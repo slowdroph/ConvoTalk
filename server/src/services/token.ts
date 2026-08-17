@@ -69,10 +69,12 @@ export function refreshCookieOptions(): {
   const cookieSecure =
     process.env.COOKIE_SECURE === "true" ||
     (isProd && process.env.COOKIE_SECURE !== "false");
+  const sameSite =
+    (process.env.COOKIE_SAMESITE as "lax" | "strict" | "none") || "lax";
   return {
     httpOnly: true,
     secure: cookieSecure,
-    sameSite: "lax",
+    sameSite,
     path: "/api/auth",
     maxAge: REFRESH_TOKEN_MAX_AGE_MS,
   };

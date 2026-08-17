@@ -5,6 +5,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
 import api from "../services/api";
 import { getAccessToken } from "../services/api";
+import { SOCKET_URL } from "../lib/apiUrl";
 
 export function SocketProvider({ children }: { children: ReactNode }) {
     const { token } = useAuth();
@@ -20,7 +21,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (!token) return;
 
-        const newSocket = io("/", {
+        const newSocket = io(SOCKET_URL || "/", {
             auth: { token: token || getAccessToken() },
             transports: ["websocket", "polling"],
             reconnection: true,

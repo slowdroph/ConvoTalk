@@ -1,4 +1,5 @@
 import axios from "axios";
+import { BASE_URL } from "../lib/apiUrl";
 
 let accessToken: string | null = null;
 
@@ -17,7 +18,7 @@ export function setUnauthorizedHandler(handler: () => void): void {
 }
 
 const api = axios.create({
-    baseURL: "/api",
+    baseURL: BASE_URL,
     withCredentials: true,
 });
 
@@ -26,7 +27,7 @@ let refreshing: Promise<string | null> | null = null;
 async function refreshAccessToken(): Promise<string | null> {
     if (!refreshing) {
         refreshing = axios
-            .post("/api/auth/refresh", {}, { withCredentials: true })
+            .post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true })
             .then((res) => {
                 accessToken = res.data.token;
                 return accessToken;

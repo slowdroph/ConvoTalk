@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import Avatar from "../ui/Avatar";
 import type { PreviewMessage } from "../../types";
+import { SOCKET_URL } from "../../lib/apiUrl";
 
 const MAX_LENGTH = 140;
 const WARN_LENGTH = 120;
@@ -54,7 +55,7 @@ export default function PreviewChat() {
     }, []);
 
     useEffect(() => {
-        const socket = io("/preview", {
+        const socket = io(SOCKET_URL ? `${SOCKET_URL}/preview` : "/preview", {
             auth: { name: nameRef.current },
             transports: ["websocket", "polling"],
         });
