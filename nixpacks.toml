@@ -3,7 +3,7 @@ nixPkgs = ["nodejs_22"]
 nixpkgsArchive = "11cb3517b3af6af300dd6c055aeda73c9bf52c48"
 
 [phases.install]
-cmds = ["cd server && npm ci"]
+cmds = ["cd server && npm ci --include=dev"]
 
 [phases.build]
 cmds = ["cd server && npm run build"]
