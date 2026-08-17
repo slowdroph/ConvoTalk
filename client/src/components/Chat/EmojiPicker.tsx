@@ -1,0 +1,137 @@
+import { useEffect, useRef, useState } from "react";
+
+const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
+  {
+    label: "Sorrisos",
+    emojis: [
+      "😀", "😁", "😂", "🤣", "😊", "😇", "🙂", "😉", "😍", "🥰",
+      "😘", "😜", "🤪", "😎", "🤓", "🥳", "😢", "😭", "😤", "😡",
+      "😱", "🤯", "😴", "🤔", "🤗", "😬", "🙄", "😏", "😳", "🥺",
+      "😷", "🤒", "🤕", "🤢", "🤮", "🥴", "🤠", "😈", "👻", "💀",
+      "🤖", "👽", "💩", "👍", "👎", "👊", "✊", "🙏", "🤝", "💪",
+      "👏", "🙌", "✌️", "🤞", "🖕", "👋", "🤙", "🫶", "🤌", "👀",
+    ],
+  },
+  {
+    label: "Animais",
+    emojis: [
+      "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯",
+      "🦁", "🐮", "🐷", "🐸", "🐵", "🐔", "🐧", "🐦", "🦆", "🦅",
+      "🦉", "🦇", "🐺", "🐗", "🐴", "🦄", "🐝", "🦋", "🐢", "🐍",
+      "🦖", "🦕", "🐙", "🦑", "🦞", "🦀", "🐬", "🐳", "🦈", "🦭",
+    ],
+  },
+  {
+    label: "Comida",
+    emojis: [
+      "🍏", "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐",
+      "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🥑", "🥦", "🥬",
+      "🌽", "🥕", "🧄", "🧅", "🥔", "🍠", "🥐", "🥖", "🍞", "🥯",
+      "🧀", "🥚", "🍳", "🥞", "🧇", "🍔", "🍟", "🍕", "🌭", "🥪",
+      "🌮", "🌯", "🥗", "🍝", "🍜", "🍣", "🍤", "🍦", "🍩", "🍪",
+      "🎂", "🍰", "🧁", "☕", "🍵", "🧃", "🥤", "🍺", "🍻", "🥂",
+    ],
+  },
+  {
+    label: "Atividades",
+    emojis: [
+      "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱",
+      "🏓", "🏸", "🥅", "🏒", "🏑", "⛳", "🏹", "🎣", "🥊", "🛹",
+      "⛸️", "🎿", "⛷️", "🏂", "🏋️", "🤸", "🏃", "🚴", "🏊", "🤽",
+      "🎮", "🕹️", "🎲", "♟️", "🎯", "🎳", "🎪", "🎤", "🎧", "🎬",
+      "🎨", "🎭", "🎩", "🎼", "🎹", "🥁", "🎺", "🎸", "🎻", "🪗",
+    ],
+  },
+  {
+    label: "Viagem",
+    emojis: [
+      "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐",
+      "🚚", "🚛", "🚜", "🛴", "🚲", "🛵", "🏍️", "✈️", "🚀", "🛸",
+      "🚁", "🛶", "⛵", "🚤", "🛥️", "🛳️", "🚢", "🗺️", "🧭", "🗿",
+      "🏔️", "🏕️", "🌋", "🗻", "🏝️", "🏖️", "🏜️", "🏟️", "🏰", "🗼",
+      "🌁", "🌆", "🌇", "🌉", "🎡", "🎢", "🎠", "⛲", "🌠", "🌈",
+    ],
+  },
+  {
+    label: "Objetos",
+    emojis: [
+      "⌚", "📱", "💻", "⌨️", "🖥️", "🖨️", "🖱️", "💾", "📷", "📸",
+      "📹", "🎥", "📺", "📻", "🔋", "🔌", "💡", "🔦", "🕯️", "🧯",
+      "💰", "💵", "💳", "💎", "⚖️", "🔧", "🔨", "🪛", "🪚", "🧲",
+      "📚", "📖", "📝", "✏️", "🖊️", "🖌️", "🖍️", "📌", "📍", "📎",
+      "📏", "🔒", "🔑", "🗝️", "🔔", "⏰", "📅", "📁", "🗂️", "📃",
+    ],
+  },
+  {
+    label: "Símbolos",
+    emojis: [
+      "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔",
+      "❣️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "💯", "✨",
+      "⭐", "🌟", "⚡", "🔥", "💥", "💫", "💦", "💨", "❄️", "☀️",
+      "🌙", "☁️", "🌈", "☔", "🍀", "🏆", "🥇", "🎉", "🎊", "🎁",
+      "✅", "❌", "❓", "❗", "💬", "💭", "👋", "👏", "🙏", "🤙",
+    ],
+  },
+];
+
+interface EmojiPickerProps {
+  onSelect: (emoji: string) => void;
+  onClose: () => void;
+}
+
+export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
+  const [activeGroup, setActiveGroup] = useState(0);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      ref={pickerRef}
+      className="absolute bottom-full mb-2 left-0 z-50 w-72 max-w-[calc(100vw-2rem)] bg-zinc-800 border border-zinc-600 rounded-xl shadow-2xl"
+    >
+      <div className="flex gap-1 px-2 py-2 border-b border-zinc-700 overflow-x-auto">
+        {EMOJI_GROUPS.map((group, i) => (
+          <button
+            key={group.label}
+            onClick={() => setActiveGroup(i)}
+            title={group.label}
+            className={`p-1.5 rounded-lg text-base transition-colors ${
+              activeGroup === i
+                ? "bg-zinc-700 text-white"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            {group.emojis[0]}
+          </button>
+        ))}
+      </div>
+      <div className="p-2 max-h-56 overflow-y-auto grid grid-cols-6 sm:grid-cols-8 gap-1">
+        {EMOJI_GROUPS[activeGroup].emojis.map((emoji) => (
+          <button
+            key={emoji}
+            onClick={() => onSelect(emoji)}
+            className="p-1 text-xl hover:bg-zinc-700 rounded-lg transition-colors"
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
