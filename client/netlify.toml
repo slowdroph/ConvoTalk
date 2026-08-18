@@ -9,3 +9,8 @@
   to = "https://agile-luck-production-f93d.up.railway.app/socket.io/:splat"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
