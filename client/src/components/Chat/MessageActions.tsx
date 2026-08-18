@@ -31,6 +31,7 @@ export default function MessageActions({
 }: MessageActionsProps) {
     return (
         <div
+            aria-hidden="true"
             className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-0.5 bg-white border border-slate-200 rounded-lg px-1.5 py-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity dark:bg-zinc-800/90 dark:border-zinc-700 ${isOwn ? "right-full mr-1.5" : "left-full ml-1.5"}`}
         >
             {/* Emoji picker button */}

@@ -140,7 +140,7 @@ export default function CreateGroupModal({
               onChange={(e) => setName(e.target.value)}
               maxLength={50}
               placeholder="Ex: Turma de estudos"
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
+              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
             />
           </div>
 
@@ -154,7 +154,7 @@ export default function CreateGroupModal({
               maxLength={200}
               rows={2}
               placeholder="Sobre o que é o grupo?"
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors resize-none"
+              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors resize-none"
             />
           </div>
 
@@ -169,7 +169,7 @@ export default function CreateGroupModal({
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar por nome ou email..."
               maxLength={100}
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
+              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
             />
 
             {selected.length > 0 && (

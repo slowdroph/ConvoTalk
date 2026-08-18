@@ -403,7 +403,7 @@ function MessageBubbleComponent({
                                     }
                                     onKeyDown={handleEditKeyDown}
                                     maxLength={2000}
-                                    className="flex-1 px-2 py-1 bg-slate-50 border border-slate-300 rounded text-slate-900 text-sm focus:outline-none focus:border-emerald-500 dark:bg-zinc-800 dark:border-zinc-600 dark:text-white dark:focus:border-green-500"
+                                    className="flex-1 px-2 py-1 bg-slate-50 border border-slate-300 rounded text-slate-900 text-base focus:outline-none focus:border-emerald-500 dark:bg-zinc-800 dark:border-zinc-600 dark:text-white dark:focus:border-green-500"
                                 />
                                 <button
                                     onClick={handleSaveEdit}

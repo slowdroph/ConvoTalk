@@ -22,7 +22,7 @@ export default function UserStatus() {
             <div className="flex items-center gap-2">
                 <button
                     onClick={() => navigate("/settings")}
-                    className="text-slate-500 hover:text-slate-900 transition-colors text-sm dark:text-zinc-400 dark:hover:text-white"
+                    className="text-slate-500 hover:text-slate-900 transition-colors text-sm dark:text-zinc-400 dark:hover:text-white p-2 rounded-lg"
                     title="Configurações"
                 >
                     <svg
@@ -48,7 +48,7 @@ export default function UserStatus() {
                 </button>
                 <button
                     onClick={logout}
-                    className="text-slate-500 hover:text-red-600 transition-colors text-sm dark:text-zinc-400 dark:hover:text-red-400"
+                    className="text-slate-500 hover:text-red-600 transition-colors text-sm dark:text-zinc-400 dark:hover:text-red-400 p-2 rounded-lg"
                     title="Sair"
                 >
                     <svg

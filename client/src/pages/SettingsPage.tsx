@@ -13,11 +13,11 @@ export default function SettingsPage() {
 
     return (
         <div className="min-h-dvh-fallback bg-slate-50 dark:bg-zinc-950">
-            <div className="max-w-2xl mx-auto px-4 py-8">
+            <div className="max-w-2xl mx-auto px-4 py-8 [padding-top:max(2rem,env(safe-area-inset-top))]">
                 <div className="flex items-center gap-4 mb-8">
                     <button
                         onClick={() => navigate("/chat")}
-                        className="text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer"
+                        className="text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer p-2 rounded-lg"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

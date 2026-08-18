@@ -92,7 +92,7 @@ export default function MessageSearch({
                     onChange={(e) => handleQueryChange(e.target.value)}
                     placeholder="Buscar mensagens..."
                     autoFocus
-                    className="w-full pl-9 pr-4 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
+                    className="w-full pl-9 pr-4 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
                 />
             </div>
 

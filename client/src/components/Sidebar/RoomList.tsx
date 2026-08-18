@@ -146,7 +146,7 @@ export default function RoomList({
                                             e.stopPropagation();
                                             setDeleteTarget(room);
                                         }}
-                                        className="text-slate-400 hover:text-red-600 transition-colors p-1 opacity-0 group-hover:opacity-100 shrink-0 dark:text-zinc-600 dark:hover:text-red-400"
+                                        className="text-slate-400 hover:text-red-600 transition-colors p-1.5 opacity-0 group-hover:opacity-100 shrink-0 dark:text-zinc-600 dark:hover:text-red-400 max-sm:opacity-60"
                                         title="Excluir conversa"
                                         aria-label={`Excluir conversa com ${getDmDisplayName(room)}`}
                                     >

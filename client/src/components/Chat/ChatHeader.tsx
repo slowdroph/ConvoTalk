@@ -97,7 +97,7 @@ export default function ChatHeader({
                     )}
                 </span>
             </h2>
-            <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+            <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 overflow-x-auto">
                 {roomType === "direct" && (
                     <>
                         <button

@@ -416,7 +416,7 @@ export default function MessageInput({
                         type="button"
                         onClick={onCancelReply}
                         disabled={uploading}
-                        className="text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-white transition-colors disabled:opacity-50"
+                        className="text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-white transition-colors disabled:opacity-50 p-2 rounded-lg shrink-0"
                         title="Cancelar resposta"
                         aria-label="Cancelar resposta"
                     >

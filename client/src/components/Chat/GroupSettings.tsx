@@ -281,7 +281,7 @@ export default function GroupSettings({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     maxLength={50}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
                   />
                 </div>
               )}
@@ -294,7 +294,7 @@ export default function GroupSettings({
                   onChange={(e) => setDescription(e.target.value)}
                   maxLength={200}
                   rows={2}
-                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors resize-none"
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors resize-none"
                 />
               </div>
               <button
@@ -316,7 +316,7 @@ export default function GroupSettings({
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Buscar por nome ou email..."
                   maxLength={100}
-                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
                 />
                 {loading && (
                   <p className="text-zinc-500 text-xs mt-2 px-1">Buscando...</p>

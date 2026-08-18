@@ -160,8 +160,8 @@ export default function ThreadPanel({
     };
 
     return (
-        <div className="w-full md:w-80 flex flex-col border-t md:border-t-0 md:border-l border-slate-200 bg-slate-50 md:max-h-full dark:border-zinc-700 dark:bg-zinc-900/60">
-            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between flex-shrink-0 dark:border-zinc-700">
+        <div className="fixed inset-0 z-40 w-full md:relative md:w-80 md:z-auto flex flex-col border-t md:border-t-0 md:border-l border-slate-200 bg-slate-50 md:max-h-full dark:border-zinc-700 dark:bg-zinc-900/60">
+            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between flex-shrink-0 dark:border-zinc-700 [padding-top:max(0.75rem,env(safe-area-inset-top))]">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                     Respostas
                 </h3>

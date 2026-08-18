@@ -91,7 +91,7 @@ export default function UserProfilePopover({
                     }}
                     onMouseLeave={closeAfterDelay}
                 >
-                    <div className="mt-1 ml-1 w-56 bg-zinc-800 border border-zinc-700 rounded-xl shadow-2xl p-4">
+                    <div className="mt-1 ml-1 w-56 max-w-[calc(100vw-2rem)] bg-zinc-800 border border-zinc-700 rounded-xl shadow-2xl p-4">
                         <div className="flex items-center gap-3 mb-3">
                             <Avatar src={avatar} name={name} size="md" />
                             <div className="min-w-0">

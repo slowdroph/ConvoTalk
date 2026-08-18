@@ -43,7 +43,7 @@ export default function DeleteAccountModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl dark:bg-zinc-900 dark:border-zinc-700">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto shadow-xl dark:bg-zinc-900 dark:border-zinc-700">
         <h3 className="text-lg font-semibold text-red-600 mb-2 dark:text-red-400">
           Excluir conta
         </h3>
