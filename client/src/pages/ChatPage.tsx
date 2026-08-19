@@ -7,7 +7,6 @@ import { useSocket } from "../hooks/useSocket";
 import { useAuth } from "../hooks/useAuth";
 import { useNotifications } from "../hooks/useNotifications";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
-import { useVisualViewportHeight } from "../hooks/useVisualViewportHeight";
 import {
   getPendingMessages,
   removePendingMessage,
@@ -195,7 +194,6 @@ export default function ChatPage() {
     }, [socket, user, activeRoom]);
 
     const activeRoomData = rooms.find((r) => r._id === activeRoom);
-    const visualViewportHeight = useVisualViewportHeight();
 
     useKeyboardShortcuts(
         Array.from({ length: Math.min(9, rooms.length) }, (_, i) => ({
@@ -215,7 +213,6 @@ export default function ChatPage() {
     return (
         <div
             className="h-dvh-fallback flex flex-col bg-zinc-950 [padding-top:env(safe-area-inset-top)]"
-            style={{ height: visualViewportHeight }}
         >
             <ConnectionBanner />
             <div className="flex flex-1 min-h-0">
