@@ -122,6 +122,17 @@ export default memo(function MessageList({
   }, [loading, virtualizer, rowCount]);
 
   useEffect(() => {
+    if (!loading && messages.length > 0) {
+      const container = containerRef.current;
+      if (container) {
+        requestAnimationFrame(() => {
+          container.scrollTop = container.scrollHeight;
+        });
+      }
+    }
+  }, [loading, messages.length]);
+
+  useEffect(() => {
     const prevCount = prevRowsCountRef.current;
     const newCount = rowCount;
     prevRowsCountRef.current = newCount;
