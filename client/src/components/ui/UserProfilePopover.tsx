@@ -25,6 +25,7 @@ export default function UserProfilePopover({
     lastSeen,
 }: UserProfilePopoverProps) {
     const [open, setOpen] = useState(false);
+    const [position, setPosition] = useState<"left" | "right">("right");
     const [isTouch] = useState<boolean>(() =>
         typeof window !== "undefined" &&
         typeof window.matchMedia === "function" &&
@@ -57,9 +58,28 @@ export default function UserProfilePopover({
         };
     }, []);
 
+    const calculatePosition = () => {
+        if (!wrapRef.current) return;
+        const rect = wrapRef.current.getBoundingClientRect();
+        const popoverWidth = 224; // w-56 = 14rem
+        if (rect.left + popoverWidth > window.innerWidth - 16) {
+            setPosition("left");
+        } else {
+            setPosition("right");
+        }
+    };
+
     const openAfterDelay = () => {
         if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => setOpen(true), 350);
+        timerRef.current = setTimeout(() => {
+            calculatePosition();
+            setOpen(true);
+        }, 350);
+    };
+
+    const toggleOpen = () => {
+        calculatePosition();
+        setOpen((v) => !v);
     };
 
     const closeAfterDelay = () => {
@@ -78,13 +98,13 @@ export default function UserProfilePopover({
             onMouseEnter={isTouch ? undefined : openAfterDelay}
             onMouseLeave={isTouch ? undefined : closeAfterDelay}
             onClick={() => {
-                if (isTouch) setOpen((v) => !v);
+                if (isTouch) toggleOpen();
             }}
         >
             {children}
             {open && (
                 <div
-                    className="absolute z-50"
+                    className={`absolute z-50 ${position === "right" ? "left-0" : "right-0"}`}
                     onMouseEnter={() => {
                         if (timerRef.current) clearTimeout(timerRef.current);
                         setOpen(true);
