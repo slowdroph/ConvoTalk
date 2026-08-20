@@ -258,7 +258,12 @@ export default function MessageInput({
                           attachments,
                           clientMessageId: crypto.randomUUID(),
                       }
-                    : { roomId, content: trimmed, attachments, clientMessageId: crypto.randomUUID() },
+                    : {
+                          roomId,
+                          content: trimmed,
+                          attachments,
+                          clientMessageId: crypto.randomUUID(),
+                      },
                 (response: { error?: string }) => {
                     setUploading(false);
                     if (response?.error) {
@@ -510,7 +515,7 @@ export default function MessageInput({
                     onFinish={handleAudioFinish}
                 />
             ) : (
-                <div className="flex gap-1.5 sm:gap-2 items-end">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 items-end">
                     <div className="relative">
                         <button
                             type="button"
