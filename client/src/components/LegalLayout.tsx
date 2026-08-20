@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 interface LegalLayoutProps {
@@ -11,53 +12,128 @@ export default function LegalLayout({
     lastUpdated,
     children,
 }: LegalLayoutProps) {
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     return (
         <div className="bg-background text-on-surface font-hanken antialiased flex flex-col min-h-dvh-fallback">
-            <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 h-16 border-b border-surface-container-high bg-background">
-                <Link to="/" className="flex items-center gap-2">
-                    <img
-                        src="/convo_talk_logo.png"
-                        alt="ConvoTalk"
-                        className="h-8 w-auto object-contain"
-                    />
-                    <span className="text-xl font-bold text-primary tracking-tight font-hanken">
-                        ConvoTalk
-                    </span>
-                </Link>
-                <nav className="hidden md:flex items-center gap-8">
-                    <Link
-                        to="/#recursos"
-                        className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
-                    >
-                        Recursos
+            <header className="fixed top-0 left-0 w-full z-50 bg-background">
+                <div className="flex justify-between items-center px-4 h-16 border-b border-surface-container-high">
+                    <Link to="/" className="flex items-center gap-2">
+                        <img
+                            src="/convo_talk_logo.png"
+                            alt="ConvoTalk"
+                            className="h-8 w-auto object-contain"
+                        />
+                        <span className="text-xl font-bold text-primary tracking-tight font-hanken">
+                            ConvoTalk
+                        </span>
                     </Link>
-                    <Link
-                        to="/#como-funciona"
-                        className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
-                    >
-                        Como funciona
-                    </Link>
-                    <Link
-                        to="/#seguranca"
-                        className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
-                    >
-                        Segurança
-                    </Link>
-                </nav>
-                <div className="flex items-center gap-3">
-                    <Link
-                        to="/login"
-                        className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200 px-3 py-2"
-                    >
-                        Login
-                    </Link>
-                    <Link
-                        to="/login?mode=register"
-                        className="text-[13px] leading-4.5 tracking-[0.02em] font-medium bg-primary-container text-white rounded px-4 py-2 hover:opacity-90 transition-opacity"
-                    >
-                        Criar conta
-                    </Link>
+                    <nav className="hidden md:flex items-center gap-8">
+                        <Link
+                            to="/#recursos"
+                            className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
+                        >
+                            Recursos
+                        </Link>
+                        <Link
+                            to="/#como-funciona"
+                            className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
+                        >
+                            Como funciona
+                        </Link>
+                        <Link
+                            to="/#seguranca"
+                            className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
+                        >
+                            Segurança
+                        </Link>
+                    </nav>
+                    <div className="flex items-center gap-3">
+                        <Link
+                            to="/login"
+                            className="hidden md:block text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200 px-3 py-2"
+                        >
+                            Login
+                        </Link>
+                        <Link
+                            to="/login?mode=register"
+                            className="text-[13px] leading-4.5 tracking-[0.02em] font-medium bg-primary-container text-white rounded px-4 py-2 hover:opacity-90 transition-opacity"
+                        >
+                            Criar conta
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={() => setMobileMenuOpen((v) => !v)}
+                            className="md:hidden p-2 -mr-2 text-on-surface-variant hover:text-primary transition-colors"
+                            aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+                            aria-expanded={mobileMenuOpen}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-6 w-6"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                {mobileMenuOpen ? (
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12"
+                                    />
+                                ) : (
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M4 6h16M4 12h16M4 18h16"
+                                    />
+                                )}
+                            </svg>
+                        </button>
+                    </div>
                 </div>
+                {mobileMenuOpen && (
+                    <div className="md:hidden border-b border-surface-container-high bg-background">
+                        <nav className="px-4 py-4 flex flex-col gap-4">
+                            <Link
+                                to="/#recursos"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
+                            >
+                                Recursos
+                            </Link>
+                            <Link
+                                to="/#como-funciona"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
+                            >
+                                Como funciona
+                            </Link>
+                            <Link
+                                to="/#seguranca"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
+                            >
+                                Segurança
+                            </Link>
+                            <Link
+                                to="/login"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
+                            >
+                                Login
+                            </Link>
+                            <Link
+                                to="/login?mode=register"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-[13px] leading-4.5 tracking-[0.02em] font-medium bg-primary-container text-white rounded px-4 py-2 hover:opacity-90 transition-opacity"
+                            >
+                                Criar conta
+                            </Link>
+                        </nav>
+                    </div>
+                )}
             </header>
 
             <main className="grow pt-32 pb-24 px-4">

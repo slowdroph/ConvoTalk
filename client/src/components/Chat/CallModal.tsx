@@ -48,7 +48,7 @@ function ControlButton({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+      className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
         danger
           ? "bg-red-600 hover:bg-red-700 text-white"
           : active
