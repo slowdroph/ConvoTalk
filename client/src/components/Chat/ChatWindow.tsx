@@ -69,7 +69,6 @@ export default function ChatWindow({
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [threadParent, setThreadParent] = useState<Message | null>(null);
   const [pinnedOpen, setPinnedOpen] = useState(false);
-  const [blockMenuOpen, setBlockMenuOpen] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [highlightedMessageId, setHighlightedMessageId] = useState<
     string | null
@@ -256,10 +255,6 @@ export default function ChatWindow({
           setPinnedOpen(false);
           return;
         }
-        if (blockMenuOpen) {
-          setBlockMenuOpen(false);
-          return;
-        }
         if (replyingTo) {
           setReplyingTo(null);
         }
@@ -267,7 +262,7 @@ export default function ChatWindow({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [searchOpen, threadParent, pinnedOpen, blockMenuOpen, replyingTo]);
+  }, [searchOpen, threadParent, pinnedOpen, replyingTo]);
 
   const handleDeleteMessage = useCallback(
     (messageId: string, forMe = false) => {
@@ -340,7 +335,6 @@ export default function ChatWindow({
 
   const handleToggleBlock = useCallback(async () => {
     if (!otherUserId) return;
-    setBlockMenuOpen(false);
     try {
       if (isBlocked) {
         await api.delete(`/user/${otherUserId}/block`);
@@ -416,8 +410,6 @@ export default function ChatWindow({
         onOpenSidebar={onOpenSidebar}
         callDisabled={!isOtherOnline}
         onStartCall={webrtc.startCall}
-        blockMenuOpen={blockMenuOpen}
-        onToggleBlockMenu={() => setBlockMenuOpen((prev) => !prev)}
         isBlocked={isBlocked}
         onToggleBlock={handleToggleBlock}
         searchOpen={searchOpen}

@@ -368,7 +368,7 @@ export default function MessageInput({
             onDragOver={(e) => e.preventDefault()}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className="relative px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-200 dark:border-zinc-700 flex-shrink-0"
+            className="relative px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-200 dark:border-zinc-700 shrink-0"
         >
             {dragging && (
                 <div className="absolute inset-0 z-20 bg-emerald-500/10 border-2 border-dashed border-emerald-500 rounded-xl flex items-center justify-center pointer-events-none dark:bg-green-600/10 dark:border-green-500">
