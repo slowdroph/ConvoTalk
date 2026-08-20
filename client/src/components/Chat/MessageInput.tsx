@@ -515,18 +515,18 @@ export default function MessageInput({
                     onFinish={handleAudioFinish}
                 />
             ) : (
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 items-end">
+                <div className="flex gap-1 sm:gap-1.5 md:gap-2 items-end">
                     <div className="relative">
                         <button
                             type="button"
                             onClick={() => setEmojiOpen((prev) => !prev)}
-                            className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-yellow-600 rounded-full transition-colors shrink-0 dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-yellow-400"
+                            className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-yellow-600 rounded-full transition-colors shrink-0 dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-yellow-400"
                             title="Emoji"
                             aria-label="Abrir seletor de emojis"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
+                                className="h-4 w-4 sm:h-5 sm:w-5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -554,22 +554,22 @@ export default function MessageInput({
                         type="button"
                         onClick={() => setIsRecording(true)}
                         disabled={uploading || files.length > 0}
-                        className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-600 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-red-400"
+                        className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-600 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-red-400"
                         title="Gravar mensagem de voz"
                         aria-label="Gravar mensagem de voz"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 11a7 7 0 01-14 0m7 7v4m-4 0h8M12 11a2 2 0 002-2V6a2 2 0 10-4 0v3a2 2 0 002 2z"
+                            className="h-4 w-4 sm:h-5 sm:w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 11a7 7 0 01-14 0m7 7v4m-4 0h8M12 11a2 2 0 002-2V6a2 2 0 10-4 0v3a2 2 0 002 2z"
                             />
                         </svg>
                     </button>
@@ -590,21 +590,21 @@ export default function MessageInput({
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploading || files.length >= MAX_FILES}
-                        className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-blue-600 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-blue-400"
+                        className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-blue-600 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-blue-400"
                         title="Anexar arquivo"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15.172 7.586a2 2 0 102.828 2.828l-6.364 6.364a2 2 0 11-2.828-2.828l6.364-6.364a4 4 0 015.657 5.657l-6.364 6.364a4 4 0 01-5.657-5.657l.707-.707"
+                            className="h-4 w-4 sm:h-5 sm:w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15.172 7.586a2 2 0 102.828 2.828l-6.364 6.364a2 2 0 11-2.828-2.828l6.364-6.364a4 4 0 015.657 5.657l-6.364 6.364a4 4 0 01-5.657-5.657l.707-.707"
                             />
                         </svg>
                     </button>
@@ -630,20 +630,20 @@ export default function MessageInput({
                         }
                         disabled={uploading || isBlocked}
                         maxLength={MAX_LENGTH + 100}
-                        className="flex-1 min-w-0 px-5 py-2.5 bg-white border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition-all resize-none overflow-y-hidden max-h-[120px] disabled:opacity-50 dark:bg-zinc-800/80 dark:border-zinc-700/60 dark:text-white dark:placeholder-zinc-500 dark:focus:border-green-500/50 dark:focus:ring-green-500/15"
+                        className="flex-1 min-w-0 px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition-all resize-none overflow-y-hidden max-h-[120px] disabled:opacity-50 dark:bg-zinc-800/80 dark:border-zinc-700/60 dark:text-white dark:placeholder-zinc-500 dark:focus:border-green-500/50 dark:focus:ring-green-500/15"
                     />
                     <button
                         type="submit"
                         disabled={!canSubmit}
                         aria-label="Enviar mensagem"
-                        className="w-11 h-11 rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30 disabled:hover:bg-emerald-600 text-white flex items-center justify-center shrink-0 transition-colors dark:bg-green-600 dark:hover:bg-green-700 dark:disabled:hover:bg-green-600 dark:text-on-accent"
+                        className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30 disabled:hover:bg-emerald-600 text-white flex items-center justify-center shrink-0 transition-colors dark:bg-green-600 dark:hover:bg-green-700 dark:disabled:hover:bg-green-600 dark:text-on-accent"
                     >
                         {uploading ? (
                             <div className="w-5 h-5 border-2 border-on-accent border-t-transparent rounded-full animate-spin" />
                         ) : (
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5 -rotate-45"
+                                className="h-4 w-4 sm:h-5 sm:w-5 -rotate-45"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
