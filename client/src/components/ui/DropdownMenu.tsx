@@ -28,7 +28,7 @@ export default function DropdownMenu({
     useEffect(() => {
         if (!open) return;
 
-        const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+        const handleClickOutside = (e: PointerEvent) => {
             if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
                 setOpen(false);
             }
@@ -40,13 +40,11 @@ export default function DropdownMenu({
             }
         };
 
-        document.addEventListener("mousedown", handleClickOutside);
-        document.addEventListener("touchstart", handleClickOutside);
+        document.addEventListener("pointerdown", handleClickOutside);
         document.addEventListener("keydown", handleKeyDown);
 
         return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-            document.removeEventListener("touchstart", handleClickOutside);
+            document.removeEventListener("pointerdown", handleClickOutside);
             document.removeEventListener("keydown", handleKeyDown);
         };
     }, [open]);

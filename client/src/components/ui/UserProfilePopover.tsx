@@ -36,7 +36,7 @@ export default function UserProfilePopover({
 
     useEffect(() => {
         if (!open || !isTouch) return;
-        const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+        const handleClickOutside = (e: PointerEvent) => {
             if (
                 wrapRef.current &&
                 !wrapRef.current.contains(e.target as Node)
@@ -44,11 +44,9 @@ export default function UserProfilePopover({
                 setOpen(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
-        document.addEventListener("touchstart", handleClickOutside);
+        document.addEventListener("pointerdown", handleClickOutside);
         return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-            document.removeEventListener("touchstart", handleClickOutside);
+            document.removeEventListener("pointerdown", handleClickOutside);
         };
     }, [open, isTouch]);
 

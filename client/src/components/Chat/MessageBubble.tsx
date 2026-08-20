@@ -213,7 +213,7 @@ function MessageBubbleComponent({
 
     useEffect(() => {
         if (!showPicker) return;
-        const handleClickOutside = (e: MouseEvent) => {
+        const handleClickOutside = (e: PointerEvent) => {
             if (
                 pickerRef.current &&
                 !pickerRef.current.contains(e.target as Node)
@@ -221,14 +221,14 @@ function MessageBubbleComponent({
                 setShowPicker(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("pointerdown", handleClickOutside);
         return () =>
-            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("pointerdown", handleClickOutside);
     }, [showPicker]);
 
     useEffect(() => {
         if (!showActions) return;
-        const handle = (e: Event) => {
+        const handle = (e: PointerEvent) => {
             if (
                 actionsRef.current &&
                 actionsRef.current.contains(e.target as Node)
@@ -237,11 +237,9 @@ function MessageBubbleComponent({
             }
             setShowActions(false);
         };
-        document.addEventListener("touchstart", handle, true);
-        document.addEventListener("mousedown", handle, true);
+        document.addEventListener("pointerdown", handle, true);
         return () => {
-            document.removeEventListener("touchstart", handle, true);
-            document.removeEventListener("mousedown", handle, true);
+            document.removeEventListener("pointerdown", handle, true);
         };
     }, [showActions]);
 
