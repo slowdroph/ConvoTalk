@@ -9,6 +9,7 @@ import UserProfilePopover from "../ui/UserProfilePopover";
 import LinkPreviewCard from "./LinkPreviewCard";
 import MessageActions from "./MessageActions";
 import TouchActions from "./TouchActions";
+import EmojiPicker from "./EmojiPicker";
 
 interface MessageBubbleProps {
     message: Message;
@@ -194,6 +195,11 @@ function MessageBubbleComponent({
     const [showPicker, setShowPicker] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [showActions, setShowActions] = useState(false);
+    const [isTouch] = useState<boolean>(() =>
+        typeof window !== "undefined" &&
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(hover: none)").matches,
+    );
     const inputRef = useRef<HTMLInputElement>(null);
     const pickerRef = useRef<HTMLDivElement>(null);
     const actionsRef = useRef<HTMLDivElement>(null);
@@ -509,8 +515,8 @@ function MessageBubbleComponent({
                         </div>
                     )}
 
-                    {/* Action buttons */}
-                    {!editing && (
+                    {/* Action buttons (desktop only) */}
+                    {!editing && !isTouch && (
                         <MessageActions
                             isOwn={isOwn}
                             isPinned={isPinned}
@@ -578,6 +584,17 @@ function MessageBubbleComponent({
                             }}
                             onDelete={() => setConfirmDelete(true)}
                             actionsRef={actionsRef}
+                        />
+                    )}
+
+                    {/* Emoji picker (mobile) */}
+                    {isTouch && showPicker && !editing && !showActions && (
+                        <EmojiPicker
+                            onSelect={(emoji) => {
+                                onToggleReaction(message._id, emoji);
+                                setShowPicker(false);
+                            }}
+                            onClose={() => setShowPicker(false)}
                         />
                     )}
                 </div>
