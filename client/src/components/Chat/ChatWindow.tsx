@@ -49,7 +49,7 @@ export default function ChatWindow({
   const { socket, onlineUsers, connected } = useSocket();
   const { user } = useAuth();
   const { showToast } = useToast();
-  const { messages, setMessages, typingUsers, pinnedMessageIds, setPinnedMessageIds } =
+  const { messages, setMessages, typingUsers, pinnedMessageIds, setPinnedMessageIds, addOptimisticMessage, markOptimisticFailed } =
     useChatSocket({
       socket,
       roomId,
@@ -83,11 +83,26 @@ export default function ChatWindow({
     try {
       const { data } = await api.get(`/messages/${roomId}`);
       setMessages((prev) => {
+        const confirmedClientIds = new Set(
+          (data.messages as Message[])
+            .map((m) => m.clientMessageId)
+            .filter(Boolean),
+        );
         const existingIds = new Set(prev.map((m) => m._id));
+        // Descarta mensagens otimistas que já foram confirmadas pelo servidor
+        const kept = prev.filter(
+          (m) =>
+            !(
+              m.status &&
+              m.status !== "failed" &&
+              m.clientMessageId &&
+              confirmedClientIds.has(m.clientMessageId)
+            ),
+        );
         const fresh = (data.messages as Message[]).filter(
           (m) => !existingIds.has(m._id),
         );
-        return [...prev, ...fresh];
+        return [...kept, ...fresh];
       });
       setHasMore(data.hasMore);
     } catch {
@@ -544,6 +559,8 @@ export default function ChatWindow({
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}
         isBlocked={isBlocked}
+        onOptimisticMessage={addOptimisticMessage}
+        onOptimisticFailed={markOptimisticFailed}
       />
     </div>
   );

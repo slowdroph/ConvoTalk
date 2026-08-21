@@ -189,13 +189,16 @@ function MessageBubbleComponent({
     const senderOnline = onlineUsers.some(
         (u) => u.userId === message.sender?._id,
     );
+    const isOwn = message.sender?._id === user?._id;
+    const isPending = Boolean(isOwn && message.status === "pending");
+    const isFailed = Boolean(isOwn && message.status === "failed");
+    const disableActions = isPending || isFailed;
 
     const [editing, setEditing] = useState(false);
     const [editContent, setEditContent] = useState(message.content);
     const [showPicker, setShowPicker] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
-    const [showActions, setShowActions] = useState(false);
-    const [isTouch] = useState<boolean>(() =>
+    const [showActions, setShowActions] = useState(false);    const [isTouch] = useState<boolean>(() =>
         typeof window !== "undefined" &&
         typeof window.matchMedia === "function" &&
         window.matchMedia("(hover: none)").matches,
@@ -207,7 +210,7 @@ function MessageBubbleComponent({
         onLongPress: () => setShowActions(true),
         onSwipeLeft: () => setShowActions(true),
         onSwipeRight: () => setShowActions(true),
-        disabled: editing,
+        disabled: editing || disableActions,
     });
 
     useEffect(() => {
@@ -261,7 +264,6 @@ function MessageBubbleComponent({
 
     if (!message.sender) return null;
 
-    const isOwn = message.sender._id === user?._id;
     const time = new Date(message.createdAt).toLocaleTimeString("pt-BR", {
         hour: "2-digit",
         minute: "2-digit",
@@ -371,7 +373,7 @@ function MessageBubbleComponent({
                             isOwn
                                 ? "bg-emerald-100 text-slate-900 rounded-br-none dark:bg-green-700/30 dark:text-white"
                                 : "bg-white text-slate-900 border border-slate-200/80 rounded-bl-none dark:bg-zinc-700 dark:text-zinc-100 dark:border-transparent"
-                        }`}
+                        } ${isPending ? "opacity-70" : ""}`}
                     >
                         {!isOwn && (
                             <div className="flex items-center gap-2 mb-1">
@@ -474,14 +476,60 @@ function MessageBubbleComponent({
                                 )}
                             </>
                         )}
-                        <p
-                            className={`text-[10px] mt-1 ${isOwn ? "text-emerald-700/70 dark:text-green-300/60" : "text-slate-400 dark:text-zinc-500"} text-right`}
+                        <div
+                            className={`flex items-center justify-end gap-1 text-[10px] mt-1 ${isOwn ? "text-emerald-700/70 dark:text-green-300/60" : "text-slate-400 dark:text-zinc-500"}`}
                         >
-                            {time}
-                            {isPinned && " 📌"}
-                            {message.edited && !editing && " (editado)"}
-                            {isRead && isOwn && ` · Lido`}
-                        </p>
+                            <span>
+                                {time}
+                                {isPinned && " 📌"}
+                                {message.edited && !editing && " (editado)"}
+                                {isRead && !disableActions && isOwn && ` · Lido`}
+                            </span>
+                            {isPending && (
+                                <svg
+                                    className="animate-spin h-3 w-3 shrink-0"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    aria-label="Enviando"
+                                    role="status"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    />
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                    />
+                                </svg>
+                            )}
+                            {isFailed && (
+                                <span
+                                    className="flex items-center gap-1 font-semibold text-red-500 dark:text-red-400"
+                                    title="Falha ao enviar. O texto foi devolvido ao campo de mensagem."
+                                >
+                                    <svg
+                                        className="h-3 w-3 shrink-0"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                                        />
+                                    </svg>
+                                    Falhou
+                                </span>
+                            )}
+                        </div>
                     </div>
 
                     {/* Reaction chips */}
@@ -516,7 +564,7 @@ function MessageBubbleComponent({
                     )}
 
                     {/* Action buttons (desktop only) */}
-                    {!editing && !isTouch && (
+                    {!editing && !isTouch && !disableActions && (
                         <MessageActions
                             isOwn={isOwn}
                             isPinned={isPinned}
@@ -547,7 +595,7 @@ function MessageBubbleComponent({
                     )}
 
                     {/* Touch action popover */}
-                    {showActions && !editing && (
+                    {showActions && !editing && !disableActions && (
                         <TouchActions
                             isOwn={isOwn}
                             isPinned={isPinned}
@@ -588,7 +636,7 @@ function MessageBubbleComponent({
                     )}
 
                     {/* Emoji picker (mobile) */}
-                    {isTouch && showPicker && !editing && !showActions && (
+                    {isTouch && showPicker && !editing && !showActions && !disableActions && (
                         <EmojiPicker
                             onSelect={(emoji) => {
                                 onToggleReaction(message._id, emoji);

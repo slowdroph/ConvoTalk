@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth";
-import { fetchLinkPreview } from "../services/linkPreview";
+import { getLinkPreview } from "../services/linkPreview";
 import { isPrivateHostname } from "../utils/ssrf";
 import { logger } from "../config/logger";
 import { sendError } from "../utils/errors";
@@ -25,7 +25,7 @@ export async function previewLink(
             return;
         }
 
-        const preview = await fetchLinkPreview(url);
+        const preview = await getLinkPreview(url);
         res.json(preview);
     } catch (error) {
         logger.warn(

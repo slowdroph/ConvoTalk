@@ -12,6 +12,7 @@ import { deleteCloudinaryAttachments, cloudinaryPublicIdFromUrl } from "../servi
 import { BadRequestError, ForbiddenError, NotFoundError, ValidationError, handleError } from "../utils/errors";
 import { audit } from "../utils/audit";
 import { logger } from "../config/logger";
+import { invalidateRoom } from "../socket/roomCache";
 
 const GROUP_PHOTO_FOLDER = "chat_app_groupPhoto";
 
@@ -313,6 +314,7 @@ export async function addMember(req: AuthRequest, res: Response): Promise<void> 
       .populate("participants", "name email avatar status")
       .populate("admins", "name email avatar status")
       .lean();
+    invalidateRoom(id);
 
     const [actor, targetUserDoc] = await Promise.all([
       User.findById(myId).select("name").lean(),
@@ -373,6 +375,7 @@ export async function removeMember(req: AuthRequest, res: Response): Promise<voi
       .populate("participants", "name email avatar status")
       .populate("admins", "name email avatar status")
       .lean();
+    invalidateRoom(id);
 
     const [actor, targetUserDoc] = await Promise.all([
       User.findById(myId).select("name").lean(),
@@ -427,6 +430,7 @@ export async function deleteRoom(req: AuthRequest, res: Response): Promise<void>
         .select("participants type name")
         .populate("participants", "name email avatar status")
         .lean();
+      invalidateRoom(id);
 
       const remainingParticipants = updated?.participants ?? [];
       if (remainingParticipants.length === 0) {

@@ -61,6 +61,8 @@ export interface MessagePayload {
     attachments?: AttachmentPayload[];
     readBy?: string[];
     parentMessage?: ParentMessagePayload | null;
+    clientMessageId?: string | null;
+    status?: "pending" | "sent" | "failed";
     createdAt: string;
     updatedAt?: string;
 }

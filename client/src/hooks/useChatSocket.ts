@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Socket } from "socket.io-client";
 import type { Message } from "../types";
 import type { TypingUser } from "../components/Chat/MessageList";
@@ -24,12 +24,21 @@ export function useChatSocket({
         socket.emit("join", roomId);
 
         const handleMessage = (msg: Message) => {
-            if (msg.room === roomId) {
-                setMessages((prev) => {
-                    if (prev.some((m) => m._id === msg._id)) return prev;
-                    return [...prev, msg];
-                });
-            }
+            if (msg.room !== roomId) return;
+            setMessages((prev) => {
+                if (msg.clientMessageId) {
+                    const pendingIdx = prev.findIndex(
+                        (m) => m.clientMessageId === msg.clientMessageId,
+                    );
+                    if (pendingIdx !== -1) {
+                        const next = [...prev];
+                        next[pendingIdx] = msg;
+                        return next;
+                    }
+                }
+                if (prev.some((m) => m._id === msg._id)) return prev;
+                return [...prev, msg];
+            });
         };
 
         const handleTyping = (data: {
@@ -189,6 +198,20 @@ export function useChatSocket({
         };
     }, [socket]);
 
+    const addOptimisticMessage = useCallback((msg: Message) => {
+        setMessages((prev) => [...prev, msg]);
+    }, []);
+
+    const markOptimisticFailed = useCallback((clientMessageId: string) => {
+        setMessages((prev) =>
+            prev.map((m) =>
+                m.clientMessageId === clientMessageId
+                    ? { ...m, status: "failed" as const }
+                    : m,
+            ),
+        );
+    }, []);
+
     return {
         messages,
         setMessages,
@@ -196,5 +219,7 @@ export function useChatSocket({
         setTypingUsers,
         pinnedMessageIds,
         setPinnedMessageIds,
+        addOptimisticMessage,
+        markOptimisticFailed,
     };
 }

@@ -6,6 +6,7 @@ import { Server as SocketIOServer } from "socket.io";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import compression from "compression";
 
 import connectDB from "./config/db";
 import { validateEnv, getAllowedOrigins } from "./config/env";
@@ -47,6 +48,12 @@ const io = new SocketIOServer(httpServer, {
         credentials: true,
         methods: ["GET", "POST"],
     },
+    pingInterval: 20_000,
+    pingTimeout: 10_000,
+    maxHttpBufferSize: 512e3,
+    connectionStateRecovery: {
+        maxDisconnectionDuration: 2 * 60_000,
+    },
 });
 
 // Middleware
@@ -75,6 +82,7 @@ app.use(
 );
 app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(cookieParser());
+app.use(compression());
 app.use(express.json({ limit: "100kb" }));
 app.use(generalLimiter);
 

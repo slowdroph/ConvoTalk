@@ -33,6 +33,7 @@ export const socketMessageSchema = z.object({
 export const socketReplySchema = z.object({
   roomId: objectId,
   parentId: objectId,
+  clientMessageId: z.string().trim().min(1).max(64).optional(),
   content: z
     .string()
     .trim()

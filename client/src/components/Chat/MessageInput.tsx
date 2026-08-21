@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSocket } from "../../hooks/useSocket";
+import { useAuth } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../utils/errors";
 import { useToast } from "../../contexts/ToastContext";
 import api from "../../services/api";
@@ -11,12 +12,15 @@ import type { Message } from "../../types";
 const MAX_LENGTH = 2000;
 const WARN_LENGTH = 1800;
 const MAX_FILES = 5;
+const SEND_ACK_TIMEOUT_MS = 15_000;
 
 interface MessageInputProps {
     roomId: string;
     replyingTo?: Message | null;
     onCancelReply?: () => void;
     isBlocked?: boolean;
+    onOptimisticMessage?: (msg: Message) => void;
+    onOptimisticFailed?: (clientMessageId: string) => void;
 }
 
 const ALLOWED_DROP_TYPES = [
@@ -38,9 +42,12 @@ export default function MessageInput({
     replyingTo,
     onCancelReply,
     isBlocked = false,
+    onOptimisticMessage,
+    onOptimisticFailed,
 }: MessageInputProps) {
     const [message, setMessage] = useState("");
     const { socket, connected } = useSocket();
+    const { user } = useAuth();
     const { showToast } = useToast();
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const [isTyping, setIsTyping] = useState(false);
@@ -247,7 +254,54 @@ export default function MessageInput({
             socket?.emit("typing", { roomId, isTyping: false });
         };
 
-        if (socket) {
+        const clientMessageId = crypto.randomUUID();
+
+        if (socket && user) {
+            // UI otimista: exibe a mensagem imediatamente com status "pending"
+            // e limpa o input sem esperar a confirmação do servidor.
+            const optimistic: Message = {
+                _id: `temp-${clientMessageId}`,
+                sender: {
+                    _id: user._id,
+                    name: user.name,
+                    avatar: user.avatar || "",
+                    status: user.status || "",
+                },
+                content: trimmed,
+                room: roomId,
+                deleted: false,
+                edited: false,
+                reactions: {},
+                attachments,
+                readBy: [],
+                parentMessage: replyingTo
+                    ? {
+                          _id: replyingTo._id,
+                          sender: replyingTo.sender,
+                          content: replyingTo.content,
+                          attachments: replyingTo.attachments,
+                          deleted: replyingTo.deleted,
+                      }
+                    : null,
+                clientMessageId,
+                status: "pending",
+                createdAt: new Date().toISOString(),
+            };
+            onOptimisticMessage?.(optimistic);
+            clearInput();
+            setUploading(false);
+
+            const failOptimistic = () => {
+                onOptimisticFailed?.(clientMessageId);
+                showToast({
+                    type: "error",
+                    message: "Não foi possível enviar a mensagem.",
+                });
+                setMessage((prev) => prev || trimmed);
+            };
+
+            const ackTimeout = setTimeout(failOptimistic, SEND_ACK_TIMEOUT_MS);
+
             socket.emit(
                 replyingTo ? "reply" : "message",
                 replyingTo
@@ -256,26 +310,20 @@ export default function MessageInput({
                           parentId: replyingTo._id,
                           content: trimmed,
                           attachments,
-                          clientMessageId: crypto.randomUUID(),
+                          clientMessageId,
                       }
                     : {
                           roomId,
                           content: trimmed,
                           attachments,
-                          clientMessageId: crypto.randomUUID(),
+                          clientMessageId,
                       },
                 (response: { error?: string }) => {
-                    setUploading(false);
+                    clearTimeout(ackTimeout);
                     if (response?.error) {
-                        setError(
-                            getErrorMessage(
-                                response,
-                                "Erro ao enviar mensagem",
-                            ),
-                        );
+                        failOptimistic();
                         return;
                     }
-                    clearInput();
                 },
             );
             return;

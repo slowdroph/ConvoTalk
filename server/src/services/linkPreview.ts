@@ -197,3 +197,71 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreview> {
         clearTimeout(timeout);
     }
 }
+
+const PREVIEW_SUCCESS_TTL_MS = 10 * 60_000;
+const PREVIEW_FAILURE_TTL_MS = 60_000;
+const PREVIEW_CACHE_MAX_ENTRIES = 500;
+
+interface PreviewCacheEntry {
+    preview?: LinkPreview;
+    expiresAt: number;
+}
+
+const previewCache = new Map<string, PreviewCacheEntry>();
+const previewInFlight = new Map<string, Promise<LinkPreview>>();
+
+function evictPreviewCache(): void {
+    if (previewCache.size <= PREVIEW_CACHE_MAX_ENTRIES) return;
+    const now = Date.now();
+    for (const [key, entry] of previewCache) {
+        if (entry.expiresAt <= now) {
+            previewCache.delete(key);
+        }
+    }
+    if (previewCache.size > PREVIEW_CACHE_MAX_ENTRIES) {
+        const oldestKey = previewCache.keys().next().value;
+        if (oldestKey !== undefined) {
+            previewCache.delete(oldestKey);
+        }
+    }
+}
+
+export async function getLinkPreview(url: string): Promise<LinkPreview> {
+    const now = Date.now();
+    const cached = previewCache.get(url);
+    if (cached) {
+        if (cached.expiresAt > now && cached.preview) {
+            return cached.preview;
+        }
+        if (cached.expiresAt > now) {
+            throw new Error("Cached failure");
+        }
+        previewCache.delete(url);
+    }
+
+    const inFlight = previewInFlight.get(url);
+    if (inFlight) return inFlight;
+
+    const request = fetchLinkPreview(url)
+        .then((preview) => {
+            previewCache.set(url, {
+                preview,
+                expiresAt: Date.now() + PREVIEW_SUCCESS_TTL_MS,
+            });
+            evictPreviewCache();
+            return preview;
+        })
+        .catch((error: unknown) => {
+            previewCache.set(url, {
+                expiresAt: Date.now() + PREVIEW_FAILURE_TTL_MS,
+            });
+            evictPreviewCache();
+            throw error;
+        })
+        .finally(() => {
+            previewInFlight.delete(url);
+        });
+
+    previewInFlight.set(url, request);
+    return request;
+}

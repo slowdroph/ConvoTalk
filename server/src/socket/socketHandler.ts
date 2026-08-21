@@ -1,4 +1,5 @@
 import { Server as SocketIOServer, Socket } from "socket.io";
+import type { Types } from "mongoose";
 import Message from "../models/Message";
 import Room from "../models/Room";
 import User from "../models/User";
@@ -35,11 +36,71 @@ import {
   removeUserSocket,
   getUserSocketIds,
 } from "./onlineUsers";
+import { getRoomInfo } from "./roomCache";
+
+interface SenderInfo {
+    name: string;
+    avatar: string;
+    status: string;
+}
+
+interface PopulatedSender {
+    _id?: Types.ObjectId | string;
+    name?: string;
+    avatar?: string;
+    status?: string;
+}
+
+interface ParentMessageLean {
+    _id: Types.ObjectId;
+    sender?: Types.ObjectId | PopulatedSender | null;
+    content?: string | null;
+    attachments?: IAttachment[];
+    deleted?: boolean;
+}
+
+function senderPayloadFrom(info: SenderInfo | null, userId: string) {
+    return {
+        _id: userId,
+        name: info?.name ?? "Usuário",
+        avatar: info?.avatar ?? "",
+        status: info?.status ?? "",
+    };
+}
+
+function parentPayload(parent: ParentMessageLean) {
+    const sender = parent.sender;
+    return {
+        _id: String(parent._id),
+        sender:
+            sender && typeof sender === "object" && "name" in sender
+                ? {
+                      _id: String(sender._id),
+                      name: sender.name,
+                      avatar: sender.avatar,
+                      status: sender.status,
+                  }
+                : null,
+        content: parent.content ?? "",
+        attachments: parent.attachments ?? [],
+        deleted: !!parent.deleted,
+    };
+}
+
+function isDuplicateClientMessageId(error: unknown): boolean {
+    return (
+        !!error &&
+        typeof error === "object" &&
+        (error as { code?: number }).code === 11000 &&
+        !!(error as { keyPattern?: Record<string, unknown> })
+            .keyPattern?.clientMessageId
+    );
+}
 
 async function isRoomParticipant(roomId: string, userId: string): Promise<boolean> {
-    const room = await Room.findById(roomId).select("participants").lean();
+    const room = await getRoomInfo(roomId);
     if (!room) return false;
-    return room.participants.some((p) => p.toString() === userId);
+    return room.participants.includes(userId);
 }
 
 async function isBlockedBetween(a: string, b: string): Promise<boolean> {
@@ -51,12 +112,12 @@ async function isBlockedBetween(a: string, b: string): Promise<boolean> {
 }
 
 async function isRoomBlocked(roomId: string, userId: string): Promise<boolean> {
-    const room = await Room.findById(roomId).select("type participants").lean();
+    const room = await getRoomInfo(roomId);
     if (!room) return false;
     if (room.type !== "direct") return false;
-    const other = room.participants.find((p) => p.toString() !== userId);
+    const other = room.participants.find((p) => p !== userId);
     if (!other) return false;
-    return isBlockedBetween(userId, other.toString());
+    return isBlockedBetween(userId, other);
 }
 
 const socketHandler = (io: SocketIOServer): void => {
@@ -66,6 +127,32 @@ const socketHandler = (io: SocketIOServer): void => {
 
         // Registrar usuário online
         const user = await User.findById(userId).select("name avatar status");
+        let senderInfo: SenderInfo | null = user
+            ? {
+                  name: user.name,
+                  avatar: user.avatar || "",
+                  status: user.status || "",
+              }
+            : null;
+        const getSenderInfo = async (): Promise<SenderInfo | null> => {
+            if (!senderInfo) {
+                const fetched = await User.findById(userId)
+                    .select("name avatar status")
+                    .lean<{
+                        name?: string;
+                        avatar?: string;
+                        status?: string;
+                    }>();
+                if (fetched) {
+                    senderInfo = {
+                        name: fetched.name ?? "Usuário",
+                        avatar: fetched.avatar ?? "",
+                        status: fetched.status ?? "",
+                    };
+                }
+            }
+            return senderInfo;
+        };
         if (user) {
             setOnlineUserInfo(userId, {
                 name: user.name,
@@ -165,19 +252,10 @@ const socketHandler = (io: SocketIOServer): void => {
                         return;
                     }
 
-                    if (clientMessageId) {
-                        const existing = await Message.findOne({
-                            sender: userId,
-                            clientMessageId,
-                        }).lean();
-                        if (existing) {
-                            if (typeof ack === "function") {
-                                ack({});
-                            }
-                            return;
-                        }
-                    }
+                    const info = await getSenderInfo();
 
+                    // Índice único { sender, clientMessageId } cobre duplicatas:
+                    // erro 11000 é tratado no catch abaixo.
                     const message = await Message.create({
                         sender: userId,
                         room: roomId,
@@ -186,32 +264,41 @@ const socketHandler = (io: SocketIOServer): void => {
                         clientMessageId: clientMessageId || null,
                     });
 
-                    await Room.updateOne(
+                    Room.updateOne(
                         { _id: roomId },
                         { $set: { [`lastReadAt.${userId}`]: new Date() } },
-                    );
+                    ).catch(() => {});
 
-                    const populatedMessage = await Message.findById(message._id)
-                        .populate("sender", "name avatar status")
-                        .populate({
-                            path: "parentMessage",
-                            select: "sender content attachments deleted",
-                            populate: { path: "sender", select: "name avatar status" },
-                        })
-                        .lean();
+                    const payload = {
+                        _id: String(message._id),
+                        sender: senderPayloadFrom(info, userId),
+                        content: message.content ?? "",
+                        type: "text" as const,
+                        room: roomId,
+                        deleted: false,
+                        edited: false,
+                        reactions: {} as Record<string, string[]>,
+                        attachments: (message.attachments ?? []).map((a) => ({
+                            url: a.url,
+                            filename: a.filename,
+                            mimetype: a.mimetype,
+                            size: a.size,
+                            publicId: a.publicId,
+                        })),
+                        readBy: [] as string[],
+                        parentMessage: null,
+                        createdAt: message.createdAt.toISOString(),
+                        ...(clientMessageId
+                            ? { clientMessageId }
+                            : {}),
+                    };
 
-                    io.to(roomId).emit("message", populatedMessage);
+                    io.to(roomId).emit("message", payload);
                     if (typeof ack === "function") {
                         ack({});
                     }
                 } catch (error) {
-                    const isDuplicateKey =
-                        error &&
-                        typeof error === "object" &&
-                        (error as { code?: number }).code === 11000 &&
-                        (error as { keyPattern?: Record<string, unknown> })
-                            .keyPattern?.clientMessageId;
-                    if (isDuplicateKey) {
+                    if (isDuplicateClientMessageId(error)) {
                         if (typeof ack === "function") {
                             ack({});
                         }
@@ -260,7 +347,7 @@ const socketHandler = (io: SocketIOServer): void => {
                         }
                         return;
                     }
-                    const { roomId, parentId, content, attachments } = parsed.data;
+                    const { roomId, parentId, content, attachments, clientMessageId } = parsed.data;
 
                     if (isRoomRateLimited(roomId, socket.id)) {
                         if (typeof ack === "function") {
@@ -289,7 +376,10 @@ const socketHandler = (io: SocketIOServer): void => {
                     const parent = await Message.findOne({
                         _id: parentId,
                         room: roomId,
-                    }).lean();
+                    })
+                        .select("sender content attachments deleted")
+                        .populate("sender", "name avatar status")
+                        .lean<ParentMessageLean>();
                     if (!parent) {
                         if (typeof ack === "function") {
                             ack({ error: "Mensagem original não encontrada." });
@@ -297,37 +387,61 @@ const socketHandler = (io: SocketIOServer): void => {
                         return;
                     }
 
+                    const info = await getSenderInfo();
+
                     const message = await Message.create({
                         sender: userId,
                         room: roomId,
                         content,
                         attachments: attachments || [],
                         parentMessage: parentId,
+                        clientMessageId: clientMessageId || null,
                     });
 
-                    await Room.updateOne(
+                    Room.updateOne(
                         { _id: roomId },
                         { $set: { [`lastReadAt.${userId}`]: new Date() } },
-                    );
+                    ).catch(() => {});
 
-                    const populatedMessage = await Message.findById(message._id)
-                        .populate("sender", "name avatar status")
-                        .populate({
-                            path: "parentMessage",
-                            select: "sender content attachments deleted",
-                            populate: { path: "sender", select: "name avatar status" },
-                        })
-                        .lean();
+                    const payload = {
+                        _id: String(message._id),
+                        sender: senderPayloadFrom(info, userId),
+                        content: message.content ?? "",
+                        type: "text" as const,
+                        room: roomId,
+                        deleted: false,
+                        edited: false,
+                        reactions: {} as Record<string, string[]>,
+                        attachments: (message.attachments ?? []).map((a) => ({
+                            url: a.url,
+                            filename: a.filename,
+                            mimetype: a.mimetype,
+                            size: a.size,
+                            publicId: a.publicId,
+                        })),
+                        readBy: [] as string[],
+                        parentMessage: parentPayload(parent),
+                        createdAt: message.createdAt.toISOString(),
+                        ...(clientMessageId
+                            ? { clientMessageId }
+                            : {}),
+                    };
 
-                    io.to(roomId).emit("message", populatedMessage);
+                    io.to(roomId).emit("message", payload);
                     io.to(roomId).emit("thread_reply", {
                         parentId,
-                        message: populatedMessage,
+                        message: payload,
                     });
                     if (typeof ack === "function") {
                         ack({});
                     }
                 } catch (error) {
+                    if (isDuplicateClientMessageId(error)) {
+                        if (typeof ack === "function") {
+                            ack({});
+                        }
+                        return;
+                    }
                     logger.error({ userId, error }, "erro ao salvar resposta");
                     if (typeof ack === "function") {
                         ack({ error: "Erro ao enviar resposta." });
