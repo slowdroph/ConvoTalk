@@ -637,17 +637,17 @@ export default function MessageInput({
                         </svg>
                     </button>
                     <div className="flex-1" />
-                    <span
-                        className={`text-xs ${
-                            isOverLimit
-                                ? "text-red-600 font-semibold dark:text-red-400"
-                                : isNearLimit
-                                  ? "text-yellow-500 dark:text-yellow-400"
-                                  : "text-slate-500 dark:text-zinc-500"
-                        }`}
-                    >
-                        {charCount}/{MAX_LENGTH}
-                    </span>
+                    {(isNearLimit || isOverLimit) && (
+                        <span
+                            className={`text-xs ${
+                                isOverLimit
+                                    ? "text-red-600 font-semibold dark:text-red-400"
+                                    : "text-yellow-500 dark:text-yellow-400"
+                            }`}
+                        >
+                            {charCount}/{MAX_LENGTH}
+                        </span>
+                    )}
                 </div>
             )}
             {isRecording ? (
