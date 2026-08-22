@@ -543,32 +543,12 @@ export default function MessageInput({
             )}
 
             {!isRecording && (
-                <div className="flex justify-end mb-1">
-                    <span
-                        className={`text-xs ${
-                            isOverLimit
-                                ? "text-red-600 font-semibold dark:text-red-400"
-                                : isNearLimit
-                                  ? "text-yellow-500 dark:text-yellow-400"
-                                  : "text-slate-500 dark:text-zinc-500"
-                        }`}
-                    >
-                        {charCount}/{MAX_LENGTH}
-                    </span>
-                </div>
-            )}
-            {isRecording ? (
-                <AudioRecorder
-                    onCancel={() => setIsRecording(false)}
-                    onFinish={handleAudioFinish}
-                />
-            ) : (
-                <div className="flex gap-1 sm:gap-1.5 md:gap-2 items-end">
-                    <div className="relative">
+                <div className="flex items-center gap-1 sm:gap-1.5 mb-1">
+                    <div className="relative shrink-0">
                         <button
                             type="button"
                             onClick={() => setEmojiOpen((prev) => !prev)}
-                            className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-yellow-600 rounded-full transition-colors shrink-0 dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-yellow-400"
+                            className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-yellow-600 rounded-full transition-colors dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-yellow-400"
                             title="Emoji"
                             aria-label="Abrir seletor de emojis"
                         >
@@ -609,15 +589,15 @@ export default function MessageInput({
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-4 w-4 sm:h-5 sm:w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 11a7 7 0 01-14 0m7 7v4m-4 0h8M12 11a2 2 0 002-2V6a2 2 0 10-4 0v3a2 2 0 002 2z"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 11a7 7 0 01-14 0m7 7v4m-4 0h8M12 11a2 2 0 002-2V6a2 2 0 10-4 0v3a2 2 0 002 2z"
                             />
                         </svg>
                     </button>
@@ -644,18 +624,39 @@ export default function MessageInput({
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-4 w-4 sm:h-5 sm:w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15.172 7.586a2 2 0 102.828 2.828l-6.364 6.364a2 2 0 11-2.828-2.828l6.364-6.364a4 4 0 015.657 5.657l-6.364 6.364a4 4 0 01-5.657-5.657l.707-.707"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15.172 7.586a2 2 0 102.828 2.828l-6.364 6.364a2 2 0 11-2.828-2.828l6.364-6.364a4 4 0 015.657 5.657l-6.364 6.364a4 4 0 01-5.657-5.657l.707-.707"
                             />
                         </svg>
                     </button>
+                    <div className="flex-1" />
+                    <span
+                        className={`text-xs ${
+                            isOverLimit
+                                ? "text-red-600 font-semibold dark:text-red-400"
+                                : isNearLimit
+                                  ? "text-yellow-500 dark:text-yellow-400"
+                                  : "text-slate-500 dark:text-zinc-500"
+                        }`}
+                    >
+                        {charCount}/{MAX_LENGTH}
+                    </span>
+                </div>
+            )}
+            {isRecording ? (
+                <AudioRecorder
+                    onCancel={() => setIsRecording(false)}
+                    onFinish={handleAudioFinish}
+                />
+            ) : (
+                <div className="flex gap-2 items-end">
                     <textarea
                         ref={textareaRef}
                         value={message}
