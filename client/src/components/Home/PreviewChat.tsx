@@ -43,7 +43,7 @@ export default function PreviewChat() {
     const socketRef = useRef<Socket | null>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const typingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
     const nameRef = useRef(name);
 
     useEffect(() => {
@@ -51,7 +51,8 @@ export default function PreviewChat() {
     }, [name]);
 
     const scrollToBottom = useCallback(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        const el = listRef.current;
+        if (el) el.scrollTop = el.scrollHeight;
     }, []);
 
     useEffect(() => {
@@ -214,7 +215,10 @@ export default function PreviewChat() {
                 </span>
             </div>
 
-            <div className="p-6 bg-background/80 min-h-80 max-h-104 overflow-y-auto custom-scrollbar flex flex-col justify-end gap-6">
+            <div
+                ref={listRef}
+                className="p-6 bg-background/80 min-h-80 max-h-104 overflow-y-auto custom-scrollbar flex flex-col justify-end gap-6"
+            >
                 <div className="text-center text-xs text-on-surface-variant mb-2">
                     <p>
                         Você está em uma sala pública de demonstração, sem
@@ -279,8 +283,6 @@ export default function PreviewChat() {
                         </div>
                     </div>
                 )}
-
-                <div ref={messagesEndRef} />
             </div>
 
             <div className="p-4 bg-surface-container-lowest border-t border-outline-variant/50">
