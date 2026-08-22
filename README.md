@@ -2,7 +2,7 @@
 
 Full-stack real-time chat application built with the MERN stack, Socket.IO and WebRTC.
 
-[![CI](https://github.com/slowdroph/chat-app/actions/workflows/ci.yml/badge.svg)](https://github.com/slowdroph/chat-app/actions/workflows/ci.yml)
+[![CI]](https://github.com/slowdroph/chat-app/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white)
