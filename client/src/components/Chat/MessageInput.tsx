@@ -543,7 +543,7 @@ export default function MessageInput({
             )}
 
             {!isRecording && (
-                <div className="flex items-center gap-1 sm:gap-1.5 mb-1">
+                <div className="flex items-center gap-1 sm:gap-1.5 mb-3">
                     <div className="relative shrink-0">
                         <button
                             type="button"
