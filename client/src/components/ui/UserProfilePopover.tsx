@@ -26,10 +26,11 @@ export default function UserProfilePopover({
 }: UserProfilePopoverProps) {
     const [open, setOpen] = useState(false);
     const [position, setPosition] = useState<"left" | "right">("right");
-    const [isTouch] = useState<boolean>(() =>
-        typeof window !== "undefined" &&
-        typeof window.matchMedia === "function" &&
-        window.matchMedia("(hover: none)").matches,
+    const [isTouch] = useState<boolean>(
+        () =>
+            typeof window !== "undefined" &&
+            typeof window.matchMedia === "function" &&
+            window.matchMedia("(hover: none)").matches,
     );
     const wrapRef = useRef<HTMLDivElement>(null);
     const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);

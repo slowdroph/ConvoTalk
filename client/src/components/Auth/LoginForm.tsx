@@ -45,9 +45,7 @@ export default function LoginForm() {
                     errorData?.error?.code === "EMAIL_NOT_VERIFIED");
             if (needsVerification) {
                 setNeedsVerification(true);
-                setError(
-                    errorData?.error?.message || "Verifique seu email.",
-                );
+                setError(errorData?.error?.message || "Verifique seu email.");
             } else {
                 setError(getErrorMessage(err, "Erro ao fazer login"));
             }

@@ -1,7 +1,7 @@
 export default function ChatSkeleton() {
     return (
         <div className="h-dvh-fallback flex bg-zinc-950">
-            <div className="w-80 bg-zinc-900 border-r border-zinc-700 flex flex-col hidden md:flex">
+            <div className="w-80 bg-zinc-900 border-r border-zinc-700 flex flex-col md:flex">
                 <div className="p-4 border-b border-zinc-700">
                     <div className="w-24 h-4 bg-zinc-800 rounded animate-pulse" />
                 </div>

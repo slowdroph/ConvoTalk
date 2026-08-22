@@ -22,21 +22,27 @@ function ToggleRow({
     return (
         <div className="flex items-center justify-between gap-4 py-3">
             <div>
-                <p className="text-slate-900 font-medium text-sm dark:text-white">{title}</p>
-                <p className="text-slate-500 text-xs dark:text-zinc-400">{description}</p>
+                <p className="text-slate-900 font-medium text-sm dark:text-white">
+                    {title}
+                </p>
+                <p className="text-slate-500 text-xs dark:text-zinc-400">
+                    {description}
+                </p>
             </div>
             <button
                 type="button"
                 role="switch"
                 aria-checked={checked}
                 onClick={() => onChange(!checked)}
-                className={`relative w-12 h-7 rounded-full transition-colors flex-shrink-0 cursor-pointer ${
-                    checked ? "bg-emerald-600 dark:bg-green-600" : "bg-slate-300 dark:bg-zinc-700"
+                className={`relative w-12 h-7 rounded-full transition-colors shrink-0 cursor-pointer ${
+                    checked
+                        ? "bg-emerald-600 dark:bg-green-600"
+                        : "bg-slate-300 dark:bg-zinc-700"
                 }`}
             >
                 <span
                     className={`absolute left-0 top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                        checked ? "translate-x-[24px]" : "translate-x-[2px]"
+                        checked ? "translate-x-6" : "translate-x-0.5"
                     }`}
                 />
             </button>
@@ -57,7 +63,11 @@ export default function NotificationSettings() {
     const handleBrowserChange = (value: boolean) => {
         setBrowser(value);
         setBrowserNotificationsEnabled(value);
-        if (value && "Notification" in window && Notification.permission === "default") {
+        if (
+            value &&
+            "Notification" in window &&
+            Notification.permission === "default"
+        ) {
             Notification.requestPermission();
         }
     };

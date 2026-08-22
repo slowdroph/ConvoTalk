@@ -24,8 +24,7 @@ export default defineConfig({
     ],
     webServer: [
         {
-            command:
-                "npx tsx src/e2e/e2eServer.ts",
+            command: "npx tsx src/e2e/e2eServer.ts",
             cwd: path.resolve(__dirname, "../server"),
             url: "http://localhost:3100/api/health",
             reuseExistingServer: !process.env.CI,

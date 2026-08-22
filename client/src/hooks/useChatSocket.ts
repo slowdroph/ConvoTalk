@@ -84,8 +84,7 @@ export function useChatSocket({
             roomId: string;
             userId: string;
         }) => {
-            if (data.roomId !== roomId || data.userId !== currentUserId)
-                return;
+            if (data.roomId !== roomId || data.userId !== currentUserId) return;
             setMessages((prev) =>
                 prev.filter((msg) => msg._id !== data.messageId),
             );
@@ -180,10 +179,7 @@ export function useChatSocket({
                         ? {
                               ...msg,
                               readBy: Array.from(
-                                  new Set([
-                                      ...(msg.readBy || []),
-                                      data.userId,
-                                  ]),
+                                  new Set([...(msg.readBy || []), data.userId]),
                               ),
                           }
                         : msg,

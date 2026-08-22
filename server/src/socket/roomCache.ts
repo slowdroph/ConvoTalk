@@ -32,21 +32,17 @@ export function invalidateRoom(roomId: string): void {
     roomCache.delete(roomId);
 }
 
-export async function getRoomInfo(
-    roomId: string,
-): Promise<CachedRoom | null> {
+export async function getRoomInfo(roomId: string): Promise<CachedRoom | null> {
     const now = Date.now();
     const cached = roomCache.get(roomId);
     if (cached && cached.expiresAt > now) {
         return cached;
     }
 
-    const room = await Room.findById(roomId)
-        .select("participants type")
-        .lean<{
-            participants: (Types.ObjectId | string)[];
-            type: "group" | "direct";
-        }>();
+    const room = await Room.findById(roomId).select("participants type").lean<{
+        participants: (Types.ObjectId | string)[];
+        type: "group" | "direct";
+    }>();
     if (!room) return null;
 
     const entry: CachedRoom = {

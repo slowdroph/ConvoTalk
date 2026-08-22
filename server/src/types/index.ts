@@ -20,22 +20,22 @@ export interface IUser extends Document {
 }
 
 export interface IRoom extends Document {
-  name: string;
-  description: string;
-  type: "group" | "direct";
-  createdBy: IUser["_id"] | null;
-  participants: IUser["_id"][];
-  admins: IUser["_id"][];
-  avatar: string;
-  lastReadAt: Map<string, Date>;
-  pinnedMessages: IPinnedMessage[];
-  createdAt: Date;
+    name: string;
+    description: string;
+    type: "group" | "direct";
+    createdBy: IUser["_id"] | null;
+    participants: IUser["_id"][];
+    admins: IUser["_id"][];
+    avatar: string;
+    lastReadAt: Map<string, Date>;
+    pinnedMessages: IPinnedMessage[];
+    createdAt: Date;
 }
 
 export interface IPinnedMessage {
-  message: IMessage["_id"];
-  pinnedBy: IUser["_id"];
-  pinnedAt: Date;
+    message: IMessage["_id"];
+    pinnedBy: IUser["_id"];
+    pinnedAt: Date;
 }
 
 export interface IMessage extends Document {

@@ -15,14 +15,25 @@ export default function ConnectionBanner() {
                 <>
                     <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
                     <p className="text-yellow-700 text-sm dark:text-yellow-400">
-                        Conexão perdida. Tentando reconectar (
-                        {reconnectAttempt}/{MAX_ATTEMPTS})...
+                        Conexão perdida. Tentando reconectar ({reconnectAttempt}
+                        /{MAX_ATTEMPTS})...
                     </p>
                 </>
             ) : (
                 <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600 flex-shrink-0 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m2.829-15.557a14.999 14.999 0 010 21.212m-5.658-5.657a4.5 4.5 0 010-6.364M6.343 17.657a9 9 0 010-12.728M3.514 21.899a15 15 0 010-21.212M8.464 14.536a4.5 4.5 0 000-6.364M12 12h.01" />
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 text-red-600 shrink-0 dark:text-red-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M18.364 5.636a9 9 0 010 12.728m2.829-15.557a14.999 14.999 0 010 21.212m-5.658-5.657a4.5 4.5 0 010-6.364M6.343 17.657a9 9 0 010-12.728M3.514 21.899a15 15 0 010-21.212M8.464 14.536a4.5 4.5 0 000-6.364M12 12h.01"
+                        />
                     </svg>
                     <p className="text-red-600 text-sm dark:text-red-400">
                         Sem conexão. Verifique sua internet.

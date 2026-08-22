@@ -58,8 +58,8 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
-const url = original.url ?? "";
-const isAuthEndpoint = /^\/auth\//.test(url);
+        const url = original.url ?? "";
+        const isAuthEndpoint = /^\/auth\//.test(url);
 
         if (
             error.response.status === 401 &&

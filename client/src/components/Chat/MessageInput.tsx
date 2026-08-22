@@ -679,7 +679,7 @@ export default function MessageInput({
                         }
                         disabled={uploading || isBlocked}
                         maxLength={MAX_LENGTH + 100}
-                        className="flex-1 min-w-0 px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition-all resize-none overflow-y-hidden max-h-[120px] disabled:opacity-50 dark:bg-zinc-800/80 dark:border-zinc-700/60 dark:text-white dark:placeholder-zinc-500 dark:focus:border-green-500/50 dark:focus:ring-green-500/15"
+                        className="flex-1 min-w-0 px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition-all resize-none overflow-y-hidden max-h-30 disabled:opacity-50 dark:bg-zinc-800/80 dark:border-zinc-700/60 dark:text-white dark:placeholder-zinc-500 dark:focus:border-green-500/50 dark:focus:ring-green-500/15"
                     />
                     <button
                         type="submit"

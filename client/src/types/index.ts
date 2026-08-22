@@ -8,7 +8,7 @@ import type {
     ParentMessagePayload,
     PinnedMessagePayload,
     LinkPreview as LinkPreviewPayload,
-} from '@shared/types';
+} from "@shared/types";
 
 export type User = UserPayload;
 export type Sender = SenderPayload;

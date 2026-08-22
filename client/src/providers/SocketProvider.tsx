@@ -104,7 +104,14 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             reconnectAttempt,
             hasConnectedOnce,
         }),
-        [socket, onlineUsers, connected, reconnecting, reconnectAttempt, hasConnectedOnce],
+        [
+            socket,
+            onlineUsers,
+            connected,
+            reconnecting,
+            reconnectAttempt,
+            hasConnectedOnce,
+        ],
     );
 
     return (

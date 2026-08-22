@@ -8,8 +8,8 @@ import { useAuth } from "../hooks/useAuth";
 import { useNotifications } from "../hooks/useNotifications";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import {
-  getPendingMessages,
-  removePendingMessage,
+    getPendingMessages,
+    removePendingMessage,
 } from "../lib/offlineStorage";
 import type { Room, Message } from "../types";
 
@@ -22,7 +22,9 @@ export default function ChatPage() {
         {},
     );
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [highlightMessageId, setHighlightMessageId] = useState<string | null>(null);
+    const [highlightMessageId, setHighlightMessageId] = useState<string | null>(
+        null,
+    );
     const initialized = useRef(false);
     const { socket, connected } = useSocket();
     const { user } = useAuth();
@@ -67,13 +69,10 @@ export default function ChatPage() {
             const { data } = await api.get("/rooms");
             setRooms(data);
             setUnreadCounts(
-                data.reduce(
-                    (acc: Record<string, number>, r: Room) => {
-                        if (r.unreadCount) acc[r._id] = r.unreadCount;
-                        return acc;
-                    },
-                    {},
-                ),
+                data.reduce((acc: Record<string, number>, r: Room) => {
+                    if (r.unreadCount) acc[r._id] = r.unreadCount;
+                    return acc;
+                }, {}),
             );
             return data;
         } catch (error) {
@@ -121,23 +120,17 @@ export default function ChatPage() {
     };
 
     const handleGroupUpdated = (room: Room) => {
-        setRooms((prev) =>
-            prev.map((r) => (r._id === room._id ? room : r)),
-        );
+        setRooms((prev) => prev.map((r) => (r._id === room._id ? room : r)));
     };
 
     const handleDeleteRoom = async (roomId: string) => {
         try {
             await api.delete(`/rooms/${roomId}`);
             setRooms((prev) => {
-                const remaining = prev.filter(
-                    (r) => r._id !== roomId,
-                );
+                const remaining = prev.filter((r) => r._id !== roomId);
                 if (activeRoom === roomId) {
                     setActiveRoom(
-                        remaining.length > 0
-                            ? remaining[0]._id
-                            : null,
+                        remaining.length > 0 ? remaining[0]._id : null,
                     );
                 }
                 return remaining;
@@ -163,9 +156,7 @@ export default function ChatPage() {
         const handleRoomUpdated = (updatedRoom: Room) => {
             if (!updatedRoom?._id) return;
             setRooms((prev) =>
-                prev.map((r) =>
-                    r._id === updatedRoom._id ? updatedRoom : r,
-                ),
+                prev.map((r) => (r._id === updatedRoom._id ? updatedRoom : r)),
             );
         };
         socket.on("room_deleted", handleRoomDeleted);
@@ -211,9 +202,7 @@ export default function ChatPage() {
     ]);
 
     return (
-        <div
-            className="h-dvh-fallback flex flex-col bg-zinc-950 [padding-top:env(safe-area-inset-top)]"
-        >
+        <div className="h-dvh-fallback flex flex-col bg-zinc-950 pt-[env(safe-area-inset-top)]">
             <ConnectionBanner />
             <div className="flex flex-1 min-h-0">
                 <Sidebar
@@ -233,7 +222,9 @@ export default function ChatPage() {
                     </div>
                 ) : roomsError ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                        <p className="text-red-600 text-sm dark:text-red-400">{roomsError}</p>
+                        <p className="text-red-600 text-sm dark:text-red-400">
+                            {roomsError}
+                        </p>
                         <button
                             onClick={loadRooms}
                             className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-zinc-800 dark:border-transparent dark:hover:bg-zinc-700 dark:text-white"
@@ -260,8 +251,19 @@ export default function ChatPage() {
                 ) : rooms.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
                         <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center dark:bg-zinc-800">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-slate-400 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-8 w-8 text-slate-400 dark:text-zinc-500"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                />
                             </svg>
                         </div>
                         <h3 className="text-slate-900 font-semibold dark:text-white">
@@ -275,8 +277,19 @@ export default function ChatPage() {
                             onClick={() => setSidebarOpen(true)}
                             className="md:hidden flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-zinc-800 dark:border-transparent dark:hover:bg-zinc-700 dark:text-white"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 6h16M4 12h16M4 18h16"
+                                />
                             </svg>
                             Abrir conversas
                         </button>
@@ -287,8 +300,19 @@ export default function ChatPage() {
                             onClick={() => setSidebarOpen(true)}
                             className="md:hidden flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-zinc-800 dark:border-transparent dark:hover:bg-zinc-700 dark:text-white"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 6h16M4 12h16M4 18h16"
+                                />
                             </svg>
                             Abrir conversas
                         </button>

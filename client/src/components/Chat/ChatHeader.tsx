@@ -55,24 +55,43 @@ export default function ChatHeader({
                         title="Abrir lista de conversas"
                         aria-label="Abrir lista de conversas"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 6h16M4 12h16M4 18h16"
+                            />
                         </svg>
                     </button>
                 )}
-                <Avatar src={avatarUrl || undefined} name={avatarName} size="sm" />
+                <Avatar
+                    src={avatarUrl || undefined}
+                    name={avatarName}
+                    size="sm"
+                />
                 <span className="flex flex-col truncate">
                     <span className="truncate">{displayName}</span>
                     {roomType === "direct" ? (
                         <span className="flex items-center gap-1 text-xs font-normal">
                             <span
                                 className={`inline-block w-2 h-2 rounded-full ${
-                                    isOtherOnline ? "bg-green-500" : "bg-zinc-600"
+                                    isOtherOnline
+                                        ? "bg-green-500"
+                                        : "bg-zinc-600"
                                 }`}
                             />
                             <span
                                 className={
-                                    isOtherOnline ? "text-green-400" : "text-zinc-500"
+                                    isOtherOnline
+                                        ? "text-green-400"
+                                        : "text-zinc-500"
                                 }
                             >
                                 {isOtherOnline

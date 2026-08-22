@@ -29,7 +29,10 @@ function attachResumeListener(): void {
     if (typeof window === "undefined" || resumeListenerAttached) return;
     resumeListenerAttached = true;
     for (const event of ["pointerdown", "keydown", "touchstart"]) {
-        window.addEventListener(event, resumeOnUserGesture, { once: true, capture: true });
+        window.addEventListener(event, resumeOnUserGesture, {
+            once: true,
+            capture: true,
+        });
     }
 }
 

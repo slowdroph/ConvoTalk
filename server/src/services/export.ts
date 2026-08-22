@@ -52,36 +52,48 @@ export interface ConversationPdfWriter {
     end(): void;
 }
 
-export function createConversationPdfWriter(params: PdfWriterParams): ConversationPdfWriter {
+export function createConversationPdfWriter(
+    params: PdfWriterParams,
+): ConversationPdfWriter {
     const doc = new PDFDocument({ margin: 48, size: "A4" });
 
     const titleWidth = doc.widthOfString("ConvoTalk");
-    doc.font("Helvetica-Bold").fontSize(22)
+    doc.font("Helvetica-Bold")
+        .fontSize(22)
         .rect(0, 0, 200, 70)
         .fill(COLORS.headerBg);
     doc.fillColor("#ffffff").text("ConvoTalk", 48, 24, { width: titleWidth });
 
-    doc.font("Helvetica").fontSize(10).fillColor(COLORS.headerText)
-        .text(
-            `Exportado em ${formatTimestamp(params.exportedAt)}`,
-            250,
-            30,
-            { width: 300, align: "right" },
-        );
+    doc.font("Helvetica")
+        .fontSize(10)
+        .fillColor(COLORS.headerText)
+        .text(`Exportado em ${formatTimestamp(params.exportedAt)}`, 250, 30, {
+            width: 300,
+            align: "right",
+        });
 
     doc.y = 90;
-    doc.font("Helvetica-Bold").fontSize(18).fillColor(COLORS.title)
+    doc.font("Helvetica-Bold")
+        .fontSize(18)
+        .fillColor(COLORS.title)
         .text(params.roomTitle);
 
-    doc.font("Helvetica").fontSize(10).fillColor(COLORS.subtitle)
+    doc.font("Helvetica")
+        .fontSize(10)
+        .fillColor(COLORS.subtitle)
         .text(params.participantsLabel);
 
     doc.moveDown(0.5);
-    doc.moveTo(48, doc.y).lineTo(545, doc.y).lineWidth(1)
-        .strokeColor(COLORS.divider).stroke();
+    doc.moveTo(48, doc.y)
+        .lineTo(545, doc.y)
+        .lineWidth(1)
+        .strokeColor(COLORS.divider)
+        .stroke();
 
     doc.moveDown(1);
-    doc.font("Helvetica-Bold").fontSize(10).fillColor(COLORS.muted)
+    doc.font("Helvetica-Bold")
+        .fontSize(10)
+        .fillColor(COLORS.muted)
         .text(`${params.messageCount} mensagens`, { align: "right" });
 
     const pageHeight = doc.page.height - doc.page.margins.bottom;
@@ -93,33 +105,44 @@ export function createConversationPdfWriter(params: PdfWriterParams): Conversati
 
         const timestamp = formatTimestamp(message.createdAt);
         if (message.deleted) {
-            doc.font("Helvetica-Oblique").fontSize(10).fillColor(COLORS.deleted)
+            doc.font("Helvetica-Oblique")
+                .fontSize(10)
+                .fillColor(COLORS.deleted)
                 .text("(mensagem excluída)", { align: "center" });
             doc.moveDown(0.6);
             return;
         }
 
         const contentWidth = doc
-          .font("Helvetica-Bold")
-          .fontSize(12)
-          .widthOfString(message.senderName);
+            .font("Helvetica-Bold")
+            .fontSize(12)
+            .widthOfString(message.senderName);
         const timestampWidth = doc.widthOfString(timestamp);
         const lineWidth = contentWidth + timestampWidth + 20;
         const bubbleX = 48;
         const bubbleWidth = Math.max(160, Math.min(400, lineWidth));
 
         let startY = doc.y;
-        doc.roundedRect(bubbleX, startY, bubbleWidth, 34, 8)
-            .fill(COLORS.bubbleBg);
+        doc.roundedRect(bubbleX, startY, bubbleWidth, 34, 8).fill(
+            COLORS.bubbleBg,
+        );
 
-        doc.font("Helvetica-Bold").fontSize(12).fillColor(COLORS.text)
-            .text(message.senderName, bubbleX + 12, startY + 8, { width: bubbleWidth - 24 });
+        doc.font("Helvetica-Bold")
+            .fontSize(12)
+            .fillColor(COLORS.text)
+            .text(message.senderName, bubbleX + 12, startY + 8, {
+                width: bubbleWidth - 24,
+            });
 
-        doc.font("Helvetica").fontSize(9).fillColor(COLORS.muted)
+        doc.font("Helvetica")
+            .fontSize(9)
+            .fillColor(COLORS.muted)
             .text(timestamp, bubbleX + 12, startY + 24);
 
         const bodyY = startY + 34;
-        doc.font("Helvetica").fontSize(11).fillColor(COLORS.text)
+        doc.font("Helvetica")
+            .fontSize(11)
+            .fillColor(COLORS.text)
             .text(message.content, bubbleX, bodyY, {
                 width: 497,
                 lineGap: 3,
@@ -130,7 +153,9 @@ export function createConversationPdfWriter(params: PdfWriterParams): Conversati
     return { doc, writeMessage, end: () => doc.end() };
 }
 
-export function generateConversationPdf(params: GenerateParams): Promise<Buffer> {
+export function generateConversationPdf(
+    params: GenerateParams,
+): Promise<Buffer> {
     return new Promise((resolve, reject) => {
         const { doc, writeMessage, end } = createConversationPdfWriter({
             roomTitle: params.roomTitle,

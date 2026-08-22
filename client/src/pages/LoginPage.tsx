@@ -23,7 +23,7 @@ export default function LoginPage() {
                         backgroundSize: "24px 24px",
                     }}
                 />
-                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-primary/10 rounded-full blur-[120px] pointer-events-none animate-glowPulse" />
+                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-175 h-175 bg-primary/10 rounded-full blur-[120px] pointer-events-none animate-glowPulse" />
 
                 <div className="relative z-10 animate-fadeInUp">
                     <div className="flex items-center gap-3">
@@ -43,7 +43,9 @@ export default function LoginPage() {
                         <h2 className="text-3xl font-bold text-on-surface leading-tight mb-3">
                             Converse em tempo real,
                             <br />
-                            <span className="text-green-400">de qualquer lugar.</span>
+                            <span className="text-green-400">
+                                de qualquer lugar.
+                            </span>
                         </h2>
                         <p className="text-on-surface-variant max-w-md">
                             Uma plataforma segura, rápida e intuitiva para você
@@ -57,12 +59,14 @@ export default function LoginPage() {
                 </div>
 
                 <p className="relative z-10 text-xs text-on-surface-variant/70">
-                    © {new Date().getFullYear()} ConvoTalk — Feito com segurança e privacidade.
+                    © {new Date().getFullYear()} ConvoTalk — Feito com segurança
+                    e privacidade.
                 </p>
             </div>
 
             <div className="flex items-center justify-center px-4 py-10 min-h-dvh-fallback lg:min-h-0 relative">
-                <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none lg:hidden"
+                <div
+                    className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none lg:hidden"
                     style={{
                         backgroundImage:
                             "radial-gradient(#3d4a3d 1px, transparent 1px)",
@@ -76,8 +80,12 @@ export default function LoginPage() {
                             alt="ConvoTalk"
                             className="h-20 w-auto mx-auto mb-4 object-contain"
                         />
-                        <h1 className="text-2xl font-bold text-white">ConvoTalk</h1>
-                        <p className="text-zinc-500 mt-1">Converse em tempo real</p>
+                        <h1 className="text-2xl font-bold text-white">
+                            ConvoTalk
+                        </h1>
+                        <p className="text-zinc-500 mt-1">
+                            Converse em tempo real
+                        </p>
                     </div>
 
                     <div className="bg-zinc-900 rounded-2xl p-6 shadow-xl border border-zinc-800 animate-fadeInUp animation-delay-100">
@@ -104,8 +112,15 @@ export default function LoginPage() {
                             </button>
                         </div>
 
-                        <div key={isLogin ? "login" : "register"} className="animate-slideInRight">
-                            {isLogin ? <LoginForm /> : <RegisterForm onSwitchToLogin={switchToLogin} />}
+                        <div
+                            key={isLogin ? "login" : "register"}
+                            className="animate-slideInRight"
+                        >
+                            {isLogin ? (
+                                <LoginForm />
+                            ) : (
+                                <RegisterForm onSwitchToLogin={switchToLogin} />
+                            )}
                         </div>
                     </div>
                 </div>

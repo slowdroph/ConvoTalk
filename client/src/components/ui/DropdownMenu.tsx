@@ -29,7 +29,10 @@ export default function DropdownMenu({
         if (!open) return;
 
         const handleClickOutside = (e: PointerEvent) => {
-            if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+            if (
+                wrapRef.current &&
+                !wrapRef.current.contains(e.target as Node)
+            ) {
                 setOpen(false);
             }
         };

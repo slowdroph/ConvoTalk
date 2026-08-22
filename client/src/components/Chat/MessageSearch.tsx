@@ -41,10 +41,9 @@ export default function MessageSearch({
         timeoutRef.current = setTimeout(async () => {
             setLoading(true);
             try {
-                const { data } = await api.get(
-                    `/messages/${roomId}/search`,
-                    { params: { q: trimmed, limit: 50 } },
-                );
+                const { data } = await api.get(`/messages/${roomId}/search`, {
+                    params: { q: trimmed, limit: 50 },
+                });
                 setResults(data.messages as Message[]);
             } catch {
                 setResults([]);
@@ -76,7 +75,7 @@ export default function MessageSearch({
 
     return (
         <div className="border-b border-zinc-700 bg-zinc-900/80 backdrop-blur px-4 py-2 flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 min-w-[200px] max-w-md">
+            <div className="relative flex-1 min-w-50 max-w-md">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2"
@@ -84,7 +83,12 @@ export default function MessageSearch({
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                 >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                 </svg>
                 <input
                     type="text"
@@ -111,18 +115,43 @@ export default function MessageSearch({
                         className="text-zinc-300 hover:text-white disabled:opacity-30 transition-colors"
                         title="Resultado anterior"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 15l7-7 7 7"
+                            />
                         </svg>
                     </button>
                     <button
                         onClick={handleNext}
-                        disabled={current >= results.length - 1 || results.length === 0}
+                        disabled={
+                            current >= results.length - 1 ||
+                            results.length === 0
+                        }
                         className="text-zinc-300 hover:text-white disabled:opacity-30 transition-colors"
                         title="Próximo resultado"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                            />
                         </svg>
                     </button>
                 </div>
@@ -133,8 +162,19 @@ export default function MessageSearch({
                 className="text-zinc-400 hover:text-white transition-colors"
                 title="Fechar busca"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                    />
                 </svg>
             </button>
         </div>

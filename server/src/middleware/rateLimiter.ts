@@ -1,7 +1,7 @@
 import rateLimit from "express-rate-limit";
 
 function skipHealth(req: { path: string }): boolean {
-  return req.path === "/api/health" || req.path === "/api/health/live";
+    return req.path === "/api/health" || req.path === "/api/health/live";
 }
 
 export const generalLimiter = rateLimit({
@@ -43,7 +43,9 @@ export const resetLimiter = rateLimit({
     max: 5,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { message: "Muitas tentativas de redefinição. Aguarde 15 minutos." },
+    message: {
+        message: "Muitas tentativas de redefinição. Aguarde 15 minutos.",
+    },
 });
 
 export const previewLimiter = rateLimit({

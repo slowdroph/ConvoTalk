@@ -51,48 +51,64 @@ export default function previewHandler(io: SocketIOServer): void {
             online: online.size,
         });
 
-        socket.on("preview:message", (data: { content: string }, ack?: (res: { error?: string }) => void) => {
-            const now = Date.now();
-            const timestamps = (lastMessages.get(socket.id) || []).filter(
-                (t) => now - t < RATE_WINDOW_MS,
-            );
-            if (timestamps.length >= RATE_LIMIT) {
-                if (typeof ack === "function") {
-                    ack({ error: "Você está enviando mensagens rápido demais. Aguarde um pouco." });
+        socket.on(
+            "preview:message",
+            (
+                data: { content: string },
+                ack?: (res: { error?: string }) => void,
+            ) => {
+                const now = Date.now();
+                const timestamps = (lastMessages.get(socket.id) || []).filter(
+                    (t) => now - t < RATE_WINDOW_MS,
+                );
+                if (timestamps.length >= RATE_LIMIT) {
+                    if (typeof ack === "function") {
+                        ack({
+                            error: "Você está enviando mensagens rápido demais. Aguarde um pouco.",
+                        });
+                    }
+                    return;
                 }
-                return;
-            }
-            timestamps.push(now);
-            lastMessages.set(socket.id, timestamps);
+                timestamps.push(now);
+                lastMessages.set(socket.id, timestamps);
 
-            const content = typeof data?.content === "string" ? data.content.trim() : "";
-            if (!content || content.length > MAX_CONTENT) {
-                if (typeof ack === "function") {
-                    ack({ error: `A mensagem deve ter entre 1 e ${MAX_CONTENT} caracteres.` });
+                const content =
+                    typeof data?.content === "string"
+                        ? data.content.trim()
+                        : "";
+                if (!content || content.length > MAX_CONTENT) {
+                    if (typeof ack === "function") {
+                        ack({
+                            error: `A mensagem deve ter entre 1 e ${MAX_CONTENT} caracteres.`,
+                        });
+                    }
+                    return;
                 }
-                return;
-            }
 
-            const name = sanitizeName(socket.handshake.auth?.name);
-            const message = formatMessage(socket.id, name, content);
+                const name = sanitizeName(socket.handshake.auth?.name);
+                const message = formatMessage(socket.id, name, content);
 
-            history.push(message);
-            if (history.length > MAX_HISTORY) {
-                history.shift();
-            }
+                history.push(message);
+                if (history.length > MAX_HISTORY) {
+                    history.shift();
+                }
 
-            namespace.to(PREVIEW_ROOM).emit("preview:message", message);
-            if (typeof ack === "function") {
-                ack({});
-            }
-        });
+                namespace.to(PREVIEW_ROOM).emit("preview:message", message);
+                if (typeof ack === "function") {
+                    ack({});
+                }
+            },
+        );
 
-        socket.on("preview:typing", (data: { name?: string; isTyping: boolean }) => {
-            socket.to(PREVIEW_ROOM).emit("preview:typing", {
-                name: sanitizeName(data?.name || ""),
-                isTyping: Boolean(data?.isTyping),
-            });
-        });
+        socket.on(
+            "preview:typing",
+            (data: { name?: string; isTyping: boolean }) => {
+                socket.to(PREVIEW_ROOM).emit("preview:typing", {
+                    name: sanitizeName(data?.name || ""),
+                    isTyping: Boolean(data?.isTyping),
+                });
+            },
+        );
 
         socket.on("disconnect", () => {
             online.delete(socket.id);

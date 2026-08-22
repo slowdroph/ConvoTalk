@@ -78,7 +78,10 @@ messageSchema.index({ sender: 1, createdAt: -1 });
 messageSchema.index({ parentMessage: 1, createdAt: 1 });
 messageSchema.index(
     { sender: 1, clientMessageId: 1 },
-    { unique: true, partialFilterExpression: { clientMessageId: { $type: "string" } } },
+    {
+        unique: true,
+        partialFilterExpression: { clientMessageId: { $type: "string" } },
+    },
 );
 
 export default mongoose.model<IMessage>("Message", messageSchema);

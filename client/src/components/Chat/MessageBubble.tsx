@@ -198,10 +198,12 @@ function MessageBubbleComponent({
     const [editContent, setEditContent] = useState(message.content);
     const [showPicker, setShowPicker] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
-    const [showActions, setShowActions] = useState(false);    const [isTouch] = useState<boolean>(() =>
-        typeof window !== "undefined" &&
-        typeof window.matchMedia === "function" &&
-        window.matchMedia("(hover: none)").matches,
+    const [showActions, setShowActions] = useState(false);
+    const [isTouch] = useState<boolean>(
+        () =>
+            typeof window !== "undefined" &&
+            typeof window.matchMedia === "function" &&
+            window.matchMedia("(hover: none)").matches,
     );
     const inputRef = useRef<HTMLInputElement>(null);
     const pickerRef = useRef<HTMLDivElement>(null);
@@ -483,7 +485,10 @@ function MessageBubbleComponent({
                                 {time}
                                 {isPinned && " 📌"}
                                 {message.edited && !editing && " (editado)"}
-                                {isRead && !disableActions && isOwn && ` · Lido`}
+                                {isRead &&
+                                    !disableActions &&
+                                    isOwn &&
+                                    ` · Lido`}
                             </span>
                             {isPending && (
                                 <svg
@@ -636,15 +641,19 @@ function MessageBubbleComponent({
                     )}
 
                     {/* Emoji picker (mobile) */}
-                    {isTouch && showPicker && !editing && !showActions && !disableActions && (
-                        <EmojiPicker
-                            onSelect={(emoji) => {
-                                onToggleReaction(message._id, emoji);
-                                setShowPicker(false);
-                            }}
-                            onClose={() => setShowPicker(false)}
-                        />
-                    )}
+                    {isTouch &&
+                        showPicker &&
+                        !editing &&
+                        !showActions &&
+                        !disableActions && (
+                            <EmojiPicker
+                                onSelect={(emoji) => {
+                                    onToggleReaction(message._id, emoji);
+                                    setShowPicker(false);
+                                }}
+                                onClose={() => setShowPicker(false)}
+                            />
+                        )}
                 </div>
             </div>
 

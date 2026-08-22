@@ -21,12 +21,12 @@ function Section({ icon, title, children, highlighted }: SectionProps) {
             </h2>
             {highlighted ? (
                 <div className="bg-surface-container rounded-lg p-6 border border-outline-variant">
-                    <div className="text-base leading-6 text-on-surface-variant leading-relaxed">
+                    <div className="text-base text-on-surface-variant leading-relaxed">
                         {children}
                     </div>
                 </div>
             ) : (
-                <div className="text-base leading-6 text-on-surface-variant leading-relaxed">
+                <div className="text-base text-on-surface-variant leading-relaxed">
                     {children}
                 </div>
             )}
@@ -34,16 +34,10 @@ function Section({ icon, title, children, highlighted }: SectionProps) {
     );
 }
 
-function DataCard({
-    title,
-    items,
-}: {
-    title: string;
-    items: string[];
-}) {
+function DataCard({ title, items }: { title: string; items: string[] }) {
     return (
         <div className="bg-surface-container-low p-5 rounded border border-outline-variant">
-            <h3 className="text-[13px] leading-[18px] tracking-[0.02em] font-medium text-on-surface mb-2 font-bold">
+            <h3 className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface mb-2">
                 {title}
             </h3>
             <ul className="text-sm leading-5 text-on-surface-variant space-y-1 list-disc list-inside">
@@ -63,10 +57,7 @@ export default function PrivacyPage() {
     });
 
     return (
-        <LegalLayout
-            title="Política de Privacidade"
-            lastUpdated={lastUpdated}
-        >
+        <LegalLayout title="Política de Privacidade" lastUpdated={lastUpdated}>
             <div className="space-y-12">
                 <Section icon="lock" title="1. Introdução" highlighted>
                     <p>
@@ -114,7 +105,9 @@ export default function PrivacyPage() {
                         finalidades:
                     </p>
                     <ul className="mt-4 space-y-2 list-disc list-inside">
-                        <li>Fornecimento e operação do serviço de mensagens;</li>
+                        <li>
+                            Fornecimento e operação do serviço de mensagens;
+                        </li>
                         <li>
                             Autenticação e segurança da conta, incluindo
                             verificação de e-mail e redefinição de senha;
@@ -154,8 +147,8 @@ export default function PrivacyPage() {
                             serviço;
                         </li>
                         <li>
-                            <strong>Cumprimento de obrigação legal</strong> (Art.
-                            7º, II): quando aplicável.
+                            <strong>Cumprimento de obrigação legal</strong>{" "}
+                            (Art. 7º, II): quando aplicável.
                         </li>
                     </ul>
                 </Section>
@@ -170,8 +163,8 @@ export default function PrivacyPage() {
                     </p>
                     <ul className="mt-4 space-y-2 list-disc list-inside">
                         <li>
-                            <strong>MongoDB Atlas</strong>: armazenamento da base
-                            de dados;
+                            <strong>MongoDB Atlas</strong>: armazenamento da
+                            base de dados;
                         </li>
                         <li>
                             <strong>Cloudinary</strong>: hospedagem de imagens e
@@ -195,7 +188,10 @@ export default function PrivacyPage() {
                     </p>
                 </Section>
 
-                <Section icon="cookie" title="6. Cookies e Tecnologias Semelhantes">
+                <Section
+                    icon="cookie"
+                    title="6. Cookies e Tecnologias Semelhantes"
+                >
                     <p>
                         Utilizamos apenas um cookie funcional e estritamente
                         necessário para a autenticação da sessão (cookie{" "}
@@ -227,7 +223,10 @@ export default function PrivacyPage() {
                     </p>
                 </Section>
 
-                <Section icon="check_circle" title="8. Seus Direitos (LGPD, Art. 18)">
+                <Section
+                    icon="check_circle"
+                    title="8. Seus Direitos (LGPD, Art. 18)"
+                >
                     <p className="mb-4">
                         Em conformidade com a LGPD, você tem o direito de:
                     </p>
@@ -261,7 +260,11 @@ export default function PrivacyPage() {
                     </p>
                 </Section>
 
-                <Section icon="shield" title="9. Segurança dos Dados" highlighted>
+                <Section
+                    icon="shield"
+                    title="9. Segurança dos Dados"
+                    highlighted
+                >
                     <p>
                         Adotamos medidas técnicas e organizacionais apropriadas
                         para proteger seus dados contra acesso não autorizado,
@@ -283,7 +286,10 @@ export default function PrivacyPage() {
                     </p>
                 </Section>
 
-                <Section icon="support_agent" title="11. Encarregado de Proteção de Dados (DPO)">
+                <Section
+                    icon="support_agent"
+                    title="11. Encarregado de Proteção de Dados (DPO)"
+                >
                     <p>
                         Nos termos do Art. 41 da LGPD, o ConvoTalk disponibiliza
                         um Encarregado de Proteção de Dados para tratar questões
@@ -297,8 +303,8 @@ export default function PrivacyPage() {
                     <p>
                         Esta Política de Privacidade pode ser atualizada
                         periodicamente. Alterações relevantes serão comunicadas
-                        pelo próprio serviço ou pelo e-mail cadastrado. A data de
-                        última atualização é indicada no início desta página.
+                        pelo próprio serviço ou pelo e-mail cadastrado. A data
+                        de última atualização é indicada no início desta página.
                     </p>
                 </Section>
 
@@ -307,8 +313,8 @@ export default function PrivacyPage() {
                         Para exercer seus direitos, esclarecer dúvidas ou
                         apresentar solicitações relacionadas à privacidade e ao
                         tratamento de dados, entre em contato conosco pelo
-                        e-mail de suporte disponibilizado na página inicial ou no
-                        menu de configurações.
+                        e-mail de suporte disponibilizado na página inicial ou
+                        no menu de configurações.
                     </p>
                     <p className="mt-4">
                         Você também pode entrar em contato com a Autoridade

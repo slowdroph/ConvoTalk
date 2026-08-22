@@ -64,7 +64,9 @@ export default function LegalLayout({
                             type="button"
                             onClick={() => setMobileMenuOpen((v) => !v)}
                             className="md:hidden p-2 -mr-2 text-on-surface-variant hover:text-primary transition-colors"
-                            aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+                            aria-label={
+                                mobileMenuOpen ? "Fechar menu" : "Abrir menu"
+                            }
                             aria-expanded={mobileMenuOpen}
                         >
                             <svg

@@ -365,11 +365,11 @@ export default function HomePage() {
                                     </div>
                                 </div>
                                 <div className="space-y-4 font-mono text-xs text-on-surface-variant opacity-70">
-                                    <p>
-                                        &gt; Estabelecendo conexão segura...
-                                    </p>
+                                    <p>&gt; Estabelecendo conexão segura...</p>
                                     <p>&gt; Conectando ao servidor.</p>
-                                    <p>&gt; Conexão estabelecida com sucesso.</p>
+                                    <p>
+                                        &gt; Conexão estabelecida com sucesso.
+                                    </p>
                                     <p className="text-primary">
                                         &gt; Você está conectado.
                                     </p>
@@ -389,8 +389,8 @@ export default function HomePage() {
                             Pronto para conversar?
                         </h2>
                         <p className="text-on-surface-variant mb-8 relative z-10">
-                            Junte-se a outros usuários e experimente a
-                            melhor plataforma de comunicação em tempo real.
+                            Junte-se a outros usuários e experimente a melhor
+                            plataforma de comunicação em tempo real.
                         </p>
                         <Link
                             to="/login?mode=register"

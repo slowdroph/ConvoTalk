@@ -1,4 +1,11 @@
-import { EditIcon, PinIcon, ReplyIcon, SmileIcon, ThreadIcon, TrashIcon } from "./MessageIcons";
+import {
+    EditIcon,
+    PinIcon,
+    ReplyIcon,
+    SmileIcon,
+    ThreadIcon,
+    TrashIcon,
+} from "./MessageIcons";
 
 interface TouchActionsProps {
     isOwn: boolean;

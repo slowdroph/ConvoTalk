@@ -9,7 +9,9 @@ interface ExportDialogProps {
     onClose: () => void;
 }
 
-function getFilenameFromDisposition(disposition: string | undefined): string | null {
+function getFilenameFromDisposition(
+    disposition: string | undefined,
+): string | null {
     if (!disposition) return null;
     const match = disposition.match(/filename="?([^";]+)"?/);
     return match ? match[1] : null;

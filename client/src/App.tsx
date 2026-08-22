@@ -32,7 +32,11 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
     if (loading) return <LoadingScreen />;
 
-    return user ? <SocketProvider>{children}</SocketProvider> : <Navigate to="/login" />;
+    return user ? (
+        <SocketProvider>{children}</SocketProvider>
+    ) : (
+        <Navigate to="/login" />
+    );
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {

@@ -24,7 +24,12 @@ export default function BlockedUsers() {
                 setError(null);
             })
             .catch((err) => {
-                setError(getErrorMessage(err, "Erro ao carregar usuários bloqueados."));
+                setError(
+                    getErrorMessage(
+                        err,
+                        "Erro ao carregar usuários bloqueados.",
+                    ),
+                );
             })
             .finally(() => setLoading(false));
     }, []);
@@ -52,8 +57,8 @@ export default function BlockedUsers() {
                 Usuários bloqueados
             </h3>
             <p className="text-slate-500 text-sm mb-4 dark:text-zinc-400">
-                Usuários bloqueados não podem enviar mensagens a você nem iniciar
-                conversas.
+                Usuários bloqueados não podem enviar mensagens a você nem
+                iniciar conversas.
             </p>
 
             {loading ? (
@@ -61,7 +66,9 @@ export default function BlockedUsers() {
                     <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin dark:border-green-500" />
                 </div>
             ) : error ? (
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">
+                    {error}
+                </p>
             ) : users.length === 0 ? (
                 <p className="text-sm text-slate-500 dark:text-zinc-500">
                     Você não bloqueou nenhum usuário.
@@ -73,7 +80,11 @@ export default function BlockedUsers() {
                             key={user._id}
                             className="flex items-center gap-3 py-2"
                         >
-                            <Avatar src={user.avatar} name={user.name} size="sm" />
+                            <Avatar
+                                src={user.avatar}
+                                name={user.name}
+                                size="sm"
+                            />
                             <div className="flex-1 min-w-0">
                                 <p className="text-slate-900 text-sm font-medium truncate dark:text-white">
                                     {user.name}

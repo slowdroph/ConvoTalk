@@ -35,7 +35,8 @@ import {
 validateEnv();
 
 const ALLOWED_ORIGINS = getAllowedOrigins();
-const corsOrigin = ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS : ["http://localhost:5173"];
+const corsOrigin =
+    ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS : ["http://localhost:5173"];
 
 const app = express();
 const httpServer = createServer(app);
@@ -58,27 +59,27 @@ const io = new SocketIOServer(httpServer, {
 
 // Middleware
 app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
-        connectSrc: ["'self'", "ws:", "wss:"],
-        mediaSrc: ["'self'", "blob:", "data:", "https:", "http:"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-        objectSrc: ["'none'"],
-        frameSrc: ["'none'"],
-        frameAncestors: ["'none'"],
-        formAction: ["'self'"],
-        baseUri: ["'self'"],
-        upgradeInsecureRequests: null,
-      },
-    },
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: false,
-  }),
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+                connectSrc: ["'self'", "ws:", "wss:"],
+                mediaSrc: ["'self'", "blob:", "data:", "https:", "http:"],
+                fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+                objectSrc: ["'none'"],
+                frameSrc: ["'none'"],
+                frameAncestors: ["'none'"],
+                formAction: ["'self'"],
+                baseUri: ["'self'"],
+                upgradeInsecureRequests: null,
+            },
+        },
+        crossOriginEmbedderPolicy: false,
+        crossOriginResourcePolicy: false,
+    }),
 );
 app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(cookieParser());
@@ -88,25 +89,30 @@ app.use(generalLimiter);
 
 // Request logging com request ID
 app.use((req, res, next) => {
-  const requestId = randomUUID();
-  res.setHeader("X-Request-Id", requestId);
-  const start = Date.now();
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    const level = res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info";
-    logger[level](
-      {
-        requestId,
-        method: req.method,
-        path: req.originalUrl,
-        status: res.statusCode,
-        durationMs: duration,
-        ip: req.ip,
-      },
-      "request",
-    );
-  });
-  next();
+    const requestId = randomUUID();
+    res.setHeader("X-Request-Id", requestId);
+    const start = Date.now();
+    res.on("finish", () => {
+        const duration = Date.now() - start;
+        const level =
+            res.statusCode >= 500
+                ? "error"
+                : res.statusCode >= 400
+                  ? "warn"
+                  : "info";
+        logger[level](
+            {
+                requestId,
+                method: req.method,
+                path: req.originalUrl,
+                status: res.statusCode,
+                durationMs: duration,
+                ip: req.ip,
+            },
+            "request",
+        );
+    });
+    next();
 });
 
 // Rotas
@@ -127,7 +133,8 @@ app.get("/api/health/live", (_req, res) => {
 });
 
 app.get("/api/health", async (_req, res) => {
-    const mongoStatus = (await import("mongoose")).default.connection.readyState;
+    const mongoStatus = (await import("mongoose")).default.connection
+        .readyState;
     const mongoOk = mongoStatus === 1;
     res.status(mongoOk ? 200 : 503).json({
         status: mongoOk ? "ok" : "degraded",

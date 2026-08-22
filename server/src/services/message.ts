@@ -9,7 +9,9 @@ export const POPULATE_PARENT = {
     populate: { path: "sender", select: "name avatar status" },
 };
 
-export async function findMessageWithSenders(id: string): Promise<IMessage | null> {
+export async function findMessageWithSenders(
+    id: string,
+): Promise<IMessage | null> {
     return Message.findById(id)
         .populate(POPULATE_SENDER)
         .populate(POPULATE_PARENT)

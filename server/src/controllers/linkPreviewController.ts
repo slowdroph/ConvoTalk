@@ -21,7 +21,12 @@ export async function previewLink(
         }
 
         if (await isPrivateHostname(hostname)) {
-            sendError(res, 400, "BLOCKED_HOST", "O domínio informado não é permitido.");
+            sendError(
+                res,
+                400,
+                "BLOCKED_HOST",
+                "O domínio informado não é permitido.",
+            );
             return;
         }
 
@@ -32,6 +37,11 @@ export async function previewLink(
             { url, err: (error as Error).message },
             "falha ao gerar preview de link",
         );
-        sendError(res, 422, "PREVIEW_UNAVAILABLE", "Não foi possível obter o preview deste link.");
+        sendError(
+            res,
+            422,
+            "PREVIEW_UNAVAILABLE",
+            "Não foi possível obter o preview deste link.",
+        );
     }
 }

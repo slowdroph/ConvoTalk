@@ -60,7 +60,9 @@ export default function RoomList({
                                 <button
                                     onClick={() => onSelectRoom(room._id)}
                                     aria-current={
-                                        activeRoom === room._id ? "true" : undefined
+                                        activeRoom === room._id
+                                            ? "true"
+                                            : undefined
                                     }
                                     className={`w-full text-left px-4 py-3 flex items-center gap-2 transition-colors ${
                                         activeRoom === room._id
@@ -133,7 +135,6 @@ export default function RoomList({
                                             <p className="font-medium text-sm truncate">
                                                 {getDmDisplayName(room)}
                                             </p>
-                                            
                                         </div>
                                         {unreadCounts[room._id] ? (
                                             <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-emerald-600 text-white text-xs font-semibold flex items-center justify-center dark:bg-green-600 dark:text-on-accent">

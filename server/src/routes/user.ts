@@ -2,19 +2,26 @@ import { Router } from "express";
 import auth from "../middleware/auth";
 import { validate } from "../middleware/validate";
 import upload from "../middleware/upload";
-import { objectId, profileSchema, passwordSchema, accountSchema, blockUserParams, statusSchema } from "../validations";
 import {
-  getMe,
-  getUserStatus,
-  updateProfile,
-  updateStatus,
-  updatePassword,
-  deleteAccount,
-  updateAvatar,
-  removeAvatar,
-  blockUser,
-  unblockUser,
-  listBlockedUsers,
+    objectId,
+    profileSchema,
+    passwordSchema,
+    accountSchema,
+    blockUserParams,
+    statusSchema,
+} from "../validations";
+import {
+    getMe,
+    getUserStatus,
+    updateProfile,
+    updateStatus,
+    updatePassword,
+    deleteAccount,
+    updateAvatar,
+    removeAvatar,
+    blockUser,
+    unblockUser,
+    listBlockedUsers,
 } from "../controllers/userController";
 
 const router = Router();

@@ -6,35 +6,35 @@ import User from "../models/User";
 import { deleteCloudinaryAttachments } from "../services/cloudinary";
 import type { IAttachment } from "../types";
 import {
-  objectId,
-  socketMessageSchema,
-  socketReplySchema,
-  socketTypingSchema,
-  socketDeleteMessageSchema,
-  socketEditMessageSchema,
-  socketReactionSchema,
-  socketReadManySchema,
-  socketPinMessageSchema,
-  safeParse,
+    objectId,
+    socketMessageSchema,
+    socketReplySchema,
+    socketTypingSchema,
+    socketDeleteMessageSchema,
+    socketEditMessageSchema,
+    socketReactionSchema,
+    socketReadManySchema,
+    socketPinMessageSchema,
+    safeParse,
 } from "../validations/socket";
 import { logger } from "../config/logger";
 import {
-  getClientIp,
-  isRateLimited,
-  isIpEventRateLimited,
-  isRoomRateLimited,
-  isTypingThrottled,
-  scheduleTypingTimeout,
-  clearTypingTimer,
-  cleanupSocketRateLimits,
-  clearTypingForUser,
+    getClientIp,
+    isRateLimited,
+    isIpEventRateLimited,
+    isRoomRateLimited,
+    isTypingThrottled,
+    scheduleTypingTimeout,
+    clearTypingTimer,
+    cleanupSocketRateLimits,
+    clearTypingForUser,
 } from "./rateLimit";
 import {
-  broadcastOnlineUsers,
-  setOnlineUserInfo,
-  addUserSocket,
-  removeUserSocket,
-  getUserSocketIds,
+    broadcastOnlineUsers,
+    setOnlineUserInfo,
+    addUserSocket,
+    removeUserSocket,
+    getUserSocketIds,
 } from "./onlineUsers";
 import { getRoomInfo } from "./roomCache";
 
@@ -92,12 +92,15 @@ function isDuplicateClientMessageId(error: unknown): boolean {
         !!error &&
         typeof error === "object" &&
         (error as { code?: number }).code === 11000 &&
-        !!(error as { keyPattern?: Record<string, unknown> })
-            .keyPattern?.clientMessageId
+        !!(error as { keyPattern?: Record<string, unknown> }).keyPattern
+            ?.clientMessageId
     );
 }
 
-async function isRoomParticipant(roomId: string, userId: string): Promise<boolean> {
+async function isRoomParticipant(
+    roomId: string,
+    userId: string,
+): Promise<boolean> {
     const room = await getRoomInfo(roomId);
     if (!room) return false;
     return room.participants.includes(userId);
@@ -162,27 +165,36 @@ const socketHandler = (io: SocketIOServer): void => {
             addUserSocket(userId, socket.id);
             await User.updateOne(
                 { _id: userId },
-                { lastSeen: new Date(), lastIp: getClientIp(socket), lastIpAt: new Date() },
+                {
+                    lastSeen: new Date(),
+                    lastIp: getClientIp(socket),
+                    lastIpAt: new Date(),
+                },
             );
             broadcastOnlineUsers(io);
         }
 
         // Entrar na sala
         socket.on("join", async (roomId: string) => {
-          if (isIpEventRateLimited(getClientIp(socket), "join")) return;
-          const parsed = objectId.safeParse(roomId);
-          if (!parsed.success) return;
+            if (isIpEventRateLimited(getClientIp(socket), "join")) return;
+            const parsed = objectId.safeParse(roomId);
+            if (!parsed.success) return;
 
-          const room = await Room.findById(parsed.data).select("participants").lean();
-          if (!room) return;
+            const room = await Room.findById(parsed.data)
+                .select("participants")
+                .lean();
+            if (!room) return;
 
-          const isParticipant = room.participants.some(
-            (p) => p.toString() === userId
-          );
-          if (!isParticipant) return;
+            const isParticipant = room.participants.some(
+                (p) => p.toString() === userId,
+            );
+            if (!isParticipant) return;
 
-          socket.join(parsed.data);
-          logger.info({ userId, roomId: parsed.data }, "usuário entrou na sala");
+            socket.join(parsed.data);
+            logger.info(
+                { userId, roomId: parsed.data },
+                "usuário entrou na sala",
+            );
         });
 
         // Sair da sala
@@ -195,15 +207,25 @@ const socketHandler = (io: SocketIOServer): void => {
         socket.on(
             "message",
             async (
-                data: { roomId: string; content: string; clientMessageId?: string; attachments?: { url: string; filename: string; mimetype: string; size: number; publicId: string }[] },
+                data: {
+                    roomId: string;
+                    content: string;
+                    clientMessageId?: string;
+                    attachments?: {
+                        url: string;
+                        filename: string;
+                        mimetype: string;
+                        size: number;
+                        publicId: string;
+                    }[];
+                },
                 ack?: (res: { error?: string }) => void,
             ) => {
                 try {
                     if (isRateLimited(socket.id)) {
                         if (typeof ack === "function") {
                             ack({
-                                error:
-                                    "Você está enviando mensagens rápido demais. Aguarde um pouco.",
+                                error: "Você está enviando mensagens rápido demais. Aguarde um pouco.",
                             });
                         }
                         return;
@@ -212,8 +234,7 @@ const socketHandler = (io: SocketIOServer): void => {
                     if (isIpEventRateLimited(getClientIp(socket), "message")) {
                         if (typeof ack === "function") {
                             ack({
-                                error:
-                                    "Muitas mensagens. Aguarde um pouco antes de continuar.",
+                                error: "Muitas mensagens. Aguarde um pouco antes de continuar.",
                             });
                         }
                         return;
@@ -226,13 +247,13 @@ const socketHandler = (io: SocketIOServer): void => {
                         }
                         return;
                     }
-                    const { roomId, content, attachments, clientMessageId } = parsed.data;
+                    const { roomId, content, attachments, clientMessageId } =
+                        parsed.data;
 
                     if (isRoomRateLimited(roomId, socket.id)) {
                         if (typeof ack === "function") {
                             ack({
-                                error:
-                                    "Esta conversa está recebendo muitas mensagens. Aguarde um pouco.",
+                                error: "Esta conversa está recebendo muitas mensagens. Aguarde um pouco.",
                             });
                         }
                         return;
@@ -240,14 +261,18 @@ const socketHandler = (io: SocketIOServer): void => {
 
                     if (!(await isRoomParticipant(roomId, userId))) {
                         if (typeof ack === "function") {
-                            ack({ error: "Você não participa desta conversa." });
+                            ack({
+                                error: "Você não participa desta conversa.",
+                            });
                         }
                         return;
                     }
 
                     if (await isRoomBlocked(roomId, userId)) {
                         if (typeof ack === "function") {
-                            ack({ error: "Não é possível enviar mensagem para este usuário." });
+                            ack({
+                                error: "Não é possível enviar mensagem para este usuário.",
+                            });
                         }
                         return;
                     }
@@ -288,9 +313,7 @@ const socketHandler = (io: SocketIOServer): void => {
                         readBy: [] as string[],
                         parentMessage: null,
                         createdAt: message.createdAt.toISOString(),
-                        ...(clientMessageId
-                            ? { clientMessageId }
-                            : {}),
+                        ...(clientMessageId ? { clientMessageId } : {}),
                     };
 
                     io.to(roomId).emit("message", payload);
@@ -316,15 +339,25 @@ const socketHandler = (io: SocketIOServer): void => {
         socket.on(
             "reply",
             async (
-                data: { roomId: string; parentId: string; content: string; attachments?: { url: string; filename: string; mimetype: string; size: number; publicId: string }[] },
+                data: {
+                    roomId: string;
+                    parentId: string;
+                    content: string;
+                    attachments?: {
+                        url: string;
+                        filename: string;
+                        mimetype: string;
+                        size: number;
+                        publicId: string;
+                    }[];
+                },
                 ack?: (res: { error?: string }) => void,
             ) => {
                 try {
                     if (isRateLimited(socket.id)) {
                         if (typeof ack === "function") {
                             ack({
-                                error:
-                                    "Você está enviando mensagens rápido demais. Aguarde um pouco.",
+                                error: "Você está enviando mensagens rápido demais. Aguarde um pouco.",
                             });
                         }
                         return;
@@ -333,8 +366,7 @@ const socketHandler = (io: SocketIOServer): void => {
                     if (isIpEventRateLimited(getClientIp(socket), "reply")) {
                         if (typeof ack === "function") {
                             ack({
-                                error:
-                                    "Muitas mensagens. Aguarde um pouco antes de continuar.",
+                                error: "Muitas mensagens. Aguarde um pouco antes de continuar.",
                             });
                         }
                         return;
@@ -347,13 +379,18 @@ const socketHandler = (io: SocketIOServer): void => {
                         }
                         return;
                     }
-                    const { roomId, parentId, content, attachments, clientMessageId } = parsed.data;
+                    const {
+                        roomId,
+                        parentId,
+                        content,
+                        attachments,
+                        clientMessageId,
+                    } = parsed.data;
 
                     if (isRoomRateLimited(roomId, socket.id)) {
                         if (typeof ack === "function") {
                             ack({
-                                error:
-                                    "Esta conversa está recebendo muitas mensagens. Aguarde um pouco.",
+                                error: "Esta conversa está recebendo muitas mensagens. Aguarde um pouco.",
                             });
                         }
                         return;
@@ -361,14 +398,18 @@ const socketHandler = (io: SocketIOServer): void => {
 
                     if (!(await isRoomParticipant(roomId, userId))) {
                         if (typeof ack === "function") {
-                            ack({ error: "Você não participa desta conversa." });
+                            ack({
+                                error: "Você não participa desta conversa.",
+                            });
                         }
                         return;
                     }
 
                     if (await isRoomBlocked(roomId, userId)) {
                         if (typeof ack === "function") {
-                            ack({ error: "Não é possível enviar mensagem para este usuário." });
+                            ack({
+                                error: "Não é possível enviar mensagem para este usuário.",
+                            });
                         }
                         return;
                     }
@@ -422,9 +463,7 @@ const socketHandler = (io: SocketIOServer): void => {
                         readBy: [] as string[],
                         parentMessage: parentPayload(parent),
                         createdAt: message.createdAt.toISOString(),
-                        ...(clientMessageId
-                            ? { clientMessageId }
-                            : {}),
+                        ...(clientMessageId ? { clientMessageId } : {}),
                     };
 
                     io.to(roomId).emit("message", payload);
@@ -450,166 +489,213 @@ const socketHandler = (io: SocketIOServer): void => {
             },
         );
 
-// Indicador de digitação
-socket.on("typing", async (data: { roomId: string; isTyping: boolean }) => {
-            const parsed = safeParse(socketTypingSchema, data);
-            if (!parsed.success) return;
-            if (!(await isRoomParticipant(parsed.data.roomId, userId))) return;
-            const typingKey = `${userId}:${parsed.data.roomId}`;
-            if (parsed.data.isTyping) {
-                const key = `${socket.id}:${parsed.data.roomId}`;
-                if (isTypingThrottled(key)) return;
-                scheduleTypingTimeout(
-                    socket,
-                    parsed.data.roomId,
+        // Indicador de digitação
+        socket.on(
+            "typing",
+            async (data: { roomId: string; isTyping: boolean }) => {
+                const parsed = safeParse(socketTypingSchema, data);
+                if (!parsed.success) return;
+                if (!(await isRoomParticipant(parsed.data.roomId, userId)))
+                    return;
+                const typingKey = `${userId}:${parsed.data.roomId}`;
+                if (parsed.data.isTyping) {
+                    const key = `${socket.id}:${parsed.data.roomId}`;
+                    if (isTypingThrottled(key)) return;
+                    scheduleTypingTimeout(
+                        socket,
+                        parsed.data.roomId,
+                        userId,
+                        user?.name,
+                        user?.avatar,
+                    );
+                } else {
+                    clearTypingTimer(typingKey);
+                }
+                socket.to(parsed.data.roomId).emit("typing", {
                     userId,
-                    user?.name,
-                    user?.avatar,
-                );
-            } else {
-                clearTypingTimer(typingKey);
-            }
-            socket.to(parsed.data.roomId).emit("typing", {
-                userId,
-                name: user?.name,
-                avatar: user?.avatar,
-                isTyping: parsed.data.isTyping,
-            });
-        });
+                    name: user?.name,
+                    avatar: user?.avatar,
+                    isTyping: parsed.data.isTyping,
+                });
+            },
+        );
 
         // Excluir mensagem
-        socket.on("delete_message", async (data: { messageId: string; roomId: string; forMe?: boolean }) => {
-            try {
-                const parsed = safeParse(socketDeleteMessageSchema, data);
-                if (!parsed.success) return;
-                const { messageId, roomId, forMe } = parsed.data;
+        socket.on(
+            "delete_message",
+            async (data: {
+                messageId: string;
+                roomId: string;
+                forMe?: boolean;
+            }) => {
+                try {
+                    const parsed = safeParse(socketDeleteMessageSchema, data);
+                    if (!parsed.success) return;
+                    const { messageId, roomId, forMe } = parsed.data;
 
-                if (forMe) {
-                    const message = await Message.findById(messageId).select("room").lean();
-                    if (!message) return;
+                    if (forMe) {
+                        const message = await Message.findById(messageId)
+                            .select("room")
+                            .lean();
+                        if (!message) return;
+                        if (message.room.toString() !== roomId) return;
+                        if (!(await isRoomParticipant(roomId, userId))) return;
+
+                        await Message.findByIdAndUpdate(messageId, {
+                            $addToSet: { deletedFor: userId },
+                        });
+                        const targetSockets = getUserSocketIds(userId);
+                        if (targetSockets) {
+                            for (const socketId of targetSockets) {
+                                io.to(socketId).emit("message_deleted_for_me", {
+                                    messageId,
+                                    roomId,
+                                    userId,
+                                });
+                            }
+                        }
+                        return;
+                    }
+
+                    const message = await Message.findById(messageId)
+                        .select("sender room attachments")
+                        .lean();
+                    if (!message || !message.sender) return;
+                    if (message.sender.toString() !== userId) return;
                     if (message.room.toString() !== roomId) return;
                     if (!(await isRoomParticipant(roomId, userId))) return;
 
-                    await Message.findByIdAndUpdate(messageId, {
-                        $addToSet: { deletedFor: userId },
-                    });
-                    const targetSockets = getUserSocketIds(userId);
-                    if (targetSockets) {
-                        for (const socketId of targetSockets) {
-                            io.to(socketId).emit("message_deleted_for_me", {
-                                messageId,
-                                roomId,
-                                userId,
-                            });
-                        }
-                    }
-                    return;
+                    await deleteCloudinaryAttachments(
+                        message.attachments as IAttachment[] | undefined,
+                    );
+                    await Message.findByIdAndDelete(messageId);
+                    io.to(roomId).emit("message_deleted", messageId);
+                } catch (error) {
+                    logger.error({ userId, error }, "erro ao excluir mensagem");
                 }
-
-                const message = await Message.findById(messageId).select("sender room attachments").lean();
-                if (!message || !message.sender) return;
-                if (message.sender.toString() !== userId) return;
-                if (message.room.toString() !== roomId) return;
-                if (!(await isRoomParticipant(roomId, userId))) return;
-
-                await deleteCloudinaryAttachments(
-                    message.attachments as IAttachment[] | undefined,
-                );
-                await Message.findByIdAndDelete(messageId);
-                io.to(roomId).emit("message_deleted", messageId);
-            } catch (error) {
-                logger.error({ userId, error }, "erro ao excluir mensagem");
-            }
-        });
+            },
+        );
 
         // Editar mensagem
-        socket.on("edit_message", async (data: { messageId: string; roomId: string; content: string }, ack?: (res: { error?: string }) => void) => {
-            try {
-                if (isRateLimited(socket.id)) {
-                    if (typeof ack === "function") {
-                        ack({ error: "Ação rápida demais. Aguarde um pouco." });
+        socket.on(
+            "edit_message",
+            async (
+                data: { messageId: string; roomId: string; content: string },
+                ack?: (res: { error?: string }) => void,
+            ) => {
+                try {
+                    if (isRateLimited(socket.id)) {
+                        if (typeof ack === "function") {
+                            ack({
+                                error: "Ação rápida demais. Aguarde um pouco.",
+                            });
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                const parsed = safeParse(socketEditMessageSchema, data);
-                if (!parsed.success) {
-                    if (typeof ack === "function") {
-                        ack({ error: parsed.error });
+                    const parsed = safeParse(socketEditMessageSchema, data);
+                    if (!parsed.success) {
+                        if (typeof ack === "function") {
+                            ack({ error: parsed.error });
+                        }
+                        return;
                     }
-                    return;
+                    const { messageId, roomId, content } = parsed.data;
+
+                    const message = await Message.findById(messageId)
+                        .select("sender room")
+                        .lean();
+                    if (!message || !message.sender) return;
+                    if (message.sender.toString() !== userId) return;
+                    if (message.room.toString() !== roomId) return;
+                    if (!(await isRoomParticipant(roomId, userId))) return;
+
+                    const updated = await Message.findByIdAndUpdate(
+                        messageId,
+                        { content, edited: true },
+                        { new: true },
+                    )
+                        .select("content edited updatedAt")
+                        .lean();
+                    if (!updated) return;
+                    io.to(roomId).emit("message_edited", {
+                        messageId,
+                        content: updated.content,
+                        updatedAt: updated.updatedAt,
+                    });
+                } catch (error) {
+                    logger.error({ userId, error }, "erro ao editar mensagem");
                 }
-                const { messageId, roomId, content } = parsed.data;
-
-                const message = await Message.findById(messageId).select("sender room").lean();
-                if (!message || !message.sender) return;
-                if (message.sender.toString() !== userId) return;
-                if (message.room.toString() !== roomId) return;
-                if (!(await isRoomParticipant(roomId, userId))) return;
-
-                const updated = await Message.findByIdAndUpdate(
-                    messageId,
-                    { content, edited: true },
-                    { new: true },
-                )
-                    .select("content edited updatedAt")
-                    .lean();
-                if (!updated) return;
-                io.to(roomId).emit("message_edited", {
-                    messageId,
-                    content: updated.content,
-                    updatedAt: updated.updatedAt,
-                });
-            } catch (error) {
-                logger.error({ userId, error }, "erro ao editar mensagem");
-            }
-        });
+            },
+        );
 
         // Reagir com emoji
-        socket.on("toggle_reaction", async (data: { messageId: string; roomId: string; emoji: string }) => {
-            try {
-                const parsed = safeParse(socketReactionSchema, data);
-                if (!parsed.success) return;
-                const { messageId, roomId, emoji } = parsed.data;
+        socket.on(
+            "toggle_reaction",
+            async (data: {
+                messageId: string;
+                roomId: string;
+                emoji: string;
+            }) => {
+                try {
+                    const parsed = safeParse(socketReactionSchema, data);
+                    if (!parsed.success) return;
+                    const { messageId, roomId, emoji } = parsed.data;
 
-                if (!(await isRoomParticipant(roomId, userId))) return;
+                    if (!(await isRoomParticipant(roomId, userId))) return;
 
-                const messageExists = await Message.findOne({
-                    _id: messageId,
-                    room: roomId,
-                }).select("_id").lean();
-                if (!messageExists) return;
+                    const messageExists = await Message.findOne({
+                        _id: messageId,
+                        room: roomId,
+                    })
+                        .select("_id")
+                        .lean();
+                    if (!messageExists) return;
 
-                const hasReacted = await Message.findOne({
-                    _id: messageId,
-                    [`reactions.${emoji}`]: userId,
-                }).lean();
+                    const hasReacted = await Message.findOne({
+                        _id: messageId,
+                        [`reactions.${emoji}`]: userId,
+                    }).lean();
 
-                if (hasReacted) {
-                    await Message.updateOne(
-                        { _id: messageId },
-                        { $pull: { [`reactions.${emoji}`]: userId } },
-                    );
-                } else {
-                    await Message.updateOne(
-                        { _id: messageId },
-                        { $addToSet: { [`reactions.${emoji}`]: userId } },
-                    );
-                }
-
-                const updated = await Message.findById(messageId).select("reactions").lean();
-                const formatted: Record<string, string[]> = {};
-                if (updated?.reactions) {
-                    for (const [emoji, userIds] of Object.entries(updated.reactions as unknown as Record<string, string[]>)) {
-                        formatted[emoji] = userIds.map((u) => u.toString());
+                    if (hasReacted) {
+                        await Message.updateOne(
+                            { _id: messageId },
+                            { $pull: { [`reactions.${emoji}`]: userId } },
+                        );
+                    } else {
+                        await Message.updateOne(
+                            { _id: messageId },
+                            { $addToSet: { [`reactions.${emoji}`]: userId } },
+                        );
                     }
-                }
 
-                io.to(roomId).emit("reaction_updated", { messageId, reactions: formatted });
-            } catch (error) {
-                logger.error({ userId, error }, "erro ao reagir à mensagem");
-            }
-        });
+                    const updated = await Message.findById(messageId)
+                        .select("reactions")
+                        .lean();
+                    const formatted: Record<string, string[]> = {};
+                    if (updated?.reactions) {
+                        for (const [emoji, userIds] of Object.entries(
+                            updated.reactions as unknown as Record<
+                                string,
+                                string[]
+                            >,
+                        )) {
+                            formatted[emoji] = userIds.map((u) => u.toString());
+                        }
+                    }
+
+                    io.to(roomId).emit("reaction_updated", {
+                        messageId,
+                        reactions: formatted,
+                    });
+                } catch (error) {
+                    logger.error(
+                        { userId, error },
+                        "erro ao reagir à mensagem",
+                    );
+                }
+            },
+        );
 
         // Fixar mensagem
         socket.on(
@@ -619,9 +705,13 @@ socket.on("typing", async (data: { roomId: string; isTyping: boolean }) => {
                 ack?: (res: { error?: string }) => void,
             ) => {
                 try {
-                    if (isIpEventRateLimited(getClientIp(socket), "pin_message")) {
+                    if (
+                        isIpEventRateLimited(getClientIp(socket), "pin_message")
+                    ) {
                         if (typeof ack === "function") {
-                            ack({ error: "Muitas ações de fixar. Aguarde um pouco." });
+                            ack({
+                                error: "Muitas ações de fixar. Aguarde um pouco.",
+                            });
                         }
                         return;
                     }
@@ -636,12 +726,16 @@ socket.on("typing", async (data: { roomId: string; isTyping: boolean }) => {
 
                     if (!(await isRoomParticipant(roomId, userId))) {
                         if (typeof ack === "function") {
-                            ack({ error: "Você não participa desta conversa." });
+                            ack({
+                                error: "Você não participa desta conversa.",
+                            });
                         }
                         return;
                     }
 
-                    const room = await Room.findById(roomId).select("pinnedMessages").lean();
+                    const room = await Room.findById(roomId)
+                        .select("pinnedMessages")
+                        .lean();
                     if (!room) {
                         if (typeof ack === "function") {
                             ack({ error: "Conversa não encontrada." });
@@ -661,7 +755,9 @@ socket.on("typing", async (data: { roomId: string; isTyping: boolean }) => {
 
                     if ((room.pinnedMessages ?? []).length >= 10) {
                         if (typeof ack === "function") {
-                            ack({ error: "Limite de mensagens fixadas atingido." });
+                            ack({
+                                error: "Limite de mensagens fixadas atingido.",
+                            });
                         }
                         return;
                     }
@@ -674,7 +770,10 @@ socket.on("typing", async (data: { roomId: string; isTyping: boolean }) => {
                         .populate({
                             path: "parentMessage",
                             select: "sender content attachments deleted",
-                            populate: { path: "sender", select: "name avatar status" },
+                            populate: {
+                                path: "sender",
+                                select: "name avatar status",
+                            },
                         })
                         .lean();
                     if (!message) {
@@ -733,7 +832,9 @@ socket.on("typing", async (data: { roomId: string; isTyping: boolean }) => {
 
                     if (!(await isRoomParticipant(roomId, userId))) {
                         if (typeof ack === "function") {
-                            ack({ error: "Você não participa desta conversa." });
+                            ack({
+                                error: "Você não participa desta conversa.",
+                            });
                         }
                         return;
                     }
@@ -761,7 +862,10 @@ socket.on("typing", async (data: { roomId: string; isTyping: boolean }) => {
                         ack({});
                     }
                 } catch (error) {
-                    logger.error({ userId, error }, "erro ao desafixar mensagem");
+                    logger.error(
+                        { userId, error },
+                        "erro ao desafixar mensagem",
+                    );
                     if (typeof ack === "function") {
                         ack({ error: "Erro ao desafixar mensagem." });
                     }
@@ -795,7 +899,10 @@ socket.on("typing", async (data: { roomId: string; isTyping: boolean }) => {
                         userId,
                     });
                 } catch (error) {
-                    logger.error({ userId, error }, "erro ao marcar mensagens como lidas");
+                    logger.error(
+                        { userId, error },
+                        "erro ao marcar mensagens como lidas",
+                    );
                 }
             },
         );
@@ -811,7 +918,10 @@ socket.on("typing", async (data: { roomId: string; isTyping: boolean }) => {
                 },
             );
             broadcastOnlineUsers(io);
-            logger.info({ userId, socketId: socket.id }, "usuário desconectado");
+            logger.info(
+                { userId, socketId: socket.id },
+                "usuário desconectado",
+            );
         });
     });
 };

@@ -1,22 +1,19 @@
 interface AdminTarget {
-  createdBy?: unknown;
-  admins?: Array<{ toString(): string }>;
+    createdBy?: unknown;
+    admins?: Array<{ toString(): string }>;
 }
 
-export function isRoomCreator(
-  room: AdminTarget,
-  userId: string,
-): boolean {
-  return !!room.createdBy && room.createdBy.toString() === userId;
+export function isRoomCreator(room: AdminTarget, userId: string): boolean {
+    return !!room.createdBy && room.createdBy.toString() === userId;
 }
 
 export function isRoomAdmin(room: AdminTarget, userId: string): boolean {
-  return (room.admins ?? []).some((a) => a.toString() === userId);
+    return (room.admins ?? []).some((a) => a.toString() === userId);
 }
 
 export function isRoomCreatorOrAdmin(
-  room: AdminTarget,
-  userId: string,
+    room: AdminTarget,
+    userId: string,
 ): boolean {
-  return isRoomCreator(room, userId) || isRoomAdmin(room, userId);
+    return isRoomCreator(room, userId) || isRoomAdmin(room, userId);
 }

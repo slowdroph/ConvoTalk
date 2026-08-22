@@ -11,10 +11,7 @@ const MAX_REDIRECTS = 3;
 const MAX_PREVIEW_TITLE = 150;
 const MAX_PREVIEW_DESCRIPTION = 400;
 
-function metaContent(
-    html: string,
-    propertyNames: string[],
-): string | null {
+function metaContent(html: string, propertyNames: string[]): string | null {
     for (const name of propertyNames) {
         const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const re = new RegExp(
@@ -23,7 +20,8 @@ function metaContent(
         );
         const match = html.match(re);
         if (match) {
-            const decoded = match[1].replace(/&amp;/g, "&")
+            const decoded = match[1]
+                .replace(/&amp;/g, "&")
                 .replace(/&quot;/g, '"')
                 .replace(/&#39;/g, "'")
                 .replace(/&lt;/g, "<")
@@ -89,11 +87,20 @@ function fetchPinned(
                             "Mozilla/5.0 (compatible; ChatAppLinkPreview/1.0)",
                         accept: "text/html,application/xhtml+xml",
                     },
-                    lookup: (((
+                    lookup: ((
                         _hostname: string,
                         _options: object,
-                        callback: (err: Error | null, address?: string, family?: number) => void,
-                    ) => callback(null, ip, isHttps ? 6 : 4)) as unknown) as LookupFunction,
+                        callback: (
+                            err: Error | null,
+                            address?: string,
+                            family?: number,
+                        ) => void,
+                    ) =>
+                        callback(
+                            null,
+                            ip,
+                            isHttps ? 6 : 4,
+                        )) as unknown as LookupFunction,
                 };
 
                 const requestFn = isHttps ? httpsRequest : httpRequest;
@@ -104,7 +111,10 @@ function fetchPinned(
                         const body = Buffer.concat(chunks);
                         resolve({
                             status: res.statusCode ?? 0,
-                            headers: res.headers as Record<string, string | string[] | undefined>,
+                            headers: res.headers as Record<
+                                string,
+                                string | string[] | undefined
+                            >,
                             arrayBuffer: async () =>
                                 body.buffer.slice(
                                     body.byteOffset,
@@ -176,8 +186,9 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreview> {
         }
 
         const buffer = await res.arrayBuffer();
-        const html = new TextDecoder("utf-8")
-            .decode(buffer.slice(0, MAX_HTML_BYTES));
+        const html = new TextDecoder("utf-8").decode(
+            buffer.slice(0, MAX_HTML_BYTES),
+        );
 
         const title = titleFromHtml(html);
         const description = descriptionFromHtml(html);

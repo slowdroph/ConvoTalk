@@ -59,16 +59,16 @@ npm run dev --prefix client
 
 ## Scripts
 
-| Diretório | Comando       | Descrição                          |
-|-----------|---------------|------------------------------------|
-| server    | `npm run dev` | Servidor com hot reload            |
-| server    | `npm run build` | Compilação TypeScript            |
-| server    | `npm start`   | Executa o build                    |
-| server    | `npm test`    | Testes (Vitest)                    |
-| client    | `npm run dev` | Frontend com hot reload            |
-| client    | `npm run build` | Build de produção                |
-| client    | `npm run lint` | Lint (ESLint)                     |
-| client    | `npm test`    | Testes (Vitest)                    |
+| Diretório | Comando         | Descrição               |
+| --------- | --------------- | ----------------------- |
+| server    | `npm run dev`   | Servidor com hot reload |
+| server    | `npm run build` | Compilação TypeScript   |
+| server    | `npm start`     | Executa o build         |
+| server    | `npm test`      | Testes (Vitest)         |
+| client    | `npm run dev`   | Frontend com hot reload |
+| client    | `npm run build` | Build de produção       |
+| client    | `npm run lint`  | Lint (ESLint)           |
+| client    | `npm test`      | Testes (Vitest)         |
 
 ## Docker Compose
 

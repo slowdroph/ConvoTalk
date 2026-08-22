@@ -113,7 +113,8 @@ export default function PreviewChat() {
             socket.disconnect();
             socketRef.current = null;
             if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            if (typingTimeoutRef.current)
+                clearTimeout(typingTimeoutRef.current);
         };
     }, []);
 
@@ -371,7 +372,9 @@ export default function PreviewChat() {
                         />
                         <button
                             type="submit"
-                            disabled={!input.trim() || isOverLimit || !connected}
+                            disabled={
+                                !input.trim() || isOverLimit || !connected
+                            }
                             className="px-6 py-3 bg-primary-container hover:bg-primary disabled:opacity-50 text-on-accent font-medium rounded-lg transition-colors shrink-0"
                         >
                             Enviar
