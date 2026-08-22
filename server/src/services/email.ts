@@ -20,7 +20,7 @@ function escapeHtml(value: string): string {
 }
 
 const EMAIL_FROM =
-    process.env.EMAIL_FROM || "ConvoTalk <onboarding@resend.dev>";
+    process.env.EMAIL_FROM || "ConvoTalk <noreply@convotalk.live>";
 
 interface EmailTemplateParams {
     preheader: string;
