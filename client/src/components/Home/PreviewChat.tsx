@@ -306,6 +306,7 @@ export default function PreviewChat() {
                             {editingName ? (
                                 <input
                                     autoFocus
+                                    name="name"
                                     value={nameDraft}
                                     maxLength={30}
                                     onChange={(e) =>
@@ -360,6 +361,7 @@ export default function PreviewChat() {
                     <div className="flex gap-2 items-end">
                         <input
                             type="text"
+                            name="message"
                             value={input}
                             onChange={(e) => {
                                 setInput(e.target.value);

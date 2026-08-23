@@ -106,6 +106,8 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
                 <input
                     ref={inputRef}
                     type="text"
+                    name="search"
+                    id="search"
                     value={query}
                     onChange={(e) => {
                         setQuery(e.target.value);

@@ -138,11 +138,13 @@ export default function CreateGroupModal({
 
                 <div className="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-1">
                     <div>
-                        <label className="block text-xs text-zinc-400 mb-1">
+                        <label htmlFor="groupName" className="block text-xs text-zinc-400 mb-1">
                             Nome do grupo
                         </label>
                         <input
                             type="text"
+                            name="name"
+                            id="groupName"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             maxLength={50}
@@ -152,10 +154,12 @@ export default function CreateGroupModal({
                     </div>
 
                     <div>
-                        <label className="block text-xs text-zinc-400 mb-1">
+                        <label htmlFor="groupDescription" className="block text-xs text-zinc-400 mb-1">
                             Descrição (opcional)
                         </label>
                         <textarea
+                            name="description"
+                            id="groupDescription"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             maxLength={200}
@@ -166,12 +170,14 @@ export default function CreateGroupModal({
                     </div>
 
                     <div>
-                        <label className="block text-xs text-zinc-400 mb-1">
+                        <label htmlFor="addParticipantsSearch" className="block text-xs text-zinc-400 mb-1">
                             Adicionar participantes
                         </label>
                         <input
                             ref={inputRef}
                             type="text"
+                            name="search"
+                            id="addParticipantsSearch"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Buscar por nome ou email..."

@@ -59,11 +59,14 @@ export default function PasswordForm() {
             )}
 
             <div>
-                <label className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
+                <label htmlFor="currentPassword" className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
                     Senha atual
                 </label>
                 <input
                     type="password"
+                    name="currentPassword"
+                    id="currentPassword"
+                    autoComplete="current-password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     required
@@ -73,11 +76,14 @@ export default function PasswordForm() {
             </div>
 
             <div>
-                <label className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
+                <label htmlFor="newPassword" className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
                     Nova senha
                 </label>
                 <input
                     type="password"
+                    name="newPassword"
+                    id="newPassword"
+                    autoComplete="new-password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
@@ -88,11 +94,14 @@ export default function PasswordForm() {
             </div>
 
             <div>
-                <label className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
+                <label htmlFor="confirmPassword" className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
                     Confirmar nova senha
                 </label>
                 <input
                     type="password"
+                    name="confirmPassword"
+                    id="confirmPassword"
+                    autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required

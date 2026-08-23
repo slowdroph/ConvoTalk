@@ -92,6 +92,8 @@ export default function MessageSearch({
                 </svg>
                 <input
                     type="text"
+                    name="search"
+                    id="search"
                     value={query}
                     onChange={(e) => handleQueryChange(e.target.value)}
                     placeholder="Buscar mensagens..."

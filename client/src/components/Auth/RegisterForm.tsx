@@ -140,6 +140,9 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                 </svg>
                 <input
                     type="text"
+                    name="name"
+                    id="name"
+                    autoComplete="name"
                     placeholder="Nome"
                     aria-label="Nome"
                     value={name}
@@ -167,6 +170,9 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                 </svg>
                 <input
                     type="email"
+                    name="email"
+                    id="email"
+                    autoComplete="email"
                     placeholder="Email"
                     aria-label="Email"
                     value={email}
@@ -194,6 +200,9 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                 </svg>
                 <input
                     type={showPassword ? "text" : "password"}
+                    name="password"
+                    id="password"
+                    autoComplete="new-password"
                     placeholder="Senha (mínimo 8 caracteres)"
                     aria-label="Senha"
                     value={password}
@@ -248,6 +257,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             <label className="flex items-start gap-3 cursor-pointer select-none">
                 <input
                     type="checkbox"
+                    name="acceptedTerms"
+                    id="acceptedTerms"
                     checked={acceptedTerms}
                     onChange={(e) => setAcceptedTerms(e.target.checked)}
                     className="mt-0.5 h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-green-500 focus:ring-green-500/20 focus:ring-offset-zinc-900 cursor-pointer"

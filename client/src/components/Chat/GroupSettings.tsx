@@ -284,6 +284,8 @@ export default function GroupSettings({
                                 <input
                                     ref={fileInputRef}
                                     type="file"
+                                    name="avatar"
+                                    id="avatar"
                                     accept="image/*"
                                     onChange={handleAvatarChange}
                                     className="hidden"
@@ -296,11 +298,13 @@ export default function GroupSettings({
                         <>
                             {isCreator && (
                                 <div>
-                                    <label className="block text-xs text-zinc-400 mb-1">
+                                    <label htmlFor="groupName" className="block text-xs text-zinc-400 mb-1">
                                         Nome do grupo
                                     </label>
                                     <input
                                         type="text"
+                                        name="name"
+                                        id="groupName"
                                         value={name}
                                         onChange={(e) =>
                                             setName(e.target.value)
@@ -311,10 +315,12 @@ export default function GroupSettings({
                                 </div>
                             )}
                             <div>
-                                <label className="block text-xs text-zinc-400 mb-1">
+                                <label htmlFor="groupDescription" className="block text-xs text-zinc-400 mb-1">
                                     Descrição
                                 </label>
                                 <textarea
+                                    name="description"
+                                    id="groupDescription"
                                     value={description}
                                     onChange={(e) =>
                                         setDescription(e.target.value)
@@ -336,12 +342,14 @@ export default function GroupSettings({
                             </button>
 
                             <div>
-                                <label className="block text-xs text-zinc-400 mb-1">
+                                <label htmlFor="addMemberSearch" className="block text-xs text-zinc-400 mb-1">
                                     Adicionar membro
                                 </label>
                                 <input
                                     ref={inputRef}
                                     type="text"
+                                    name="search"
+                                    id="addMemberSearch"
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     placeholder="Buscar por nome ou email..."

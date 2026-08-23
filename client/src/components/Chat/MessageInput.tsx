@@ -604,6 +604,8 @@ export default function MessageInput({
                     <input
                         ref={fileInputRef}
                         type="file"
+                        name="file"
+                        id="file"
                         multiple
                         accept="image/*,.pdf,.txt,.json,audio/*"
                         onChange={handleFileChange}
@@ -659,6 +661,8 @@ export default function MessageInput({
                 <div className="flex gap-2 items-end">
                     <textarea
                         ref={textareaRef}
+                        name="message"
+                        id="message"
                         value={message}
                         aria-label="Escrever mensagem"
                         rows={1}

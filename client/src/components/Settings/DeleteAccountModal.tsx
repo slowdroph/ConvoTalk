@@ -61,6 +61,9 @@ export default function DeleteAccountModal({
                 <form onSubmit={handleDelete} className="space-y-4">
                     <input
                         type="password"
+                        name="password"
+                        id="password"
+                        autoComplete="current-password"
                         placeholder="Digite sua senha"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}

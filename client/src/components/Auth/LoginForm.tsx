@@ -121,6 +121,9 @@ export default function LoginForm() {
                 </svg>
                 <input
                     type="email"
+                    name="email"
+                    id="email"
+                    autoComplete="email"
                     placeholder="Email"
                     aria-label="Email"
                     value={email}
@@ -152,6 +155,9 @@ export default function LoginForm() {
                 </svg>
                 <input
                     type={showPassword ? "text" : "password"}
+                    name="password"
+                    id="password"
+                    autoComplete="current-password"
                     placeholder="Senha"
                     aria-label="Senha"
                     value={password}

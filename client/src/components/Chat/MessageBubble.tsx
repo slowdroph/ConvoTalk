@@ -414,6 +414,7 @@ function MessageBubbleComponent({
                                 <input
                                     ref={inputRef}
                                     type="text"
+                                    name="editContent"
                                     value={editContent}
                                     onChange={(e) =>
                                         setEditContent(e.target.value)

@@ -107,6 +107,8 @@ export default function SearchDialog({
                     </svg>
                     <input
                         ref={inputRef}
+                        name="search"
+                        id="globalSearch"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Buscar em todas as conversas..."

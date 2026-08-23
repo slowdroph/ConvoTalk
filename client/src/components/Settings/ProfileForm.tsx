@@ -136,6 +136,8 @@ export default function ProfileForm() {
                     <input
                         ref={fileInputRef}
                         type="file"
+                        name="avatar"
+                        id="avatar"
                         accept="image/*"
                         onChange={handleAvatarChange}
                         className="hidden"
@@ -162,11 +164,13 @@ export default function ProfileForm() {
             </div>
 
             <div>
-                <label className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
+                <label htmlFor="name" className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
                     Nome
                 </label>
                 <input
                     type="text"
+                    name="name"
+                    id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
@@ -176,11 +180,13 @@ export default function ProfileForm() {
             </div>
 
             <div>
-                <label className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
+                <label htmlFor="email" className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
                     Email
                 </label>
                 <input
                     type="email"
+                    name="email"
+                    id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -198,11 +204,13 @@ export default function ProfileForm() {
             </button>
 
             <div className="border-t border-slate-200 pt-4 dark:border-zinc-800">
-                <label className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
+                <label htmlFor="status" className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
                     Status
                 </label>
                 <input
                     type="text"
+                    name="status"
+                    id="status"
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                     maxLength={100}
