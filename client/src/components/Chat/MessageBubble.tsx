@@ -1,7 +1,9 @@
 import { memo, useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useGesture } from "../../hooks/useGesture";
 import { useSocket } from "../../hooks/useSocket";
+import { useMessageActionsPosition } from "../../hooks/useMessageActionsPosition";
 import type { Message, ParentMessage } from "../../types";
 import Avatar from "../ui/Avatar";
 import ConfirmDialog from "../ui/ConfirmDialog";
@@ -208,12 +210,15 @@ function MessageBubbleComponent({
     const inputRef = useRef<HTMLInputElement>(null);
     const pickerRef = useRef<HTMLDivElement>(null);
     const actionsRef = useRef<HTMLDivElement>(null);
+    const bubbleRef = useRef<HTMLDivElement>(null);
     const gesture = useGesture({
         onLongPress: () => setShowActions(true),
         onSwipeLeft: () => setShowActions(true),
         onSwipeRight: () => setShowActions(true),
         disabled: editing || disableActions,
     });
+
+    const actionsPosition = useMessageActionsPosition(bubbleRef, showActions);
 
     useEffect(() => {
         if (editing) {
@@ -358,8 +363,12 @@ function MessageBubbleComponent({
                     className={`relative max-w-[85%] sm:max-w-[70%] ${
                         highlighted ? "ring-2 ring-yellow-500 rounded-xl" : ""
                     }`}
+                    ref={bubbleRef}
                     style={{
-                        transform: `translateX(${gesture.offset}px)`,
+                        transform:
+                            gesture.dragging || gesture.offset !== 0
+                                ? `translateX(${gesture.offset}px)`
+                                : undefined,
                         transition: gesture.dragging
                             ? "none"
                             : "transform 0.2s ease",
@@ -601,43 +610,47 @@ function MessageBubbleComponent({
 
                     {/* Touch action popover */}
                     {showActions && !editing && !disableActions && (
-                        <TouchActions
-                            isOwn={isOwn}
-                            isPinned={isPinned}
-                            onTogglePicker={() =>
-                                setShowPicker((prev) => !prev)
-                            }
-                            onReply={
-                                onReply
-                                    ? () => {
-                                          onReply(message);
-                                          setShowActions(false);
-                                      }
-                                    : undefined
-                            }
-                            onOpenThread={
-                                onOpenThread
-                                    ? () => {
-                                          onOpenThread(message);
-                                          setShowActions(false);
-                                      }
-                                    : undefined
-                            }
-                            onTogglePin={
-                                onTogglePin
-                                    ? () => {
-                                          onTogglePin(message);
-                                          setShowActions(false);
-                                      }
-                                    : undefined
-                            }
-                            onEdit={() => {
-                                setEditing(true);
-                                setShowActions(false);
-                            }}
-                            onDelete={() => setConfirmDelete(true)}
-                            actionsRef={actionsRef}
-                        />
+                        createPortal(
+                            <TouchActions
+                                isOwn={isOwn}
+                                isPinned={isPinned}
+                                onTogglePicker={() =>
+                                    setShowPicker((prev) => !prev)
+                                }
+                                onReply={
+                                    onReply
+                                        ? () => {
+                                              onReply(message);
+                                              setShowActions(false);
+                                          }
+                                        : undefined
+                                }
+                                onOpenThread={
+                                    onOpenThread
+                                        ? () => {
+                                              onOpenThread(message);
+                                              setShowActions(false);
+                                          }
+                                        : undefined
+                                }
+                                onTogglePin={
+                                    onTogglePin
+                                        ? () => {
+                                              onTogglePin(message);
+                                              setShowActions(false);
+                                          }
+                                        : undefined
+                                }
+                                onEdit={() => {
+                                    setEditing(true);
+                                    setShowActions(false);
+                                }}
+                                onDelete={() => setConfirmDelete(true)}
+                                actionsRef={actionsRef}
+                                position={actionsPosition}
+                            />,
+                            document.body,
+                        )
                     )}
 
                     {/* Emoji picker (mobile) */}
@@ -657,26 +670,31 @@ function MessageBubbleComponent({
                 </div>
             </div>
 
-            <ConfirmDialog
-                isOpen={confirmDelete}
-                title="Excluir mensagem"
-                message="Como deseja excluir esta mensagem?"
-                cancelLabel="Cancelar"
-                confirmLabel="Para todos"
-                danger
-                onConfirm={() => {
-                    setConfirmDelete(false);
-                    onDelete(message._id, false);
-                }}
-                onCancel={() => setConfirmDelete(false)}
-                extraButton={{
-                    label: "Só pra mim",
-                    onExtra: () => {
-                        setConfirmDelete(false);
-                        onDelete(message._id, true);
-                    },
-                }}
-            />
+            {confirmDelete && (
+                createPortal(
+                    <ConfirmDialog
+                        isOpen={confirmDelete}
+                        title="Excluir mensagem"
+                        message="Como deseja excluir esta mensagem?"
+                        cancelLabel="Cancelar"
+                        confirmLabel="Para todos"
+                        danger
+                        onConfirm={() => {
+                            setConfirmDelete(false);
+                            onDelete(message._id, false);
+                        }}
+                        onCancel={() => setConfirmDelete(false)}
+                        extraButton={{
+                            label: "Só pra mim",
+                            onExtra: () => {
+                                setConfirmDelete(false);
+                                onDelete(message._id, true);
+                            },
+                        }}
+                    />,
+                    document.body,
+                )
+            )}
         </>
     );
 }

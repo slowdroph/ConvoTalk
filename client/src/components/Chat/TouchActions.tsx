@@ -17,6 +17,7 @@ interface TouchActionsProps {
     onEdit: () => void;
     onDelete: () => void;
     actionsRef: React.RefObject<HTMLDivElement | null>;
+    position?: { top: number; left: number } | null;
 }
 
 export default function TouchActions({
@@ -29,11 +30,21 @@ export default function TouchActions({
     onEdit,
     onDelete,
     actionsRef,
+    position,
 }: TouchActionsProps) {
+    if (!position) return null;
+
     return (
         <div
             ref={actionsRef}
-            className="absolute z-40 top-full left-1/2 -translate-x-1/2 mt-1.5 flex flex-wrap justify-center gap-1 max-w-[calc(100vw-1rem)] bg-white border border-slate-200 rounded-lg p-1.5 shadow-lg dark:bg-zinc-800 dark:border-zinc-700"
+            style={{
+                position: "fixed",
+                top: position.top,
+                left: position.left,
+                transform: "translateX(-50%)",
+                zIndex: 50,
+            }}
+            className="flex flex-wrap justify-center gap-1 max-w-[calc(100vw-1rem)] bg-white border border-slate-200 rounded-lg p-1.5 shadow-lg dark:bg-zinc-800 dark:border-zinc-700 pointer-events-auto"
         >
             <button
                 onClick={onTogglePicker}
