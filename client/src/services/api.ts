@@ -22,18 +22,22 @@ const api = axios.create({
     withCredentials: true,
 });
 
+const SESSION_FLAG_KEY = "chat_has_session";
+
 let refreshing: Promise<string | null> | null = null;
 
-async function refreshAccessToken(): Promise<string | null> {
+export async function refreshAccessToken(): Promise<string | null> {
     if (!refreshing) {
         refreshing = axios
             .post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true })
             .then((res) => {
                 accessToken = res.data.token;
+                localStorage.setItem(SESSION_FLAG_KEY, "1");
                 return accessToken;
             })
             .catch(() => {
                 accessToken = null;
+                localStorage.removeItem(SESSION_FLAG_KEY);
                 return null;
             })
             .finally(() => {
@@ -41,6 +45,10 @@ async function refreshAccessToken(): Promise<string | null> {
             });
     }
     return refreshing;
+}
+
+export function clearSessionFlag(): void {
+    localStorage.removeItem(SESSION_FLAG_KEY);
 }
 
 api.interceptors.request.use((config) => {

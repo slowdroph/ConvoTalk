@@ -4,8 +4,12 @@ import api, {
     setAccessToken,
     getAccessToken,
     setUnauthorizedHandler,
+    refreshAccessToken,
+    clearSessionFlag,
 } from "../services/api";
 import type { User } from "../contexts/AuthContext";
+
+const SESSION_FLAG_KEY = "chat_has_session";
 
 function getInitialUser(): User | null {
     try {
@@ -16,6 +20,10 @@ function getInitialUser(): User | null {
     }
 }
 
+function hasSessionFlag(): boolean {
+    return localStorage.getItem(SESSION_FLAG_KEY) === "1";
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(getInitialUser);
     const [token, setToken] = useState<string | null>(getAccessToken);
@@ -24,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         setUnauthorizedHandler(() => {
             setAccessToken(null);
+            clearSessionFlag();
             localStorage.removeItem("user");
             setToken(null);
             setUser(null);
@@ -34,13 +43,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let cancelled = false;
 
         const validateSession = async () => {
+            if (!hasSessionFlag()) {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+                return;
+            }
+
             try {
-                const { data } = await api.post(
-                    "/auth/refresh",
-                    {},
-                    { withCredentials: true },
-                );
-                const currentToken = data.token;
+                const currentToken = await refreshAccessToken();
+                if (!currentToken) {
+                    throw new Error("Refresh failed");
+                }
                 setAccessToken(currentToken);
                 const me = await api.get("/user/me");
                 if (!cancelled) {
@@ -51,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } catch {
                 if (!cancelled) {
                     setAccessToken(null);
+                    clearSessionFlag();
                     localStorage.removeItem("user");
                     setToken(null);
                     setUser(null);
@@ -73,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data } = await api.post("/auth/login", { email, password });
         setAccessToken(data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem(SESSION_FLAG_KEY, "1");
         setToken(data.token);
         setUser(data.user);
     }, []);
@@ -85,6 +101,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 password,
                 acceptedTerms: true,
             });
+            if (data.token) {
+                setAccessToken(data.token);
+                localStorage.setItem("user", JSON.stringify(data.user));
+                localStorage.setItem(SESSION_FLAG_KEY, "1");
+                setToken(data.token);
+                setUser(data.user);
+            }
             return data;
         },
         [],
@@ -97,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Ignora falhas na chamada de logout
         }
         setAccessToken(null);
+        clearSessionFlag();
         localStorage.removeItem("user");
         setToken(null);
         setUser(null);
