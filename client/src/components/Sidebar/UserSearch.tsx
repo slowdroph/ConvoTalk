@@ -115,6 +115,7 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
                     }}
                     placeholder="Nome ou email..."
                     maxLength={100}
+                    autoComplete="off"
                     className="flex-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
                 />
                 <button

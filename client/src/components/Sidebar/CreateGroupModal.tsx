@@ -182,6 +182,7 @@ export default function CreateGroupModal({
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Buscar por nome ou email..."
                             maxLength={100}
+                            autoComplete="off"
                             className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
                         />
 
