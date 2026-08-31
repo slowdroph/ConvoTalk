@@ -7,6 +7,7 @@ import api, {
     refreshAccessToken,
     clearSessionFlag,
 } from "../services/api";
+import { unsubscribeFromPush } from "../services/push";
 import type { User } from "../contexts/AuthContext";
 
 const SESSION_FLAG_KEY = "chat_has_session";
@@ -114,6 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     const logout = useCallback(async () => {
+        try {
+            await unsubscribeFromPush();
+        } catch {
+            // Ignora falhas ao remover inscrição push
+        }
         try {
             await api.post("/auth/logout");
         } catch {

@@ -52,7 +52,7 @@ self.addEventListener("fetch", (event) => {
       fetch(request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("/", copy));
+          caches.open(CACHE_NAME).then((cache) => cache.put(request.url, copy));
           return response;
         })
         .catch(() => caches.match("/")),
@@ -111,9 +111,28 @@ self.addEventListener("notificationclick", (event) => {
     self.clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
+        const targetPath = new URL(
+          targetUrl,
+          self.location.origin,
+        ).pathname;
+
+        // Prioriza um client que já está na URL de destino
+        for (const client of clientList) {
+          if (
+            client.url &&
+            client.url.includes(targetPath) &&
+            "focus" in client
+          ) {
+            return client.focus();
+          }
+        }
+
         for (const client of clientList) {
           if (client.url && "focus" in client) {
-            if ("navigate" in client && typeof client.navigate === "function") {
+            if (
+              "navigate" in client &&
+              typeof client.navigate === "function"
+            ) {
               client.navigate(targetUrl);
             }
             return client.focus();

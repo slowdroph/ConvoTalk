@@ -16,6 +16,15 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
     return outputArray;
 }
 
+function currentKeyAsBytesEqual(a: ArrayBuffer, b: Uint8Array): boolean {
+    if (a.byteLength !== b.length) return false;
+    const aBytes = new Uint8Array(a);
+    for (let i = 0; i < aBytes.length; i++) {
+        if (aBytes[i] !== b[i]) return false;
+    }
+    return true;
+}
+
 export function isPushSupported(): boolean {
     return (
         typeof window !== "undefined" &&
@@ -63,6 +72,25 @@ export async function subscribeToPush(): Promise<boolean> {
         const registration = await navigator.serviceWorker.ready;
         let subscription = await registration.pushManager.getSubscription();
 
+        if (subscription) {
+            // Detecta rotação de chave VAPID no servidor e reassina se necessário
+            let matchesKey = true;
+            const currentKey = subscription.options.applicationServerKey;
+            const newKey = urlBase64ToUint8Array(publicKey);
+            if (currentKey && currentKey.byteLength !== newKey.byteLength) {
+                matchesKey = false;
+            } else if (
+                currentKey &&
+                !currentKeyAsBytesEqual(currentKey, newKey)
+            ) {
+                matchesKey = false;
+            }
+            if (!matchesKey) {
+                await subscription.unsubscribe();
+                subscription = null;
+            }
+        }
+
         if (!subscription) {
             const convertedKey = urlBase64ToUint8Array(publicKey);
             subscription = await registration.pushManager.subscribe({
@@ -106,7 +134,7 @@ export async function unsubscribeFromPush(): Promise<boolean> {
                     endpoint: subscription.endpoint,
                 });
             } catch {
-                // continua mesmo se a requisição de API falhar
+                return false;
             }
             await subscription.unsubscribe();
         }

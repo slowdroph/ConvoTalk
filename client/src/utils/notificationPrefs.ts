@@ -1,6 +1,7 @@
 const SOUND_KEY = "notifications:sound";
 const BROWSER_KEY = "notifications:browser";
-const TITLE_BADGE_KEY = "notifications:titleBadge";
+const TITLE_BADGE_KEY = "notifications:title-badge";
+const TITLE_BADGE_LEGACY_KEY = "notifications:titleBadge";
 
 function readPref(key: string, fallback: boolean): boolean {
     try {
@@ -35,10 +36,27 @@ export function setBrowserNotificationsEnabled(value: boolean): void {
     writePref(BROWSER_KEY, value);
 }
 
+function hasPref(key: string): boolean {
+    try {
+        return localStorage.getItem(key) !== null;
+    } catch {
+        return false;
+    }
+}
+
 export function getTitleBadgeEnabled(): boolean {
+    // Compatibilidade com a antiga chave camelCase
+    if (hasPref(TITLE_BADGE_LEGACY_KEY)) {
+        return readPref(TITLE_BADGE_LEGACY_KEY, true);
+    }
     return readPref(TITLE_BADGE_KEY, true);
 }
 
 export function setTitleBadgeEnabled(value: boolean): void {
     writePref(TITLE_BADGE_KEY, value);
+    try {
+        localStorage.removeItem(TITLE_BADGE_LEGACY_KEY);
+    } catch {
+        // ignore
+    }
 }

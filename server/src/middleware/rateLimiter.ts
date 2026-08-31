@@ -55,3 +55,11 @@ export const previewLimiter = rateLimit({
     legacyHeaders: false,
     message: { message: "Muitos previews de link. Aguarde um minuto." },
 });
+
+export const pushLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Muitas requisições de push. Aguarde um minuto." },
+});

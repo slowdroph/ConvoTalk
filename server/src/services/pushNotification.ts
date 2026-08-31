@@ -28,9 +28,6 @@ export function configureWebPush(): boolean {
 }
 
 export function getVapidPublicKey(): string | null {
-    if (!isVapidConfigured) {
-        configureWebPush();
-    }
     return isVapidConfigured ? process.env.VAPID_PUBLIC_KEY || null : null;
 }
 
@@ -39,16 +36,14 @@ export async function savePushSubscription(
     sub: PushSubscriptionPayload,
 ): Promise<void> {
     await PushSubscription.findOneAndUpdate(
-        { endpoint: sub.endpoint },
+        { endpoint: sub.endpoint, user: userId },
         {
             user: userId,
             endpoint: sub.endpoint,
             keys: sub.keys,
             userAgent: sub.userAgent || "",
-            createdAt: new Date(),
         },
         { upsert: true, returnDocument: "after" },
-
     );
 }
 
@@ -66,10 +61,7 @@ export async function sendPushToUsers(
     userIds: string[],
     payload: PushNotificationPayload,
 ): Promise<void> {
-    if (!isVapidConfigured) {
-        const configured = configureWebPush();
-        if (!configured) return;
-    }
+    if (!isVapidConfigured) return;
 
     if (!userIds || userIds.length === 0) return;
 
@@ -84,6 +76,17 @@ export async function sendPushToUsers(
 
         await Promise.allSettled(
             subscriptions.map(async (sub) => {
+                if (!sub.keys?.p256dh || !sub.keys?.auth) {
+                    logger.warn(
+                        { subId: sub._id },
+                        "Inscrição de push com keys inválidas. Removendo.",
+                    );
+                    await PushSubscription.deleteOne({ _id: sub._id }).catch(
+                        () => {},
+                    );
+                    return;
+                }
+
                 const pushConfig = {
                     endpoint: sub.endpoint,
                     keys: {
@@ -110,7 +113,11 @@ export async function sendPushToUsers(
                             "Inscrição de push expirada. Removendo do banco de dados.",
                         );
                         await PushSubscription.deleteOne({ _id: sub._id }).catch(
-                            () => {},
+                            (err) =>
+                                logger.warn(
+                                    { err, subId: sub._id },
+                                    "Falha ao remover inscrição de push expirada.",
+                                ),
                         );
                     } else {
                         logger.warn(

@@ -39,7 +39,7 @@ export function useNotifications(
     useEffect(() => {
         if (!socket || !user) return;
 
-        const handleMessage = (msg: Message) => {
+        const handleMessage = async (msg: Message) => {
             if (!msg.sender || msg.sender._id === user._id) return;
             if (msg.type === "system") return;
 
@@ -68,14 +68,30 @@ export function useNotifications(
                 "Notification" in window &&
                 Notification.permission === "granted"
             ) {
-                new Notification(msg.sender.name, {
-                    body:
-                        msg.content.length > 100
-                            ? msg.content.slice(0, 100) + "..."
-                            : msg.content,
-                    icon: "/favicon.svg",
-                    tag: msg.room,
-                });
+                // Se houver push subscription ativa, o service worker já exibe a
+                // notificação nativa; evita notificações duplicadas.
+                let hasPushSubscription = false;
+                if ("serviceWorker" in navigator) {
+                    try {
+                        const registration =
+                            await navigator.serviceWorker.ready;
+                        hasPushSubscription = Boolean(
+                            await registration.pushManager.getSubscription(),
+                        );
+                    } catch {
+                        hasPushSubscription = false;
+                    }
+                }
+                if (!hasPushSubscription) {
+                    new Notification(msg.sender.name, {
+                        body:
+                            msg.content.length > 100
+                                ? msg.content.slice(0, 100) + "..."
+                                : msg.content,
+                        icon: "/favicon.svg",
+                        tag: msg.room,
+                    });
+                }
             }
 
             if (!isActiveRoom) {
@@ -94,14 +110,6 @@ export function useNotifications(
         };
 
         document.addEventListener("visibilitychange", handleVisibility);
-
-        if (
-            getBrowserNotificationsEnabled() &&
-            "Notification" in window &&
-            Notification.permission === "default"
-        ) {
-            Notification.requestPermission();
-        }
 
         return () => {
             socket.off("message", handleMessage);

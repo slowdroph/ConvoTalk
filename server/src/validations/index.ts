@@ -269,8 +269,14 @@ export const pushSubscribeSchema = z.object({
     body: z.object({
         endpoint: z.string().url("Endpoint de push inválido."),
         keys: z.object({
-            p256dh: z.string().min(1, "Chave p256dh é obrigatória."),
-            auth: z.string().min(1, "Chave auth é obrigatória."),
+            p256dh: z
+                .string()
+                .regex(/^[A-Za-z0-9_-]+$/, "Chave p256dh inválida.")
+                .min(1, "Chave p256dh é obrigatória."),
+            auth: z
+                .string()
+                .regex(/^[A-Za-z0-9_-]+$/, "Chave auth inválida.")
+                .min(1, "Chave auth é obrigatória."),
         }),
         userAgent: z.string().max(300).optional(),
     }),

@@ -32,9 +32,12 @@ import {
     refreshLimiter,
     searchLimiter,
     previewLimiter,
+    pushLimiter,
 } from "./middleware/rateLimiter";
+import { configureWebPush } from "./services/pushNotification";
 
 validateEnv();
+configureWebPush();
 
 const ALLOWED_ORIGINS = getAllowedOrigins();
 const corsOrigin =
@@ -125,7 +128,7 @@ app.use("/api/rooms", roomRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/users", searchLimiter, usersSearchRoutes);
 app.use("/api/links", previewLimiter, linkPreviewRoutes);
-app.use("/api/push", pushRoutes);
+app.use("/api/push", pushLimiter, pushRoutes);
 
 
 app.get("/api/health/live", (_req, res) => {

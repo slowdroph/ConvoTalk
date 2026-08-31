@@ -66,23 +66,28 @@ export default function NotificationSettings() {
     const [browser, setBrowser] = useState(getBrowserNotificationsEnabled);
     const [titleBadge, setTitleBadge] = useState(getTitleBadgeEnabled);
     const [pushLoading, setPushLoading] = useState(false);
-    const [permissionStatus, setPermissionStatus] = useState<NotificationPermission | "unsupported">("default");
+    const [permissionStatus, setPermissionStatus] = useState<
+        NotificationPermission | "unsupported"
+    >(() => (isPushSupported() ? Notification.permission : "unsupported"));
 
     useEffect(() => {
         if (!isPushSupported()) {
-            setPermissionStatus("unsupported");
             return;
         }
 
-        setPermissionStatus(Notification.permission);
+        let cancelled = false;
 
         // Verifica se já existe inscrição ativa no navegador
         getCurrentPushSubscription().then((sub) => {
-            if (sub && Notification.permission === "granted") {
+            if (!cancelled && sub && Notification.permission === "granted") {
                 setBrowser(true);
                 setBrowserNotificationsEnabled(true);
             }
         });
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     const handleSoundChange = (value: boolean) => {
@@ -104,9 +109,14 @@ export default function NotificationSettings() {
                 setPermissionStatus(permission);
 
                 if (permission === "granted") {
-                    setBrowser(true);
-                    setBrowserNotificationsEnabled(true);
-                    await subscribeToPush();
+                    const success = await subscribeToPush();
+                    if (success) {
+                        setBrowser(true);
+                        setBrowserNotificationsEnabled(true);
+                    } else {
+                        setBrowser(false);
+                        setBrowserNotificationsEnabled(false);
+                    }
                 } else {
                     setBrowser(false);
                     setBrowserNotificationsEnabled(false);
