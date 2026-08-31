@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     getSoundEnabled,
     setSoundEnabled,
@@ -7,16 +7,24 @@ import {
     getTitleBadgeEnabled,
     setTitleBadgeEnabled,
 } from "../../utils/notificationPrefs";
+import {
+    isPushSupported,
+    getCurrentPushSubscription,
+    subscribeToPush,
+    unsubscribeFromPush,
+} from "../../services/push";
 
 function ToggleRow({
     title,
     description,
     checked,
+    disabled = false,
     onChange,
 }: {
     title: string;
     description: string;
     checked: boolean;
+    disabled?: boolean;
     onChange: (value: boolean) => void;
 }) {
     return (
@@ -33,8 +41,11 @@ function ToggleRow({
                 type="button"
                 role="switch"
                 aria-checked={checked}
-                onClick={() => onChange(!checked)}
-                className={`relative w-12 h-7 rounded-full transition-colors shrink-0 cursor-pointer ${
+                disabled={disabled}
+                onClick={() => !disabled && onChange(!checked)}
+                className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${
+                    disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                } ${
                     checked
                         ? "bg-emerald-600 dark:bg-green-600"
                         : "bg-slate-300 dark:bg-zinc-700"
@@ -54,21 +65,61 @@ export default function NotificationSettings() {
     const [sound, setSound] = useState(getSoundEnabled);
     const [browser, setBrowser] = useState(getBrowserNotificationsEnabled);
     const [titleBadge, setTitleBadge] = useState(getTitleBadgeEnabled);
+    const [pushLoading, setPushLoading] = useState(false);
+    const [permissionStatus, setPermissionStatus] = useState<NotificationPermission | "unsupported">("default");
+
+    useEffect(() => {
+        if (!isPushSupported()) {
+            setPermissionStatus("unsupported");
+            return;
+        }
+
+        setPermissionStatus(Notification.permission);
+
+        // Verifica se já existe inscrição ativa no navegador
+        getCurrentPushSubscription().then((sub) => {
+            if (sub && Notification.permission === "granted") {
+                setBrowser(true);
+                setBrowserNotificationsEnabled(true);
+            }
+        });
+    }, []);
 
     const handleSoundChange = (value: boolean) => {
         setSound(value);
         setSoundEnabled(value);
     };
 
-    const handleBrowserChange = (value: boolean) => {
-        setBrowser(value);
-        setBrowserNotificationsEnabled(value);
-        if (
-            value &&
-            "Notification" in window &&
-            Notification.permission === "default"
-        ) {
-            Notification.requestPermission();
+    const handleBrowserChange = async (value: boolean) => {
+        if (!isPushSupported()) {
+            setBrowser(value);
+            setBrowserNotificationsEnabled(value);
+            return;
+        }
+
+        setPushLoading(true);
+        try {
+            if (value) {
+                const permission = await Notification.requestPermission();
+                setPermissionStatus(permission);
+
+                if (permission === "granted") {
+                    setBrowser(true);
+                    setBrowserNotificationsEnabled(true);
+                    await subscribeToPush();
+                } else {
+                    setBrowser(false);
+                    setBrowserNotificationsEnabled(false);
+                }
+            } else {
+                setBrowser(false);
+                setBrowserNotificationsEnabled(false);
+                await unsubscribeFromPush();
+            }
+        } catch (err) {
+            console.error("Erro ao alternar notificações push:", err);
+        } finally {
+            setPushLoading(false);
         }
     };
 
@@ -82,6 +133,19 @@ export default function NotificationSettings() {
             <h3 className="text-lg font-semibold text-slate-900 mb-2 dark:text-white">
                 Notificações
             </h3>
+
+            {permissionStatus === "denied" && (
+                <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-lg text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                    <span className="material-symbols-outlined text-base shrink-0 mt-0.5">
+                        warning
+                    </span>
+                    <span>
+                        As notificações estão bloqueadas nas configurações do seu navegador.
+                        Para ativá-las, permita as notificações para este site nas opções do navegador.
+                    </span>
+                </div>
+            )}
+
             <div className="divide-y divide-slate-100 dark:divide-zinc-800">
                 <ToggleRow
                     title="Som de notificação"
@@ -90,9 +154,10 @@ export default function NotificationSettings() {
                     onChange={handleSoundChange}
                 />
                 <ToggleRow
-                    title="Notificações do navegador"
-                    description="Mostra um popup quando a aba está em segundo plano."
+                    title="Notificações Push / Navegador"
+                    description="Receba avisos de novas mensagens mesmo em segundo plano ou com a aba fechada."
                     checked={browser}
+                    disabled={pushLoading || permissionStatus === "denied"}
                     onChange={handleBrowserChange}
                 />
                 <ToggleRow

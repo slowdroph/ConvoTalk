@@ -37,6 +37,7 @@ import {
     getUserSocketIds,
 } from "./onlineUsers";
 import { getRoomInfo } from "./roomCache";
+import { sendPushToUsers } from "../services/pushNotification";
 
 interface SenderInfo {
     name: string;
@@ -122,6 +123,68 @@ async function isRoomBlocked(roomId: string, userId: string): Promise<boolean> {
     if (!other) return false;
     return isBlockedBetween(userId, other);
 }
+
+async function triggerPushForRoom(
+    roomId: string,
+    senderId: string,
+    senderName: string,
+    content: string,
+    messageId: string,
+): Promise<void> {
+    try {
+        const room = await getRoomInfo(roomId);
+        if (!room) return;
+
+        const recipientIds = room.participants.filter(
+            (p) => String(p) !== String(senderId),
+        );
+        if (recipientIds.length === 0) return;
+
+        const blockedUsers = await User.find({
+            _id: { $in: recipientIds },
+            blockedUsers: senderId,
+        }).distinct("_id");
+
+        const blockedSet = new Set(blockedUsers.map((id) => String(id)));
+        const finalRecipients = recipientIds.filter(
+            (id) => !blockedSet.has(String(id)),
+        );
+
+        if (finalRecipients.length === 0) return;
+
+        const roomTitle =
+            room.type === "group" && room.name
+                ? `${senderName} (${room.name})`
+                : senderName;
+
+        const truncatedBody =
+            content && content.trim()
+                ? content.length > 100
+                    ? content.slice(0, 97) + "..."
+                    : content
+                : "Enviou um anexo";
+
+        await sendPushToUsers(finalRecipients, {
+            title: roomTitle,
+            body: truncatedBody,
+            icon: "/icon-192.png",
+            badge: "/icon-192.png",
+            tag: roomId,
+            data: {
+                roomId,
+                messageId,
+                senderId,
+                url: `/chat/${roomId}`,
+            },
+        });
+    } catch (error) {
+        logger.error(
+            { error, roomId, senderId },
+            "erro ao disparar notificação push",
+        );
+    }
+}
+
 
 const socketHandler = (io: SocketIOServer): void => {
     io.on("connection", async (socket: Socket) => {
@@ -317,9 +380,17 @@ const socketHandler = (io: SocketIOServer): void => {
                     };
 
                     io.to(roomId).emit("message", payload);
+                    triggerPushForRoom(
+                        roomId,
+                        userId,
+                        info?.name || "Usuário",
+                        message.content || "",
+                        String(message._id),
+                    ).catch(() => {});
                     if (typeof ack === "function") {
                         ack({});
                     }
+
                 } catch (error) {
                     if (isDuplicateClientMessageId(error)) {
                         if (typeof ack === "function") {
@@ -471,9 +542,17 @@ const socketHandler = (io: SocketIOServer): void => {
                         parentId,
                         message: payload,
                     });
+                    triggerPushForRoom(
+                        roomId,
+                        userId,
+                        info?.name || "Usuário",
+                        message.content || "",
+                        String(message._id),
+                    ).catch(() => {});
                     if (typeof ack === "function") {
                         ack({});
                     }
+
                 } catch (error) {
                     if (isDuplicateClientMessageId(error)) {
                         if (typeof ack === "function") {

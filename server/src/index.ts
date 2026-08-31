@@ -16,6 +16,8 @@ import roomRoutes from "./routes/rooms";
 import userRoutes from "./routes/user";
 import usersSearchRoutes from "./routes/users";
 import linkPreviewRoutes from "./routes/linkPreview";
+import pushRoutes from "./routes/push";
+
 import socketHandler from "./socket/socketHandler";
 import previewHandler from "./socket/previewHandler";
 import webrtcHandler from "./socket/webrtcHandler";
@@ -123,6 +125,8 @@ app.use("/api/rooms", roomRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/users", searchLimiter, usersSearchRoutes);
 app.use("/api/links", previewLimiter, linkPreviewRoutes);
+app.use("/api/push", pushRoutes);
+
 
 app.get("/api/health/live", (_req, res) => {
     res.status(200).json({

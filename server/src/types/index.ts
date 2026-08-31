@@ -72,3 +72,15 @@ export interface OnlineUser {
 export interface AuthUser {
     _id: string;
 }
+
+export interface IPushSubscription extends Document {
+    user: IUser["_id"];
+    endpoint: string;
+    keys: {
+        p256dh: string;
+        auth: string;
+    };
+    userAgent?: string;
+    createdAt: Date;
+}
+

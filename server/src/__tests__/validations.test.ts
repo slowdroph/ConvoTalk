@@ -124,3 +124,44 @@ describe("room validations", () => {
         expect(result.success).toBe(false);
     });
 });
+
+describe("push validations", () => {
+    it("aceita payload de inscrição válido", async () => {
+        const { pushSubscribeSchema } = await import("../validations");
+        const result = pushSubscribeSchema.safeParse({
+            body: {
+                endpoint: "https://fcm.googleapis.com/fcm/send/sample-token",
+                keys: {
+                    p256dh: "key-p256dh",
+                    auth: "key-auth",
+                },
+                userAgent: "Mozilla/5.0",
+            },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("rejeita inscrição com endpoint que não é URL", async () => {
+        const { pushSubscribeSchema } = await import("../validations");
+        const result = pushSubscribeSchema.safeParse({
+            body: {
+                endpoint: "invalid-url",
+                keys: {
+                    p256dh: "key-p256dh",
+                    auth: "key-auth",
+                },
+            },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("aceita payload de desinscrição válido", async () => {
+        const { pushUnsubscribeSchema } = await import("../validations");
+        const result = pushUnsubscribeSchema.safeParse({
+            body: {
+                endpoint: "https://fcm.googleapis.com/fcm/send/sample-token",
+            },
+        });
+        expect(result.success).toBe(true);
+    });
+});

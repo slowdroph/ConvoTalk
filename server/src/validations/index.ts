@@ -264,3 +264,21 @@ export const linkPreviewSchema = z.object({
             }, "Apenas URLs http/https são permitidas."),
     }),
 });
+
+export const pushSubscribeSchema = z.object({
+    body: z.object({
+        endpoint: z.string().url("Endpoint de push inválido."),
+        keys: z.object({
+            p256dh: z.string().min(1, "Chave p256dh é obrigatória."),
+            auth: z.string().min(1, "Chave auth é obrigatória."),
+        }),
+        userAgent: z.string().max(300).optional(),
+    }),
+});
+
+export const pushUnsubscribeSchema = z.object({
+    body: z.object({
+        endpoint: z.string().url("Endpoint de push inválido."),
+    }),
+});
+

@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import Room from "../models/Room";
 
 interface CachedRoom {
+    name?: string;
     participants: string[];
     type: "group" | "direct";
     expiresAt: number;
@@ -39,13 +40,17 @@ export async function getRoomInfo(roomId: string): Promise<CachedRoom | null> {
         return cached;
     }
 
-    const room = await Room.findById(roomId).select("participants type").lean<{
-        participants: (Types.ObjectId | string)[];
-        type: "group" | "direct";
-    }>();
+    const room = await Room.findById(roomId)
+        .select("name participants type")
+        .lean<{
+            name?: string;
+            participants: (Types.ObjectId | string)[];
+            type: "group" | "direct";
+        }>();
     if (!room) return null;
 
     const entry: CachedRoom = {
+        name: room.name,
         participants: room.participants.map((p) => p.toString()),
         type: room.type,
         expiresAt: now + ROOM_CACHE_TTL_MS,
@@ -54,3 +59,4 @@ export async function getRoomInfo(roomId: string): Promise<CachedRoom | null> {
     evictIfNeeded();
     return entry;
 }
+

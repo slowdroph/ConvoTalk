@@ -163,3 +163,37 @@ export interface LinkPreview {
     description?: string;
     image?: string;
 }
+
+export interface PushSubscriptionKeys {
+    p256dh: string;
+    auth: string;
+}
+
+export interface PushSubscriptionPayload {
+    endpoint: string;
+    keys: PushSubscriptionKeys;
+    userAgent?: string;
+}
+
+export interface PushUnsubscribePayload {
+    endpoint: string;
+}
+
+export interface PushPublicKeyResponse {
+    publicKey: string | null;
+}
+
+export interface PushNotificationPayload {
+    title: string;
+    body: string;
+    icon?: string;
+    badge?: string;
+    tag?: string;
+    data?: {
+        url?: string;
+        roomId?: string;
+        messageId?: string;
+        senderId?: string;
+    };
+}
+
