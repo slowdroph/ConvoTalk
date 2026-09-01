@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
 import ChatWindow from "../components/Chat/ChatWindow";
 import ConnectionBanner from "../components/Chat/ConnectionBanner";
@@ -14,8 +15,13 @@ import {
 import type { Room, Message } from "../types";
 
 export default function ChatPage() {
+    const { roomId } = useParams();
+    const navigate = useNavigate();
     const [rooms, setRooms] = useState<Room[]>([]);
     const [activeRoom, setActiveRoom] = useState<string | null>(null);
+    const [lastUrlRoomId, setLastUrlRoomId] = useState<string | undefined>(
+        roomId,
+    );
     const [roomsLoading, setRoomsLoading] = useState(true);
     const [roomsError, setRoomsError] = useState<string | null>(null);
     const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>(
@@ -28,6 +34,14 @@ export default function ChatPage() {
     const initialized = useRef(false);
     const { socket, connected } = useSocket();
     const { user } = useAuth();
+
+    // Ajusta a sala ativa quando a URL muda (ex.: clique em notificação push)
+    if (roomId !== lastUrlRoomId) {
+        setLastUrlRoomId(roomId);
+        if (roomId && rooms.some((r) => r._id === roomId)) {
+            setActiveRoom(roomId);
+        }
+    }
 
     useNotifications(socket, user, activeRoom);
 
@@ -89,14 +103,16 @@ export default function ChatPage() {
             initialized.current = true;
             loadRooms().then((data) => {
                 if (data.length > 0) {
-                    setActiveRoom(data[0]._id);
+                    const initialRoom = data.find((r: Room) => r._id === roomId);
+                    setActiveRoom(initialRoom ? initialRoom._id : data[0]._id);
                 }
             });
         }
-    }, [loadRooms]);
+    }, [loadRooms, roomId]);
 
     const handleSelectRoom = (roomId: string, messageId?: string) => {
         setActiveRoom(roomId);
+        navigate(`/chat/${roomId}`, { replace: true });
         setHighlightMessageId(messageId ?? null);
         setSidebarOpen(false);
         setUnreadCounts((prev) => {
@@ -110,12 +126,14 @@ export default function ChatPage() {
     const handleConversationCreated = (roomId: string) => {
         loadRooms().then(() => {
             setActiveRoom(roomId);
+            navigate(`/chat/${roomId}`, { replace: true });
         });
     };
 
     const handleGroupCreated = (roomId: string) => {
         loadRooms().then(() => {
             setActiveRoom(roomId);
+            navigate(`/chat/${roomId}`, { replace: true });
         });
     };
 

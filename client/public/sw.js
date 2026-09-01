@@ -116,28 +116,32 @@ self.addEventListener("notificationclick", (event) => {
           self.location.origin,
         ).pathname;
 
-        // Prioriza um client que já está na URL de destino
+        // Prioriza um client que já está exatamente na URL de destino
         for (const client of clientList) {
           if (
             client.url &&
-            client.url.includes(targetPath) &&
+            new URL(client.url, self.location.origin).pathname === targetPath &&
             "focus" in client
           ) {
             return client.focus();
           }
         }
 
-        for (const client of clientList) {
-          if (client.url && "focus" in client) {
-            if (
-              "navigate" in client &&
-              typeof client.navigate === "function"
-            ) {
-              client.navigate(targetUrl);
-            }
-            return client.focus();
+        // Navega a primeira window disponível até a URL de destino
+        const focusable = clientList.filter(
+          (client) => client.url && "focus" in client,
+        );
+        if (focusable.length > 0) {
+          const client = focusable[0];
+          if ("navigate" in client && typeof client.navigate === "function") {
+            return client
+              .navigate(targetUrl)
+              .catch(() => {})
+              .then(() => client.focus());
           }
+          return client.focus();
         }
+
         if (self.clients.openWindow) {
           return self.clients.openWindow(targetUrl);
         }

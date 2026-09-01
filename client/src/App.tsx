@@ -111,7 +111,7 @@ export default function App() {
                         }
                     />
                     <Route
-                        path="/chat"
+                        path="/chat/:roomId?"
                         element={
                             <PrivateRoute>
                                 <Suspense fallback={<ChatSkeleton />}>
