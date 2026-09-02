@@ -11,6 +11,7 @@ interface RoomListProps {
     onSelectRoom: (roomId: string) => void;
     onDeleteRoom: (roomId: string) => void;
     unreadCounts: Record<string, number>;
+    mentionUnreadCounts: Record<string, number>;
 }
 
 export default function RoomList({
@@ -19,6 +20,7 @@ export default function RoomList({
     onSelectRoom,
     onDeleteRoom,
     unreadCounts,
+    mentionUnreadCounts,
 }: RoomListProps) {
     const { user } = useAuth();
     const { onlineUsers } = useSocket();
@@ -87,6 +89,10 @@ export default function RoomList({
                                         <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-emerald-600 text-white text-xs font-semibold flex items-center justify-center dark:bg-green-600 dark:text-on-accent">
                                             {unreadCounts[room._id]}
                                         </span>
+                                    ) : mentionUnreadCounts[room._id] ? (
+                                        <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-amber-500 text-white text-xs font-semibold flex items-center justify-center">
+                                            {mentionUnreadCounts[room._id]}
+                                        </span>
                                     ) : null}
                                 </button>
                             </li>
@@ -139,6 +145,10 @@ export default function RoomList({
                                         {unreadCounts[room._id] ? (
                                             <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-emerald-600 text-white text-xs font-semibold flex items-center justify-center dark:bg-green-600 dark:text-on-accent">
                                                 {unreadCounts[room._id]}
+                                            </span>
+                                        ) : mentionUnreadCounts[room._id] ? (
+                                            <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-amber-500 text-white text-xs font-semibold flex items-center justify-center">
+                                                {mentionUnreadCounts[room._id]}
                                             </span>
                                         ) : null}
                                     </button>

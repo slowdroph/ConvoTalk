@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useGesture } from "../../hooks/useGesture";
 import { useSocket } from "../../hooks/useSocket";
 import { useMessageActionsPosition } from "../../hooks/useMessageActionsPosition";
-import type { Message, ParentMessage } from "../../types";
+import type { Message, ParentMessage, User } from "../../types";
 import Avatar from "../ui/Avatar";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import UserProfilePopover from "../ui/UserProfilePopover";
@@ -12,6 +12,7 @@ import LinkPreviewCard from "./LinkPreviewCard";
 import MessageActions from "./MessageActions";
 import TouchActions from "./TouchActions";
 import EmojiPicker from "./EmojiPicker";
+import MentionText from "./MentionText";
 
 interface MessageBubbleProps {
     message: Message;
@@ -26,27 +27,7 @@ interface MessageBubbleProps {
     highlighted?: boolean;
     roomType: "group" | "direct";
     currentUserId: string;
-}
-
-function HighlightedText({ text, query }: { text: string; query?: string }) {
-    if (!query || query.trim() === "") return <>{text}</>;
-
-    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const parts = text.split(new RegExp(`(${escaped})`, "gi"));
-
-    return (
-        <>
-            {parts.map((part, i) =>
-                part.toLowerCase() === query.toLowerCase() ? (
-                    <span key={i} className="bg-yellow-500/40 rounded px-0.5">
-                        {part}
-                    </span>
-                ) : (
-                    <span key={i}>{part}</span>
-                ),
-            )}
-        </>
-    );
+    participants?: User[];
 }
 
 function formatFileSize(bytes: number): string {
@@ -185,6 +166,7 @@ function MessageBubbleComponent({
     highlighted,
     roomType,
     currentUserId,
+    participants,
 }: MessageBubbleProps) {
     const { user } = useAuth();
     const { onlineUsers } = useSocket();
@@ -474,9 +456,10 @@ function MessageBubbleComponent({
                                     )}
                                 {message.content && (
                                     <p className="text-sm wrap-break-word">
-                                        <HighlightedText
-                                            text={message.content}
-                                            query={searchQuery}
+                                        <MentionText
+                                            content={message.content}
+                                            participants={participants || []}
+                                            searchQuery={searchQuery}
                                         />
                                     </p>
                                 )}

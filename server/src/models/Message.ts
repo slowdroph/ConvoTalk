@@ -60,6 +60,12 @@ const messageSchema = new Schema<IMessage>(
                 ref: "User",
             },
         ],
+        mentions: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
         parentMessage: {
             type: Schema.Types.ObjectId,
             ref: "Message",
@@ -76,6 +82,7 @@ const messageSchema = new Schema<IMessage>(
 messageSchema.index({ room: 1, createdAt: -1, _id: -1 });
 messageSchema.index({ sender: 1, createdAt: -1 });
 messageSchema.index({ parentMessage: 1, createdAt: 1 });
+messageSchema.index({ room: 1, mentions: 1, createdAt: -1 });
 messageSchema.index(
     { sender: 1, clientMessageId: 1 },
     {

@@ -14,6 +14,7 @@ interface SidebarProps {
     onGroupCreated: (roomId: string) => void;
     onDeleteRoom: (roomId: string) => void;
     unreadCounts: Record<string, number>;
+    mentionUnreadCounts: Record<string, number>;
     isOpen: boolean;
     onClose?: () => void;
 }
@@ -26,6 +27,7 @@ export default function Sidebar({
     onGroupCreated,
     onDeleteRoom,
     unreadCounts,
+    mentionUnreadCounts,
     isOpen,
     onClose,
 }: SidebarProps) {
@@ -101,6 +103,7 @@ export default function Sidebar({
                     onSelectRoom={onSelectRoom}
                     onDeleteRoom={onDeleteRoom}
                     unreadCounts={unreadCounts}
+                    mentionUnreadCounts={mentionUnreadCounts}
                 />
                 <CreateGroupModal
                     isOpen={groupModalOpen}

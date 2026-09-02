@@ -38,6 +38,7 @@ import {
 } from "./onlineUsers";
 import { getRoomInfo } from "./roomCache";
 import { sendPushToUsers } from "../services/pushNotification";
+import { parseMentionTokens, getUniqueMentionUserIds } from "../../../shared/mentions";
 
 interface SenderInfo {
     name: string;
@@ -182,6 +183,103 @@ async function triggerPushForRoom(
             { error, roomId, senderId },
             "erro ao disparar notificação push",
         );
+    }
+}
+
+async function extractMentionsFromContent(
+    content: string,
+    roomId: string,
+): Promise<string[]> {
+    if (!content.includes("@")) {
+        return [];
+    }
+
+    const room = await getRoomInfo(roomId);
+    if (!room) return [];
+
+    const participantIds = room.participants.map((p) => String(p));
+    const participants = await User.find(
+        { _id: { $in: participantIds } },
+        { _id: 1, name: 1 },
+    ).lean<{ _id: Types.ObjectId; name: string }[]>();
+
+    const tokens = parseMentionTokens(
+        content,
+        participants.map((p) => ({ _id: String(p._id), name: p.name })),
+    );
+
+    return getUniqueMentionUserIds(tokens);
+}
+
+async function triggerMentionNotifications(
+    io: SocketIOServer,
+    roomId: string,
+    senderId: string,
+    senderInfo: { name: string; avatar: string },
+    message: { _id: Types.ObjectId; content: string; createdAt: Date },
+    explicitRecipientIds?: string[],
+): Promise<void> {
+    try {
+        const room = await getRoomInfo(roomId);
+        if (!room || room.type === "direct") return;
+
+        let mentionedIds: string[];
+        if (explicitRecipientIds) {
+            mentionedIds = explicitRecipientIds;
+        } else {
+            mentionedIds = await extractMentionsFromContent(
+                message.content,
+                roomId,
+            );
+        }
+        if (mentionedIds.length === 0) return;
+
+        const blockedUsers = await User.find({
+            _id: { $in: mentionedIds },
+            blockedUsers: senderId,
+        }).distinct("_id");
+        const blockedSet = new Set(blockedUsers.map((id) => String(id)));
+
+        const recipients = mentionedIds.filter(
+            (id) => id !== senderId && !blockedSet.has(id),
+        );
+        if (recipients.length === 0) return;
+
+        const roomName = room.type === "group" && room.name ? room.name : senderInfo.name;
+
+        for (const recipientId of recipients) {
+            const socketIds = getUserSocketIds(recipientId);
+            if (socketIds?.length) {
+                for (const socketId of socketIds) {
+                    io.to(socketId).emit("mention:new", {
+                        messageId: String(message._id),
+                        roomId,
+                        sender: senderInfo,
+                        content: message.content,
+                        createdAt: message.createdAt.toISOString(),
+                    });
+                }
+            }
+        }
+
+        await sendPushToUsers(recipients, {
+            title: `@${senderInfo.name} mencionou você`,
+            body: message.content.length > 100
+                ? message.content.slice(0, 97) + "..."
+                : message.content,
+            icon: "/icon-192.png",
+            badge: "/icon-192.png",
+            tag: `mention-${roomId}`,
+            data: {
+                roomId,
+                messageId: String(message._id),
+                senderId,
+                url: `/chat/${roomId}`,
+                mention: true,
+            },
+        });
+    } catch (error) {
+        logger.error({ error, roomId, senderId }, "erro ao disparar notificação de menção");
     }
 }
 
@@ -342,6 +440,8 @@ const socketHandler = (io: SocketIOServer): void => {
 
                     const info = await getSenderInfo();
 
+                    const mentions = await extractMentionsFromContent(content, roomId);
+
                     // Índice único { sender, clientMessageId } cobre duplicatas:
                     // erro 11000 é tratado no catch abaixo.
                     const message = await Message.create({
@@ -350,6 +450,7 @@ const socketHandler = (io: SocketIOServer): void => {
                         content,
                         attachments: attachments || [],
                         clientMessageId: clientMessageId || null,
+                        mentions,
                     });
 
                     Room.updateOne(
@@ -374,6 +475,7 @@ const socketHandler = (io: SocketIOServer): void => {
                             publicId: a.publicId,
                         })),
                         readBy: [] as string[],
+                        mentions: message.mentions?.map(String) ?? [],
                         parentMessage: null,
                         createdAt: message.createdAt.toISOString(),
                         ...(clientMessageId ? { clientMessageId } : {}),
@@ -387,6 +489,14 @@ const socketHandler = (io: SocketIOServer): void => {
                         message.content || "",
                         String(message._id),
                     ).catch(() => {});
+                    triggerMentionNotifications(io, roomId, userId, {
+                        name: info?.name || "Usuário",
+                        avatar: info?.avatar || "",
+                    }, {
+                        _id: message._id,
+                        content: message.content,
+                        createdAt: message.createdAt,
+                    }).catch(() => {});
                     if (typeof ack === "function") {
                         ack({});
                     }
@@ -501,6 +611,8 @@ const socketHandler = (io: SocketIOServer): void => {
 
                     const info = await getSenderInfo();
 
+                    const mentions = await extractMentionsFromContent(content, roomId);
+
                     const message = await Message.create({
                         sender: userId,
                         room: roomId,
@@ -508,6 +620,7 @@ const socketHandler = (io: SocketIOServer): void => {
                         attachments: attachments || [],
                         parentMessage: parentId,
                         clientMessageId: clientMessageId || null,
+                        mentions,
                     });
 
                     Room.updateOne(
@@ -532,6 +645,7 @@ const socketHandler = (io: SocketIOServer): void => {
                             publicId: a.publicId,
                         })),
                         readBy: [] as string[],
+                        mentions: message.mentions?.map(String) ?? [],
                         parentMessage: parentPayload(parent),
                         createdAt: message.createdAt.toISOString(),
                         ...(clientMessageId ? { clientMessageId } : {}),
@@ -549,6 +663,14 @@ const socketHandler = (io: SocketIOServer): void => {
                         message.content || "",
                         String(message._id),
                     ).catch(() => {});
+                    triggerMentionNotifications(io, roomId, userId, {
+                        name: info?.name || "Usuário",
+                        avatar: info?.avatar || "",
+                    }, {
+                        _id: message._id,
+                        content: message.content,
+                        createdAt: message.createdAt,
+                    }).catch(() => {});
                     if (typeof ack === "function") {
                         ack({});
                     }
@@ -682,26 +804,49 @@ const socketHandler = (io: SocketIOServer): void => {
                     const { messageId, roomId, content } = parsed.data;
 
                     const message = await Message.findById(messageId)
-                        .select("sender room")
+                        .select("sender room mentions")
                         .lean();
                     if (!message || !message.sender) return;
                     if (message.sender.toString() !== userId) return;
                     if (message.room.toString() !== roomId) return;
                     if (!(await isRoomParticipant(roomId, userId))) return;
 
+                    const oldMentions = message.mentions?.map(String) ?? [];
+                    const newMentions = await extractMentionsFromContent(content, roomId);
+
                     const updated = await Message.findByIdAndUpdate(
                         messageId,
-                        { content, edited: true },
+                        { content, edited: true, mentions: newMentions },
                         { new: true },
                     )
-                        .select("content edited updatedAt")
+                        .select("content edited updatedAt mentions")
                         .lean();
                     if (!updated) return;
+
+                    const addedMentions = newMentions.filter(
+                        (id) => !oldMentions.includes(id),
+                    );
+                    if (addedMentions.length > 0) {
+                        const info = await getSenderInfo();
+                        triggerMentionNotifications(io, roomId, userId, {
+                            name: info?.name || "Usuário",
+                            avatar: info?.avatar || "",
+                        }, {
+                            _id: updated._id,
+                            content: updated.content,
+                            createdAt: updated.createdAt,
+                        }, addedMentions).catch(() => {});
+                    }
+
                     io.to(roomId).emit("message_edited", {
                         messageId,
                         content: updated.content,
                         updatedAt: updated.updatedAt,
+                        mentions: updated.mentions?.map(String) ?? [],
                     });
+                    if (typeof ack === "function") {
+                        ack({});
+                    }
                 } catch (error) {
                     logger.error({ userId, error }, "erro ao editar mensagem");
                 }

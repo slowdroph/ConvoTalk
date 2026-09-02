@@ -40,6 +40,7 @@ export async function listRooms(
 ): Promise<void> {
     try {
         const userId = req.user!._id;
+        const userObjId = new mongoose.Types.ObjectId(userId);
 
         const me = await User.findById(userId).select("blockedUsers").lean();
         const blocked = new Set(
@@ -63,13 +64,16 @@ export async function listRooms(
 
         const roomIds = visibleRooms.map((r) => r._id);
         let unreadAgg: { _id: mongoose.Types.ObjectId; count: number }[] = [];
+        let mentionAgg: { _id: mongoose.Types.ObjectId; count: number }[] = [];
         if (roomIds.length > 0) {
-            unreadAgg = await Message.aggregate([
+            const agg = await Message.aggregate([
                 {
                     $match: {
                         room: { $in: roomIds },
-                        sender: { $ne: new mongoose.Types.ObjectId(userId) },
+                        sender: { $ne: userObjId },
                         type: { $ne: "system" },
+                        deleted: { $ne: true },
+                        deletedFor: { $ne: userObjId },
                     },
                 },
                 {
@@ -94,6 +98,9 @@ export async function listRooms(
                                 null,
                             ],
                         },
+                        isMention: {
+                            $in: [userObjId, "$mentions"],
+                        },
                     },
                 },
                 {
@@ -106,23 +113,36 @@ export async function listRooms(
                                 else: { $gt: ["$createdAt", "$lastRead"] },
                             },
                         },
+                        isMention: 1,
                     },
                 },
                 {
-                    $group: {
-                        _id: "$room",
-                        count: { $sum: { $cond: ["$isUnread", 1, 0] } },
+                    $facet: {
+                        unread: [
+                            { $match: { isUnread: true } },
+                            { $group: { _id: "$room", count: { $sum: 1 } } },
+                        ],
+                        mentions: [
+                            { $match: { isMention: true, isUnread: true } },
+                            { $group: { _id: "$room", count: { $sum: 1 } } },
+                        ],
                     },
                 },
             ]);
+            unreadAgg = agg[0]?.unread ?? [];
+            mentionAgg = agg[0]?.mentions ?? [];
         }
 
         const unreadMap = new Map(
             unreadAgg.map((u) => [u._id.toString(), u.count]),
         );
+        const mentionMap = new Map(
+            mentionAgg.map((u) => [u._id.toString(), u.count]),
+        );
         const result = visibleRooms.map((r) => ({
             ...r,
             unreadCount: unreadMap.get(r._id.toString()) || 0,
+            mentionUnreadCount: mentionMap.get(r._id.toString()) || 0,
         }));
 
         res.json(result);

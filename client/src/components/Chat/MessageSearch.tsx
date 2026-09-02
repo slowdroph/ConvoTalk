@@ -16,46 +16,78 @@ export default function MessageSearch({
     onClose,
 }: MessageSearchProps) {
     const [query, setQuery] = useState("");
+    const [filter, setFilter] = useState<"all" | "mentions">("all");
     const [results, setResults] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
     const [current, setCurrent] = useState(0);
     const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const abortRef = useRef<AbortController | null>(null);
+    const requestVersionRef = useRef(0);
 
     const handleQueryChange = (value: string) => {
         setQuery(value);
         setCurrent(0);
-        if (!value.trim()) {
+        if (!value.trim() && filter === "all") {
             setResults([]);
         }
         onQueryChange(value);
     };
 
+    const handleFilterChange = (newFilter: "all" | "mentions") => {
+        setFilter(newFilter);
+        setCurrent(0);
+        if (!query.trim() && newFilter === "all") {
+            setResults([]);
+        }
+    };
+
     useEffect(() => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (abortRef.current) abortRef.current.abort();
 
-        const trimmed = query.trim();
-        if (!trimmed) {
+        if (filter === "all" && !query.trim()) {
             return;
         }
 
+        const version = ++requestVersionRef.current;
+
         timeoutRef.current = setTimeout(async () => {
+            const controller = new AbortController();
+            abortRef.current = controller;
             setLoading(true);
             try {
+                const params: Record<string, string | number> = {
+                    limit: 50,
+                    filter,
+                };
+                if (query.trim()) {
+                    params.q = query.trim();
+                }
                 const { data } = await api.get(`/messages/${roomId}/search`, {
-                    params: { q: trimmed, limit: 50 },
+                    params,
+                    signal: controller.signal,
                 });
-                setResults(data.messages as Message[]);
+                if (version === requestVersionRef.current) {
+                    setResults(data.messages as Message[]);
+                    setCurrent(0);
+                }
             } catch {
-                setResults([]);
+                if (version === requestVersionRef.current) {
+                    setResults([]);
+                    setCurrent(0);
+                }
             } finally {
-                setLoading(false);
+                if (version === requestVersionRef.current) {
+                    setLoading(false);
+                }
             }
         }, 300);
 
         return () => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            if (abortRef.current) abortRef.current.abort();
         };
-    }, [query, roomId]);
+    }, [query, filter, roomId]);
 
     const goTo = (index: number) => {
         const next = results[index];
@@ -96,20 +128,44 @@ export default function MessageSearch({
                     id="search"
                     value={query}
                     onChange={(e) => handleQueryChange(e.target.value)}
-                    placeholder="Buscar mensagens..."
+                    placeholder={filter === "mentions" ? "Filtrar menções (opcional)..." : "Buscar mensagens..."}
+                    aria-label="Buscar mensagens"
                     autoFocus
                     className="w-full pl-9 pr-4 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
                 />
             </div>
 
+            <div className="flex items-center gap-1 bg-zinc-800 border border-zinc-700 rounded-lg p-0.5">
+                <button
+                    onClick={() => handleFilterChange("all")}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                        filter === "all"
+                            ? "bg-green-600 text-white"
+                            : "text-zinc-300 hover:text-white"
+                    }`}
+                >
+                    Todas
+                </button>
+                <button
+                    onClick={() => handleFilterChange("mentions")}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                        filter === "mentions"
+                            ? "bg-emerald-600 text-white"
+                            : "text-zinc-300 hover:text-white"
+                    }`}
+                >
+                    Menções
+                </button>
+            </div>
+
             {loading ? (
                 <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-            ) : query.trim() ? (
+            ) : query.trim() || filter === "mentions" ? (
                 <div className="flex items-center gap-2 text-sm text-zinc-400">
                     <span>
                         {results.length === 0
                             ? "Nenhum resultado"
-                            : `${current + 1}/${results.length}`}
+                            : `${Math.min(current + 1, results.length)}/${results.length}`}
                     </span>
                     <button
                         onClick={handlePrev}

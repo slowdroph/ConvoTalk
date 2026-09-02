@@ -49,6 +49,7 @@ export interface IMessage extends Document {
     reactions: Map<string, IUser["_id"][]>;
     attachments: IAttachment[];
     readBy: IUser["_id"][];
+    mentions: IUser["_id"][];
     parentMessage: IMessage["_id"] | null;
     clientMessageId: string | null;
     createdAt: Date;

@@ -577,6 +577,7 @@ export default function ChatWindow({
                                 onOpenThread={handleOpenThread}
                                 pinnedMessageIds={pinnedMessageIds}
                                 onTogglePin={handleTogglePin}
+                                participants={participants}
                             />
                         </div>
                         {threadParent && (
@@ -591,6 +592,7 @@ export default function ChatWindow({
                                 onToggleReaction={handleToggleReaction}
                                 onTogglePin={handleTogglePin}
                                 isPinned={(id) => pinnedMessageIds.includes(id)}
+                                participants={participants}
                             />
                         )}
                     </div>
@@ -603,6 +605,7 @@ export default function ChatWindow({
                 isBlocked={isBlocked}
                 onOptimisticMessage={addOptimisticMessage}
                 onOptimisticFailed={markOptimisticFailed}
+                participants={participants}
             />
         </div>
     );

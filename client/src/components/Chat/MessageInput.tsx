@@ -6,8 +6,10 @@ import { useToast } from "../../contexts/ToastContext";
 import api from "../../services/api";
 import EmojiPicker from "./EmojiPicker";
 import AudioRecorder from "./AudioRecorder";
+import MentionAutocomplete from "./MentionAutocomplete";
 import { queuePendingMessage } from "../../lib/offlineStorage";
-import type { Message } from "../../types";
+import { parseMentionTokens, getUniqueMentionUserIds } from "@shared/mentions";
+import type { Message, User } from "../../types";
 
 const MAX_LENGTH = 2000;
 const WARN_LENGTH = 1800;
@@ -21,6 +23,7 @@ interface MessageInputProps {
     isBlocked?: boolean;
     onOptimisticMessage?: (msg: Message) => void;
     onOptimisticFailed?: (clientMessageId: string) => void;
+    participants?: User[];
 }
 
 const ALLOWED_DROP_TYPES = [
@@ -44,6 +47,7 @@ export default function MessageInput({
     isBlocked = false,
     onOptimisticMessage,
     onOptimisticFailed,
+    participants = [],
 }: MessageInputProps) {
     const [message, setMessage] = useState("");
     const { socket, connected } = useSocket();
@@ -58,6 +62,10 @@ export default function MessageInput({
     const [isRecording, setIsRecording] = useState(false);
     const [dragDepth, setDragDepth] = useState(0);
     const [dragging, setDragging] = useState(false);
+    const [mentionQuery, setMentionQuery] = useState("");
+    const [mentionActive, setMentionActive] = useState(false);
+    const [mentionCaretPos, setMentionCaretPos] = useState(0);
+    const [mentionPosition, setMentionPosition] = useState({ left: 0, top: 0 });
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLFormElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -75,12 +83,88 @@ export default function MessageInput({
         resizeTextarea();
     }, [message, resizeTextarea]);
 
+    const handleTyping = () => {
+        if (!socket) return;
+
+        if (!isTyping) {
+            setIsTyping(true);
+            socket.emit("typing", { roomId, isTyping: true });
+        }
+
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+
+        typingTimeoutRef.current = setTimeout(() => {
+            setIsTyping(false);
+            socket.emit("typing", { roomId, isTyping: false });
+        }, 4000);
+    };
+
+    const handleMentionSelect = useCallback(
+        (selectedUser: User) => {
+            const textarea = textareaRef.current;
+            if (!textarea) return;
+
+            const atIndex = message.lastIndexOf("@", mentionCaretPos - 1);
+            if (atIndex === -1) return;
+
+            const beforeMention = message.slice(0, atIndex);
+            const afterMention = message.slice(mentionCaretPos);
+
+            const newMessage = `${beforeMention}@${selectedUser.name} ${afterMention}`;
+            setMessage(newMessage);
+            setMentionActive(false);
+            setMentionQuery("");
+
+            requestAnimationFrame(() => {
+                const newCaretPos = atIndex + selectedUser.name.length + 2;
+                textarea.focus();
+                textarea.setSelectionRange(newCaretPos, newCaretPos);
+                handleTyping();
+            });
+        },
+        [message, mentionCaretPos, handleTyping],
+    );
+
+    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const newValue = e.target.value;
+        setMessage(newValue);
+        setError("");
+        handleTyping();
+
+        const caretPos = e.target.selectionStart;
+        const atIndex = newValue.lastIndexOf("@", caretPos - 1);
+
+        if (atIndex !== -1) {
+            const prevChar = atIndex > 0 ? newValue[atIndex - 1] : "";
+            const isWordChar = /[\w]/.test(prevChar);
+            if (!isWordChar) {
+                const afterAt = newValue.slice(atIndex + 1, caretPos);
+                if (!afterAt.includes(" ") && !afterAt.includes("\n")) {
+                    const rect = e.target.getBoundingClientRect();
+                    setMentionQuery(afterAt.toLowerCase());
+                    setMentionCaretPos(caretPos);
+                    setMentionActive(true);
+                    setMentionPosition({ left: rect.left, top: rect.top });
+                    return;
+                }
+            }
+        }
+        setMentionActive(false);
+        setMentionQuery("");
+    };
+
     const handleTextareaKeyDown = (
         e: React.KeyboardEvent<HTMLTextAreaElement>,
     ) => {
         if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
             e.preventDefault();
             e.currentTarget.form?.requestSubmit();
+        }
+        if (e.key === "Escape") {
+            setMentionActive(false);
+            setMentionQuery("");
         }
     };
 
@@ -164,24 +248,6 @@ export default function MessageInput({
         setError("");
     };
 
-    const handleTyping = () => {
-        if (!socket) return;
-
-        if (!isTyping) {
-            setIsTyping(true);
-            socket.emit("typing", { roomId, isTyping: true });
-        }
-
-        if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current);
-        }
-
-        typingTimeoutRef.current = setTimeout(() => {
-            setIsTyping(false);
-            socket.emit("typing", { roomId, isTyping: false });
-        }, 4000);
-    };
-
     const removeFile = (index: number) => {
         setFiles((prev) => prev.filter((_, i) => i !== index));
     };
@@ -246,6 +312,8 @@ export default function MessageInput({
         const clearInput = () => {
             setMessage("");
             setFiles([]);
+            setMentionActive(false);
+            setMentionQuery("");
             if (onCancelReply) onCancelReply();
             if (typingTimeoutRef.current) {
                 clearTimeout(typingTimeoutRef.current);
@@ -259,6 +327,13 @@ export default function MessageInput({
         if (socket && user) {
             // UI otimista: exibe a mensagem imediatamente com status "pending"
             // e limpa o input sem esperar a confirmação do servidor.
+            const mentionParticipants = participants.map((p) => ({
+                _id: p._id,
+                name: p.name,
+            }));
+            const mentionTokens = parseMentionTokens(trimmed, mentionParticipants);
+            const mentionIds = getUniqueMentionUserIds(mentionTokens);
+
             const optimistic: Message = {
                 _id: `temp-${clientMessageId}`,
                 sender: {
@@ -274,6 +349,7 @@ export default function MessageInput({
                 reactions: {},
                 attachments,
                 readBy: [],
+                mentions: mentionIds,
                 parentMessage: replyingTo
                     ? {
                           _id: replyingTo._id,
@@ -666,11 +742,7 @@ export default function MessageInput({
                         value={message}
                         aria-label="Escrever mensagem"
                         rows={1}
-                        onChange={(e) => {
-                            setMessage(e.target.value);
-                            setError("");
-                            handleTyping();
-                        }}
+                        onChange={handleTextareaChange}
                         onKeyDown={handleTextareaKeyDown}
                         placeholder={
                             isBlocked
@@ -711,6 +783,17 @@ export default function MessageInput({
                         )}
                     </button>
                 </div>
+            )}
+            {mentionActive && participants.length > 0 && (
+                <MentionAutocomplete
+                    isOpen={mentionActive}
+                    participants={participants}
+                    currentUserId={user?._id || ""}
+                    query={mentionQuery}
+                    onSelect={handleMentionSelect}
+                    onClose={() => setMentionActive(false)}
+                    position={mentionPosition}
+                />
             )}
         </form>
     );

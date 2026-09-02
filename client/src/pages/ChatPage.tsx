@@ -27,6 +27,9 @@ export default function ChatPage() {
     const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>(
         {},
     );
+    const [mentionUnreadCounts, setMentionUnreadCounts] = useState<
+        Record<string, number>
+    >({});
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [highlightMessageId, setHighlightMessageId] = useState<string | null>(
         null,
@@ -88,6 +91,12 @@ export default function ChatPage() {
                     return acc;
                 }, {}),
             );
+            setMentionUnreadCounts(
+                data.reduce((acc: Record<string, number>, r: Room) => {
+                    if (r.mentionUnreadCount) acc[r._id] = r.mentionUnreadCount;
+                    return acc;
+                }, {}),
+            );
             return data;
         } catch (error) {
             console.error("Erro ao carregar salas:", error);
@@ -116,6 +125,12 @@ export default function ChatPage() {
         setHighlightMessageId(messageId ?? null);
         setSidebarOpen(false);
         setUnreadCounts((prev) => {
+            if (!prev[roomId]) return prev;
+            const next = { ...prev };
+            delete next[roomId];
+            return next;
+        });
+        setMentionUnreadCounts((prev) => {
             if (!prev[roomId]) return prev;
             const next = { ...prev };
             delete next[roomId];
@@ -196,9 +211,24 @@ export default function ChatPage() {
                 [msg.room]: (prev[msg.room] || 0) + 1,
             }));
         };
+        const handleMention = (payload: {
+            messageId: string;
+            roomId: string;
+            sender: { _id: string; name: string; avatar?: string; status?: string };
+            content: string;
+            createdAt: string;
+        }) => {
+            if (payload.roomId === activeRoom) return;
+            setMentionUnreadCounts((prev) => ({
+                ...prev,
+                [payload.roomId]: (prev[payload.roomId] || 0) + 1,
+            }));
+        };
         socket.on("message", handleMessage);
+        socket.on("mention:new", handleMention);
         return () => {
             socket.off("message", handleMessage);
+            socket.off("mention:new", handleMention);
         };
     }, [socket, user, activeRoom]);
 
@@ -231,6 +261,7 @@ export default function ChatPage() {
                     onGroupCreated={handleGroupCreated}
                     onDeleteRoom={handleDeleteRoom}
                     unreadCounts={unreadCounts}
+                    mentionUnreadCounts={mentionUnreadCounts}
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
                 />

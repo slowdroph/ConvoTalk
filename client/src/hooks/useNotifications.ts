@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { Socket } from "socket.io-client";
-import type { Message } from "../types";
+import type { Message, MentionNotificationPayload } from "../types";
 import { playNotificationSound } from "../utils/sound";
 import { useToast } from "../contexts/ToastContext";
 import {
@@ -100,7 +100,58 @@ export function useNotifications(
             }
         };
 
+        const handleMention = async (payload: MentionNotificationPayload) => {
+            if (payload.roomId === activeRoomIdRef.current) return;
+
+            const isHidden = document.hidden;
+
+            if (!isHidden) {
+                showToast({
+                    title: `@${payload.sender.name} mencionou você`,
+                    message:
+                        payload.content.length > 100
+                            ? payload.content.slice(0, 100) + "..."
+                            : payload.content,
+                });
+            }
+
+            if (getSoundEnabled()) {
+                playNotificationSound();
+            }
+
+            if (
+                isHidden &&
+                getBrowserNotificationsEnabled() &&
+                "Notification" in window &&
+                Notification.permission === "granted"
+            ) {
+                let hasPushSubscription = false;
+                if ("serviceWorker" in navigator) {
+                    try {
+                        const registration =
+                            await navigator.serviceWorker.ready;
+                        hasPushSubscription = Boolean(
+                            await registration.pushManager.getSubscription(),
+                        );
+                    } catch {
+                        hasPushSubscription = false;
+                    }
+                }
+                if (!hasPushSubscription) {
+                    new Notification(`@${payload.sender.name} mencionou você`, {
+                        body:
+                            payload.content.length > 100
+                                ? payload.content.slice(0, 100) + "..."
+                                : payload.content,
+                        icon: "/favicon.svg",
+                        tag: `mention-${payload.roomId}`,
+                    });
+                }
+            }
+        };
+
         socket.on("message", handleMessage);
+        socket.on("mention:new", handleMention);
 
         const handleVisibility = () => {
             if (!document.hidden && unreadCount.current > 0) {
@@ -113,6 +164,7 @@ export function useNotifications(
 
         return () => {
             socket.off("message", handleMessage);
+            socket.off("mention:new", handleMention);
             document.removeEventListener("visibilitychange", handleVisibility);
             unreadCount.current = 0;
             updateTitle();

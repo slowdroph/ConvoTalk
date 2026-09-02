@@ -37,6 +37,7 @@ export interface RoomPayload {
     admins?: UserPayload[];
     avatar?: string;
     unreadCount?: number;
+    mentionUnreadCount?: number;
     pinnedMessages?: PinnedMessagePayload[];
 }
 
@@ -60,6 +61,7 @@ export interface MessagePayload {
     reactions: Record<string, string[]>;
     attachments?: AttachmentPayload[];
     readBy?: string[];
+    mentions?: string[];
     parentMessage?: ParentMessagePayload | null;
     clientMessageId?: string | null;
     status?: "pending" | "sent" | "failed";
@@ -195,5 +197,13 @@ export interface PushNotificationPayload {
         messageId?: string;
         senderId?: string;
     };
+}
+
+export interface MentionNotificationPayload {
+    messageId: string;
+    roomId: string;
+    sender: SenderPayload;
+    content: string;
+    createdAt: string;
 }
 

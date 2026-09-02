@@ -176,15 +176,25 @@ export const messageSearchQuerySchema = z.object({
     query: z.object({
         q: z
             .string()
-            .min(1, "Termo de busca é obrigatório.")
-            .max(100, "Termo de busca deve ter no máximo 100 caracteres."),
+            .max(100, "Termo de busca deve ter no máximo 100 caracteres.")
+            .optional()
+            .default(""),
+        filter: z
+            .enum(["all", "mentions"])
+            .optional()
+            .default("all"),
         limit: z.coerce
             .number()
             .int()
             .min(1, "Limite deve ser no mínimo 1.")
             .max(50, "Limite deve ser no máximo 50.")
             .default(20),
-    }),
+    }).refine((data) => {
+        if (data.filter === "all" && !data.q.trim()) {
+            return false;
+        }
+        return true;
+    }, "Termo de busca é obrigatório quando filtro não é 'mentions'."),
 });
 
 export const searchQuerySchema = z.object({

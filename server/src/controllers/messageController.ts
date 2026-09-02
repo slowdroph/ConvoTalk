@@ -137,8 +137,9 @@ export async function searchRoomMessages(
 ): Promise<void> {
     try {
         const { roomId } = req.params;
-        const { q, limit } = req.query as unknown as {
+        const { q, filter, limit } = req.query as unknown as {
             q: string;
+            filter: "all" | "mentions";
             limit: number;
         };
 
@@ -155,12 +156,27 @@ export async function searchRoomMessages(
             throw new ForbiddenError("Acesso negado.");
         }
 
-        const escaped = escapeRegex(q);
-        const messages = await Message.find({
+        const userId = req.user!._id.toString();
+        let query: Record<string, unknown> = {
             room: roomId,
             deleted: { $ne: true },
-            content: { $regex: escaped, $options: "i" },
-        })
+        };
+
+        if (filter === "mentions") {
+            query.mentions = userId;
+            if (q && q.trim()) {
+                const escaped = escapeRegex(q);
+                query.content = { $regex: escaped, $options: "i" };
+            }
+        } else {
+            if (!q || !q.trim()) {
+                throw new ValidationError("Termo de busca é obrigatório.");
+            }
+            const escaped = escapeRegex(q);
+            query.content = { $regex: escaped, $options: "i" };
+        }
+
+        const messages = await Message.find(query)
             .sort({ createdAt: -1 })
             .limit(limit ?? 20)
             .populate("sender", "name avatar status")

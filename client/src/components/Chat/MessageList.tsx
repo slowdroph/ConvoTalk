@@ -2,7 +2,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import MessageBubble from "./MessageBubble";
 import Avatar from "../ui/Avatar";
-import type { Message } from "../../types";
+import type { Message, User } from "../../types";
 
 export interface TypingUser {
     userId: string;
@@ -28,6 +28,7 @@ interface MessageListProps {
     onOpenThread?: (message: Message) => void;
     pinnedMessageIds?: string[];
     onTogglePin?: (message: Message) => void;
+    participants?: User[];
 }
 
 const SCROLL_THRESHOLD = 150;
@@ -62,6 +63,7 @@ export default memo(function MessageList({
     onOpenThread,
     pinnedMessageIds = [],
     onTogglePin,
+    participants,
 }: MessageListProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const nearBottomRef = useRef(true);
@@ -324,6 +326,7 @@ export default memo(function MessageList({
                                                         currentUserId={
                                                             currentUserId ?? ""
                                                         }
+                                                        participants={participants}
                                                     />
                                                 </div>
                                             );

@@ -8,6 +8,7 @@ import type {
     ParentMessagePayload,
     PinnedMessagePayload,
     LinkPreview as LinkPreviewPayload,
+    MentionNotificationPayload as MentionNotificationPayloadShared,
 } from "@shared/types";
 
 export type User = UserPayload;
@@ -19,6 +20,7 @@ export type OnlineUser = OnlineUserPayload;
 export type ParentMessage = ParentMessagePayload;
 export type PinnedMessage = PinnedMessagePayload;
 export type LinkPreview = LinkPreviewPayload;
+export type MentionNotificationPayload = MentionNotificationPayloadShared;
 
 export interface Participant {
     _id: string;
