@@ -22,7 +22,7 @@ const auth = (req: AuthRequest, res: Response, next: NextFunction): void => {
 
     try {
         const decoded = verifyAccessToken(token);
-        req.user = { _id: decoded.userId };
+        req.user = { _id: decoded.userId, sessionId: decoded.sessionId };
         next();
     } catch {
         sendError(res, 401, "UNAUTHORIZED", "Token inválido.");

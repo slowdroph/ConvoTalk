@@ -3,6 +3,8 @@ import type { Types } from "mongoose";
 import Message from "../models/Message";
 import Room from "../models/Room";
 import User from "../models/User";
+import Session from "../models/Session";
+import ReadLog from "../models/ReadLog";
 import { deleteCloudinaryAttachments } from "../services/cloudinary";
 import type { IAttachment } from "../types";
 import {
@@ -249,7 +251,7 @@ async function triggerMentionNotifications(
 
         for (const recipientId of recipients) {
             const socketIds = getUserSocketIds(recipientId);
-            if (socketIds?.length) {
+            if (socketIds?.size) {
                 for (const socketId of socketIds) {
                     io.to(socketId).emit("mention:new", {
                         messageId: String(message._id),
@@ -332,6 +334,12 @@ const socketHandler = (io: SocketIOServer): void => {
                     lastIpAt: new Date(),
                 },
             );
+            if (socket.sessionId) {
+                await Session.updateOne(
+                    { _id: socket.sessionId, userId },
+                    { lastActiveAt: new Date() },
+                ).catch(() => {});
+            }
             broadcastOnlineUsers(io);
         }
 
@@ -360,8 +368,10 @@ const socketHandler = (io: SocketIOServer): void => {
 
         // Sair da sala
         socket.on("leave", (roomId: string) => {
-            socket.leave(roomId);
-            logger.info({ userId, roomId }, "usuário saiu da sala");
+            const parsed = objectId.safeParse(roomId);
+            if (!parsed.success) return;
+            socket.leave(parsed.data);
+            logger.info({ userId, roomId: parsed.data }, "usuário saiu da sala");
         });
 
         // Enviar mensagem
@@ -1118,6 +1128,21 @@ const socketHandler = (io: SocketIOServer): void => {
                         { $set: { [`lastReadAt.${userId}`]: new Date() } },
                     );
 
+                    if (socket.sessionId) {
+                        const readLogEntries = messageIds.map((messageId) => ({
+                            userId,
+                            sessionId: socket.sessionId,
+                            messageId,
+                            roomId,
+                            readAt: new Date(),
+                        }));
+                        await ReadLog.insertMany(readLogEntries, { ordered: false }).catch((err) => {
+                            if (err?.code !== 11000) {
+                                logger.error({ userId, error: err }, "erro ao salvar read logs");
+                            }
+                        });
+                    }
+
                     io.to(roomId).emit("messages_read", {
                         messageIds,
                         userId,
@@ -1137,10 +1162,14 @@ const socketHandler = (io: SocketIOServer): void => {
             cleanupSocketRateLimits(socket.id);
             clearTypingForUser(userId);
             User.updateOne({ _id: userId }, { lastSeen: new Date() }).catch(
-                () => {
-                    // falha silenciosa na atualização de lastSeen
-                },
+                () => {},
             );
+            if (socket.sessionId) {
+                Session.updateOne(
+                    { _id: socket.sessionId, userId },
+                    { lastActiveAt: new Date() },
+                ).catch(() => {});
+            }
             broadcastOnlineUsers(io);
             logger.info(
                 { userId, socketId: socket.id },

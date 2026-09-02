@@ -196,6 +196,7 @@ export interface PushNotificationPayload {
         roomId?: string;
         messageId?: string;
         senderId?: string;
+        mention?: boolean;
     };
 }
 
@@ -205,5 +206,23 @@ export interface MentionNotificationPayload {
     sender: SenderPayload;
     content: string;
     createdAt: string;
+}
+
+export interface SessionPayload {
+    _id: string;
+    deviceType: "web" | "mobile" | "desktop" | "unknown";
+    deviceLabel: string;
+    ip: string | null;
+    lastActiveAt: string;
+    createdAt: string;
+    current: boolean;
+}
+
+export interface ReadDetailPayload {
+    userId: string;
+    name: string;
+    avatar: string;
+    readAt: string;
+    sessionId: string;
 }
 

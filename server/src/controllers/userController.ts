@@ -263,7 +263,6 @@ export async function updateAvatar(
             verificationTokenExpiry,
             resetToken,
             resetTokenExpiry,
-            refreshToken,
             ...userWithoutSensitive
         } = user.toObject();
         res.json(userWithoutSensitive);
@@ -303,7 +302,6 @@ export async function removeAvatar(
             verificationTokenExpiry,
             resetToken,
             resetTokenExpiry,
-            refreshToken,
             ...userWithoutSensitive
         } = user.toObject();
         res.json(userWithoutSensitive);

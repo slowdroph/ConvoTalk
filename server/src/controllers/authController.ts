@@ -1,6 +1,7 @@
 import { Response } from "express";
 import bcrypt from "bcryptjs";
 import User from "../models/User";
+import Session from "../models/Session";
 import { Request } from "express";
 import {
     ConflictError,
@@ -29,6 +30,8 @@ import {
 } from "../services/token";
 import { SALT_ROUNDS } from "../constants";
 import { logger } from "../config/logger";
+import { getSocketIO } from "../config/io";
+import { emitForceLogout } from "../utils/socket";
 
 function publicUser(user: {
     _id: unknown;
@@ -101,6 +104,37 @@ export async function register(req: Request, res: Response): Promise<void> {
     }
 }
 
+function parseDeviceType(userAgent: string): "web" | "mobile" | "desktop" | "unknown" {
+    if (!userAgent) return "unknown";
+    const ua = userAgent.toLowerCase();
+    if (/mobile|android|iphone|ipad/.test(ua)) return "mobile";
+    if (/electron/.test(ua)) return "desktop";
+    return "web";
+}
+
+function buildDeviceLabel(userAgent: string): string {
+    if (!userAgent) return "Dispositivo desconhecido";
+    const ua = userAgent;
+    let browser = "Navegador desconhecido";
+    let os = "Sistema desconhecido";
+
+    if (/chrome/i.test(ua) && !/edge|opr/i.test(ua)) browser = "Chrome";
+    else if (/firefox/i.test(ua)) browser = "Firefox";
+    else if (/safari/i.test(ua) && !/chrome/i.test(ua)) browser = "Safari";
+    else if (/edge/i.test(ua)) browser = "Edge";
+    else if (/opr|opera/i.test(ua)) browser = "Opera";
+
+    if (/windows/i.test(ua)) os = "Windows";
+    else if (/macintosh|mac os/i.test(ua)) os = "Mac";
+    else if (/linux/i.test(ua)) os = "Linux";
+    else if (/android/i.test(ua)) os = "Android";
+    else if (/iphone|ipad/i.test(ua)) os = "iOS";
+
+    return `${browser} em ${os}`;
+}
+
+const MAX_SESSIONS_PER_USER = 10;
+
 export async function login(req: Request, res: Response): Promise<void> {
     try {
         const { email, password } = req.body;
@@ -126,20 +160,51 @@ export async function login(req: Request, res: Response): Promise<void> {
             return;
         }
 
-        const accessToken = signAccessToken(user._id.toString());
-        const refreshToken = signRefreshToken(user._id.toString());
-        user.refreshToken = hashRefreshToken(refreshToken);
+        const userAgent = req.header("User-Agent") || "";
+        const deviceType = parseDeviceType(userAgent);
+        const deviceLabel = buildDeviceLabel(userAgent);
+        const ip = req.ip ?? null;
+
+        const tempRefreshToken = signRefreshToken(user._id.toString(), "pending");
+        const session = await Session.create({
+            userId: user._id,
+            token: hashRefreshToken(tempRefreshToken),
+            deviceType,
+            userAgent: userAgent.slice(0, 500),
+            ip,
+            deviceLabel,
+            lastActiveAt: new Date(),
+        });
+
+        const accessToken = signAccessToken(user._id.toString(), session._id.toString());
+        const finalRefreshToken = signRefreshToken(user._id.toString(), session._id.toString());
+        session.token = hashRefreshToken(finalRefreshToken);
+        await session.save();
+
+        const excessCount = await Session.countDocuments({ userId: user._id }) - MAX_SESSIONS_PER_USER;
+        if (excessCount > 0) {
+            const oldestSessions = await Session.find({ userId: user._id })
+                .sort({ createdAt: 1 })
+                .limit(excessCount)
+                .select("_id")
+                .lean();
+            if (oldestSessions.length > 0) {
+                const idsToRemove = oldestSessions.map((s) => s._id);
+                await Session.deleteMany({ _id: { $in: idsToRemove } });
+            }
+        }
+
         user.lastIp = req.ip ?? null;
         user.lastIpAt = new Date();
         await user.save();
 
-        res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions());
+        res.cookie(REFRESH_COOKIE_NAME, finalRefreshToken, refreshCookieOptions());
 
         audit({
             action: "auth.login",
             actorId: user._id.toString(),
             ip: req.ip,
-            details: { email: user.email },
+            details: { email: user.email, sessionId: session._id.toString(), deviceType },
         });
 
         res.json({
@@ -152,29 +217,35 @@ export async function login(req: Request, res: Response): Promise<void> {
 }
 
 export async function refresh(req: Request, res: Response): Promise<void> {
-    const refreshToken = req.cookies?.[REFRESH_COOKIE_NAME] as
-        | string
-        | undefined;
-    if (!refreshToken) {
-        throw new UnauthorizedError("Sessão expirada.");
-    }
-
     try {
-        const { userId } = verifyRefreshToken(refreshToken);
-        const user = await User.findById(userId);
-        if (
-            !user ||
-            !user.refreshToken ||
-            user.refreshToken !== hashRefreshToken(refreshToken)
-        ) {
+        const refreshToken = req.cookies?.[REFRESH_COOKIE_NAME] as
+            | string
+            | undefined;
+        if (!refreshToken) {
             throw new UnauthorizedError("Sessão expirada.");
         }
 
-        const newRefreshToken = signRefreshToken(userId);
-        user.refreshToken = hashRefreshToken(newRefreshToken);
-        await user.save();
+        const { userId, sessionId } = verifyRefreshToken(refreshToken);
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new UnauthorizedError("Sessão expirada.");
+        }
 
-        const accessToken = signAccessToken(userId);
+        if (!sessionId) {
+            throw new UnauthorizedError("Sessão legada. Faça login novamente.");
+        }
+
+        const session = await Session.findById(sessionId);
+        if (!session || session.token !== hashRefreshToken(refreshToken)) {
+            throw new UnauthorizedError("Sessão expirada.");
+        }
+
+        const newRefreshToken = signRefreshToken(userId, sessionId);
+        session.token = hashRefreshToken(newRefreshToken);
+        session.lastActiveAt = new Date();
+        await session.save();
+
+        const accessToken = signAccessToken(userId, sessionId);
         res.cookie(
             REFRESH_COOKIE_NAME,
             newRefreshToken,
@@ -195,11 +266,14 @@ export async function logout(req: Request, res: Response): Promise<void> {
         | undefined;
     if (refreshToken) {
         try {
-            const { userId } = verifyRefreshToken(refreshToken);
-            await User.updateOne(
-                { _id: userId },
-                { $unset: { refreshToken: 1 } },
-            );
+            const { userId, sessionId } = verifyRefreshToken(refreshToken);
+            if (sessionId) {
+                const io = getSocketIO();
+                if (io) {
+                    await emitForceLogout(io, userId, "remote_logout", sessionId);
+                }
+                await Session.findByIdAndDelete(sessionId);
+            }
         } catch {
             // Token inválido — apenas limpa o cookie
         }
@@ -333,8 +407,14 @@ export async function resetPassword(
         user.password = await bcrypt.hash(password, salt);
         user.resetToken = null;
         user.resetTokenExpiry = null;
-        user.refreshToken = null;
         await user.save();
+
+        await Session.deleteMany({ userId: user._id });
+
+        const io = getSocketIO();
+        if (io) {
+            await emitForceLogout(io, user._id.toString(), "password_changed");
+        }
 
         res.json({
             message: "Senha redefinida com sucesso! Faça login para continuar.",

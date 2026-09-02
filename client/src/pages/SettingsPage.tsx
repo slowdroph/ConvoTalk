@@ -6,6 +6,7 @@ import NotificationSettings from "../components/Settings/NotificationSettings";
 import DeleteAccountModal from "../components/Settings/DeleteAccountModal";
 import ThemeToggle from "../components/Settings/ThemeToggle";
 import BlockedUsers from "../components/Settings/BlockedUsers";
+import SessionManager from "../components/Settings/SessionManager";
 
 export default function SettingsPage() {
     const navigate = useNavigate();
@@ -54,6 +55,10 @@ export default function SettingsPage() {
 
                     <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm dark:bg-zinc-900 dark:border-zinc-800 dark:shadow-none">
                         <BlockedUsers />
+                    </div>
+
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm dark:bg-zinc-900 dark:border-zinc-800 dark:shadow-none">
+                        <SessionManager />
                     </div>
 
                     <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm dark:bg-zinc-900 dark:border-zinc-800 dark:shadow-none">

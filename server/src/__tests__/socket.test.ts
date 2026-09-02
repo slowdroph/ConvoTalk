@@ -26,7 +26,7 @@ async function createUser(name: string, email: string) {
 
 function connectClient(userId: string): Promise<ClientSocket> {
     return new Promise((resolve) => {
-        const token = signAccessToken(userId);
+        const token = signAccessToken(userId, "session-test");
         const client = ioc(`http://localhost:${port}`, {
             transports: ["websocket"],
             auth: { token },

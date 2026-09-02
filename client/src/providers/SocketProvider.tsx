@@ -8,7 +8,7 @@ import { getAccessToken } from "../services/api";
 import { SOCKET_URL } from "../lib/apiUrl";
 
 export function SocketProvider({ children }: { children: ReactNode }) {
-    const { token } = useAuth();
+    const { token, logout } = useAuth();
     const { showToast } = useToast();
     const [socket, setSocket] = useState<Socket | null>(null);
     const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
@@ -80,6 +80,19 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         newSocket.on("user_online", (users: OnlineUser[]) =>
             setOnlineUsers(users),
         );
+        newSocket.on("session:force_logout", (data?: { reason?: string }) => {
+            const reasonMessages: Record<string, string> = {
+                password_changed: "Sua senha foi alterada. Faça login novamente.",
+                all_devices: "Todas as sessões foram encerradas.",
+                remote_logout: "Sessão encerrada remotamente.",
+                session_expired: "Sessão expirada. Faça login novamente.",
+            };
+            const message = data?.reason
+                ? reasonMessages[data.reason] ?? "Sessão encerrada."
+                : "Sessão encerrada.";
+            showToast({ type: "warning", message });
+            logout();
+        });
 
         setSocket(newSocket);
 
@@ -93,7 +106,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             setHasConnectedOnce(false);
             wasConnected.current = false;
         };
-    }, [token, showToast]);
+    }, [token, showToast, logout]);
 
     const value = useMemo(
         () => ({

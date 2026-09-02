@@ -3,6 +3,7 @@ import multer from "multer";
 import Message from "../models/Message";
 import Room from "../models/Room";
 import User from "../models/User";
+import ReadLog from "../models/ReadLog";
 import { AuthRequest } from "../middleware/auth";
 import { objectId } from "../validations";
 import {
@@ -497,5 +498,60 @@ export async function getRoomMessages(
         res.json({ messages: result, hasMore });
     } catch (error) {
         handleError(error, res, "Erro ao buscar mensagens.");
+    }
+}
+
+export async function getMessageReadDetails(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { messageId } = req.params;
+        const userId = req.user!._id;
+
+        const parsed = objectId.safeParse(messageId);
+        if (!parsed.success) {
+            sendError(res, 400, "INVALID_ID", "ID da mensagem inválido.");
+            return;
+        }
+
+        const message = await Message.findById(parsed.data).lean();
+        if (!message) {
+            throw new NotFoundError("Mensagem não encontrada.");
+        }
+
+        const room = await Room.findById(message.room)
+            .select("participants")
+            .lean();
+        if (!room) {
+            throw new NotFoundError("Sala não encontrada.");
+        }
+
+        const isParticipant = room.participants.some(
+            (p) => p.toString() === userId,
+        );
+        if (!isParticipant) {
+            throw new ForbiddenError("Você não tem acesso a esta mensagem.");
+        }
+
+        const readLogs = await ReadLog.find({ messageId: parsed.data })
+            .populate("userId", "name avatar")
+            .sort({ readAt: -1 })
+            .lean();
+
+        const readDetails = readLogs.map((log) => {
+            const user = log.userId as unknown as { _id?: { toString(): string }; name?: string; avatar?: string };
+            return {
+                userId: user._id?.toString() || (log.userId as unknown as { toString(): string }).toString(),
+                name: user.name || "Usuário",
+                avatar: user.avatar || "",
+                readAt: log.readAt.toISOString(),
+                sessionId: log.sessionId.toString(),
+            };
+        });
+
+        res.json({ readDetails });
+    } catch (error) {
+        handleError(error, res, "Erro ao buscar detalhes de leitura.");
     }
 }

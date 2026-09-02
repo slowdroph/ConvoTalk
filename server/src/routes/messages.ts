@@ -14,6 +14,7 @@ import {
     uploadAttachments,
     getRoomMessages,
     getThreadMessages,
+    getMessageReadDetails,
 } from "../controllers/messageController";
 
 const router = Router();
@@ -27,6 +28,7 @@ router.get(
 );
 router.get("/:roomId/export", auth, exportRoom);
 router.get("/:roomId/thread/:messageId", auth, getThreadMessages);
+router.get("/:messageId/read-details", auth, getMessageReadDetails);
 router.post(
     "/:roomId/attachments",
     auth,

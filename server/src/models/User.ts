@@ -45,10 +45,6 @@ const userSchema = new Schema<IUser>({
         type: Date,
         default: null,
     },
-    refreshToken: {
-        type: String,
-        default: null,
-    },
     lastSeen: {
         type: Date,
         default: null,

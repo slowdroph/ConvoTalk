@@ -161,12 +161,14 @@ export function scheduleTypingTimeout(
     clearTypingTimer(key);
     const timer = setTimeout(() => {
         typingTimers.delete(key);
-        socket.to(roomId).emit("typing", {
-            userId,
-            name,
-            avatar,
-            isTyping: false,
-        });
+        if (socket.connected) {
+            socket.to(roomId).emit("typing", {
+                userId,
+                name,
+                avatar,
+                isTyping: false,
+            });
+        }
     }, TYPING_TIMEOUT_MS);
     typingTimers.set(key, timer);
 }

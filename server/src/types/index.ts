@@ -10,7 +10,6 @@ export interface IUser extends Document {
     verificationTokenExpiry: Date | null;
     resetToken: string | null;
     resetTokenExpiry: Date | null;
-    refreshToken: string | null;
     lastSeen: Date | null;
     lastIp: string | null;
     lastIpAt: Date | null;
@@ -70,8 +69,28 @@ export interface OnlineUser {
     avatar: string;
 }
 
+export interface ISession extends Document {
+    userId: IUser["_id"];
+    token: string;
+    deviceType: "web" | "mobile" | "desktop" | "unknown";
+    userAgent: string;
+    ip: string | null;
+    deviceLabel: string;
+    lastActiveAt: Date;
+    createdAt: Date;
+}
+
+export interface IReadLog extends Document {
+    userId: IUser["_id"];
+    sessionId: ISession["_id"];
+    messageId: IMessage["_id"];
+    roomId: IRoom["_id"];
+    readAt: Date;
+}
+
 export interface AuthUser {
     _id: string;
+    sessionId?: string;
 }
 
 export interface IPushSubscription extends Document {

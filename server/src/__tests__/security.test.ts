@@ -42,12 +42,12 @@ async function request(
 
 describe("segurança: token type", () => {
     it("rejeita refresh token usado como access token", () => {
-        const refresh = signRefreshToken("user-123");
+        const refresh = signRefreshToken("user-123", "session-456");
         expect(() => verifyAccessToken(refresh)).toThrow();
     });
 
     it("aceita access token como access token", () => {
-        const access = signAccessToken("user-123");
+        const access = signAccessToken("user-123", "session-456");
         expect(verifyAccessToken(access).userId).toBe("user-123");
     });
 });
@@ -83,7 +83,7 @@ describe("segurança: middleware auth", () => {
             res.json({ userId: req.user?._id });
         });
 
-        const token = signAccessToken("user-123");
+        const token = signAccessToken("user-123", "session-456");
         const result = await request(app, "/api/rooms", {
             headers: { authorization: `Bearer ${token}` },
         });

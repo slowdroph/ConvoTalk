@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { logger } from "../config/logger";
 
 const ACCESS_SECRET = (): string => process.env.JWT_SECRET!;
 const REFRESH_SECRET = (): string => process.env.REFRESH_TOKEN_SECRET!;
@@ -9,36 +10,44 @@ export const REFRESH_TOKEN_EXPIRES_IN = "7d";
 export const REFRESH_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 export const REFRESH_COOKIE_NAME = "refresh_token";
 
-export function signAccessToken(userId: string): string {
-    return jwt.sign({ userId, tokenType: "access" }, ACCESS_SECRET(), {
+export function signAccessToken(userId: string, sessionId: string): string {
+    return jwt.sign({ userId, sessionId, tokenType: "access" }, ACCESS_SECRET(), {
         expiresIn: ACCESS_TOKEN_EXPIRES_IN,
     });
 }
 
-export function signRefreshToken(userId: string): string {
-    return jwt.sign({ userId, tokenType: "refresh" }, REFRESH_SECRET(), {
+export function signRefreshToken(userId: string, sessionId: string): string {
+    return jwt.sign({ userId, sessionId, tokenType: "refresh" }, REFRESH_SECRET(), {
         expiresIn: REFRESH_TOKEN_EXPIRES_IN,
     });
 }
 
-export function verifyAccessToken(token: string): { userId: string } {
+export function verifyAccessToken(token: string): { userId: string; sessionId?: string } {
     const decoded = jwt.verify(token, ACCESS_SECRET()) as {
         userId: string;
+        sessionId?: string;
         tokenType?: string;
     };
     if (decoded.tokenType !== "access") {
         throw new Error("Tipo de token inválido");
     }
+    if (!decoded.sessionId) {
+        logger.warn("Token legacy sem sessionId detectado (access)");
+    }
     return decoded;
 }
 
-export function verifyRefreshToken(token: string): { userId: string } {
+export function verifyRefreshToken(token: string): { userId: string; sessionId?: string } {
     const decoded = jwt.verify(token, REFRESH_SECRET()) as {
         userId: string;
+        sessionId?: string;
         tokenType?: string;
     };
     if (decoded.tokenType !== "refresh") {
         throw new Error("Tipo de token inválido");
+    }
+    if (!decoded.sessionId) {
+        logger.warn("Token legacy sem sessionId detectado (refresh)");
     }
     return decoded;
 }

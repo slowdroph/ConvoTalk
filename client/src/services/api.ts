@@ -1,5 +1,6 @@
 import axios from "axios";
 import { BASE_URL } from "../lib/apiUrl";
+import type { Session } from "../types";
 
 let accessToken: string | null = null;
 
@@ -49,6 +50,19 @@ export async function refreshAccessToken(): Promise<string | null> {
 
 export function clearSessionFlag(): void {
     localStorage.removeItem(SESSION_FLAG_KEY);
+}
+
+export async function getSessions(): Promise<Session[]> {
+    const response = await api.get("/sessions");
+    return response.data.sessions;
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+    await api.delete(`/sessions/${sessionId}`);
+}
+
+export async function deleteAllSessions(): Promise<void> {
+    await api.delete("/sessions");
 }
 
 api.interceptors.request.use((config) => {

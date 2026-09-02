@@ -17,6 +17,7 @@ import userRoutes from "./routes/user";
 import usersSearchRoutes from "./routes/users";
 import linkPreviewRoutes from "./routes/linkPreview";
 import pushRoutes from "./routes/push";
+import sessionRoutes from "./routes/sessions";
 
 import socketHandler from "./socket/socketHandler";
 import previewHandler from "./socket/previewHandler";
@@ -129,6 +130,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/users", searchLimiter, usersSearchRoutes);
 app.use("/api/links", previewLimiter, linkPreviewRoutes);
 app.use("/api/push", pushLimiter, pushRoutes);
+app.use("/api/sessions", sessionRoutes);
 
 
 app.get("/api/health/live", (_req, res) => {
