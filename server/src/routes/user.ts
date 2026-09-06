@@ -2,6 +2,7 @@ import { Router } from "express";
 import auth from "../middleware/auth";
 import { validate } from "../middleware/validate";
 import upload from "../middleware/upload";
+import { emailChangeLimiter } from "../middleware/rateLimiter";
 import {
     objectId,
     profileSchema,
@@ -9,6 +10,7 @@ import {
     accountSchema,
     blockUserParams,
     statusSchema,
+    confirmEmailChangeSchema,
 } from "../validations";
 import {
     getMe,
@@ -22,13 +24,26 @@ import {
     blockUser,
     unblockUser,
     listBlockedUsers,
+    confirmEmailChange,
 } from "../controllers/userController";
 
 const router = Router();
 
 router.get("/me", auth, getMe);
 router.get("/:id/status", auth, getUserStatus);
-router.put("/profile", auth, validate(profileSchema), updateProfile);
+router.put(
+    "/profile",
+    auth,
+    emailChangeLimiter,
+    validate(profileSchema),
+    updateProfile,
+);
+router.post(
+    "/confirm-email-change",
+    emailChangeLimiter,
+    validate(confirmEmailChangeSchema),
+    confirmEmailChange,
+);
 router.put("/status", auth, validate(statusSchema), updateStatus);
 router.put("/password", auth, validate(passwordSchema), updatePassword);
 router.delete("/account", auth, validate(accountSchema), deleteAccount);

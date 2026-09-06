@@ -44,6 +44,17 @@ export const profileSchema = z.object({
             .string()
             .email("Email inválido.")
             .max(100, "Email deve ter no máximo 100 caracteres."),
+        currentPassword: z
+            .string()
+            .max(128, "Senha deve ter no máximo 128 caracteres.")
+            .optional()
+            .default(""),
+    }),
+});
+
+export const confirmEmailChangeSchema = z.object({
+    body: z.object({
+        token: z.string().min(1, "Token é obrigatório."),
     }),
 });
 

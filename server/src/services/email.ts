@@ -264,6 +264,34 @@ export async function sendVerificationEmail(
     });
 }
 
+export async function sendEmailChangeConfirmation(
+    email: string,
+    name: string,
+    token: string,
+): Promise<void> {
+    const confirmUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/confirm-email-change?token=${token}`;
+    const safeName = escapeHtml(name);
+
+    const html = buildEmailHtml({
+        preheader: "Confirme seu novo email no ConvoTalk",
+        heading: `Olá, ${safeName}!`,
+        content: `
+          <p>Recebemos uma solicitação para alterar o email da sua conta no ConvoTalk.</p>
+          <p>Para confirmar o novo email, clique no botão abaixo.</p>
+          <p>Este link é válido por <strong>24 horas</strong>. Se você não solicitou esta alteração, ignore este email.</p>
+        `,
+        cta: { url: confirmUrl, label: "Confirmar novo email" },
+        footerNote: "Se você não solicitou a alteração, ignore este email.",
+    });
+
+    await getResend().emails.send({
+        from: EMAIL_FROM,
+        to: email,
+        subject: "Confirme seu novo email - ConvoTalk",
+        html,
+    });
+}
+
 export async function sendPasswordResetEmail(
     email: string,
     name: string,

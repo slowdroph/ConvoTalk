@@ -1,7 +1,8 @@
-﻿import { Response } from "express";
+﻿import { Response, Request } from "express";
 import bcrypt from "bcryptjs";
 import User from "../models/User";
 import Message from "../models/Message";
+import Session from "../models/Session";
 import { AuthRequest } from "../middleware/auth";
 import { objectId } from "../validations";
 import cloudinary from "../config/cloudinary";
@@ -18,16 +19,33 @@ import {
     deleteCloudinaryAttachments,
     cloudinaryPublicIdFromUrl,
 } from "../services/cloudinary";
-import { sendVerificationEmail } from "../services/email";
+import { sendEmailChangeConfirmation } from "../services/email";
 import {
     generateSecretToken,
     hashSecretToken,
     VERIFICATION_TOKEN_EXPIRES_MIN,
 } from "../services/token";
 import { SALT_ROUNDS } from "../constants";
+import { logger } from "../config/logger";
+import { getSocketIO } from "../config/io";
+import { emitForceLogout } from "../utils/socket";
 
 const SENSITIVE_SELECT =
-    "-password -verificationToken -verificationTokenExpiry -resetToken -resetTokenExpiry -refreshToken";
+    "-password -verificationToken -verificationTokenExpiry -resetToken -resetTokenExpiry -pendingEmailToken -pendingEmailTokenExpiry";
+
+function toSafeUserObject(doc: ReturnType<typeof User.prototype.toObject>) {
+    const {
+        password: _password,
+        verificationToken: _vt,
+        verificationTokenExpiry: _vte,
+        pendingEmailToken: _pet,
+        pendingEmailTokenExpiry: _pete,
+        resetToken: _rt,
+        resetTokenExpiry: _rte,
+        ...safeUser
+    } = doc;
+    return safeUser;
+}
 
 export async function getMe(req: AuthRequest, res: Response): Promise<void> {
     try {
@@ -37,7 +55,7 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
         if (!user) {
             throw new NotFoundError("Usuário não encontrado.");
         }
-        res.json(user);
+        res.json({ ...user, emailPending: Boolean(user.pendingEmail) });
     } catch (error) {
         handleError(error, res, "Erro ao buscar usuário.");
     }
@@ -77,44 +95,165 @@ export async function updateProfile(
     res: Response,
 ): Promise<void> {
     try {
-        const { name, email } = req.body;
+        const { name, email, currentPassword } = req.body;
         const user = await User.findById(req.user!._id);
         if (!user) {
             throw new NotFoundError("Usuário não encontrado.");
         }
 
-        if (email && email !== user.email) {
+        let emailChanged = false;
+        let confirmationToken = "";
+
+        if (name && name !== user.name) {
+            user.name = name;
+        }
+
+        const normalizedEmail = email?.toLowerCase();
+        const isPendingEmail =
+            normalizedEmail && normalizedEmail === user.pendingEmail;
+        if (
+            normalizedEmail &&
+            normalizedEmail !== user.email &&
+            !isPendingEmail
+        ) {
             const existingUser = await User.findOne({
-                email,
+                email: normalizedEmail,
                 _id: { $ne: req.user!._id },
             });
             if (existingUser) {
                 throw new BadRequestError("Email já está em uso.");
             }
 
-            user.email = email;
-            user.verified = false;
-            const verificationToken = generateSecretToken();
-            user.verificationToken = hashSecretToken(verificationToken);
-            user.verificationTokenExpiry = new Date(
+            const isMatch = await bcrypt.compare(
+                currentPassword || "",
+                user.password,
+            );
+            if (!isMatch) {
+                throw new UnauthorizedError("Senha atual incorreta.");
+            }
+
+            confirmationToken = generateSecretToken();
+            user.pendingEmail = normalizedEmail;
+            user.pendingEmailToken = hashSecretToken(confirmationToken);
+            user.pendingEmailTokenExpiry = new Date(
                 Date.now() + VERIFICATION_TOKEN_EXPIRES_MIN * 60 * 1000,
             );
-            await user.save();
+            user.verificationToken = null;
+            user.verificationTokenExpiry = null;
+            emailChanged = true;
+        }
 
-            await sendVerificationEmail(
-                user.email,
-                user.name,
-                verificationToken,
-            );
-        } else if (name && name !== user.name) {
-            user.name = name;
+        if (user.isModified()) {
             await user.save();
         }
 
-        const { password: _, ...safeUser } = user.toObject();
-        res.json(safeUser);
+        if (emailChanged) {
+            try {
+                await sendEmailChangeConfirmation(
+                    user.pendingEmail!,
+                    user.name,
+                    confirmationToken,
+                );
+            } catch (error) {
+                logger.error(
+                    { error },
+                    "erro ao enviar email de confirmação de alteração de email",
+                );
+            }
+
+            audit({
+                action: "user.request_email_change",
+                actorId: req.user!._id.toString(),
+                ip: req.ip,
+                details: { previousEmail: user.email, newEmail: user.pendingEmail },
+            });
+        }
+
+        res.json({
+            ...toSafeUserObject(user.toObject()),
+            emailPending: Boolean(user.pendingEmail),
+        });
     } catch (error) {
         handleError(error, res, "Erro ao atualizar perfil.");
+    }
+}
+
+export async function confirmEmailChange(
+    req: Request,
+    res: Response,
+): Promise<void> {
+    try {
+        const { token } = req.body;
+
+        const user = await User.findOne({
+            pendingEmailToken: hashSecretToken(token),
+            pendingEmailTokenExpiry: { $gt: new Date() },
+        });
+        if (!user) {
+            throw new ValidationError("Token inválido ou expirado.");
+        }
+
+        if (!user.pendingEmail) {
+            throw new ValidationError("Nenhuma alteração de email pendente.");
+        }
+
+        const existingUser = await User.findOne({
+            email: user.pendingEmail,
+            _id: { $ne: user._id },
+        });
+        if (existingUser) {
+            throw new ConflictError(
+                "Este email já está em uso por outra conta.",
+            );
+        }
+
+        const previousEmail = user.email;
+        user.email = user.pendingEmail;
+        user.verified = true;
+        user.pendingEmail = null;
+        user.pendingEmailToken = null;
+        user.pendingEmailTokenExpiry = null;
+        try {
+            await user.save();
+        } catch (error: unknown) {
+            if (
+                error instanceof Error &&
+                "code" in error &&
+                (error as { code: number }).code === 11000
+            ) {
+                throw new ConflictError(
+                    "Este email já está em uso por outra conta.",
+                );
+            }
+            throw error;
+        }
+
+        try {
+            await Session.deleteMany({ userId: user._id });
+            const io = getSocketIO();
+            if (io) {
+                await emitForceLogout(io, user._id.toString(), "email_changed");
+            }
+        } catch (error) {
+            logger.error(
+                { error },
+                "erro ao fazer logout forçado após confirmação de email",
+            );
+        }
+
+        audit({
+            action: "user.confirm_email_change",
+            actorId: user._id.toString(),
+            ip: req.ip,
+            details: { previousEmail, newEmail: user.email },
+        });
+
+        res.json({
+            message:
+                "Email atualizado com sucesso! Faça login para continuar.",
+        });
+    } catch (error) {
+        handleError(error, res);
     }
 }
 
@@ -257,15 +396,7 @@ export async function updateAvatar(
         user.avatar = result.secure_url;
         await user.save();
 
-        const {
-            password: _,
-            verificationToken,
-            verificationTokenExpiry,
-            resetToken,
-            resetTokenExpiry,
-            ...userWithoutSensitive
-        } = user.toObject();
-        res.json(userWithoutSensitive);
+        res.json(toSafeUserObject(user.toObject()));
     } catch (error) {
         handleError(error, res, "Erro ao fazer upload da imagem.");
     }
@@ -296,15 +427,7 @@ export async function removeAvatar(
         user.avatar = "";
         await user.save();
 
-        const {
-            password: _,
-            verificationToken,
-            verificationTokenExpiry,
-            resetToken,
-            resetTokenExpiry,
-            ...userWithoutSensitive
-        } = user.toObject();
-        res.json(userWithoutSensitive);
+        res.json(toSafeUserObject(user.toObject()));
     } catch (error) {
         handleError(error, res, "Erro ao remover avatar.");
     }

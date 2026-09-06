@@ -8,6 +8,9 @@ export interface IUser extends Document {
     verified: boolean;
     verificationToken: string | null;
     verificationTokenExpiry: Date | null;
+    pendingEmail: string | null;
+    pendingEmailToken: string | null;
+    pendingEmailTokenExpiry: Date | null;
     resetToken: string | null;
     resetTokenExpiry: Date | null;
     lastSeen: Date | null;

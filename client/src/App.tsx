@@ -8,6 +8,9 @@ import SettingsSkeleton from "./components/Skeletons/SettingsSkeleton";
 
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
+const ConfirmEmailChangePage = lazy(
+    () => import("./pages/ConfirmEmailChangePage"),
+);
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -75,6 +78,14 @@ export default function App() {
                         element={
                             <Suspense fallback={<LoadingScreen />}>
                                 <VerifyEmailPage />
+                            </Suspense>
+                        }
+                    />
+                    <Route
+                        path="/confirm-email-change"
+                        element={
+                            <Suspense fallback={<LoadingScreen />}>
+                                <ConfirmEmailChangePage />
                             </Suspense>
                         }
                     />

@@ -37,6 +37,20 @@ const userSchema = new Schema<IUser>({
         type: Date,
         default: null,
     },
+    pendingEmail: {
+        type: String,
+        default: null,
+        lowercase: true,
+        trim: true,
+    },
+    pendingEmailToken: {
+        type: String,
+        default: null,
+    },
+    pendingEmailTokenExpiry: {
+        type: Date,
+        default: null,
+    },
     resetToken: {
         type: String,
         default: null,
@@ -76,6 +90,7 @@ const userSchema = new Schema<IUser>({
 });
 
 userSchema.index({ verificationToken: 1 }, { sparse: true });
+userSchema.index({ pendingEmailToken: 1 }, { sparse: true });
 userSchema.index({ resetToken: 1 }, { sparse: true });
 
 export default mongoose.model<IUser>("User", userSchema);

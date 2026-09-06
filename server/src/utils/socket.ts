@@ -4,7 +4,7 @@ import { logger } from "../config/logger";
 export async function emitForceLogout(
     io: SocketIOServer,
     targetUserId: string,
-    reason: "remote_logout" | "all_devices" | "password_changed" | "session_expired",
+    reason: "remote_logout" | "all_devices" | "password_changed" | "session_expired" | "email_changed",
     targetSessionId?: string,
 ): Promise<void> {
     const { getUserSocketIds } = await import("../socket/onlineUsers");

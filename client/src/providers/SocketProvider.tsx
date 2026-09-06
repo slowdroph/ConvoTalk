@@ -83,6 +83,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         newSocket.on("session:force_logout", (data?: { reason?: string }) => {
             const reasonMessages: Record<string, string> = {
                 password_changed: "Sua senha foi alterada. Faça login novamente.",
+                email_changed: "Seu email foi alterado. Faça login novamente.",
                 all_devices: "Todas as sessões foram encerradas.",
                 remote_logout: "Sessão encerrada remotamente.",
                 session_expired: "Sessão expirada. Faça login novamente.",

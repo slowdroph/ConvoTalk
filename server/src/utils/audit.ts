@@ -9,6 +9,8 @@ export type AuditAction =
     | "auth.resend_verification"
     | "auth.verify_email"
     | "user.update_profile"
+    | "user.request_email_change"
+    | "user.confirm_email_change"
     | "user.update_password"
     | "user.update_status"
     | "user.delete_account"

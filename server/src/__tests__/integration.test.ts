@@ -1,10 +1,24 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import User from "../models/User";
 import Room from "../models/Room";
 import Message from "../models/Message";
 import { isRoomCreator, isRoomAdmin, isRoomCreatorOrAdmin } from "../utils/roomAuth";
 import { startTestDb, stopTestDb, clearTestDb } from "./db";
+import {
+    updateProfile,
+    confirmEmailChange,
+} from "../controllers/userController";
+import { generateSecretToken, hashSecretToken } from "../services/token";
+import type { AuthRequest } from "../middleware/auth";
+import type { Request, Response } from "express";
+
+vi.mock("../services/email", () => ({
+    sendEmailChangeConfirmation: vi.fn().mockResolvedValue(undefined),
+    sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
+    sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
+}));
 
 beforeAll(async () => {
     await startTestDb();
@@ -179,5 +193,252 @@ describe("integração: mongoose sanitização", () => {
         const user = await createUser("Eva", "eva@test.com");
         expect(user._id).toBeInstanceOf(mongoose.Types.ObjectId);
         expect(mongoose.isObjectIdOrHexString(user._id.toString())).toBe(true);
+    });
+});
+
+describe("integração: alteração de email", () => {
+    async function createHashedUser(name: string, email: string) {
+        const salt = await bcrypt.genSalt(10);
+        return User.create({
+            name,
+            email,
+            password: await bcrypt.hash("password123", salt),
+            verified: true,
+        });
+    }
+
+    function mockRes() {
+        const state = { statusCode: 200, body: undefined as unknown };
+        const res = {
+            status(code: number) {
+                state.statusCode = code;
+                return res;
+            },
+            json(body: unknown) {
+                state.body = body;
+                return res;
+            },
+            get statusCode() {
+                return state.statusCode;
+            },
+            get body() {
+                return state.body;
+            },
+        };
+        return res as Response & { statusCode: number; body: unknown };
+    }
+
+    function profileReq(
+        user: { _id: unknown },
+        body: { name: string; email: string; currentPassword?: string },
+    ) {
+        return {
+            body,
+            user: { _id: user._id },
+            ip: "127.0.0.1",
+        } as unknown as AuthRequest;
+    }
+
+    it("exige senha atual correta para alterar email", async () => {
+        const user = await createHashedUser("Zé", "ze@test.com");
+        const res = mockRes();
+
+        await updateProfile(
+            profileReq(user, {
+                name: "Zé",
+                email: "novo@test.com",
+                currentPassword: "errada",
+            }),
+            res,
+        );
+
+        expect(res.statusCode).toBe(401);
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.email).toBe("ze@test.com");
+        expect(updated?.pendingEmail).toBeNull();
+    });
+
+    it("marca email pendente sem alterar email/verified atuais", async () => {
+        const user = await createHashedUser("Zé", "ze@test.com");
+        const res = mockRes();
+
+        await updateProfile(
+            profileReq(user, {
+                name: "Zé",
+                email: "novo@test.com",
+                currentPassword: "password123",
+            }),
+            res,
+        );
+
+        expect(res.statusCode).toBe(200);
+        const body = res.body as {
+            email?: string;
+            emailPending?: boolean;
+            pendingEmail?: string | null;
+        };
+        expect(body.email).toBe("ze@test.com");
+        expect(body.emailPending).toBe(true);
+        expect(body.pendingEmail).toBe("novo@test.com");
+
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.email).toBe("ze@test.com");
+        expect(updated?.verified).toBe(true);
+        expect(updated?.pendingEmail).toBe("novo@test.com");
+        expect(updated?.pendingEmailToken).toBeTruthy();
+        expect(updated?.pendingEmailTokenExpiry).toBeInstanceOf(Date);
+    });
+
+    it("confirma alteração com token válido", async () => {
+        const user = await createHashedUser("Zé", "ze@test.com");
+        const rawToken = generateSecretToken();
+        await User.updateOne(
+            { _id: user._id },
+            {
+                pendingEmail: "novo@test.com",
+                pendingEmailToken: hashSecretToken(rawToken),
+                pendingEmailTokenExpiry: new Date(Date.now() + 60 * 60 * 1000),
+            },
+        );
+
+        const res = mockRes();
+        await confirmEmailChange(
+            {
+                body: { token: rawToken },
+                ip: "127.0.0.1",
+            } as unknown as Request,
+            res,
+        );
+
+        expect(res.statusCode).toBe(200);
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.email).toBe("novo@test.com");
+        expect(updated?.verified).toBe(true);
+        expect(updated?.pendingEmail).toBeNull();
+        expect(updated?.pendingEmailToken).toBeNull();
+        expect(updated?.pendingEmailTokenExpiry).toBeNull();
+    });
+
+    it("rejeita token inválido ou expirado", async () => {
+        const user = await createHashedUser("Zé", "ze@test.com");
+        await User.updateOne(
+            { _id: user._id },
+            {
+                pendingEmail: "novo@test.com",
+                pendingEmailToken: hashSecretToken(generateSecretToken()),
+                pendingEmailTokenExpiry: new Date(Date.now() - 1000),
+            },
+        );
+
+        const res = mockRes();
+        await confirmEmailChange(
+            {
+                body: { token: generateSecretToken() },
+                ip: "127.0.0.1",
+            } as unknown as Request,
+            res,
+        );
+
+        expect(res.statusCode).toBe(400);
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.email).toBe("ze@test.com");
+    });
+
+    it("rejeita confirmação quando email já está em uso", async () => {
+        const user = await createHashedUser("Zé", "ze@test.com");
+        await createHashedUser("Outro", "novo@test.com");
+        const rawToken = generateSecretToken();
+        await User.updateOne(
+            { _id: user._id },
+            {
+                pendingEmail: "novo@test.com",
+                pendingEmailToken: hashSecretToken(rawToken),
+                pendingEmailTokenExpiry: new Date(Date.now() + 60 * 60 * 1000),
+            },
+        );
+
+        const res = mockRes();
+        await confirmEmailChange(
+            {
+                body: { token: rawToken },
+                ip: "127.0.0.1",
+            } as unknown as Request,
+            res,
+        );
+
+        expect(res.statusCode).toBe(409);
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.email).toBe("ze@test.com");
+        expect(updated?.pendingEmail).toBe("novo@test.com");
+    });
+
+    it("atualização só de nome não cria pendência de email", async () => {
+        const user = await createHashedUser("Zé", "ze@test.com");
+        const res = mockRes();
+
+        await updateProfile(
+            profileReq(user, {
+                name: "Zezinho",
+                email: "ze@test.com",
+                currentPassword: "",
+            }),
+            res,
+        );
+
+        expect(res.statusCode).toBe(200);
+        const body = res.body as { emailPending?: boolean };
+        expect(body.emailPending).toBe(false);
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.name).toBe("Zezinho");
+        expect(updated?.email).toBe("ze@test.com");
+        expect(updated?.pendingEmail).toBeNull();
+    });
+
+    it("salva nome e email simultaneamente", async () => {
+        const user = await createHashedUser("Zé", "ze@test.com");
+        const res = mockRes();
+
+        await updateProfile(
+            profileReq(user, {
+                name: "Zezinho",
+                email: "novo@test.com",
+                currentPassword: "password123",
+            }),
+            res,
+        );
+
+        expect(res.statusCode).toBe(200);
+        const body = res.body as {
+            name?: string;
+            email?: string;
+            emailPending?: boolean;
+        };
+        expect(body.name).toBe("Zezinho");
+        expect(body.email).toBe("ze@test.com");
+        expect(body.emailPending).toBe(true);
+
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.name).toBe("Zezinho");
+        expect(updated?.pendingEmail).toBe("novo@test.com");
+    });
+
+    it("compara email de forma case-insensitive", async () => {
+        const user = await createHashedUser("Zé", "ze@test.com");
+        const res = mockRes();
+
+        await updateProfile(
+            profileReq(user, {
+                name: "Zé",
+                email: "ZE@TEST.COM",
+                currentPassword: "",
+            }),
+            res,
+        );
+
+        expect(res.statusCode).toBe(200);
+        const body = res.body as { emailPending?: boolean };
+        expect(body.emailPending).toBe(false);
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.pendingEmail).toBeNull();
     });
 });

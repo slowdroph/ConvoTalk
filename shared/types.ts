@@ -4,6 +4,8 @@ export interface UserPayload {
     email: string;
     avatar?: string;
     status?: string;
+    emailPending?: boolean;
+    pendingEmail?: string;
 }
 
 export interface SenderPayload {
