@@ -2,7 +2,10 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User";
 import Message from "../models/Message";
+import Room from "../models/Room";
 import Session from "../models/Session";
+import PushSubscription from "../models/PushSubscription";
+import ReadLog from "../models/ReadLog";
 import { AuthRequest } from "../middleware/auth";
 import { objectId } from "../validations";
 import cloudinary from "../config/cloudinary";
@@ -324,16 +327,46 @@ export async function deleteAccount(
 
         const myId = req.user!._id;
 
+        const myRooms = await Room.find({ participants: myId })
+            .select("_id type")
+            .lean();
+        const myRoomIds = myRooms.map((r) => r._id);
+
+        const dmIds = myRooms
+            .filter((r) => r.type === "direct")
+            .map((r) => r._id);
+
+        if (dmIds.length > 0) {
+            const dmMessages = await Message.find({ room: { $in: dmIds } })
+                .select("attachments")
+                .lean();
+            await deleteCloudinaryAttachments(
+                dmMessages.flatMap((m) => m.attachments ?? []),
+            );
+            await Message.deleteMany({ room: { $in: dmIds } });
+            await Room.deleteMany({ _id: { $in: dmIds } });
+        }
+
+        await Room.updateMany(
+            { _id: { $in: myRoomIds }, type: "group" },
+            { $pull: { participants: myId, admins: myId } },
+        );
+
         const myMessages = await Message.find({ sender: myId })
             .select("attachments")
             .lean();
         await deleteCloudinaryAttachments(
             myMessages.flatMap((m) => m.attachments ?? []),
         );
+        await Message.deleteMany({ sender: myId });
 
-        await Message.updateMany(
-            { sender: myId },
-            { $set: { deleted: true }, $unset: { attachments: 1 } },
+        await Session.deleteMany({ userId: myId });
+        await PushSubscription.deleteMany({ user: myId });
+        await ReadLog.deleteMany({ userId: myId });
+
+        await User.updateMany(
+            { blockedUsers: myId },
+            { $pull: { blockedUsers: myId } },
         );
 
         if (user.avatar) {

@@ -63,7 +63,12 @@ function ToggleRow({
 
 export default function NotificationSettings() {
     const [sound, setSound] = useState(getSoundEnabled);
-    const [browser, setBrowser] = useState(getBrowserNotificationsEnabled);
+    const [browser, setBrowser] = useState(
+        () =>
+            isPushSupported() &&
+            Notification.permission === "granted" &&
+            getBrowserNotificationsEnabled(),
+    );
     const [titleBadge, setTitleBadge] = useState(getTitleBadgeEnabled);
     const [pushLoading, setPushLoading] = useState(false);
     const [permissionStatus, setPermissionStatus] = useState<
@@ -79,9 +84,12 @@ export default function NotificationSettings() {
 
         // Verifica se já existe inscrição ativa no navegador
         getCurrentPushSubscription().then((sub) => {
-            if (!cancelled && sub && Notification.permission === "granted") {
+            if (cancelled) return;
+            if (sub && Notification.permission === "granted") {
                 setBrowser(true);
                 setBrowserNotificationsEnabled(true);
+            } else {
+                setBrowser(false);
             }
         });
 
