@@ -10,6 +10,7 @@ import {
     configureWebPush,
 } from "../services/pushNotification";
 import webpush from "web-push";
+import { generatePublicId } from "../utils/publicId";
 
 vi.mock("web-push", () => {
     return {
@@ -51,6 +52,7 @@ describe("Push Notification Service", () => {
         const user = await User.create({
             name: "Alice",
             email: "alice@test.com",
+            publicId: generatePublicId(),
             password: "password123",
         });
 
@@ -96,6 +98,7 @@ describe("Push Notification Service", () => {
         const user = await User.create({
             name: "Bob",
             email: "bob@test.com",
+            publicId: generatePublicId(),
             password: "password123",
         });
 
@@ -119,6 +122,7 @@ describe("Push Notification Service", () => {
         const user = await User.create({
             name: "Carol",
             email: "carol@test.com",
+            publicId: generatePublicId(),
             password: "password123",
         });
 
@@ -142,6 +146,7 @@ describe("Push Notification Service", () => {
         const user = await User.create({
             name: "David",
             email: "david@test.com",
+            publicId: generatePublicId(),
             password: "password123",
         });
 

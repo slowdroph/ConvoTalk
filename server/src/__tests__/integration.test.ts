@@ -11,6 +11,7 @@ import {
     confirmEmailChange,
 } from "../controllers/userController";
 import { generateSecretToken, hashSecretToken } from "../services/token";
+import { generatePublicId } from "../utils/publicId";
 import type { AuthRequest } from "../middleware/auth";
 import type { Request, Response } from "express";
 
@@ -36,6 +37,7 @@ async function createUser(name: string, email: string) {
     return User.create({
         name,
         email,
+        publicId: generatePublicId(),
         password: "password123",
         verified: true,
     });
@@ -202,6 +204,7 @@ describe("integração: alteração de email", () => {
         return User.create({
             name,
             email,
+            publicId: generatePublicId(),
             password: await bcrypt.hash("password123", salt),
             verified: true,
         });

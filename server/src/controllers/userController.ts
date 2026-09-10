@@ -552,7 +552,7 @@ export async function listBlockedUsers(
 ): Promise<void> {
     try {
         const me = await User.findById(req.user!._id)
-            .populate("blockedUsers", "name email avatar")
+            .populate("blockedUsers", "name email publicId avatar")
             .select("blockedUsers")
             .lean();
 

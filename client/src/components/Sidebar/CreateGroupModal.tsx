@@ -8,6 +8,7 @@ interface SearchResult {
     _id: string;
     name: string;
     email: string;
+    publicId: string;
     avatar?: string;
 }
 
@@ -91,6 +92,7 @@ export default function CreateGroupModal({
 
     const handleCreate = async () => {
         setError("");
+        setCreating(true);
         const participantIds = selected.map((s) => s._id);
         try {
             const { data } = await api.post("/rooms/group", {
@@ -180,7 +182,7 @@ export default function CreateGroupModal({
                             id="addParticipantsSearch"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Buscar por nome ou email..."
+                            placeholder="Buscar por nome, email ou #ID..."
                             maxLength={100}
                             autoComplete="off"
                             className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
@@ -259,7 +261,7 @@ export default function CreateGroupModal({
                                                     {u.name}
                                                 </p>
                                                 <p className="text-xs text-zinc-500 truncate">
-                                                    {u.email}
+                                                    #{u.publicId}
                                                 </p>
                                             </div>
                                         </button>

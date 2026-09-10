@@ -32,17 +32,20 @@ import { SALT_ROUNDS } from "../constants";
 import { logger } from "../config/logger";
 import { getSocketIO } from "../config/io";
 import { emitForceLogout } from "../utils/socket";
+import { generatePublicId } from "../utils/publicId";
 
 function publicUser(user: {
     _id: unknown;
     name: string;
     email: string;
+    publicId: string;
     avatar: string;
-}): { _id: unknown; name: string; email: string; avatar: string } {
+}): { _id: unknown; name: string; email: string; publicId: string; avatar: string } {
     return {
         _id: user._id,
         name: user.name,
         email: user.email,
+        publicId: user.publicId,
         avatar: user.avatar,
     };
 }
@@ -61,17 +64,40 @@ export async function register(req: Request, res: Response): Promise<void> {
 
         const verificationToken = generateSecretToken();
 
-        const user = await User.create({
-            name,
-            email,
-            password: hashedPassword,
-            verificationToken: hashSecretToken(verificationToken),
-            verificationTokenExpiry: new Date(
-                Date.now() + VERIFICATION_TOKEN_EXPIRES_MIN * 60 * 1000,
-            ),
-            lastIp: req.ip ?? null,
-            lastIpAt: new Date(),
-        });
+        let publicId = generatePublicId();
+        let user;
+        const MAX_RETRIES = 3;
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+            try {
+                user = await User.create({
+                    name,
+                    email,
+                    publicId,
+                    password: hashedPassword,
+                    verificationToken: hashSecretToken(verificationToken),
+                    verificationTokenExpiry: new Date(
+                        Date.now() + VERIFICATION_TOKEN_EXPIRES_MIN * 60 * 1000,
+                    ),
+                    lastIp: req.ip ?? null,
+                    lastIpAt: new Date(),
+                });
+                break;
+            } catch (err: unknown) {
+                if (
+                    attempt < MAX_RETRIES - 1 &&
+                    err instanceof Error &&
+                    "code" in err &&
+                    (err as { code: number }).code === 11000
+                ) {
+                    publicId = generatePublicId();
+                    continue;
+                }
+                throw err;
+            }
+        }
+        if (!user) {
+            throw new Error("Não foi possível criar o usuário. Tente novamente.");
+        }
 
         try {
             await sendVerificationEmail(email, name, verificationToken);

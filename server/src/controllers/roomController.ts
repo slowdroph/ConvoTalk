@@ -49,8 +49,8 @@ export async function listRooms(
 
         const rooms = await Room.find({ participants: userId })
             .sort({ name: 1 })
-            .populate("participants", "name email avatar status")
-            .populate("admins", "name email avatar status")
+            .populate("participants", "name email publicId avatar status")
+            .populate("admins", "name email publicId avatar status")
             .lean();
 
         const visibleRooms = rooms.filter((r) => {
@@ -186,7 +186,7 @@ export async function createDirectRoom(
             type: "direct",
             participants: { $all: [myId, otherUserId], $size: 2 },
         })
-            .populate("participants", "name email")
+            .populate("participants", "name email publicId")
             .lean();
 
         if (existing) {
@@ -201,7 +201,7 @@ export async function createDirectRoom(
         });
 
         const populated = await Room.findById(room._id)
-            .populate("participants", "name email avatar status")
+            .populate("participants", "name email publicId avatar status")
             .lean();
 
         audit({
@@ -253,7 +253,7 @@ export async function createGroupRoom(
         });
 
         const populated = await Room.findById(room._id)
-            .populate("participants", "name email avatar status")
+            .populate("participants", "name email publicId avatar status")
             .lean();
 
         const creator = await User.findById(creatorId).select("name").lean();
@@ -324,8 +324,8 @@ export async function updateGroupRoom(
             new: true,
             runValidators: true,
         })
-            .populate("participants", "name email avatar status")
-            .populate("admins", "name email avatar status")
+            .populate("participants", "name email publicId avatar status")
+            .populate("admins", "name email publicId avatar status")
             .lean();
 
         const actor = await User.findById(myId).select("name").lean();
@@ -393,8 +393,8 @@ export async function addMember(
             { $addToSet: { participants: newMemberId } },
             { new: true, runValidators: true },
         )
-            .populate("participants", "name email avatar status")
-            .populate("admins", "name email avatar status")
+            .populate("participants", "name email publicId avatar status")
+            .populate("admins", "name email publicId avatar status")
             .lean();
         invalidateRoom(id);
 
@@ -465,8 +465,8 @@ export async function removeMember(
             { $pull: { participants: removeId, admins: removeId } },
             { new: true, runValidators: true },
         )
-            .populate("participants", "name email avatar status")
-            .populate("admins", "name email avatar status")
+            .populate("participants", "name email publicId avatar status")
+            .populate("admins", "name email publicId avatar status")
             .lean();
         invalidateRoom(id);
 
@@ -526,7 +526,7 @@ export async function deleteRoom(
                 { new: true },
             )
                 .select("participants type name")
-                .populate("participants", "name email avatar status")
+                .populate("participants", "name email publicId avatar status")
                 .lean();
             invalidateRoom(id);
 
@@ -659,8 +659,8 @@ export async function addAdmin(req: AuthRequest, res: Response): Promise<void> {
             { $addToSet: { admins: newAdminId } },
             { new: true, runValidators: true },
         )
-            .populate("participants", "name email avatar status")
-            .populate("admins", "name email avatar status")
+            .populate("participants", "name email publicId avatar status")
+            .populate("admins", "name email publicId avatar status")
             .lean();
 
         const [actor, targetUserDoc] = await Promise.all([
@@ -726,8 +726,8 @@ export async function removeAdmin(
             { $pull: { admins: removeAdminId } },
             { new: true, runValidators: true },
         )
-            .populate("participants", "name email avatar status")
-            .populate("admins", "name email avatar status")
+            .populate("participants", "name email publicId avatar status")
+            .populate("admins", "name email publicId avatar status")
             .lean();
 
         const [actor, targetUserDoc] = await Promise.all([
@@ -812,8 +812,8 @@ export async function updateGroupAvatar(
             { avatar: result.secure_url },
             { new: true, runValidators: true },
         )
-            .populate("participants", "name email avatar status")
-            .populate("admins", "name email avatar status")
+            .populate("participants", "name email publicId avatar status")
+            .populate("admins", "name email publicId avatar status")
             .lean();
 
         const actor = await User.findById(myId).select("name").lean();
@@ -876,8 +876,8 @@ export async function removeGroupAvatar(
             { avatar: "" },
             { new: true, runValidators: true },
         )
-            .populate("participants", "name email avatar status")
-            .populate("admins", "name email avatar status")
+            .populate("participants", "name email publicId avatar status")
+            .populate("admins", "name email publicId avatar status")
             .lean();
 
         broadcastRoomUpdated(id, updated);

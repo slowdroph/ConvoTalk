@@ -8,7 +8,6 @@
         "build": "tsc",
         "start": "node dist/server/src/index.js",
         "test": "vitest run",
-
         "test:watch": "vitest"
     },
     "keywords": [],

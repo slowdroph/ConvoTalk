@@ -44,6 +44,7 @@ import { parseMentionTokens, getUniqueMentionUserIds } from "../../../shared/men
 
 interface SenderInfo {
     name: string;
+    publicId: string;
     avatar: string;
     status: string;
 }
@@ -51,6 +52,7 @@ interface SenderInfo {
 interface PopulatedSender {
     _id?: Types.ObjectId | string;
     name?: string;
+    publicId?: string;
     avatar?: string;
     status?: string;
 }
@@ -67,6 +69,7 @@ function senderPayloadFrom(info: SenderInfo | null, userId: string) {
     return {
         _id: userId,
         name: info?.name ?? "Usuário",
+        publicId: info?.publicId ?? "",
         avatar: info?.avatar ?? "",
         status: info?.status ?? "",
     };
@@ -81,6 +84,7 @@ function parentPayload(parent: ParentMessageLean) {
                 ? {
                       _id: String(sender._id),
                       name: sender.name,
+                      publicId: sender.publicId ?? "",
                       avatar: sender.avatar,
                       status: sender.status,
                   }
@@ -292,10 +296,11 @@ const socketHandler = (io: SocketIOServer): void => {
         logger.info({ userId, socketId: socket.id }, "usuário conectado");
 
         // Registrar usuário online
-        const user = await User.findById(userId).select("name avatar status");
+        const user = await User.findById(userId).select("name publicId avatar status");
         let senderInfo: SenderInfo | null = user
             ? {
                   name: user.name,
+                  publicId: user.publicId,
                   avatar: user.avatar || "",
                   status: user.status || "",
               }
@@ -303,15 +308,17 @@ const socketHandler = (io: SocketIOServer): void => {
         const getSenderInfo = async (): Promise<SenderInfo | null> => {
             if (!senderInfo) {
                 const fetched = await User.findById(userId)
-                    .select("name avatar status")
+                    .select("name publicId avatar status")
                     .lean<{
                         name?: string;
+                        publicId?: string;
                         avatar?: string;
                         status?: string;
                     }>();
                 if (fetched) {
                     senderInfo = {
                         name: fetched.name ?? "Usuário",
+                        publicId: fetched.publicId ?? "",
                         avatar: fetched.avatar ?? "",
                         status: fetched.status ?? "",
                     };
@@ -610,7 +617,7 @@ const socketHandler = (io: SocketIOServer): void => {
                         room: roomId,
                     })
                         .select("sender content attachments deleted")
-                        .populate("sender", "name avatar status")
+                        .populate("sender", "name publicId avatar status")
                         .lean<ParentMessageLean>();
                     if (!parent) {
                         if (typeof ack === "function") {
@@ -1000,7 +1007,7 @@ const socketHandler = (io: SocketIOServer): void => {
                         _id: messageId,
                         room: roomId,
                     })
-                        .populate("sender", "name avatar status")
+                        .populate("sender", "name publicId avatar status")
                         .populate({
                             path: "parentMessage",
                             select: "sender content attachments deleted",

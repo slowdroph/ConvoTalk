@@ -9,6 +9,7 @@ import Message from "../models/Message";
 import socketHandler from "../socket/socketHandler";
 import { socketAuth } from "../middleware/socketAuth";
 import { signAccessToken } from "../services/token";
+import { generatePublicId } from "../utils/publicId";
 import { startTestDb, stopTestDb, clearTestDb } from "./db";
 
 let httpServer: ReturnType<typeof createServer>;
@@ -19,6 +20,7 @@ async function createUser(name: string, email: string) {
     return User.create({
         name,
         email,
+        publicId: generatePublicId(),
         password: "password123",
         verified: true,
     });

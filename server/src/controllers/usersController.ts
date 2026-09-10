@@ -22,12 +22,19 @@ export async function searchUsers(
             (me?.blockedUsers ?? []).map((id) => id.toString()),
         );
 
+        const isIdQuery = q.trim().startsWith("#");
+        const cleanQuery = q.trim().replace(/^#/, "");
+
+        const orFilters: Record<string, unknown>[] = isIdQuery
+            ? [{ publicId: new RegExp(`^${escapeRegex(cleanQuery)}`, "i") }]
+            : [{ name: regex }, { email: regex }, { publicId: new RegExp(`^${escapeRegex(cleanQuery)}`, "i") }];
+
         const users = await User.find({
             _id: { $ne: req.user!._id },
             blockedUsers: { $ne: req.user!._id },
-            $or: [{ name: regex }, { email: regex }],
+            $or: orFilters,
         })
-            .select("name email avatar")
+            .select("name email publicId avatar")
             .limit(20)
             .lean();
 

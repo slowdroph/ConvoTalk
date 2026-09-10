@@ -2,6 +2,7 @@ export interface UserPayload {
     _id: string;
     name: string;
     email: string;
+    publicId: string;
     avatar?: string;
     status?: string;
     emailPending?: boolean;
@@ -11,6 +12,7 @@ export interface UserPayload {
 export interface SenderPayload {
     _id: string;
     name: string;
+    publicId?: string;
     avatar?: string;
     status?: string;
 }

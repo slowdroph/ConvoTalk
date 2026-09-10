@@ -16,6 +16,15 @@ const userSchema = new Schema<IUser>({
         lowercase: true,
         trim: true,
     },
+    publicId: {
+        type: String,
+        required: true,
+        unique: true,
+        uppercase: true,
+        trim: true,
+        minlength: 8,
+        maxlength: 8,
+    },
     password: {
         type: String,
         required: true,

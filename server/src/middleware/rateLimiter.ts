@@ -32,7 +32,7 @@ export const refreshLimiter = rateLimit({
 
 export const searchLimiter = rateLimit({
     windowMs: 60 * 1000,
-    max: 10,
+    max: 80,
     standardHeaders: true,
     legacyHeaders: false,
     message: { message: "Muitas buscas. Aguarde um minuto." },
