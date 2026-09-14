@@ -1,4 +1,5 @@
 import LegalLayout from "../components/LegalLayout";
+import SEO from "../components/SEO";
 
 interface SectionProps {
     icon: string;
@@ -58,6 +59,11 @@ export default function PrivacyPage() {
 
     return (
         <LegalLayout title="Política de Privacidade" lastUpdated={lastUpdated}>
+            <SEO
+                title="Política de Privacidade"
+                description="Conheça a política de privacidade do ConvoTalk. Como coletamos, usamos e protegemos seus dados pessoais."
+                canonical="/privacy"
+            />
             <div className="space-y-12">
                 <Section icon="lock" title="1. Introdução" highlighted>
                     <p>

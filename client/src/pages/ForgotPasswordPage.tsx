@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
 import { getErrorMessage } from "../utils/errors";
+import SEO from "../components/SEO";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -29,6 +30,11 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="min-h-dvh-fallback bg-zinc-950 flex items-center justify-center px-4">
+            <SEO
+                title="Redefinir senha"
+                description="Redefina sua senha do ConvoTalk. Informe seu email e receba um link seguro para criar uma nova senha."
+                canonical="/forgot-password"
+            />
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <img

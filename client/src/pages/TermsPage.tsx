@@ -1,4 +1,5 @@
 import LegalLayout from "../components/LegalLayout";
+import SEO from "../components/SEO";
 
 interface SectionProps {
     icon: string;
@@ -61,6 +62,11 @@ export default function TermsPage() {
 
     return (
         <LegalLayout title="Termos de Uso" lastUpdated={lastUpdated}>
+            <SEO
+                title="Termos de Uso"
+                description="Leia os termos de uso do ConvoTalk. Regras, responsabilidades e condicoes para utilizacao da plataforma."
+                canonical="/terms"
+            />
             <div className="space-y-12">
                 <Section
                     icon="lock"

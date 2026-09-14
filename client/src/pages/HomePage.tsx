@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import PreviewChat from "../components/Home/PreviewChat";
 import Navbar from "../components/Home/Navbar";
 import BackToTop from "../components/Home/BackToTop";
 import Reveal from "../components/ui/Reveal";
+import SEO from "../components/SEO";
 import { useScrollSpy } from "../hooks/useScrollSpy";
 
 export default function HomePage() {
@@ -12,6 +14,30 @@ export default function HomePage() {
 
     return (
         <div className="min-h-dvh-fallback bg-background text-on-surface font-hanken antialiased">
+            <SEO
+                title="Converse em tempo real"
+                description="ConvoTalk - Converse em tempo real com quem importa. Plataforma segura, rapida e intuitiva de mensagens instantaneas."
+                canonical="/"
+            />
+            <Helmet>
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "WebApplication",
+                        name: "ConvoTalk",
+                        url: "https://convotalk.live",
+                        description:
+                            "Plataforma segura, rapida e intuitiva para conversas em tempo real.",
+                        applicationCategory: "CommunicationApplication",
+                        operatingSystem: "Web",
+                        offers: {
+                            "@type": "Offer",
+                            price: "0",
+                            priceCurrency: "BRL",
+                        },
+                    })}
+                </script>
+            </Helmet>
             <Navbar activeSection={activeSection} scrolled={scrolled} />
 
             {/* Hero */}

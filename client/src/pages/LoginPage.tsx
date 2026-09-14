@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import LoginForm from "../components/Auth/LoginForm";
 import RegisterForm from "../components/Auth/RegisterForm";
 import ChatIllustration from "../components/ui/ChatIllustration";
+import SEO from "../components/SEO";
 
 export default function LoginPage() {
     const [searchParams] = useSearchParams();
@@ -14,6 +15,11 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-dvh-fallback bg-zinc-950 lg:grid lg:grid-cols-2">
+            <SEO
+                title="Login"
+                description="Entre na sua conta ConvoTalk ou crie uma nova conta gratuita. Converse em tempo real com quem importa."
+                canonical="/login"
+            />
             <div className="hidden lg:flex flex-col justify-between relative overflow-hidden p-10 bg-background">
                 <div
                     className="absolute inset-0 bg-grid-pattern opacity-20 pointer-events-none"
