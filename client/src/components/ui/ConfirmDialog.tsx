@@ -29,16 +29,16 @@ export default function ConfirmDialog({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-sm mx-4">
+        <div className="fixed inset-0 bg-noir-base/60 backdrop-blur-xs flex items-center justify-center z-50">
+            <div className="bg-noir-card border border-noir-border rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
                 <h3
                     className={`text-lg font-semibold mb-2 ${
-                        danger ? "text-red-400" : "text-white"
+                        danger ? "text-red-400" : "text-noir-text-bright"
                     }`}
                 >
                     {title}
                 </h3>
-                <p className="text-zinc-400 text-sm mb-4">{message}</p>
+                <p className="text-noir-text-muted text-sm mb-4">{message}</p>
                 <div className="flex gap-3">
                     <Button
                         variant="secondary"
@@ -50,7 +50,7 @@ export default function ConfirmDialog({
                     {extraButton && (
                         <Button
                             variant="secondary"
-                            className="flex-1 border border-zinc-600 text-zinc-200"
+                            className="flex-1 border border-noir-border-light text-noir-text-bright"
                             onClick={extraButton.onExtra}
                         >
                             {extraButton.label}

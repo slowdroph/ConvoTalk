@@ -57,12 +57,12 @@ export default function ExportDialog({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-sm mx-4">
-                <h3 className="text-lg font-semibold text-white mb-2">
+        <div className="fixed inset-0 bg-noir-base/60 backdrop-blur-xs flex items-center justify-center z-50">
+            <div className="bg-noir-card border border-noir-border rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+                <h3 className="text-lg font-semibold text-noir-text-bright mb-2">
                     Exportar conversa
                 </h3>
-                <p className="text-zinc-400 text-sm mb-4">
+                <p className="text-noir-text-muted text-sm mb-4">
                     Baixe todas as mensagens desta conversa em um arquivo PDF.
                 </p>
                 {error && <p className="text-red-400 text-sm mb-4">{error}</p>}

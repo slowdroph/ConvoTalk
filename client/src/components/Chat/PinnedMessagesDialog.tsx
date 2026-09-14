@@ -60,15 +60,15 @@ export default function PinnedMessagesDialog({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md mx-4 max-h-[80vh] flex flex-col">
+        <div className="fixed inset-0 bg-noir-base/60 backdrop-blur-xs flex items-center justify-center z-50">
+            <div className="bg-noir-card border border-noir-border rounded-2xl p-6 w-full max-w-md mx-4 max-h-[80vh] flex flex-col shadow-2xl">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-noir-text-bright">
                         Mensagens fixadas
                     </h3>
                     <button
                         onClick={onClose}
-                        className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+                        className="p-1.5 rounded-lg text-noir-text-muted hover:text-noir-text-bright hover:bg-noir-surface-alt transition-colors"
                         title="Fechar"
                     >
                         <svg
@@ -91,14 +91,14 @@ export default function PinnedMessagesDialog({
                 <div className="flex-1 overflow-y-auto custom-scrollbar -mx-2 px-2">
                     {loading ? (
                         <div className="flex items-center justify-center py-8">
-                            <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                            <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                         </div>
                     ) : error ? (
                         <p className="text-sm text-red-400 text-center py-6">
                             {error}
                         </p>
                     ) : pinned.length === 0 ? (
-                        <p className="text-sm text-zinc-500 text-center py-6">
+                        <p className="text-sm text-noir-text-muted text-center py-6">
                             Nenhuma mensagem fixada.
                         </p>
                     ) : (
@@ -106,7 +106,7 @@ export default function PinnedMessagesDialog({
                             {pinned.map((entry) => (
                                 <li
                                     key={entry.pinnedAt + entry.message._id}
-                                    className="flex items-start gap-2 bg-zinc-800/60 border border-zinc-700 rounded-lg p-3"
+                                    className="flex items-start gap-2 bg-noir-surface-alt/60 border border-noir-border rounded-xl p-3"
                                 >
                                     <button
                                         onClick={() =>
@@ -115,7 +115,7 @@ export default function PinnedMessagesDialog({
                                         className="flex-1 min-w-0 text-left"
                                         title="Abrir thread"
                                     >
-                                        <p className="text-sm text-zinc-300 line-clamp-2 wrap-break-word">
+                                        <p className="text-sm text-noir-text-bright line-clamp-2 wrap-break-word">
                                             {entry.message.content ||
                                                 (entry.message.attachments &&
                                                 entry.message.attachments
@@ -123,7 +123,7 @@ export default function PinnedMessagesDialog({
                                                     ? "📎 Anexo"
                                                     : "")}
                                         </p>
-                                        <p className="text-xs text-zinc-500 mt-1">
+                                        <p className="text-xs text-noir-text-muted mt-1">
                                             {entry.message.sender?.name ||
                                                 "Desconhecido"}{" "}
                                             ·{" "}
@@ -136,7 +136,7 @@ export default function PinnedMessagesDialog({
                                         onClick={() =>
                                             onUnpin(entry.message._id)
                                         }
-                                        className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 transition-colors shrink-0"
+                                        className="p-1.5 rounded-md text-noir-text-muted hover:text-red-400 transition-colors shrink-0"
                                         title="Desafixar"
                                     >
                                         <svg

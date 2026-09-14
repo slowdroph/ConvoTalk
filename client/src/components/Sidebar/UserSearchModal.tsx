@@ -172,7 +172,7 @@ export default function UserSearchModal({
                         autoComplete="off"
                     />
                     {loading && (
-                        <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                        <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0" />
                     )}
                     <button
                         onClick={handleClose}
@@ -234,7 +234,7 @@ export default function UserSearchModal({
                                     size="sm"
                                 />
                                 {isOnline(user._id) && (
-                                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-noir-card" />
+                                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-noir-card" />
                                 )}
                             </div>
                             <div className="flex-1 min-w-0">

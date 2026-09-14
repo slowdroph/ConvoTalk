@@ -52,8 +52,8 @@ function ControlButton({
                 danger
                     ? "bg-red-600 hover:bg-red-700 text-white"
                     : active
-                      ? "bg-zinc-600 hover:bg-zinc-500 text-white"
-                      : "bg-zinc-800 hover:bg-zinc-700 text-white"
+                      ? "bg-noir-border-light hover:bg-noir-border text-noir-text-bright"
+                      : "bg-noir-surface-alt hover:bg-noir-card text-noir-text-bright"
             }`}
         >
             {children}
@@ -100,7 +100,7 @@ export default function CallModal({
     const hasRemote = Boolean(remoteStream);
 
     return (
-        <div className="fixed inset-x-0 top-0 z-50 h-dvh-fallback bg-zinc-950/95 flex flex-col">
+        <div className="fixed inset-x-0 top-0 z-50 h-dvh-fallback bg-noir-base/95 flex flex-col">
             {/* Video remote */}
             {phase === "active" && isVideo ? (
                 <div className="flex-1 relative bg-black">
@@ -116,15 +116,15 @@ export default function CallModal({
                                 name={remoteName}
                                 size="lg"
                             />
-                            <p className="text-white text-lg font-semibold">
+                            <p className="text-noir-text-bright text-lg font-semibold">
                                 {remoteName}
                             </p>
-                            <p className="text-zinc-400 text-sm">
+                            <p className="text-noir-text-muted text-sm">
                                 Conectando...
                             </p>
                         </div>
                     )}
-                    <div className="absolute bottom-4 right-4 w-28 h-20 sm:w-32 sm:h-24 rounded-lg overflow-hidden border-2 border-zinc-600">
+                    <div className="absolute bottom-4 right-4 w-28 h-20 sm:w-32 sm:h-24 rounded-lg overflow-hidden border-2 border-noir-border-light">
                         {localStream && !cameraOff ? (
                             <VideoView
                                 stream={localStream}
@@ -132,7 +132,7 @@ export default function CallModal({
                                 className="w-full h-full object-cover scale-x-[-1]"
                             />
                         ) : (
-                            <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                            <div className="w-full h-full bg-noir-surface-alt flex items-center justify-center">
                                 <Avatar
                                     src={remoteAvatar}
                                     name={remoteName}
@@ -146,24 +146,24 @@ export default function CallModal({
                 <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
                     <Avatar src={remoteAvatar} name={remoteName} size="lg" />
                     <div className="text-center">
-                        <p className="text-white text-xl font-semibold">
+                        <p className="text-noir-text-bright text-xl font-semibold">
                             {remoteName}
                         </p>
                         {phase === "incoming" && (
-                            <p className="text-zinc-400 text-sm mt-1">
+                            <p className="text-noir-text-muted text-sm mt-1">
                                 Chamada de {isVideo ? "vídeo" : "áudio"}{" "}
                                 recebida
                             </p>
                         )}
                         {phase === "outgoing" && (
-                            <p className="text-zinc-400 text-sm mt-1">
+                            <p className="text-noir-text-muted text-sm mt-1">
                                 {isOtherOnline
                                     ? "Chamando..."
                                     : "Usuário indisponível no momento"}
                             </p>
                         )}
                         {phase === "active" && (
-                            <p className="text-zinc-400 text-sm mt-1">
+                            <p className="text-noir-text-muted text-sm mt-1">
                                 Em chamada
                             </p>
                         )}
@@ -173,7 +173,7 @@ export default function CallModal({
                             {Array.from({ length: 18 }).map((_, i) => (
                                 <span
                                     key={i}
-                                    className="w-1 rounded-full bg-green-500 animate-pulse"
+                                    className="w-1 rounded-full bg-emerald-500 animate-pulse"
                                     style={{
                                         height: `${20 + ((i * 17) % 28)}px`,
                                         animationDelay: `${i * 60}ms`,

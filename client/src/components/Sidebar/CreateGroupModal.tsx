@@ -110,15 +110,15 @@ export default function CreateGroupModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md mx-4 max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-noir-base/60 backdrop-blur-xs flex items-center justify-center z-50">
+            <div className="bg-noir-card border border-noir-border rounded-2xl p-6 w-full max-w-md mx-4 max-h-[90vh] flex flex-col shadow-2xl">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-noir-text-bright">
                         Criar grupo
                     </h3>
                     <button
                         onClick={onClose}
-                        className="text-zinc-400 hover:text-white transition-colors"
+                        className="text-noir-text-muted hover:text-noir-text-bright transition-colors"
                         title="Fechar"
                     >
                         <svg
@@ -140,7 +140,7 @@ export default function CreateGroupModal({
 
                 <div className="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-1">
                     <div>
-                        <label htmlFor="groupName" className="block text-xs text-zinc-400 mb-1">
+                        <label htmlFor="groupName" className="block text-xs text-noir-text-muted mb-1">
                             Nome do grupo
                         </label>
                         <input
@@ -151,12 +151,12 @@ export default function CreateGroupModal({
                             onChange={(e) => setName(e.target.value)}
                             maxLength={50}
                             placeholder="Ex: Turma de estudos"
-                            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
+                            className="w-full px-3 py-2 bg-noir-surface-alt border border-noir-border rounded-xl text-noir-text-bright text-base placeholder-noir-text-muted focus:outline-none focus:border-emerald-500 transition-colors"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="groupDescription" className="block text-xs text-zinc-400 mb-1">
+                        <label htmlFor="groupDescription" className="block text-xs text-noir-text-muted mb-1">
                             Descrição (opcional)
                         </label>
                         <textarea
@@ -167,12 +167,12 @@ export default function CreateGroupModal({
                             maxLength={200}
                             rows={2}
                             placeholder="Sobre o que é o grupo?"
-                            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors resize-none"
+                            className="w-full px-3 py-2 bg-noir-surface-alt border border-noir-border rounded-xl text-noir-text-bright text-base placeholder-noir-text-muted focus:outline-none focus:border-emerald-500 transition-colors resize-none"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="addParticipantsSearch" className="block text-xs text-zinc-400 mb-1">
+                        <label htmlFor="addParticipantsSearch" className="block text-xs text-noir-text-muted mb-1">
                             Adicionar participantes
                         </label>
                         <input
@@ -185,7 +185,7 @@ export default function CreateGroupModal({
                             placeholder="Buscar por nome, email ou #ID..."
                             maxLength={100}
                             autoComplete="off"
-                            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
+                            className="w-full px-3 py-2 bg-noir-surface-alt border border-noir-border rounded-xl text-noir-text-bright text-base placeholder-noir-text-muted focus:outline-none focus:border-emerald-500 transition-colors"
                         />
 
                         {selected.length > 0 && (
@@ -193,19 +193,19 @@ export default function CreateGroupModal({
                                 {selected.map((u) => (
                                     <span
                                         key={u._id}
-                                        className="inline-flex items-center gap-1.5 bg-zinc-800 border border-zinc-700 rounded-full pl-1.5 pr-2 py-1"
+                                        className="inline-flex items-center gap-1.5 bg-noir-surface-alt border border-noir-border rounded-full pl-1.5 pr-2 py-1"
                                     >
                                         <Avatar
                                             src={u.avatar}
                                             name={u.name}
                                             size="xs"
                                         />
-                                        <span className="text-xs text-white max-w-32 truncate">
+                                        <span className="text-xs text-noir-text-bright max-w-32 truncate">
                                             {u.name}
                                         </span>
                                         <button
                                             onClick={() => removeUser(u._id)}
-                                            className="text-zinc-400 hover:text-white transition-colors"
+                                            className="text-noir-text-muted hover:text-noir-text-bright transition-colors"
                                             title="Remover"
                                         >
                                             <svg
@@ -229,13 +229,13 @@ export default function CreateGroupModal({
                         )}
 
                         {loading && (
-                            <p className="text-zinc-500 text-xs mt-2 px-1">
+                            <p className="text-noir-text-muted text-xs mt-2 px-1">
                                 Buscando...
                             </p>
                         )}
 
                         {results.length > 0 && (
-                            <ul className="mt-2 max-h-40 overflow-y-auto custom-scrollbar border border-zinc-700 rounded-lg">
+                            <ul className="mt-2 max-h-40 overflow-y-auto custom-scrollbar border border-noir-border rounded-xl">
                                 {results.map((u) => (
                                     <li key={u._id}>
                                         <button
@@ -243,12 +243,12 @@ export default function CreateGroupModal({
                                             disabled={selected.some(
                                                 (s) => s._id === u._id,
                                             )}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+                                            className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors rounded-lg ${
                                                 selected.some(
                                                     (s) => s._id === u._id,
                                                 )
                                                     ? "opacity-50 cursor-not-allowed"
-                                                    : "hover:bg-zinc-800"
+                                                    : "hover:bg-noir-surface-alt"
                                             }`}
                                         >
                                             <Avatar
@@ -257,10 +257,10 @@ export default function CreateGroupModal({
                                                 size="sm"
                                             />
                                             <div className="min-w-0">
-                                                <p className="text-sm text-white truncate">
+                                                <p className="text-sm text-noir-text-bright truncate">
                                                     {u.name}
                                                 </p>
-                                                <p className="text-xs text-zinc-500 truncate">
+                                                <p className="text-xs text-noir-text-muted truncate">
                                                     #{u.publicId}
                                                 </p>
                                             </div>
@@ -273,14 +273,14 @@ export default function CreateGroupModal({
                         {query.length > 0 &&
                             !loading &&
                             results.length === 0 && (
-                                <p className="text-zinc-500 text-xs mt-2 px-1">
+                                <p className="text-noir-text-muted text-xs mt-2 px-1">
                                     Nenhum usuário encontrado.
                                 </p>
                             )}
                     </div>
 
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-3 py-2 rounded-lg text-xs">
+                        <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-3 py-2 rounded-xl text-xs">
                             {error}
                         </div>
                     )}
