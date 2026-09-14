@@ -22,6 +22,8 @@ interface ChatHeaderProps {
     onOpenExport: () => void;
     onOpenPinned: () => void;
     onOpenGroupSettings: () => void;
+    onClearConversation: () => void;
+    pinnedCount?: number;
 }
 
 export default function ChatHeader({
@@ -44,6 +46,8 @@ export default function ChatHeader({
     onOpenExport,
     onOpenPinned,
     onOpenGroupSettings,
+    onClearConversation,
+    pinnedCount,
 }: ChatHeaderProps) {
     return (
         <div className="h-16 px-4 sm:px-6 border-b border-noir-border bg-noir-surface/90 flex items-center justify-between gap-2">
@@ -124,6 +128,8 @@ export default function ChatHeader({
                 onOpenExport={onOpenExport}
                 onOpenPinned={onOpenPinned}
                 onOpenGroupSettings={onOpenGroupSettings}
+                onClearConversation={onClearConversation}
+                pinnedCount={pinnedCount}
             />
         </div>
     );

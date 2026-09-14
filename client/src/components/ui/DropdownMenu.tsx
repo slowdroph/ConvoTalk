@@ -66,10 +66,11 @@ export default function DropdownMenu({
             })}
             {open && (
                 <div
-                    className={`absolute top-full mt-1 z-50 bg-white border border-slate-200 rounded-lg overflow-hidden shadow-lg min-w-40 dark:bg-zinc-800 dark:border-zinc-700 ${
+                    className={`absolute top-full mt-2 z-50 w-64 rounded-2xl bg-noir-surface-alt/95 backdrop-blur-md border border-noir-border shadow-2xl p-1.5 ${
                         align === "right" ? "right-0" : "left-0"
                     } ${className}`}
                     onClick={closeMenu}
+                    role="menu"
                 >
                     {children}
                 </div>

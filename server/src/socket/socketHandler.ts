@@ -17,6 +17,7 @@ import {
     socketReactionSchema,
     socketReadManySchema,
     socketPinMessageSchema,
+    socketClearConversationSchema,
     safeParse,
 } from "../validations/socket";
 import { logger } from "../config/logger";
@@ -1174,6 +1175,51 @@ Room.updateOne(
                         { userId, error },
                         "erro ao marcar mensagens como lidas",
                     );
+                }
+            },
+        );
+
+        // Limpar conversa (todas as mensagens)
+        socket.on(
+            "clear_conversation",
+            async (
+                data: { roomId: string },
+                ack?: (res: { error?: string }) => void,
+            ) => {
+                try {
+                    const parsed = safeParse(socketClearConversationSchema, data);
+                    if (!parsed.success) {
+                        ack?.({ error: parsed.error });
+                        return;
+                    }
+                    const { roomId } = parsed.data;
+
+                    if (!(await isRoomParticipant(roomId, userId))) {
+                        ack?.({ error: "Você não participa desta conversa." });
+                        return;
+                    }
+
+                    const messages = await Message.find({ room: roomId })
+                        .select("attachments")
+                        .lean();
+                    await deleteCloudinaryAttachments(
+                        messages.flatMap((m) => m.attachments ?? []),
+                    );
+
+                    await Message.deleteMany({ room: roomId });
+
+                    await Room.findByIdAndUpdate(roomId, {
+                        lastMessageAt: null,
+                    });
+
+                    io.to(roomId).emit("conversation_cleared", { roomId });
+                    ack?.({});
+                } catch (error) {
+                    logger.error(
+                        { userId, error },
+                        "erro ao limpar conversa",
+                    );
+                    ack?.({ error: "Erro ao limpar conversa." });
                 }
             },
         );

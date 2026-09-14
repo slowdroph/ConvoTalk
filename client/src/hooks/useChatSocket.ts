@@ -156,6 +156,15 @@ export function useChatSocket({
         socket.on("message_pinned", handleMessagePinned);
         socket.on("message_unpinned", handleMessageUnpinned);
 
+        const handleConversationCleared = (data: { roomId: string }) => {
+            if (data.roomId !== roomId) return;
+            setMessages([]);
+            setPinnedMessageIds([]);
+            setTypingUsers([]);
+        };
+
+        socket.on("conversation_cleared", handleConversationCleared);
+
         return () => {
             socket.off("message", handleMessage);
             socket.off("typing", handleTyping);
@@ -165,6 +174,7 @@ export function useChatSocket({
             socket.off("reaction_updated", handleReactionUpdated);
             socket.off("message_pinned", handleMessagePinned);
             socket.off("message_unpinned", handleMessageUnpinned);
+            socket.off("conversation_cleared", handleConversationCleared);
         };
     }, [socket, roomId, currentUserId]);
 

@@ -12,6 +12,7 @@ import GroupSettings from "./GroupSettings";
 import CallModal from "./CallModal";
 import ThreadPanel from "./ThreadPanel";
 import PinnedMessagesDialog from "./PinnedMessagesDialog";
+import ConfirmDialog from "../ui/ConfirmDialog";
 import ChatHeader from "./ChatHeader";
 import api from "../../services/api";
 import type { Message, Participant, Room } from "../../types";
@@ -77,6 +78,7 @@ export default function ChatWindow({
     const [threadParent, setThreadParent] = useState<Message | null>(null);
     const [pinnedOpen, setPinnedOpen] = useState(false);
     const [isBlocked, setIsBlocked] = useState(false);
+    const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
     const [highlightedMessageId, setHighlightedMessageId] = useState<
         string | null
     >(highlightMessageId ?? null);
@@ -383,6 +385,28 @@ export default function ChatWindow({
         }
     }, [otherUserId, isBlocked, setMessages, showToast]);
 
+    const handleClearConversation = useCallback(() => {
+        if (!socket) return;
+        socket.emit(
+            "clear_conversation",
+            { roomId },
+            (response: { error?: string }) => {
+                if (response?.error) {
+                    showToast({
+                        type: "error",
+                        message: response.error,
+                    });
+                } else {
+                    setClearConfirmOpen(false);
+                    showToast({
+                        type: "success",
+                        message: "Conversa limpa com sucesso.",
+                    });
+                }
+            },
+        );
+    }, [socket, roomId, showToast]);
+
     const handleLoadOlderMessages = useCallback(
         async (container: HTMLDivElement | null) => {
             if (!hasMore || loadingMore || messages.length === 0) return;
@@ -449,6 +473,8 @@ export default function ChatWindow({
                 onOpenExport={() => setExportOpen(true)}
                 onOpenPinned={() => setPinnedOpen(true)}
                 onOpenGroupSettings={() => setGroupSettingsOpen(true)}
+                onClearConversation={() => setClearConfirmOpen(true)}
+                pinnedCount={pinnedMessageIds.length}
             />
 
             <GroupSettings
@@ -606,6 +632,16 @@ export default function ChatWindow({
                 onOptimisticMessage={addOptimisticMessage}
                 onOptimisticFailed={markOptimisticFailed}
                 participants={participants}
+            />
+
+            <ConfirmDialog
+                isOpen={clearConfirmOpen}
+                title="Limpar conversa"
+                message="Tem certeza que deseja limpar todas as mensagens desta conversa? Essa ação não pode ser desfeita."
+                confirmLabel="Limpar"
+                danger
+                onConfirm={handleClearConversation}
+                onCancel={() => setClearConfirmOpen(false)}
             />
         </div>
     );

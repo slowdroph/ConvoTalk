@@ -114,6 +114,10 @@ export const socketPinMessageSchema = z.object({
     messageId: objectId,
 });
 
+export const socketClearConversationSchema = z.object({
+    roomId: objectId,
+});
+
 export const socketCallInitiateSchema = z.object({
     roomId: objectId,
     calleeId: objectId,
