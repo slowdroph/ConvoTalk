@@ -361,3 +361,65 @@ html[data-theme="light"] .chat-bg-pattern {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ===== Custom cursor ===== */
+@media (pointer: fine) {
+    * {
+        cursor: none !important;
+    }
+
+    input,
+    textarea,
+    [contenteditable]:not([contenteditable="false"]) {
+        cursor: text !important;
+    }
+
+    .custom-cursor {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    .custom-cursor.is-visible {
+        opacity: 1;
+    }
+
+    .custom-cursor__dot,
+    .custom-cursor__ring {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        will-change: transform;
+    }
+
+    .custom-cursor__dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: var(--color-emerald-500);
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+    }
+
+    .custom-cursor__ring {
+        width: 32px;
+        height: 32px;
+        border-radius: 9999px;
+        border: 1.5px solid var(--color-emerald-500);
+        box-shadow:
+            0 0 12px rgba(16, 185, 129, 0.35),
+            inset 0 0 6px rgba(16, 185, 129, 0.15);
+    }
+}
+
+html[data-theme="light"] .custom-cursor__dot {
+    background: var(--color-emerald-600);
+}
+
+html[data-theme="light"] .custom-cursor__ring {
+    border-color: var(--color-emerald-600);
+}
