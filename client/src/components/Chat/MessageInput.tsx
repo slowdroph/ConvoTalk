@@ -83,7 +83,7 @@ export default function MessageInput({
         resizeTextarea();
     }, [message, resizeTextarea]);
 
-    const handleTyping = () => {
+    const handleTyping = useCallback(() => {
         if (!socket) return;
 
         if (!isTyping) {
@@ -99,7 +99,7 @@ export default function MessageInput({
             setIsTyping(false);
             socket.emit("typing", { roomId, isTyping: false });
         }, 4000);
-    };
+    }, [socket, isTyping, roomId]);
 
     const handleMentionSelect = useCallback(
         (selectedUser: User) => {

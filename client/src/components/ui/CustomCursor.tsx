@@ -95,7 +95,7 @@ export default function CustomCursor() {
             const opacityLerp = reducedMotionRef.current ? 1 : OPACITY_LERP;
 
             let ringScaleTarget = ringScaleTargetRef.current;
-            let dotScaleTarget = dotScaleTargetRef.current;
+            const dotScaleTarget = dotScaleTargetRef.current;
 
             if (clickAnimRef.current.active) {
                 clickAnimRef.current.progress += 0.04;

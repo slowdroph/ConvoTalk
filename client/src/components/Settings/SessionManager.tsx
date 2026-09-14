@@ -60,17 +60,22 @@ export default function SessionManager() {
     const otherSessions = sessions.filter((s) => !s.current);
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                    Sessões Ativas
-                </h3>
+        <div className="space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-noir-border gap-2">
+                <div>
+                    <h2 className="text-base font-semibold text-noir-text-bright">
+                        Sessões Ativas
+                    </h2>
+                    <p className="text-xs text-noir-text-muted mt-0.5">
+                        Gerencie os dispositivos conectados à sua conta ConvoTalk.
+                    </p>
+                </div>
                 {otherSessions.length > 0 && (
                     <button
                         onClick={handleRemoveAll}
                         disabled={removingAll}
                         aria-label="Encerrar todas as outras sessões"
-                        className="text-sm text-red-600 hover:text-red-700 disabled:opacity-50 transition-colors cursor-pointer dark:text-red-400 dark:hover:text-red-300"
+                        className="text-xs text-red-400 hover:text-red-300 font-medium hover:underline self-start sm:self-auto cursor-pointer disabled:opacity-50"
                     >
                         {removingAll
                             ? "Encerrando..."
@@ -79,13 +84,12 @@ export default function SessionManager() {
                 )}
             </div>
 
-            <p className="text-sm text-slate-500 dark:text-zinc-400">
-                Gerencie os dispositivos conectados à sua conta.
-            </p>
-
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm dark:bg-red-500/10 dark:border-red-500/50 dark:text-red-400">
-                    {error}
+                <div role="alert" className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-2.5 rounded-xl text-xs flex items-center gap-2">
+                    <svg className="w-4 h-4 shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{error}</span>
                 </div>
             )}
 
@@ -94,90 +98,81 @@ export default function SessionManager() {
                     {[1, 2, 3].map((i) => (
                         <div
                             key={i}
-                            className="animate-pulse flex items-center gap-4 p-4 rounded-lg bg-slate-50 dark:bg-zinc-800"
+                            className="animate-pulse flex items-center gap-4 p-4 rounded-xl border border-noir-border bg-noir-surface-alt/50"
                         >
-                            <div className="w-10 h-10 bg-slate-200 rounded-lg dark:bg-zinc-700" />
+                            <div className="w-10 h-10 bg-noir-surface-alt rounded-xl" />
                             <div className="flex-1 space-y-2">
-                                <div className="h-4 bg-slate-200 rounded w-1/3 dark:bg-zinc-700" />
-                                <div className="h-3 bg-slate-200 rounded w-1/2 dark:bg-zinc-700" />
+                                <div className="h-3.5 bg-noir-surface-alt rounded w-1/3" />
+                                <div className="h-2.5 bg-noir-surface-alt rounded w-1/2" />
                             </div>
                         </div>
                     ))}
                 </div>
             ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                     {sessions.map((session) => (
                         <div
                             key={session._id}
-                            className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${
+                            className={`p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3 ${
                                 session.current
-                                    ? "bg-emerald-50 border-emerald-200 dark:bg-green-500/10 dark:border-green-500/30"
-                                    : "bg-slate-50 border-slate-200 hover:bg-slate-100 dark:bg-zinc-800 dark:border-zinc-700 dark:hover:bg-zinc-750"
+                                    ? "border-emerald-500/40 bg-gradient-to-r from-emerald-950/30 to-noir-surface-alt"
+                                    : "border-noir-border bg-noir-surface-alt/50 hover:border-noir-border-light"
                             }`}
                         >
-                            <div
-                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                    session.current
-                                        ? "bg-emerald-100 dark:bg-green-500/20"
-                                        : "bg-slate-100 dark:bg-zinc-700"
-                                }`}
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className={`w-5 h-5 ${
+                            <div className="flex items-center gap-3.5 min-w-0">
+                                <div
+                                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                                         session.current
-                                            ? "text-emerald-600 dark:text-green-400"
-                                            : "text-slate-500 dark:text-zinc-400"
+                                            ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"
+                                            : "bg-noir-surface-alt/80 border border-noir-border-light text-noir-text-muted"
                                     }`}
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    strokeWidth={1.5}
                                 >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d={getDeviceIcon(session.deviceType)}
-                                    />
-                                </svg>
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                    <p
-                                        className={`text-sm font-medium truncate ${
-                                            session.current
-                                                ? "text-emerald-700 dark:text-green-300"
-                                                : "text-slate-900 dark:text-white"
-                                        }`}
+                                    <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
                                     >
-                                        {session.deviceLabel || "Dispositivo desconhecido"}
-                                    </p>
-                                    {session.current && (
-                                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full dark:bg-green-500/20 dark:text-green-400">
-                                            Atual
-                                        </span>
-                                    )}
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={1.8}
+                                            d={getDeviceIcon(session.deviceType)}
+                                        />
+                                    </svg>
                                 </div>
-                                <div className="flex items-center gap-3 mt-1">
-                                    <p className="text-xs text-slate-500 dark:text-zinc-400">
-                                        {session.ip || "IP desconhecido"}
-                                    </p>
-                                    <span className="text-slate-300 dark:text-zinc-600">
-                                        ·
-                                    </span>
-                                    <p className="text-xs text-slate-500 dark:text-zinc-400">
-                                        {formatTimeAgo(session.lastActiveAt)}
-                                    </p>
+
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-semibold text-noir-text-bright truncate">
+                                            {session.deviceLabel || "Dispositivo"}
+                                        </span>
+                                        {session.current && (
+                                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/25 text-emerald-400 border border-emerald-500/30">
+                                                Atual
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[11px] text-noir-text-muted font-mono mt-0.5">
+                                        <span>{session.ip || "IP desconhecido"}</span>
+                                        <span>•</span>
+                                        <span className={session.current ? "text-emerald-400" : "text-noir-text-muted"}>
+                                            {session.current ? "Agora mesmo" : formatTimeAgo(session.lastActiveAt)}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
-                            {!session.current && (
+                            {session.current ? (
+                                <span className="hidden sm:inline-block text-xs text-noir-text-muted italic shrink-0">
+                                    Dispositivo principal
+                                </span>
+                            ) : (
                                 <button
                                     onClick={() => handleRemoveSession(session._id)}
                                     disabled={removingId === session._id}
                                     aria-label={`Encerrar sessão ${session.deviceLabel}`}
-                                    className="text-sm text-red-600 hover:text-red-700 disabled:opacity-50 transition-colors cursor-pointer dark:text-red-400 dark:hover:text-red-300"
+                                    className="text-xs font-medium text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-950/20 border border-transparent hover:border-red-900/40 transition cursor-pointer disabled:opacity-50 shrink-0"
                                 >
                                     {removingId === session._id
                                         ? "Encerrando..."
@@ -188,8 +183,8 @@ export default function SessionManager() {
                     ))}
 
                     {sessions.length === 0 && (
-                        <p className="text-center text-slate-500 py-4 dark:text-zinc-400">
-                            Nenhuma sessão ativa.
+                        <p className="text-center text-noir-text-muted py-6 text-xs">
+                            Nenhuma sessão ativa encontrada.
                         </p>
                     )}
                 </div>

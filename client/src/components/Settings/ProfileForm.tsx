@@ -127,48 +127,64 @@ export default function ProfileForm() {
         email.toLowerCase() !== (user?.email || "").toLowerCase();
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                Perfil
-            </h3>
+        <div className="space-y-6">
+            <div className="border-b border-noir-border pb-4">
+                <h2 className="text-base font-semibold text-noir-text-bright">
+                    Perfil &amp; Informações
+                </h2>
+                <p className="text-xs text-noir-text-muted mt-0.5">
+                    Atualize seus dados de exibição, foto de perfil e mensagem de status.
+                </p>
+            </div>
 
             {user?.emailPending && user.pendingEmail && (
-                <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg text-sm dark:bg-amber-500/10 dark:border-amber-500/50 dark:text-amber-400">
-                    Alteração de email pendente: confirme o link enviado para{" "}
-                    <strong>{user.pendingEmail}</strong> para concluir a
-                    alteração. Seu email atual continua ativo até a
-                    confirmação.
+                <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 px-4 py-3 rounded-xl text-xs flex items-start gap-2">
+                    <svg className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>
+                        Alteração de email pendente: confirme o link enviado para{" "}
+                        <strong className="text-amber-200">{user.pendingEmail}</strong>. Seu email atual continua ativo até a confirmação.
+                    </span>
                 </div>
             )}
 
             {success && (
-                <div role="alert" className="bg-green-100 border border-green-200 text-green-800 px-4 py-2 rounded-lg text-sm dark:bg-green-500/10 dark:border-green-500/50 dark:text-green-400">
-                    {success}
+                <div role="alert" className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-4 py-2.5 rounded-xl text-xs flex items-center gap-2">
+                    <svg className="w-4 h-4 shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{success}</span>
                 </div>
             )}
 
             {error && (
-                <div role="alert" className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm dark:bg-red-500/10 dark:border-red-500/50 dark:text-red-400">
-                    {error}
+                <div role="alert" className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-2.5 rounded-xl text-xs flex items-center gap-2">
+                    <svg className="w-4 h-4 shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{error}</span>
                 </div>
             )}
 
-            <div className="flex items-center gap-4">
-                <div className="relative">
+            {/* Controle de Avatar */}
+            <div className="flex items-center gap-4 sm:gap-6">
+                <div className="relative group">
                     <Avatar
                         src={avatarUrl || undefined}
                         name={user?.name || "?"}
                         size="lg"
-                        className="border-2 border-slate-200 dark:border-zinc-700"
+                        className="w-16 h-16 rounded-full border-2 border-noir-border shadow-md ring-2 ring-emerald-500/20"
                     />
+                    <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-noir-card" />
                     {avatarLoading && (
-                        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+                            <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
                         </div>
                     )}
                 </div>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap gap-2.5">
                     <input
                         ref={fileInputRef}
                         type="file"
@@ -182,7 +198,7 @@ export default function ProfileForm() {
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={avatarLoading}
-                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 disabled:opacity-50 text-slate-700 text-sm font-medium rounded-lg transition-colors cursor-pointer dark:bg-zinc-700 dark:border-transparent dark:hover:bg-zinc-600 dark:text-white"
+                        className="px-3.5 py-1.5 rounded-lg bg-noir-surface-alt hover:bg-noir-card text-xs font-medium text-noir-text-bright border border-noir-border-light transition disabled:opacity-50 cursor-pointer"
                     >
                         Alterar foto
                     </button>
@@ -191,103 +207,130 @@ export default function ProfileForm() {
                             type="button"
                             onClick={handleRemoveAvatar}
                             disabled={avatarLoading}
-                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 disabled:opacity-50 text-slate-600 text-sm font-medium rounded-lg transition-colors cursor-pointer dark:bg-zinc-800 dark:border-transparent dark:hover:bg-zinc-700 dark:text-zinc-400"
+                            className="px-3.5 py-1.5 rounded-lg bg-noir-surface/60 hover:bg-red-950/40 text-xs font-medium text-noir-text-muted hover:text-red-400 border border-noir-border transition disabled:opacity-50 cursor-pointer"
                         >
-                            Remover foto
+                            Remover
                         </button>
                     )}
                 </div>
             </div>
 
-            <div>
-                <label htmlFor="name" className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
-                    Nome
-                </label>
-                <input
-                    type="text"
-                    name="name"
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    maxLength={50}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors dark:bg-zinc-800 dark:border-zinc-700 dark:text-white dark:placeholder-zinc-500 dark:focus:border-green-500"
-                />
-            </div>
-
-            <div>
-                <label htmlFor="email" className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
-                    Email
-                </label>
-                <input
-                    type="email"
-                    name="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    maxLength={100}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors dark:bg-zinc-800 dark:border-zinc-700 dark:text-white dark:placeholder-zinc-500 dark:focus:border-green-500"
-                />
-            </div>
-
-            {emailChanged && (
+            {/* Formulário Principal */}
+            <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
                 <div>
                     <label
-                        htmlFor="currentPassword"
-                        className="block text-sm text-slate-600 mb-1 dark:text-zinc-400"
+                        htmlFor="input-nome"
+                        className="block text-xs font-medium text-noir-text-bright mb-1.5"
                     >
-                        Senha atual
+                        Nome
                     </label>
                     <input
-                        type="password"
-                        name="currentPassword"
-                        id="currentPassword"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        type="text"
+                        id="input-nome"
+                        name="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         required
-                        autoComplete="current-password"
-                        placeholder="Para alterar o email, confirme sua senha"
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors dark:bg-zinc-800 dark:border-zinc-700 dark:text-white dark:placeholder-zinc-500 dark:focus:border-green-500"
+                        maxLength={50}
+                        className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2.5 text-sm text-noir-text-bright focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition"
                     />
-                    <p className="mt-1 text-xs text-slate-500 dark:text-zinc-500">
-                        Um link de confirmação será enviado para o novo email.
-                        Seu email atual continua ativo até você confirmar.
-                    </p>
                 </div>
-            )}
 
-            <button
-                type="submit"
-                disabled={profileLoading}
-                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors cursor-pointer dark:bg-green-600 dark:hover:bg-green-700 dark:text-on-accent"
-            >
-                {profileLoading ? "Salvando..." : "Salvar alterações"}
-            </button>
+                <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label
+                            htmlFor="input-email"
+                            className="block text-xs font-medium text-noir-text-bright"
+                        >
+                            Email
+                        </label>
+                        <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Verificado
+                        </span>
+                    </div>
+                    <input
+                        type="email"
+                        id="input-email"
+                        name="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        maxLength={100}
+                        className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2.5 text-sm text-noir-text-bright focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition"
+                    />
+                </div>
 
-            <div className="border-t border-slate-200 pt-4 dark:border-zinc-800">
-                <label htmlFor="status" className="block text-sm text-slate-600 mb-1 dark:text-zinc-400">
-                    Status
-                </label>
-                <input
-                    type="text"
-                    name="status"
-                    id="status"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    maxLength={100}
-                    placeholder="Ex: Disponível, Em reunião, Não me perturbe..."
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors dark:bg-zinc-800 dark:border-zinc-700 dark:text-white dark:placeholder-zinc-500 dark:focus:border-green-500"
-                />
-                <button
-                    type="button"
-                    onClick={handleStatusSubmit}
-                    disabled={statusLoading}
-                    className="mt-4 px-6 py-3 bg-slate-100 hover:bg-slate-200 border border-slate-300 disabled:opacity-50 text-slate-700 font-medium rounded-lg transition-colors cursor-pointer dark:bg-zinc-700 dark:border-transparent dark:hover:bg-zinc-600 dark:text-white"
-                >
-                    {statusLoading ? "Salvando..." : "Salvar status"}
-                </button>
+                {emailChanged && (
+                    <div className="p-3.5 rounded-xl border border-noir-border bg-noir-surface-alt space-y-2">
+                        <label
+                            htmlFor="currentPassword"
+                            className="block text-xs font-medium text-noir-text-bright"
+                        >
+                            Senha atual para confirmação
+                        </label>
+                        <input
+                            type="password"
+                            name="currentPassword"
+                            id="currentPassword"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            required
+                            autoComplete="current-password"
+                            placeholder="Digite sua senha atual"
+                            className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2 text-sm text-noir-text-bright focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition"
+                        />
+                        <p className="text-[11px] text-noir-text-muted">
+                            Um link de confirmação será enviado para o novo email. Seu email atual continua ativo até você confirmar.
+                        </p>
+                    </div>
+                )}
+
+                <div className="pt-1">
+                    <button
+                        type="submit"
+                        disabled={profileLoading}
+                        className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs tracking-wide shadow-md shadow-emerald-500/20 transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
+                    >
+                        {profileLoading ? "Salvando..." : "Salvar alterações"}
+                    </button>
+                </div>
+            </form>
+
+            {/* Seção de Status */}
+            <div className="pt-5 border-t border-noir-border max-w-2xl">
+                <form onSubmit={handleStatusSubmit} className="space-y-3">
+                    <label
+                        htmlFor="input-status"
+                        className="block text-xs font-medium text-noir-text-bright"
+                    >
+                        Status
+                    </label>
+                    <div className="relative">
+                        <input
+                            type="text"
+                            id="input-status"
+                            name="status"
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            maxLength={100}
+                            placeholder="Ex: Disponível, Em reunião, Não me perturbe..."
+                            className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2.5 pr-10 text-sm text-noir-text-bright placeholder-noir-text-muted focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition"
+                        />
+                    </div>
+                    <div>
+                        <button
+                            type="submit"
+                            disabled={statusLoading}
+                            className="px-4 py-2 rounded-xl bg-noir-surface-alt hover:bg-noir-card text-noir-text-bright font-medium text-xs border border-noir-border-light transition-all disabled:opacity-50 cursor-pointer"
+                        >
+                            {statusLoading ? "Salvando..." : "Salvar status"}
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     );
 }

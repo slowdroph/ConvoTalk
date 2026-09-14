@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
-import Button from "../ui/Button";
 
 interface DeleteAccountModalProps {
     isOpen: boolean;
@@ -42,52 +41,67 @@ export default function DeleteAccountModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto shadow-xl dark:bg-zinc-900 dark:border-zinc-700">
-                <h3 className="text-lg font-semibold text-red-600 mb-2 dark:text-red-400">
-                    Excluir conta
-                </h3>
-                <p className="text-slate-500 text-sm mb-4 dark:text-zinc-400">
-                    Esta ação é irreversível. Todas as suas mensagens serão
-                    excluídas. Digite sua senha para confirmar.
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+            <div className="bg-noir-card border border-red-900/40 rounded-2xl p-6 w-full max-w-md mx-auto shadow-2xl space-y-4">
+                <div className="flex items-center gap-2.5 text-red-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <h3 className="text-base font-semibold text-red-400">
+                        Excluir conta definitivamente
+                    </h3>
+                </div>
+
+                <p className="text-xs text-noir-text-muted leading-relaxed">
+                    Esta ação é irreversível. Todas as suas conversas, mensagens e mídias serão excluídas permanentemente dos servidores. Digite sua senha para confirmar.
                 </p>
 
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm mb-4 dark:bg-red-500/10 dark:border-red-500/50 dark:text-red-400">
-                        {error}
+                    <div role="alert" className="bg-red-500/10 border border-red-500/30 text-red-400 px-3.5 py-2 rounded-xl text-xs flex items-center gap-2">
+                        <svg className="w-4 h-4 shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{error}</span>
                     </div>
                 )}
 
-                <form onSubmit={handleDelete} className="space-y-4">
-                    <input
-                        type="password"
-                        name="password"
-                        id="password"
-                        autoComplete="current-password"
-                        placeholder="Digite sua senha"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        maxLength={128}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-colors dark:bg-zinc-800 dark:border-zinc-700 dark:text-white dark:placeholder-zinc-500"
-                    />
+                <form onSubmit={handleDelete} className="space-y-4 pt-1">
+                    <div>
+                        <label
+                            htmlFor="password"
+                            className="block text-xs font-medium text-noir-text-bright mb-1.5"
+                        >
+                            Sua senha atual
+                        </label>
+                        <input
+                            type="password"
+                            name="password"
+                            id="password"
+                            autoComplete="current-password"
+                            placeholder="Digite sua senha para confirmar"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            maxLength={128}
+                            className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2.5 text-sm text-noir-text-bright placeholder-noir-text-muted focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none transition"
+                        />
+                    </div>
 
-                    <div className="flex gap-3">
-                        <Button
-                            variant="secondaryLight"
-                            className="flex-1"
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            type="button"
+                            className="flex-1 px-4 py-2.5 rounded-xl bg-noir-surface-alt hover:bg-noir-card text-xs font-medium text-noir-text-bright border border-noir-border-light transition cursor-pointer"
                             onClick={handleClose}
                         >
                             Cancelar
-                        </Button>
-                        <Button
+                        </button>
+                        <button
                             type="submit"
-                            variant="danger"
-                            className="flex-1"
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-red-800/80 bg-red-950/60 hover:bg-red-900/70 text-red-300 font-semibold text-xs transition duration-150 cursor-pointer disabled:opacity-50"
                             disabled={loading}
                         >
                             {loading ? "Excluindo..." : "Excluir conta"}
-                        </Button>
+                        </button>
                     </div>
                 </form>
             </div>
