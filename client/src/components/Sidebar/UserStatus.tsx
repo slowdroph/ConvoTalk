@@ -7,14 +7,14 @@ export default function UserStatus() {
     const navigate = useNavigate();
 
     return (
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-zinc-700">
+        <div className="flex items-center justify-between p-4 border-b border-noir-border bg-noir-surface/90 backdrop-blur">
             <div className="flex items-center gap-3 min-w-0">
                 <Avatar src={user?.avatar} name={user?.name || "?"} />
                 <div className="min-w-0">
-                    <p className="text-slate-900 font-medium text-sm truncate dark:text-white">
+                    <p className="text-slate-900 font-medium text-sm truncate dark:text-noir-text-bright">
                         {user?.name}
                     </p>
-                    <p className="text-slate-500 text-xs truncate dark:text-zinc-400">
+                    <p className="text-slate-500 text-xs truncate dark:text-noir-text-muted">
                         {user?.email}
                     </p>
                 </div>
@@ -22,7 +22,7 @@ export default function UserStatus() {
             <div className="flex items-center gap-2">
                 <button
                     onClick={() => navigate("/settings")}
-                    className="text-slate-500 hover:text-slate-900 transition-colors text-sm dark:text-zinc-400 dark:hover:text-white p-2 rounded-lg"
+                    className="text-slate-500 hover:text-slate-900 transition-colors text-sm dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt p-2 rounded-lg"
                     title="Configurações"
                 >
                     <svg
@@ -48,7 +48,7 @@ export default function UserStatus() {
                 </button>
                 <button
                     onClick={logout}
-                    className="text-slate-500 hover:text-red-600 transition-colors text-sm dark:text-zinc-400 dark:hover:text-red-400 p-2 rounded-lg"
+                    className="text-slate-500 hover:text-red-600 transition-colors text-sm dark:text-noir-text-muted dark:hover:text-red-400 dark:hover:bg-red-950/20 p-2 rounded-lg"
                     title="Sair"
                 >
                     <svg

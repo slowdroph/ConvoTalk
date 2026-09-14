@@ -42,6 +42,10 @@ const roomSchema = new Schema<IRoom>({
         of: Date,
         default: {},
     },
+    lastMessageAt: {
+        type: Date,
+        default: null,
+    },
     pinnedMessages: [
         {
             message: {
@@ -67,5 +71,6 @@ const roomSchema = new Schema<IRoom>({
 });
 
 roomSchema.index({ type: 1, participants: 1 });
+roomSchema.index({ participants: 1, lastMessageAt: -1 });
 
 export default mongoose.model<IRoom>("Room", roomSchema);

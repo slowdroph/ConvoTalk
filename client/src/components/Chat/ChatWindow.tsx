@@ -428,7 +428,7 @@ export default function ChatWindow({
     };
 
     return (
-        <div className="flex-1 flex flex-col bg-zinc-950 h-full">
+        <div className="flex-1 flex flex-col bg-noir-base h-full">
             <ChatHeader
                 roomType={roomType}
                 displayName={displayName}
@@ -551,7 +551,7 @@ export default function ChatWindow({
                                         setMessagesLoading(false);
                                     });
                             }}
-                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-zinc-800 dark:border-transparent dark:hover:bg-zinc-700 dark:text-white"
+                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-card dark:text-noir-text-bright"
                         >
                             Tentar novamente
                         </button>

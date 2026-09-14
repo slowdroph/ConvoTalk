@@ -165,14 +165,14 @@ export default function ThreadPanel({
     };
 
     return (
-        <div className="fixed inset-0 z-40 w-full md:relative md:w-80 md:z-auto flex flex-col border-t md:border-t-0 md:border-l border-slate-200 bg-slate-50 md:max-h-full dark:border-zinc-700 dark:bg-zinc-900/60">
-            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between shrink-0 dark:border-zinc-700 pt-[max(0.75rem,env(safe-area-inset-top))]">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+        <div className="fixed inset-0 z-40 w-full md:relative md:w-80 md:z-auto flex flex-col border-t md:border-t-0 md:border-l border-noir-border bg-noir-surface md:max-h-full">
+            <div className="px-4 py-3 border-b border-noir-border flex items-center justify-between shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))]">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-noir-text-bright">
                     Respostas
                 </h3>
                 <button
                     onClick={onClose}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors dark:text-zinc-500 dark:hover:text-white dark:hover:bg-zinc-800"
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
                     title="Fechar respostas"
                     aria-label="Fechar respostas"
                 >
@@ -197,7 +197,7 @@ export default function ThreadPanel({
                 ref={containerRef}
                 className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3"
             >
-                <div className="mb-4 pb-3 border-b border-slate-200 dark:border-zinc-800">
+                <div className="mb-4 pb-3 border-b border-noir-border">
                     <MessageBubble
                         message={parent}
                         onDelete={onDeleteMessage}
@@ -221,7 +221,7 @@ export default function ThreadPanel({
                         {error}
                     </p>
                 ) : replies.length === 0 ? (
-                    <p className="text-sm text-slate-500 text-center py-6 dark:text-zinc-500">
+                    <p className="text-sm text-slate-500 text-center py-6 dark:text-noir-text-muted">
                         Nenhuma resposta ainda. Seja o primeiro a responder!
                     </p>
                 ) : (

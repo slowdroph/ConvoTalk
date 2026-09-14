@@ -58,11 +58,11 @@ function MessageAttachments({
                 att.mimetype.startsWith("audio/") ? (
                     <div
                         key={i}
-                        className="mt-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 dark:bg-zinc-800/80 dark:border-zinc-700"
+                        className="mt-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 dark:bg-noir-surface-alt dark:border-noir-border"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 text-emerald-600 dark:text-green-400 shrink-0"
+                            className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -104,11 +104,11 @@ function MessageAttachments({
                         target="_blank"
                         rel="noopener noreferrer"
                         download={att.filename}
-                        className="mt-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 hover:bg-slate-100 transition-colors dark:bg-zinc-800/80 dark:border-zinc-700 dark:hover:bg-zinc-700/80"
+                        className="mt-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 hover:bg-slate-100 transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-card"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 text-emerald-600 dark:text-green-400 shrink-0"
+                            className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -121,10 +121,10 @@ function MessageAttachments({
                             />
                         </svg>
                         <div className="min-w-0">
-                            <p className="text-sm text-slate-900 truncate max-w-48 dark:text-white">
+                            <p className="text-sm text-slate-900 truncate max-w-48 dark:text-noir-text-bright">
                                 {att.filename}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-zinc-500">
+                            <p className="text-xs text-slate-500 dark:text-noir-text-muted">
                                 {formatFileSize(att.size)}
                             </p>
                         </div>
@@ -137,12 +137,12 @@ function MessageAttachments({
 
 function ReplyPreview({ parent }: { parent: ParentMessage }) {
     return (
-        <div className="flex items-start gap-2 mb-1.5 px-2 py-1.5 bg-slate-100 border-l-2 border-emerald-500/60 rounded-r-md dark:bg-zinc-900/60 dark:border-green-500/60">
+        <div className="flex items-start gap-2 mb-1.5 px-2 py-1.5 bg-slate-100 border-l-2 border-emerald-500/60 rounded-r-md dark:bg-noir-card/80 dark:border-emerald-500/60">
             <div className="min-w-0">
-                <p className="text-xs font-semibold text-emerald-600 truncate dark:text-green-400">
+                <p className="text-xs font-semibold text-emerald-600 truncate dark:text-emerald-400">
                     {parent.sender?.name || "Mensagem"}
                 </p>
-                <p className="text-xs text-slate-500 truncate dark:text-zinc-400">
+                <p className="text-xs text-slate-500 truncate dark:text-noir-text-muted">
                     {parent.content ||
                         (parent.attachments && parent.attachments.length > 0
                             ? "📎 Anexo"
@@ -244,7 +244,7 @@ function MessageBubbleComponent({
     if (message.type === "system") {
         return (
             <div className="flex justify-center mb-3">
-                <p className="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-500 text-center max-w-[80%] dark:bg-zinc-800/70 dark:border-zinc-700/50 dark:text-zinc-400">
+                <p className="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-500 text-center max-w-[80%] dark:bg-noir-surface/80 dark:border-noir-border dark:text-noir-text-muted">
                     {message.content}
                 </p>
             </div>
@@ -301,8 +301,8 @@ function MessageBubbleComponent({
                 <div
                     className={`max-w-[70%] px-3 py-2 rounded-lg ${
                         isOwn
-                            ? "bg-emerald-100 text-slate-900 rounded-br-none dark:bg-green-700/30 dark:text-white"
-                            : "bg-white text-slate-900 border border-slate-200/80 rounded-bl-none dark:bg-zinc-700 dark:text-zinc-100 dark:border-transparent"
+                            ? "bg-emerald-100 text-slate-900 rounded-br-none dark:bg-linear-to-br dark:from-emerald-950 dark:via-[#0a351a] dark:to-[#072b14] dark:border dark:border-emerald-600/40 dark:rounded-2xl dark:rounded-tr-sm dark:text-noir-text-bright dark:shadow-bubble-sent"
+                            : "bg-white text-slate-900 border border-slate-200/80 rounded-bl-none dark:bg-noir-card dark:border-noir-border dark:text-noir-text-bright"
                     }`}
                 >
                     {!isOwn && (
@@ -319,13 +319,13 @@ function MessageBubbleComponent({
                                     name={message.sender.name}
                                     size="xs"
                                 />
-                                <p className="text-xs font-semibold text-emerald-600 dark:text-green-400">
+                                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                                     {message.sender.name}
                                 </p>
                             </UserProfilePopover>
                         </div>
                     )}
-                    <p className="text-sm italic text-slate-400 dark:text-zinc-400">
+                    <p className="text-sm italic text-slate-400 dark:text-noir-text-muted">
                         {isOwn
                             ? "Você excluiu esta mensagem"
                             : `${message.sender.name} excluiu esta mensagem`}
@@ -364,8 +364,8 @@ function MessageBubbleComponent({
                     <div
                         className={`px-3 py-2 rounded-lg shadow-sm shadow-black/20 ${
                             isOwn
-                                ? "bg-emerald-100 text-slate-900 rounded-br-none dark:bg-green-700/30 dark:text-white"
-                                : "bg-white text-slate-900 border border-slate-200/80 rounded-bl-none dark:bg-zinc-700 dark:text-zinc-100 dark:border-transparent"
+                                ? "bg-emerald-100 text-slate-900 rounded-br-none dark:bg-linear-to-br dark:from-emerald-950 dark:via-[#0a351a] dark:to-[#072b14] dark:border dark:border-emerald-600/40 dark:rounded-2xl dark:rounded-tr-sm dark:text-noir-text-bright dark:shadow-bubble-sent"
+                                : "bg-white text-slate-900 border border-slate-200/80 rounded-bl-none dark:bg-noir-card dark:border-noir-border dark:text-noir-text-bright"
                         } ${isPending ? "opacity-70" : ""}`}
                     >
                         {!isOwn && (
@@ -382,7 +382,7 @@ function MessageBubbleComponent({
                                         name={message.sender.name}
                                         size="xs"
                                     />
-                                    <p className="text-xs font-semibold text-emerald-600 dark:text-green-400">
+                                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                                         {message.sender.name}
                                     </p>
                                 </UserProfilePopover>
@@ -403,11 +403,11 @@ function MessageBubbleComponent({
                                     }
                                     onKeyDown={handleEditKeyDown}
                                     maxLength={2000}
-                                    className="flex-1 px-2 py-1 bg-slate-50 border border-slate-300 rounded text-slate-900 text-base focus:outline-none focus:border-emerald-500 dark:bg-zinc-800 dark:border-zinc-600 dark:text-white dark:focus:border-green-500"
+                                    className="flex-1 px-2 py-1 bg-slate-50 border border-slate-300 rounded text-slate-900 text-base focus:outline-none focus:border-emerald-500 dark:bg-noir-surface-alt dark:border-noir-border-light dark:text-noir-text-bright dark:focus:border-emerald-500"
                                 />
                                 <button
                                     onClick={handleSaveEdit}
-                                    className="text-emerald-600 hover:text-emerald-700 dark:text-green-400 dark:hover:text-green-300 transition-colors"
+                                    className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors"
                                     title="Salvar"
                                 >
                                     <svg
@@ -427,7 +427,7 @@ function MessageBubbleComponent({
                                 </button>
                                 <button
                                     onClick={handleCancelEdit}
-                                    className="text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-zinc-300 transition-colors"
+                                    className="text-slate-400 hover:text-slate-600 dark:text-noir-text-muted dark:hover:text-noir-text-bright transition-colors"
                                     title="Cancelar"
                                 >
                                     <svg
@@ -472,7 +472,7 @@ function MessageBubbleComponent({
                             </>
                         )}
                         <div
-                            className={`flex items-center justify-end gap-1 text-[10px] mt-1 ${isOwn ? "text-emerald-700/70 dark:text-green-300/60" : "text-slate-400 dark:text-zinc-500"}`}
+                            className={`flex items-center justify-end gap-1 text-[10px] mt-1 ${isOwn ? "text-emerald-700/70 dark:text-emerald-400/80" : "text-slate-400 dark:text-noir-text-muted"}`}
                         >
                             <span>
                                 {time}
@@ -548,8 +548,8 @@ function MessageBubbleComponent({
                                             }
                                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors ${
                                                 hasReacted
-                                                    ? "bg-green-700/40 border border-green-500/50 text-green-300 dark:bg-emerald-100 dark:text-emerald-800"
-                                                    : "bg-slate-100 border border-slate-200 text-slate-500 hover:border-slate-300 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600"
+                                                    ? "bg-green-700/40 border border-green-500/50 text-green-300 dark:bg-emerald-600/20 dark:border-emerald-500/50 dark:text-emerald-400"
+                                                    : "bg-slate-100 border border-slate-200 text-slate-500 hover:border-slate-300 dark:bg-noir-card dark:border-noir-border dark:text-noir-text-muted dark:hover:border-noir-border-light"
                                             }`}
                                         >
                                             <span>{emoji}</span>

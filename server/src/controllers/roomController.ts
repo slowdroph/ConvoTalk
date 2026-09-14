@@ -48,7 +48,7 @@ export async function listRooms(
         );
 
         const rooms = await Room.find({ participants: userId })
-            .sort({ name: 1 })
+            .sort({ lastMessageAt: -1, createdAt: -1 })
             .populate("participants", "name email publicId avatar status")
             .populate("admins", "name email publicId avatar status")
             .lean();
@@ -139,11 +139,29 @@ export async function listRooms(
         const mentionMap = new Map(
             mentionAgg.map((u) => [u._id.toString(), u.count]),
         );
-        const result = visibleRooms.map((r) => ({
-            ...r,
-            unreadCount: unreadMap.get(r._id.toString()) || 0,
-            mentionUnreadCount: mentionMap.get(r._id.toString()) || 0,
-        }));
+
+        let lastMsgMap = new Map<string, { content: string; createdAt: Date }>();
+        if (roomIds.length > 0) {
+            const lastMsgAgg = await Message.aggregate([
+                { $match: { room: { $in: roomIds }, deleted: { $ne: true }, type: { $ne: "system" } } },
+                { $sort: { createdAt: -1 as const } },
+                { $group: { _id: "$room", content: { $first: "$content" }, createdAt: { $first: "$createdAt" } } },
+            ]);
+            lastMsgMap = new Map(
+                lastMsgAgg.map((m) => [m._id.toString(), { content: m.content, createdAt: m.createdAt }]),
+            );
+        }
+
+        const result = visibleRooms.map((r) => {
+            const lastMsg = lastMsgMap.get(r._id.toString());
+            return {
+                ...r,
+                unreadCount: unreadMap.get(r._id.toString()) || 0,
+                mentionUnreadCount: mentionMap.get(r._id.toString()) || 0,
+                lastMessageAt: r.lastMessageAt || r.createdAt,
+                lastMessagePreview: lastMsg?.content ?? null,
+            };
+        });
 
         res.json(result);
     } catch (error) {

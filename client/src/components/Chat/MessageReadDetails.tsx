@@ -43,15 +43,15 @@ export default function MessageReadDetails({
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden dark:bg-zinc-900">
-                <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-zinc-800">
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden dark:bg-noir-surface">
+                <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-noir-border">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-noir-text-bright">
                         Quem leu esta mensagem
                     </h3>
                     <button
                         onClick={onClose}
                         aria-label="Fechar detalhes de leitura"
-                        className="text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer"
+                        className="text-slate-500 hover:text-slate-700 dark:text-noir-text-muted dark:hover:text-noir-text-bright transition-colors cursor-pointer"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -78,10 +78,10 @@ export default function MessageReadDetails({
                                     key={i}
                                     className="animate-pulse flex items-center gap-3"
                                 >
-                                    <div className="w-10 h-10 bg-slate-200 rounded-full dark:bg-zinc-700" />
+                                    <div className="w-10 h-10 bg-slate-200 rounded-full dark:bg-noir-surface-alt" />
                                     <div className="flex-1 space-y-2">
-                                        <div className="h-4 bg-slate-200 rounded w-1/3 dark:bg-zinc-700" />
-                                        <div className="h-3 bg-slate-200 rounded w-1/2 dark:bg-zinc-700" />
+                                        <div className="h-4 bg-slate-200 rounded w-1/3 dark:bg-noir-surface-alt" />
+                                        <div className="h-3 bg-slate-200 rounded w-1/2 dark:bg-noir-surface-alt" />
                                     </div>
                                 </div>
                             ))}
@@ -94,7 +94,7 @@ export default function MessageReadDetails({
                         </div>
                     ) : readDetails.length === 0 ? (
                         <div className="text-center py-4">
-                            <p className="text-slate-500 dark:text-zinc-400">
+                            <p className="text-slate-500 dark:text-noir-text-muted">
                                 Ninguém leu esta mensagem ainda.
                             </p>
                         </div>
@@ -112,17 +112,17 @@ export default function MessageReadDetails({
                                             className="w-10 h-10 rounded-full object-cover"
                                         />
                                     ) : (
-                                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-zinc-700 flex items-center justify-center">
-                                            <span className="text-slate-500 dark:text-zinc-400 font-medium">
+                                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-noir-surface-alt flex items-center justify-center">
+                                            <span className="text-slate-500 dark:text-noir-text-muted font-medium">
                                                 {detail.name.charAt(0).toUpperCase()}
                                             </span>
                                         </div>
                                     )}
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                                        <p className="text-sm font-medium text-slate-900 dark:text-noir-text-bright truncate">
                                             {detail.name}
                                         </p>
-                                        <p className="text-xs text-slate-500 dark:text-zinc-400">
+                                        <p className="text-xs text-slate-500 dark:text-noir-text-muted">
                                             {formatTimeAgo(detail.readAt)} às{" "}
                                             {formatDateTime(detail.readAt)}
                                         </p>

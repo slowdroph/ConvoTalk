@@ -40,7 +40,7 @@ export default function ConnectionBanner() {
                     </p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs rounded-lg transition-colors dark:bg-zinc-800 dark:border-transparent dark:hover:bg-zinc-700 dark:text-zinc-200"
+                        className="px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs rounded-lg transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-card dark:text-noir-text-bright"
                     >
                         Reconectar
                     </button>

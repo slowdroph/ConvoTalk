@@ -181,14 +181,14 @@ export default memo(function MessageList({
                 role="log"
                 aria-live="polite"
                 aria-label="Mensagens da conversa"
-                className="absolute inset-0 overflow-y-auto overscroll-contain custom-scrollbar chat-bg-pattern px-4 py-2 pt-10"
+                className="absolute inset-0 overflow-y-auto overscroll-contain custom-scrollbar chat-bg-pattern px-4 sm:px-6 py-2 pt-10"
             >
                 {loading ? (
                     <div className="flex items-center justify-center h-full">
-                        <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin dark:border-green-500" />
+                        <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : messages.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-slate-500 dark:text-zinc-500">
+                    <div className="flex items-center justify-center h-full text-slate-500 dark:text-noir-text-muted">
                         <p>Nenhuma mensagem ainda. Comece a conversar!</p>
                     </div>
                 ) : (
@@ -216,11 +216,11 @@ export default memo(function MessageList({
                                             <button
                                                 onClick={handleLoadMore}
                                                 disabled={loadingMore}
-                                                className="text-sm text-slate-500 hover:text-slate-700 disabled:text-slate-400 transition-colors dark:text-zinc-400 dark:hover:text-zinc-200 dark:disabled:text-zinc-600"
+                                                className="text-sm text-slate-500 hover:text-slate-700 disabled:text-slate-400 transition-colors dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:disabled:text-noir-text-muted/50"
                                             >
                                                 {loadingMore ? (
                                                     <span className="flex items-center gap-2">
-                                                        <div className="w-4 h-4 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+                                                        <div className="w-4 h-4 border-2 dark:border-noir-text-muted border-t-transparent rounded-full animate-spin" />
                                                         Carregando...
                                                     </span>
                                                 ) : (
@@ -243,9 +243,9 @@ export default memo(function MessageList({
                                                         />
                                                     ))}
                                             </div>
-                                            <div className="flex items-center gap-1 px-3 py-2.5 bg-white border border-slate-200/80 rounded-full shadow-sm dark:bg-zinc-700 dark:border-transparent dark:shadow-black/20">
+                                            <div className="flex items-center gap-1 px-3 py-2.5 bg-white border border-slate-200/80 rounded-full shadow-sm dark:bg-noir-card dark:border-noir-border dark:shadow-bubble-sent">
                                                 <span
-                                                    className="w-2 h-2 bg-slate-400 dark:bg-zinc-400 rounded-full"
+                                                    className="w-2 h-2 bg-slate-400 dark:bg-emerald-500/60 rounded-full"
                                                     style={{
                                                         animation:
                                                             "typingBounce 1.4s ease-in-out infinite",
@@ -253,7 +253,7 @@ export default memo(function MessageList({
                                                     }}
                                                 />
                                                 <span
-                                                    className="w-2 h-2 bg-slate-400 dark:bg-zinc-400 rounded-full"
+                                                    className="w-2 h-2 bg-slate-400 dark:bg-emerald-500/60 rounded-full"
                                                     style={{
                                                         animation:
                                                             "typingBounce 1.4s ease-in-out infinite",
@@ -261,7 +261,7 @@ export default memo(function MessageList({
                                                     }}
                                                 />
                                                 <span
-                                                    className="w-2 h-2 bg-slate-400 dark:bg-zinc-400 rounded-full"
+                                                    className="w-2 h-2 bg-slate-400 dark:bg-emerald-500/60 rounded-full"
                                                     style={{
                                                         animation:
                                                             "typingBounce 1.4s ease-in-out infinite",
@@ -269,7 +269,7 @@ export default memo(function MessageList({
                                                     }}
                                                 />
                                             </div>
-                                            <span className="text-xs text-slate-500 dark:text-zinc-500">
+                                            <span className="text-xs text-slate-500 dark:text-noir-text-muted">
                                                 {formatTypingMessage(
                                                     typingUsers,
                                                 )}
@@ -342,7 +342,7 @@ export default memo(function MessageList({
             {showNewBadge && (
                 <button
                     onClick={scrollToBottom}
-                    className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg transition-colors z-10 dark:bg-green-600 dark:hover:bg-green-700 dark:text-on-accent"
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg dark:shadow-glow-emerald transition-colors z-10"
                 >
                     ↓ Novas mensagens
                 </button>

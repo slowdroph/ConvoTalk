@@ -44,11 +44,11 @@ export default function TouchActions({
                 transform: "translateX(-50%)",
                 zIndex: 50,
             }}
-            className="flex flex-wrap justify-center gap-1 max-w-[calc(100vw-1rem)] bg-white border border-slate-200 rounded-lg p-1.5 shadow-lg dark:bg-zinc-800 dark:border-zinc-700 pointer-events-auto"
+            className="flex flex-wrap justify-center gap-1 max-w-[calc(100vw-1rem)] bg-white border border-slate-200 rounded-lg p-1.5 shadow-lg dark:bg-noir-card dark:border-noir-border pointer-events-auto"
         >
             <button
                 onClick={onTogglePicker}
-                className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-zinc-700 dark:text-zinc-300 transition-colors"
+                className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
                 title="Reagir"
             >
                 <SmileIcon />
@@ -56,7 +56,7 @@ export default function TouchActions({
             {onReply && (
                 <button
                     onClick={onReply}
-                    className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-zinc-700 dark:text-zinc-300 transition-colors"
+                    className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
                     title="Responder"
                 >
                     <ReplyIcon />
@@ -65,7 +65,7 @@ export default function TouchActions({
             {onOpenThread && (
                 <button
                     onClick={onOpenThread}
-                    className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-zinc-700 dark:text-zinc-300 transition-colors"
+                    className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
                     title="Ver respostas"
                 >
                     <ThreadIcon />
@@ -74,7 +74,7 @@ export default function TouchActions({
             {onTogglePin && (
                 <button
                     onClick={onTogglePin}
-                    className={`p-2 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors ${isPinned ? "text-emerald-600 dark:text-green-400" : "text-slate-600 dark:text-zinc-300"}`}
+                    className={`p-2 rounded-md hover:bg-slate-100 dark:hover:bg-noir-surface-alt transition-colors ${isPinned ? "text-emerald-600 dark:text-emerald-400" : "text-slate-600 dark:text-noir-text-muted"}`}
                     title={isPinned ? "Desafixar mensagem" : "Fixar mensagem"}
                 >
                     <PinIcon filled={isPinned} />
@@ -84,14 +84,14 @@ export default function TouchActions({
                 <>
                     <button
                         onClick={onEdit}
-                        className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-zinc-700 dark:text-zinc-300 transition-colors"
+                        className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
                         title="Editar mensagem"
                     >
                         <EditIcon />
                     </button>
                     <button
                         onClick={onDelete}
-                        className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-zinc-700 dark:text-zinc-300 transition-colors"
+                        className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
                         title="Excluir mensagem"
                     >
                         <TrashIcon />

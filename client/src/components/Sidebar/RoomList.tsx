@@ -4,6 +4,7 @@ import { useSocket } from "../../hooks/useSocket";
 import type { Room } from "../../types";
 import Avatar from "../ui/Avatar";
 import ConfirmDialog from "../ui/ConfirmDialog";
+import { formatSidebarTime } from "../../utils/format";
 
 interface RoomListProps {
     rooms: Room[];
@@ -43,123 +44,139 @@ export default function RoomList({
             : false;
     };
 
-    const groupRooms = rooms.filter((r) => r.type === "group");
-    const dmRooms = rooms.filter((r) => r.type === "direct");
+    const getRoomDisplayName = (room: Room) => {
+        return room.type === "direct" ? getDmDisplayName(room) : room.name;
+    };
+
+    const getRoomAvatar = (room: Room) => {
+        return room.type === "direct"
+            ? { src: getDmAvatarUrl(room), name: getDmDisplayName(room) }
+            : { src: room.avatar, name: room.name };
+    };
+
+    const activeCount = rooms.length;
 
     return (
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {/* Salas de grupo */}
-            {groupRooms.length > 0 && (
-                <>
-                    <div className="px-4 py-3">
-                        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-zinc-500">
-                            Salas
-                        </h3>
-                    </div>
-                    <ul>
-                        {groupRooms.map((room) => (
-                            <li key={room._id}>
+        <div className="flex-1 overflow-y-auto custom-scrollbar pb-4">
+            {/* Header */}
+            <div className="px-4 py-1.5 flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider dark:text-noir-text-muted">
+                <span>Conversas Recentes</span>
+                {activeCount > 0 && (
+                    <span className="text-[10px] normal-case text-slate-400 dark:text-noir-text-muted/60">
+                        {activeCount} {activeCount === 1 ? "ativa" : "ativas"}
+                    </span>
+                )}
+            </div>
+
+            {/* Lista de conversas */}
+            <ul className="px-2 space-y-1.5">
+                {rooms.map((room) => {
+                    const displayName = getRoomDisplayName(room);
+                    const avatar = getRoomAvatar(room);
+                    const isActive = activeRoom === room._id;
+                    const unread = unreadCounts[room._id] ?? 0;
+                    const mentions = mentionUnreadCounts[room._id] ?? 0;
+                    const hasUnread = unread > 0 || mentions > 0;
+                    const lastTime = room.lastMessageAt || "";
+
+                    return (
+                        <li key={room._id}>
+                            <div
+                                className={`relative group flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl border transition-colors ${
+                                    isActive
+                                        ? "bg-slate-100 border-slate-200 dark:bg-noir-surface-alt/90 dark:border-emerald-600/30"
+                                        : "border-transparent hover:bg-slate-50 hover:border-slate-100 dark:hover:bg-noir-surface-alt/60 dark:hover:border-noir-border/50"
+                                }`}
+                            >
+                                {isActive && (
+                                    <span
+                                        className="absolute left-0 top-3 bottom-3 w-1 bg-emerald-500 rounded-r-full"
+                                        aria-hidden="true"
+                                    />
+                                )}
+
                                 <button
                                     onClick={() => onSelectRoom(room._id)}
-                                    aria-current={
-                                        activeRoom === room._id
-                                            ? "true"
-                                            : undefined
-                                    }
-                                    className={`w-full text-left px-4 py-3 flex items-center gap-2 transition-colors ${
-                                        activeRoom === room._id
-                                            ? "bg-slate-100 text-slate-900 dark:bg-zinc-700/50 dark:text-white"
-                                            : "text-slate-700 hover:bg-slate-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                                    }`}
+                                    aria-current={isActive ? "true" : undefined}
+                                    className="flex items-center gap-2.5 min-w-0 flex-1"
                                 >
-                                    <Avatar
-                                        src={room.avatar}
-                                        name={room.name}
-                                        className="shrink-0"
-                                    />
-                                    <div className="min-w-0 flex-1">
-                                        <p className="font-medium text-sm truncate">
-                                            {room.name}
-                                        </p>
-                                        <p className="text-xs text-slate-500 truncate dark:text-zinc-500">
-                                            {room.description}
-                                        </p>
+                                    {/* Avatar */}
+                                    <div className="relative shrink-0 ml-0.5">
+                                        <Avatar
+                                            src={avatar.src}
+                                            name={avatar.name}
+                                            size="md"
+                                        />
+                                        {room.type === "direct" &&
+                                            isDmOnline(room) && (
+                                                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-noir-surface-alt" />
+                                            )}
                                     </div>
-                                    {unreadCounts[room._id] ? (
-                                        <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-emerald-600 text-white text-xs font-semibold flex items-center justify-center dark:bg-green-600 dark:text-on-accent">
-                                            {unreadCounts[room._id]}
-                                        </span>
-                                    ) : mentionUnreadCounts[room._id] ? (
-                                        <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-amber-500 text-white text-xs font-semibold flex items-center justify-center">
-                                            {mentionUnreadCounts[room._id]}
-                                        </span>
-                                    ) : null}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                </>
-            )}
 
-            {/* Conversas diretas */}
-            {dmRooms.length > 0 && (
-                <>
-                    <div className="px-4 py-3">
-                        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-zinc-500">
-                            Conversas
-                        </h3>
-                    </div>
-                    <ul>
-                        {dmRooms.map((room) => (
-                            <li key={room._id}>
-                                <div
-                                    className={`w-full text-left px-4 py-3 flex items-center gap-2 transition-colors group ${
-                                        activeRoom === room._id
-                                            ? "bg-slate-100 text-slate-900 dark:bg-zinc-700/50 dark:text-white"
-                                            : "text-slate-700 hover:bg-slate-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                                    }`}
-                                >
-                                    <button
-                                        onClick={() => onSelectRoom(room._id)}
-                                        aria-current={
-                                            activeRoom === room._id
-                                                ? "true"
-                                                : undefined
-                                        }
-                                        className="flex items-center gap-2 min-w-0 flex-1"
-                                    >
-                                        <div className="relative shrink-0">
-                                            <Avatar
-                                                src={getDmAvatarUrl(room)}
-                                                name={getDmDisplayName(room)}
-                                            />
-                                            {isDmOnline(room) && (
-                                                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:bg-green-500 dark:border-zinc-900" />
+                                    {/* Conteúdo */}
+                                    <div className="flex-1 min-w-0">
+                                        {/* Linha 1: Nome + Timestamp */}
+                                        <div className="flex items-center justify-between mb-0.5">
+                                            <h2
+                                                className={`text-sm truncate ${
+                                                    isActive
+                                                        ? "font-semibold dark:text-noir-text-bright"
+                                                        : "font-medium dark:text-noir-text-bright/90"
+                                                }`}
+                                            >
+                                                {displayName}
+                                            </h2>
+                                            {lastTime && (
+                                                <time
+                                                    className={`text-[11px] shrink-0 ml-2 ${
+                                                        hasUnread
+                                                            ? "text-emerald-600 font-medium dark:text-emerald-400"
+                                                            : "text-slate-400 dark:text-noir-text-muted"
+                                                    }`}
+                                                >
+                                                    {formatSidebarTime(
+                                                        lastTime,
+                                                    )}
+                                                </time>
                                             )}
                                         </div>
-                                        <div className="min-w-0 ">
-                                            <p className="font-medium text-sm truncate">
-                                                {getDmDisplayName(room)}
+
+                                        {/* Linha 2: Preview + Badge */}
+                                        <div className="flex items-center justify-between text-xs">
+                                            <p
+                                                className={`truncate ${
+                                                    hasUnread
+                                                        ? "text-slate-700 dark:text-noir-text-bright/80"
+                                                        : "text-slate-500 dark:text-noir-text-muted"
+                                                }`}
+                                            >
+                                                {room.lastMessagePreview ||
+                                                    room.description ||
+                                                    (room.type === "direct"
+                                                        ? ""
+                                                        : room.name)}
                                             </p>
+                                            {hasUnread ? (
+                                                <span className="shrink-0 min-w-4 h-4 px-1 rounded-full bg-emerald-600 text-[10px] font-bold text-white flex items-center justify-center ml-1">
+                                                    {mentions > 0
+                                                        ? mentions
+                                                        : unread}
+                                                </span>
+                                            ) : null}
                                         </div>
-                                        {unreadCounts[room._id] ? (
-                                            <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-emerald-600 text-white text-xs font-semibold flex items-center justify-center dark:bg-green-600 dark:text-on-accent">
-                                                {unreadCounts[room._id]}
-                                            </span>
-                                        ) : mentionUnreadCounts[room._id] ? (
-                                            <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-amber-500 text-white text-xs font-semibold flex items-center justify-center">
-                                                {mentionUnreadCounts[room._id]}
-                                            </span>
-                                        ) : null}
-                                    </button>
+                                    </div>
+                                </button>
+
+                                {/* Botão deletar (DMs) */}
+                                {room.type === "direct" && (
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setDeleteTarget(room);
                                         }}
-                                        className="text-slate-400 hover:text-red-600 transition-colors p-1.5 opacity-0 group-hover:opacity-100 shrink-0 dark:text-zinc-600 dark:hover:text-red-400 max-sm:opacity-60"
+                                        className="text-slate-400 hover:text-red-600 transition-colors p-1.5 opacity-0 group-hover:opacity-100 shrink-0 dark:text-noir-text-muted dark:hover:text-red-400 max-sm:opacity-60"
                                         title="Excluir conversa"
-                                        aria-label={`Excluir conversa com ${getDmDisplayName(room)}`}
+                                        aria-label={`Excluir conversa com ${displayName}`}
                                     >
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
@@ -176,12 +193,12 @@ export default function RoomList({
                                             />
                                         </svg>
                                     </button>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                </>
-            )}
+                                )}
+                            </div>
+                        </li>
+                    );
+                })}
+            </ul>
 
             {/* Modal de confirmação */}
             <ConfirmDialog

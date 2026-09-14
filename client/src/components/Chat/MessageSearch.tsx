@@ -106,11 +106,11 @@ export default function MessageSearch({
     };
 
     return (
-        <div className="border-b border-zinc-700 bg-zinc-900/80 backdrop-blur px-4 py-2 flex flex-wrap items-center gap-2">
+        <div className="border-b border-noir-border bg-noir-surface/90 backdrop-blur px-4 py-2 flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-50 max-w-md">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2"
+                    className="h-4 w-4 text-slate-500 dark:text-noir-text-muted absolute left-3 top-1/2 -translate-y-1/2"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -131,17 +131,17 @@ export default function MessageSearch({
                     placeholder={filter === "mentions" ? "Filtrar menções (opcional)..." : "Buscar mensagens..."}
                     aria-label="Buscar mensagens"
                     autoFocus
-                    className="w-full pl-9 pr-4 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
+                    className="w-full pl-9 pr-4 py-1.5 bg-noir-surface-alt border border-noir-border rounded-lg text-noir-text-bright text-base placeholder-noir-text-muted/70 focus:outline-none focus:border-emerald-500 transition-colors"
                 />
             </div>
 
-            <div className="flex items-center gap-1 bg-zinc-800 border border-zinc-700 rounded-lg p-0.5">
+            <div className="flex items-center gap-1 bg-noir-surface-alt border border-noir-border rounded-lg p-0.5">
                 <button
                     onClick={() => handleFilterChange("all")}
                     className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
                         filter === "all"
-                            ? "bg-green-600 text-white"
-                            : "text-zinc-300 hover:text-white"
+                            ? "bg-emerald-600 text-white"
+                            : "text-slate-600 hover:text-slate-900 dark:text-noir-text-muted dark:hover:text-noir-text-bright"
                     }`}
                 >
                     Todas
@@ -151,7 +151,7 @@ export default function MessageSearch({
                     className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
                         filter === "mentions"
                             ? "bg-emerald-600 text-white"
-                            : "text-zinc-300 hover:text-white"
+                            : "text-slate-600 hover:text-slate-900 dark:text-noir-text-muted dark:hover:text-noir-text-bright"
                     }`}
                 >
                     Menções
@@ -159,9 +159,9 @@ export default function MessageSearch({
             </div>
 
             {loading ? (
-                <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
             ) : query.trim() || filter === "mentions" ? (
-                <div className="flex items-center gap-2 text-sm text-zinc-400">
+                <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-noir-text-muted">
                     <span>
                         {results.length === 0
                             ? "Nenhum resultado"
@@ -170,7 +170,7 @@ export default function MessageSearch({
                     <button
                         onClick={handlePrev}
                         disabled={current <= 0 || results.length === 0}
-                        className="text-zinc-300 hover:text-white disabled:opacity-30 transition-colors"
+                        className="text-slate-500 hover:text-slate-900 dark:text-noir-text-muted dark:hover:text-noir-text-bright disabled:opacity-30 transition-colors"
                         title="Resultado anterior"
                     >
                         <svg
@@ -194,7 +194,7 @@ export default function MessageSearch({
                             current >= results.length - 1 ||
                             results.length === 0
                         }
-                        className="text-zinc-300 hover:text-white disabled:opacity-30 transition-colors"
+                        className="text-slate-500 hover:text-slate-900 dark:text-noir-text-muted dark:hover:text-noir-text-bright disabled:opacity-30 transition-colors"
                         title="Próximo resultado"
                     >
                         <svg
@@ -217,7 +217,7 @@ export default function MessageSearch({
 
             <button
                 onClick={onClose}
-                className="text-zinc-400 hover:text-white transition-colors"
+                className="text-slate-500 hover:text-slate-900 dark:text-noir-text-muted dark:hover:text-noir-text-bright transition-colors"
                 title="Fechar busca"
             >
                 <svg

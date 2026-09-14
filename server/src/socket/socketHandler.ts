@@ -472,7 +472,7 @@ const socketHandler = (io: SocketIOServer): void => {
 
                     Room.updateOne(
                         { _id: roomId },
-                        { $set: { [`lastReadAt.${userId}`]: new Date() } },
+                        { $set: { [`lastReadAt.${userId}`]: new Date(), lastMessageAt: new Date() } },
                     ).catch(() => {});
 
                     const payload = {
@@ -640,9 +640,9 @@ const socketHandler = (io: SocketIOServer): void => {
                         mentions,
                     });
 
-                    Room.updateOne(
+Room.updateOne(
                         { _id: roomId },
-                        { $set: { [`lastReadAt.${userId}`]: new Date() } },
+                        { $set: { [`lastReadAt.${userId}`]: new Date(), lastMessageAt: new Date() } },
                     ).catch(() => {});
 
                     const payload = {
@@ -730,6 +730,7 @@ const socketHandler = (io: SocketIOServer): void => {
                     clearTypingTimer(typingKey);
                 }
                 socket.to(parsed.data.roomId).emit("typing", {
+                    roomId: parsed.data.roomId,
                     userId,
                     name: user?.name,
                     avatar: user?.avatar,
@@ -787,6 +788,20 @@ const socketHandler = (io: SocketIOServer): void => {
                         message.attachments as IAttachment[] | undefined,
                     );
                     await Message.findByIdAndDelete(messageId);
+
+                    const lastMsg = await Message.findOne({
+                        room: roomId,
+                        deleted: { $ne: true },
+                        type: { $ne: "system" },
+                    })
+                        .sort({ createdAt: -1 })
+                        .select("createdAt")
+                        .lean();
+
+                    await Room.findByIdAndUpdate(roomId, {
+                        lastMessageAt: lastMsg?.createdAt ?? null,
+                    });
+
                     io.to(roomId).emit("message_deleted", messageId);
                 } catch (error) {
                     logger.error({ userId, error }, "erro ao excluir mensagem");

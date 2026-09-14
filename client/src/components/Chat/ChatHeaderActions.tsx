@@ -14,13 +14,13 @@ interface ChatHeaderActionsProps {
 }
 
 const callButtonClass =
-    "p-1.5 sm:p-2 rounded-lg transition-colors text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:text-zinc-500 dark:hover:text-green-400 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed";
+    "p-2.5 rounded-xl transition-colors text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt disabled:opacity-40 disabled:cursor-not-allowed";
 
 const menuItemClass =
-    "w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors text-slate-700 hover:bg-slate-100 dark:text-zinc-200 dark:hover:bg-zinc-700";
+    "w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors text-slate-700 hover:bg-slate-100 dark:text-noir-text-bright dark:hover:bg-noir-surface-alt";
 
 const moreButtonClass =
-    "p-1.5 sm:p-2 rounded-lg transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-zinc-500 dark:hover:text-white dark:hover:bg-zinc-800";
+    "p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt";
 
 export default function ChatHeaderActions({
     roomType,
@@ -89,7 +89,7 @@ export default function ChatHeaderActions({
                         </svg>
                     </button>
                     <div
-                        className="w-px h-5 bg-zinc-700 mx-0.5 sm:mx-1"
+                        className="w-px h-6 dark:bg-noir-border mx-1"
                         aria-hidden="true"
                     />
                 </>
@@ -142,7 +142,7 @@ export default function ChatHeaderActions({
                     onClick={onToggleSearch}
                     className={`${menuItemClass} ${
                         searchOpen
-                            ? "bg-emerald-500/20 text-emerald-700 dark:bg-green-600/20 dark:text-green-400"
+                            ? "bg-emerald-500/20 text-emerald-700 dark:bg-emerald-600/20 dark:text-emerald-400"
                             : ""
                     }`}
                 >

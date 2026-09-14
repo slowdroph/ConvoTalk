@@ -163,6 +163,7 @@ export function scheduleTypingTimeout(
         typingTimers.delete(key);
         if (socket.connected) {
             socket.to(roomId).emit("typing", {
+                roomId,
                 userId,
                 name,
                 avatar,

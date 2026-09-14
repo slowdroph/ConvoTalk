@@ -31,18 +31,19 @@ export default function UserSearchModal({
     const { onlineUsers } = useSocket();
     const inputRef = useRef<HTMLInputElement>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-    const listRef = useRef<HTMLUListElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
 
-    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-    if (prevIsOpen !== isOpen) {
-        setPrevIsOpen(isOpen);
-        if (isOpen) {
-            setQuery("");
-            setResults([]);
-            setError("");
-            setSelectedIndex(0);
-        }
-    }
+    useEffect(() => {
+        if (isOpen) setTimeout(() => inputRef.current?.focus(), 50);
+    }, [isOpen]);
+
+    const handleClose = () => {
+        setQuery("");
+        setResults([]);
+        setError("");
+        setSelectedIndex(0);
+        onClose();
+    };
 
     const search = useCallback(async (term: string) => {
         if (term.trim().length < 1) {
@@ -74,10 +75,6 @@ export default function UserSearchModal({
         };
     }, [query, search]);
 
-    useEffect(() => {
-        if (isOpen) setTimeout(() => inputRef.current?.focus(), 50);
-    }, [isOpen]);
-
     const isOnline = (userId: string) =>
         onlineUsers.some((u) => u.userId === userId);
 
@@ -86,7 +83,7 @@ export default function UserSearchModal({
         try {
             const { data } = await api.post("/rooms/direct", { userId });
             onConversationCreated(data._id);
-            onClose();
+            handleClose();
         } catch (err: unknown) {
             setError(getErrorMessage(err, "Erro ao criar conversa"));
         }
@@ -94,7 +91,7 @@ export default function UserSearchModal({
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Escape") {
-            onClose();
+            handleClose();
             return;
         }
 
@@ -128,20 +125,20 @@ export default function UserSearchModal({
     return (
         <div
             className="fixed inset-0 bg-black/60 flex items-start justify-center z-50 p-4"
-            onClick={onClose}
+            onClick={handleClose}
             onKeyDown={handleKeyDown}
             role="dialog"
             aria-modal="true"
             aria-label="Buscar usuário"
         >
             <div
-                className="w-full max-w-lg mt-16 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl flex flex-col max-h-[70vh]"
+                className="w-full max-w-lg mt-16 bg-white border border-slate-200 rounded-xl shadow-2xl flex flex-col max-h-[70vh] dark:bg-noir-card dark:border-noir-border"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="px-4 py-3 border-b border-zinc-700 flex items-center gap-3">
+                <div className="px-4 py-3 border-b border-slate-200 flex items-center gap-3 dark:border-noir-border">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-zinc-500"
+                        className="h-5 w-5 text-slate-400 dark:text-noir-text-muted"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -163,7 +160,7 @@ export default function UserSearchModal({
                             setError("");
                         }}
                         placeholder="Buscar por nome, email ou #ID..."
-                        className="flex-1 bg-transparent text-white placeholder-zinc-500 outline-none"
+                        className="flex-1 bg-transparent text-slate-900 placeholder-slate-400 outline-none dark:text-noir-text-bright dark:placeholder-noir-text-muted/70"
                         aria-label="Buscar usuário"
                         aria-autocomplete="list"
                         aria-controls="user-search-results"
@@ -178,8 +175,8 @@ export default function UserSearchModal({
                         <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin shrink-0" />
                     )}
                     <button
-                        onClick={onClose}
-                        className="text-zinc-500 hover:text-white transition-colors"
+                        onClick={handleClose}
+                        className="text-slate-400 hover:text-slate-900 transition-colors dark:text-noir-text-muted dark:hover:text-noir-text-bright"
                         aria-label="Fechar busca"
                     >
                         <svg
@@ -200,8 +197,8 @@ export default function UserSearchModal({
                 </div>
 
                 {error && (
-                    <div className="px-4 py-2 bg-red-500/10 border-b border-zinc-700">
-                        <p className="text-red-400 text-sm">{error}</p>
+                    <div className="px-4 py-2 bg-red-500/10 border-b border-slate-200 dark:border-noir-border">
+                        <p className="text-red-600 text-sm dark:text-red-400">{error}</p>
                     </div>
                 )}
 
@@ -213,7 +210,7 @@ export default function UserSearchModal({
                     aria-label="Resultados da busca"
                 >
                     {query.trim() && results.length === 0 && !loading && !error && (
-                        <p className="px-4 py-8 text-center text-zinc-500 text-sm">
+                        <p className="px-4 py-8 text-center text-slate-500 text-sm dark:text-noir-text-muted">
                             Nenhum usuário encontrado.
                         </p>
                     )}
@@ -224,10 +221,10 @@ export default function UserSearchModal({
                             onClick={() => handleStartConversation(user._id)}
                             role="option"
                             aria-selected={index === selectedIndex}
-                            className={`w-full text-left px-4 py-3 border-b border-zinc-800 transition-colors flex items-center gap-3 ${
+                            className={`w-full text-left px-4 py-3 border-b border-slate-200 transition-colors flex items-center gap-3 dark:border-noir-border ${
                                 index === selectedIndex
-                                    ? "bg-zinc-800/80"
-                                    : "hover:bg-zinc-800/60"
+                                    ? "bg-slate-200/70 dark:bg-noir-surface-alt/80"
+                                    : "hover:bg-slate-100 dark:hover:bg-noir-surface-alt/60"
                             }`}
                         >
                             <div className="relative shrink-0">
@@ -237,19 +234,19 @@ export default function UserSearchModal({
                                     size="sm"
                                 />
                                 {isOnline(user._id) && (
-                                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-zinc-900" />
+                                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-noir-card" />
                                 )}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-white text-sm font-semibold truncate">
+                                    <span className="text-slate-900 text-sm font-semibold truncate dark:text-noir-text-bright">
                                         {user.name}
                                     </span>
-                                    <span className="text-zinc-500 text-xs font-mono shrink-0">
+                                    <span className="text-slate-500 text-xs font-mono shrink-0 dark:text-noir-text-muted">
                                         #{user.publicId}
                                     </span>
                                 </div>
-                                <p className="text-zinc-400 text-xs truncate">
+                                <p className="text-slate-500 text-xs truncate dark:text-noir-text-muted">
                                     {user.email}
                                 </p>
                             </div>

@@ -46,12 +46,12 @@ export default function ChatHeader({
     onOpenGroupSettings,
 }: ChatHeaderProps) {
     return (
-        <div className="px-4 py-3 border-b border-zinc-700 flex items-center justify-between gap-2">
-            <h2 className="text-slate-900 font-semibold flex items-center gap-2 min-w-0 dark:text-white">
+        <div className="h-16 px-4 sm:px-6 border-b border-noir-border bg-noir-surface/90 flex items-center justify-between gap-2">
+            <h2 className="text-slate-900 font-semibold flex items-center gap-2 min-w-0 dark:text-noir-text-bright">
                 {onOpenSidebar && (
                     <button
                         onClick={onOpenSidebar}
-                        className="p-2 rounded-lg transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-zinc-500 dark:hover:text-white dark:hover:bg-zinc-800 md:hidden shrink-0"
+                        className="p-2 rounded-lg transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt md:hidden shrink-0"
                         title="Abrir lista de conversas"
                         aria-label="Abrir lista de conversas"
                     >
@@ -83,15 +83,15 @@ export default function ChatHeader({
                             <span
                                 className={`inline-block w-2 h-2 rounded-full ${
                                     isOtherOnline
-                                        ? "bg-green-500"
-                                        : "bg-zinc-600"
+                                        ? "bg-emerald-500"
+                                        : "dark:bg-noir-border"
                                 }`}
                             />
                             <span
                                 className={
                                     isOtherOnline
-                                        ? "text-green-400"
-                                        : "text-zinc-500"
+                                        ? "text-emerald-400"
+                                        : "dark:text-noir-text-muted"
                                 }
                             >
                                 {isOtherOnline
@@ -100,14 +100,14 @@ export default function ChatHeader({
                             </span>
                         </span>
                     ) : (
-                        <span className="text-xs font-normal text-zinc-500">
+                        <span className="text-xs font-normal dark:text-noir-text-muted">
                             {onlineCount > 0
                                 ? `${onlineCount} online`
                                 : `${participantCount} participantes`}
                         </span>
                     )}
                     {roomType === "direct" && otherStatus && (
-                        <span className="text-xs font-normal text-zinc-500 truncate">
+                        <span className="text-xs font-normal dark:text-noir-text-muted truncate">
                             {otherStatus}
                         </span>
                     )}

@@ -43,6 +43,8 @@ export interface RoomPayload {
     unreadCount?: number;
     mentionUnreadCount?: number;
     pinnedMessages?: PinnedMessagePayload[];
+    lastMessageAt?: string;
+    lastMessagePreview?: string | null;
 }
 
 export interface ParentMessagePayload {
@@ -101,6 +103,7 @@ export interface TypingPayload {
 }
 
 export interface TypingBroadcast {
+    roomId: string;
     userId: string;
     name?: string;
     isTyping: boolean;

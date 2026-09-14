@@ -250,7 +250,7 @@ export default function ChatPage() {
     ]);
 
     return (
-        <div className="h-dvh-fallback flex flex-col bg-zinc-950 pt-[env(safe-area-inset-top)]">
+        <div className="h-dvh-fallback flex flex-col bg-noir-base pt-[env(safe-area-inset-top)]">
             <ConnectionBanner />
             <div className="flex flex-1 min-h-0">
                 <Sidebar
@@ -276,7 +276,7 @@ export default function ChatPage() {
                         </p>
                         <button
                             onClick={loadRooms}
-                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-zinc-800 dark:border-transparent dark:hover:bg-zinc-700 dark:text-white"
+                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-border dark:text-noir-text-bright"
                         >
                             Tentar novamente
                         </button>
@@ -299,10 +299,10 @@ export default function ChatPage() {
                     />
                 ) : rooms.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
-                        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center dark:bg-zinc-800">
+                        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center dark:bg-noir-surface-alt">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-8 w-8 text-slate-400 dark:text-zinc-500"
+                                className="h-8 w-8 text-slate-400 dark:text-noir-text-muted"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -315,16 +315,16 @@ export default function ChatPage() {
                                 />
                             </svg>
                         </div>
-                        <h3 className="text-slate-900 font-semibold dark:text-white">
+                        <h3 className="text-slate-900 font-semibold dark:text-noir-text-bright">
                             Nenhuma conversa ainda
                         </h3>
-                        <p className="text-slate-500 text-sm max-w-sm dark:text-zinc-400">
+                        <p className="text-slate-500 text-sm max-w-sm dark:text-noir-text-muted">
                             Comece pesquisando um usuário no menu lateral ou
                             criando um novo grupo.
                         </p>
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="md:hidden flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-zinc-800 dark:border-transparent dark:hover:bg-zinc-700 dark:text-white"
+                            className="md:hidden flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-border dark:text-noir-text-bright"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -344,10 +344,10 @@ export default function ChatPage() {
                         </button>
                     </div>
                 ) : (
-                    <div className="flex-1 flex items-center justify-center text-slate-500 dark:text-zinc-500">
+                    <div className="flex-1 flex items-center justify-center text-slate-500 dark:text-noir-text-muted">
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="md:hidden flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-zinc-800 dark:border-transparent dark:hover:bg-zinc-700 dark:text-white"
+                            className="md:hidden flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-border dark:text-noir-text-bright"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"

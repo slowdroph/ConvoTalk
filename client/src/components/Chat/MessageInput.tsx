@@ -492,11 +492,11 @@ export default function MessageInput({
             onDragOver={(e) => e.preventDefault()}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className="relative px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-200 dark:border-zinc-700 shrink-0"
+            className="relative px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-noir-border bg-noir-surface shrink-0"
         >
             {dragging && (
-                <div className="absolute inset-0 z-20 bg-emerald-500/10 border-2 border-dashed border-emerald-500 rounded-xl flex items-center justify-center pointer-events-none dark:bg-green-600/10 dark:border-green-500">
-                    <div className="flex flex-col items-center gap-2 text-emerald-600 dark:text-green-400">
+                <div className="absolute inset-0 z-20 bg-emerald-500/10 border-2 border-dashed border-emerald-500 rounded-xl flex items-center justify-center pointer-events-none dark:bg-emerald-600/10 dark:border-emerald-500">
+                    <div className="flex flex-col items-center gap-2 text-emerald-600 dark:text-emerald-400">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-10 w-10"
@@ -527,13 +527,13 @@ export default function MessageInput({
             )}
 
             {replyingTo && (
-                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 mb-2 dark:bg-zinc-800/80 dark:border-zinc-700">
+                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 mb-2 dark:bg-noir-surface-alt dark:border-noir-border">
                     <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-emerald-600 dark:text-green-400">
+                        <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                             Respondendo a{" "}
                             {replyingTo.sender?.name || "mensagem"}
                         </p>
-                        <p className="text-xs text-slate-500 truncate dark:text-zinc-400">
+                        <p className="text-xs text-slate-500 truncate dark:text-noir-text-muted">
                             {replyingTo.content ||
                                 (replyingTo.attachments &&
                                 replyingTo.attachments.length > 0
@@ -545,7 +545,7 @@ export default function MessageInput({
                         type="button"
                         onClick={onCancelReply}
                         disabled={uploading}
-                        className="text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-white transition-colors disabled:opacity-50 p-2 rounded-lg shrink-0"
+                        className="text-slate-400 hover:text-slate-600 dark:text-noir-text-muted dark:hover:text-noir-text-bright transition-colors disabled:opacity-50 p-2 rounded-lg shrink-0"
                         title="Cancelar resposta"
                         aria-label="Cancelar resposta"
                     >
@@ -572,11 +572,11 @@ export default function MessageInput({
                     {files.map((file, i) => (
                         <span
                             key={`${file.name}-${i}`}
-                            className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg pl-2 pr-1.5 py-1 max-w-48 dark:bg-zinc-800 dark:border-zinc-700"
+                            className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg pl-2 pr-1.5 py-1 max-w-48 dark:bg-noir-surface-alt dark:border-noir-border"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4 text-emerald-600 dark:text-green-400 shrink-0"
+                                className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -588,14 +588,14 @@ export default function MessageInput({
                                     d="M15.172 7.586a2 2 0 102.828 2.828l-6.364 6.364a2 2 0 11-2.828-2.828l6.364-6.364a4 4 0 015.657 5.657l-6.364 6.364a4 4 0 01-5.657-5.657l.707-.707"
                                 />
                             </svg>
-                            <span className="text-xs text-slate-900 truncate dark:text-white">
+                            <span className="text-xs text-slate-900 truncate dark:text-noir-text-bright">
                                 {file.name}
                             </span>
                             <button
                                 type="button"
                                 onClick={() => removeFile(i)}
                                 disabled={uploading}
-                                className="text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-white transition-colors disabled:opacity-50"
+                                className="text-slate-400 hover:text-slate-600 dark:text-noir-text-muted dark:hover:text-noir-text-bright transition-colors disabled:opacity-50"
                                 title="Remover arquivo"
                             >
                                 <svg
@@ -619,12 +619,13 @@ export default function MessageInput({
             )}
 
             {!isRecording && (
-                <div className="flex items-center gap-1 sm:gap-1.5 mb-3">
-                    <div className="relative shrink-0">
-                        <button
-                            type="button"
-                            onClick={() => setEmojiOpen((prev) => !prev)}
-                            className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-yellow-600 rounded-full transition-colors dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-yellow-400"
+                <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center bg-slate-100 border border-slate-200 rounded-2xl p-1 dark:bg-noir-surface-alt dark:border-noir-border">
+                        <div className="relative shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setEmojiOpen((prev) => !prev)}
+                                className="p-2 text-slate-500 hover:text-yellow-600 hover:bg-slate-200 rounded-xl transition-colors dark:text-noir-text-muted dark:hover:text-emerald-400 dark:hover:bg-noir-card"
                             title="Emoji"
                             aria-label="Abrir seletor de emojis"
                         >
@@ -654,11 +655,11 @@ export default function MessageInput({
                             />
                         )}
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => setIsRecording(true)}
-                        disabled={uploading || files.length > 0}
-                        className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-600 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-red-400"
+                        <button
+                            type="button"
+                            onClick={() => setIsRecording(true)}
+                            disabled={uploading || files.length > 0}
+                            className="p-2 text-slate-500 hover:text-red-600 hover:bg-slate-200 rounded-xl transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:text-noir-text-muted dark:hover:text-red-400 dark:hover:bg-noir-card"
                         title="Gravar mensagem de voz"
                         aria-label="Gravar mensagem de voz"
                     >
@@ -696,7 +697,7 @@ export default function MessageInput({
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploading || files.length >= MAX_FILES}
-                        className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-blue-600 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-blue-400"
+                        className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-200 rounded-xl transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:text-noir-text-muted dark:hover:text-emerald-400 dark:hover:bg-noir-card"
                         title="Anexar arquivo"
                     >
                         <svg
@@ -714,6 +715,7 @@ export default function MessageInput({
                             />
                         </svg>
                     </button>
+                    </div>
                     <div className="flex-1" />
                     {(isNearLimit || isOverLimit) && (
                         <span
@@ -755,13 +757,13 @@ export default function MessageInput({
                         }
                         disabled={uploading || isBlocked}
                         maxLength={MAX_LENGTH + 100}
-                        className="flex-1 min-w-0 px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition-all resize-none overflow-y-hidden max-h-30 disabled:opacity-50 dark:bg-zinc-800/80 dark:border-zinc-700/60 dark:text-white dark:placeholder-zinc-500 dark:focus:border-green-500/50 dark:focus:ring-green-500/15"
+                        className="flex-1 min-w-0 px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition-all resize-none overflow-y-hidden max-h-30 disabled:opacity-50 dark:bg-noir-surface-alt dark:border-noir-border dark:text-noir-text-bright dark:placeholder-noir-text-muted/70 dark:focus:border-emerald-500/80 dark:focus:ring-emerald-500/80"
                     />
                     <button
                         type="submit"
                         disabled={!canSubmit}
                         aria-label="Enviar mensagem"
-                        className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30 disabled:hover:bg-emerald-600 text-white flex items-center justify-center shrink-0 transition-colors dark:bg-green-600 dark:hover:bg-green-700 dark:disabled:hover:bg-green-600 dark:text-on-accent"
+                        className="w-11 h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-30 disabled:hover:bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-glow-emerald transition-all"
                     >
                         {uploading ? (
                             <div className="w-5 h-5 border-2 border-on-accent border-t-transparent rounded-full animate-spin" />

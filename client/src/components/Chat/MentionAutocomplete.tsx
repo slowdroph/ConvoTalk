@@ -103,7 +103,7 @@ export default function MentionAutocomplete({
     return (
         <div
             ref={containerRef}
-            className="fixed z-50 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg shadow-lg max-h-60 overflow-y-auto w-64"
+            className="fixed z-50 bg-white dark:bg-noir-card border border-slate-200 dark:border-noir-border rounded-lg shadow-lg max-h-60 overflow-y-auto w-64"
             style={{
                 left: position ? position.left + 4 : 0,
                 top: position ? position.top - 200 : 0,
@@ -143,7 +143,7 @@ export default function MentionAutocomplete({
                             <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
                                 {user.name}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-zinc-400 truncate">
+                            <p className="text-xs text-slate-500 dark:text-noir-text-muted truncate">
                                 {user.email}
                             </p>
                         </div>

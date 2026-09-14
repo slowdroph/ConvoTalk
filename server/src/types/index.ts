@@ -31,6 +31,7 @@ export interface IRoom extends Document {
     admins: IUser["_id"][];
     avatar: string;
     lastReadAt: Map<string, Date>;
+    lastMessageAt: Date | null;
     pinnedMessages: IPinnedMessage[];
     createdAt: Date;
 }

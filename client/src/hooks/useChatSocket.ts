@@ -42,11 +42,13 @@ export function useChatSocket({
         };
 
         const handleTyping = (data: {
+            roomId: string;
             userId: string;
             name: string;
             avatar?: string;
             isTyping: boolean;
         }) => {
+            if (data.roomId !== roomId) return;
             setTypingUsers((prev) => {
                 const exists = prev.some((u) => u.userId === data.userId);
                 if (data.isTyping && !exists) {
