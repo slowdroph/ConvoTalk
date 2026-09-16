@@ -423,3 +423,33 @@ html[data-theme="light"] .custom-cursor__dot {
 html[data-theme="light"] .custom-cursor__ring {
     border-color: var(--color-emerald-600);
 }
+
+.bg-grid-dots {
+    background-image: radial-gradient(rgba(89, 224, 123, 0.12) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+.glass-card {
+    background: rgba(22, 29, 22, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(61, 74, 61, 0.75);
+}
+
+.glass-card-hover {
+    transition: all 0.2s ease-in-out;
+}
+
+.glass-card-hover:hover {
+    border-color: rgba(89, 224, 123, 0.45);
+    transform: translateY(-2px);
+}
+
+@keyframes dot-bounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-4px); }
+}
+
+.bounce-1 { animation: dot-bounce 1.2s infinite ease-in-out; }
+.bounce-2 { animation: dot-bounce 1.2s infinite ease-in-out 0.2s; }
+.bounce-3 { animation: dot-bounce 1.2s infinite ease-in-out 0.4s;
+}
