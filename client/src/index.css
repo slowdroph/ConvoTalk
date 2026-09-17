@@ -425,14 +425,26 @@ html[data-theme="light"] .custom-cursor__ring {
 }
 
 .bg-grid-dots {
-    background-image: radial-gradient(rgba(89, 224, 123, 0.12) 1px, transparent 1px);
+    --dot-color: rgba(89, 224, 123, 0.12);
+    background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
     background-size: 24px 24px;
 }
 
+html[data-theme="light"] .bg-grid-dots {
+    --dot-color: rgba(0, 168, 75, 0.10);
+}
+
 .glass-card {
-    background: rgba(22, 29, 22, 0.7);
+    --glass-bg: rgba(22, 29, 22, 0.7);
+    --glass-border: rgba(61, 74, 61, 0.75);
+    background: var(--glass-bg);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(61, 74, 61, 0.75);
+    border: 1px solid var(--glass-border);
+}
+
+html[data-theme="light"] .glass-card {
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(203, 213, 225, 0.6);
 }
 
 .glass-card-hover {

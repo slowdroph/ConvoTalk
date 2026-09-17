@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import PreviewChat from "../components/Home/PreviewChat";
@@ -7,6 +7,9 @@ import BackToTop from "../components/Home/BackToTop";
 import Reveal from "../components/ui/Reveal";
 import SEO from "../components/SEO";
 import { useScrollSpy } from "../hooks/useScrollSpy";
+import SectionHeader from "../components/Home/SectionHeader";
+import IconBadge from "../components/Home/IconBadge";
+import FeatureCard from "../components/Home/FeatureCard";
 
 const FAQ_ITEMS = [
     {
@@ -40,11 +43,28 @@ const FAQ_ITEMS = [
 ];
 
 export default function HomePage() {
-    const { activeSection, scrollY } = useScrollSpy();
+    const { activeSection, scrolled, showBackToTop } = useScrollSpy();
     const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-    const scrolled = scrollY > 40;
-    const showBackToTop = scrollY > 400;
+    const structuredData = useMemo(
+        () =>
+            JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "WebApplication",
+                name: "ConvoTalk",
+                url: "https://convotalk.live",
+                description:
+                    "Plataforma completa para mensagens instantâneas, grupos, chamadas de áudio e vídeo e compartilhamento de arquivos em tempo real.",
+                applicationCategory: "CommunicationApplication",
+                operatingSystem: "Web",
+                offers: {
+                    "@type": "Offer",
+                    price: "0",
+                    priceCurrency: "BRL",
+                },
+            }),
+        [],
+    );
 
     const toggleFaq = (index: number) => {
         setOpenFaq((prev) => (prev === index ? null : index));
@@ -58,23 +78,7 @@ export default function HomePage() {
                 canonical="/"
             />
             <Helmet>
-                <script type="application/ld+json">
-                    {JSON.stringify({
-                        "@context": "https://schema.org",
-                        "@type": "WebApplication",
-                        name: "ConvoTalk",
-                        url: "https://convotalk.live",
-                        description:
-                            "Plataforma completa para mensagens instantâneas, grupos, chamadas de áudio e vídeo e compartilhamento de arquivos em tempo real.",
-                        applicationCategory: "CommunicationApplication",
-                        operatingSystem: "Web",
-                        offers: {
-                            "@type": "Offer",
-                            price: "0",
-                            priceCurrency: "BRL",
-                        },
-                    })}
-                </script>
+                <script type="application/ld+json">{structuredData}</script>
             </Helmet>
 
             {/* 1. NAVBAR */}
@@ -92,7 +96,7 @@ export default function HomePage() {
                         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/30 bg-surface-container-high/60 backdrop-blur text-xs font-medium text-on-surface mb-8 shadow-sm">
                             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                             <span className="text-primary font-semibold">
-                                Nova versão v2.0
+                                Nova versão v2.4
                             </span>
                             <span className="text-outline-variant">•</span>
                             <span className="text-on-surface-variant">
@@ -105,7 +109,7 @@ export default function HomePage() {
                     <Reveal delay={100}>
                         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-on-surface max-w-4xl mx-auto leading-[1.15]">
                             Converse. Compartilhe. Conecte-se. <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#77fd94] to-primary-container">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary-fixed to-primary-container">
                                 Em tempo real.
                             </span>
                         </h1>
@@ -113,7 +117,9 @@ export default function HomePage() {
 
                     <Reveal delay={200}>
                         <p className="mt-6 text-lg sm:text-xl text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-                            Uma plataforma completa para mensagens instantâneas, grupos, chamadas de áudio e vídeo e compartilhamento de arquivos.
+                            Uma plataforma completa para mensagens instantâneas,
+                            grupos, chamadas de áudio e vídeo e compartilhamento
+                            de arquivos.
                         </p>
                     </Reveal>
 
@@ -122,7 +128,7 @@ export default function HomePage() {
                         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Link
                                 to="/login?mode=register"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary-container to-[#00be55] text-white px-7 py-3.5 rounded-lg font-semibold text-sm shadow-[0_0_25px_rgba(0,168,75,0.4)] hover:shadow-[0_0_35px_rgba(89,224,123,0.6)] hover:-translate-y-0.5 transition-all"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary-container to-primary text-white px-7 py-3.5 rounded-lg font-semibold text-sm shadow-[0_0_25px_rgba(0,168,75,0.4)] hover:shadow-[0_0_35px_rgba(89,224,123,0.6)] hover:-translate-y-0.5 transition-all"
                             >
                                 <span>Começar agora</span>
                                 <span className="material-symbols-outlined text-lg">
@@ -142,33 +148,34 @@ export default function HomePage() {
                     <div className="mt-14 max-w-4xl mx-auto text-left">
                         <PreviewChat />
                         <p className="text-center text-xs text-on-surface-variant mt-4">
-                            Experimente o ConvoTalk — Envie uma mensagem e veja a comunicação acontecer em tempo real.
+                            Experimente o ConvoTalk — Envie uma mensagem e veja
+                            a comunicação acontecer em tempo real.
                         </p>
                     </div>
                 </div>
             </section>
 
             {/* 3. PRODUCT CAPABILITY STRIP */}
-            <section className="border-y border-outline-variant/60 bg-surface-container-lowest/90 py-4 px-4 overflow-x-auto">
+            <section className="border-y border-outline-variant/60 bg-surface-container-lowest/90 py-4 px-4 overflow-x-auto relative">
                 <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 min-w-max text-xs font-medium text-on-surface-variant">
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
-                        <span className="text-primary font-bold">⚡</span>
+                        <IconBadge name="bolt" />
                         <span>Mensagens em tempo real</span>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
-                        <span className="text-primary">👥</span>
+                        <IconBadge name="groups" />
                         <span>Conversas em grupo</span>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
-                        <span className="text-primary">🎥</span>
+                        <IconBadge name="videocam" />
                         <span>Áudio e vídeo WebRTC</span>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
-                        <span className="text-primary">📎</span>
+                        <IconBadge name="attach_file" />
                         <span>Compartilhamento de arquivos</span>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
-                        <span className="text-primary">🔎</span>
+                        <IconBadge name="search" />
                         <span>
                             Busca inteligente{" "}
                             <kbd className="px-1.5 py-0.5 bg-surface-container-high rounded text-[10px] border border-outline-variant">
@@ -177,146 +184,80 @@ export default function HomePage() {
                         </span>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
-                        <span className="text-primary">📱</span>
+                        <IconBadge name="smartphone" />
                         <span>PWA & Suporte Offline</span>
                     </div>
                 </div>
+                <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-surface-container-lowest to-transparent md:hidden" />
             </section>
 
             {/* 4. FEATURE OVERVIEW */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 bg-surface" id="recursos">
+            <section
+                className="py-24 px-4 sm:px-6 lg:px-8 bg-surface"
+                id="recursos"
+            >
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center max-w-3xl mx-auto mb-16">
-                        <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                            Recursos Centrais
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface mt-3">
-                            Tudo o que você precisa para conversar
-                        </h2>
-                        <p className="mt-4 text-base sm:text-lg text-on-surface-variant">
-                            Mais do que mensagens. O ConvoTalk reúne as principais ferramentas para comunicação em um único lugar.
-                        </p>
+                        <SectionHeader
+                            badge="Recursos Centrais"
+                            title="Tudo o que você precisa para conversar"
+                            subtitle="Mais do que mensagens. O ConvoTalk reúne as principais ferramentas para comunicação em um único lugar."
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {/* Card 1 */}
                         <Reveal delay={0}>
-                            <div className="glass-card glass-card-hover p-6 rounded-xl transition-all h-full">
-                                <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
-                                    <span
-                                        className="material-symbols-outlined text-2xl"
-                                        style={{ fontVariationSettings: "'FILL' 1" }}
-                                    >
-                                        bolt
-                                    </span>
-                                </div>
-                                <h3 className="text-lg font-bold text-on-surface mb-2">
-                                    Mensagens em tempo real
-                                </h3>
-                                <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Envie e receba mensagens instantaneamente com indicadores de digitação, presença online e confirmação de leitura.
-                                </p>
-                            </div>
+                            <FeatureCard
+                                icon="bolt"
+                                title="Mensagens em tempo real"
+                                description="Envie e receba mensagens instantaneamente com indicadores de digitação, presença online e confirmação de leitura."
+                            />
                         </Reveal>
 
                         {/* Card 2 */}
                         <Reveal delay={100}>
-                            <div className="glass-card glass-card-hover p-6 rounded-xl transition-all h-full">
-                                <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
-                                    <span
-                                        className="material-symbols-outlined text-2xl"
-                                        style={{ fontVariationSettings: "'FILL' 1" }}
-                                    >
-                                        groups
-                                    </span>
-                                </div>
-                                <h3 className="text-lg font-bold text-on-surface mb-2">
-                                    Conversas privadas e grupos
-                                </h3>
-                                <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Converse individualmente ou reúna várias pessoas em uma mesma conversa com canais temáticos dedicados.
-                                </p>
-                            </div>
+                            <FeatureCard
+                                icon="groups"
+                                title="Conversas privadas e grupos"
+                                description="Converse individualmente ou reúna várias pessoas em uma mesma conversa com canais temáticos dedicados."
+                            />
                         </Reveal>
 
                         {/* Card 3 */}
                         <Reveal delay={200}>
-                            <div className="glass-card glass-card-hover p-6 rounded-xl transition-all h-full">
-                                <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
-                                    <span
-                                        className="material-symbols-outlined text-2xl"
-                                        style={{ fontVariationSettings: "'FILL' 1" }}
-                                    >
-                                        video_call
-                                    </span>
-                                </div>
-                                <h3 className="text-lg font-bold text-on-surface mb-2">
-                                    Chamadas de áudio e vídeo
-                                </h3>
-                                <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Inicie chamadas diretamente de uma conversa usando comunicação peer-to-peer em tempo real via WebRTC.
-                                </p>
-                            </div>
+                            <FeatureCard
+                                icon="video_call"
+                                title="Chamadas de áudio e vídeo"
+                                description="Inicie chamadas diretamente de uma conversa usando comunicação peer-to-peer em tempo real via WebRTC."
+                            />
                         </Reveal>
 
                         {/* Card 4 */}
                         <Reveal delay={300}>
-                            <div className="glass-card glass-card-hover p-6 rounded-xl transition-all h-full">
-                                <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
-                                    <span
-                                        className="material-symbols-outlined text-2xl"
-                                        style={{ fontVariationSettings: "'FILL' 1" }}
-                                    >
-                                        cloud_upload
-                                    </span>
-                                </div>
-                                <h3 className="text-lg font-bold text-on-surface mb-2">
-                                    Compartilhamento de arquivos
-                                </h3>
-                                <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Envie imagens, documentos, áudios e outros arquivos diretamente pelo chat com preview instantâneo.
-                                </p>
-                            </div>
+                            <FeatureCard
+                                icon="cloud_upload"
+                                title="Compartilhamento de arquivos"
+                                description="Envie imagens, documentos, áudios e outros arquivos diretamente pelo chat com preview instantâneo."
+                            />
                         </Reveal>
 
                         {/* Card 5 */}
                         <Reveal delay={400}>
-                            <div className="glass-card glass-card-hover p-6 rounded-xl transition-all h-full">
-                                <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
-                                    <span
-                                        className="material-symbols-outlined text-2xl"
-                                        style={{ fontVariationSettings: "'FILL' 1" }}
-                                    >
-                                        push_pin
-                                    </span>
-                                </div>
-                                <h3 className="text-lg font-bold text-on-surface mb-2">
-                                    Organização das conversas
-                                </h3>
-                                <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Responda, fixe, reaja, edite e organize suas mensagens mantendo as prioridades visíveis a todos.
-                                </p>
-                            </div>
+                            <FeatureCard
+                                icon="push_pin"
+                                title="Organização das conversas"
+                                description="Responda, fixe, reaja, edite e organize suas mensagens mantendo as prioridades visíveis a todos."
+                            />
                         </Reveal>
 
                         {/* Card 6 */}
                         <Reveal delay={500}>
-                            <div className="glass-card glass-card-hover p-6 rounded-xl transition-all h-full">
-                                <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
-                                    <span
-                                        className="material-symbols-outlined text-2xl"
-                                        style={{ fontVariationSettings: "'FILL' 1" }}
-                                    >
-                                        search
-                                    </span>
-                                </div>
-                                <h3 className="text-lg font-bold text-on-surface mb-2">
-                                    Busca inteligente
-                                </h3>
-                                <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Encontre rapidamente mensagens, contatos e informações dentro das suas conversas usando comandos rápidos.
-                                </p>
-                            </div>
+                            <FeatureCard
+                                icon="search"
+                                title="Busca inteligente"
+                                description="Encontre rapidamente mensagens, contatos e informações dentro das suas conversas usando comandos rápidos."
+                            />
                         </Reveal>
                     </div>
                 </div>
@@ -342,7 +283,7 @@ export default function HomePage() {
                                                     <div className="w-8 h-8 rounded-full bg-emerald-900/60 text-primary flex items-center justify-center font-bold text-xs">
                                                         C
                                                     </div>
-                                                    <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-primary border-2 border-[#161d16]" />
+                                                    <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-primary border-2 border-surface-container-low" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-xs font-semibold text-on-surface truncate">
@@ -359,7 +300,7 @@ export default function HomePage() {
                                                     <div className="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center font-bold text-xs">
                                                         T
                                                     </div>
-                                                    <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-primary border-2 border-[#161d16]" />
+                                                    <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-primary border-2 border-surface-container-low" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-xs font-bold text-primary truncate">
@@ -432,10 +373,14 @@ export default function HomePage() {
                                                         <span className="material-symbols-outlined text-[12px]">
                                                             lock
                                                         </span>
-                                                        <span>Mensagem segura</span>
+                                                        <span>
+                                                            Mensagem segura
+                                                        </span>
                                                     </div>
                                                     <p className="text-on-surface">
-                                                        As APIs do WebSocket já estão respondendo com latência abaixo de 20ms.
+                                                        As APIs do WebSocket já
+                                                        estão respondendo com
+                                                        latência abaixo de 20ms.
                                                     </p>
                                                     <div className="flex items-center justify-between mt-2 pt-1 border-t border-outline-variant/30 text-[10px] text-on-surface-variant">
                                                         <span>14:02</span>
@@ -455,11 +400,16 @@ export default function HomePage() {
                                             <div className="flex flex-col items-end gap-1">
                                                 <div className="bg-primary-container/25 border border-primary/40 rounded-xl rounded-tr-sm p-3 max-w-[85%] text-on-surface">
                                                     <p>
-                                                        Excelente! Acabei de rodar a suíte de testes de stress e segurou 10k conexões simultâneas.
+                                                        Excelente! Acabei de
+                                                        rodar a suíte de testes
+                                                        de stress e segurou 10k
+                                                        conexões simultâneas.
                                                     </p>
                                                     <div className="flex items-center justify-end gap-1.5 mt-1 text-[10px] text-primary">
                                                         <span>14:03</span>
-                                                        <span className="font-bold">Lido ✓✓</span>
+                                                        <span className="font-bold">
+                                                            Lido ✓✓
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -471,7 +421,9 @@ export default function HomePage() {
                                                     <span className="w-1.5 h-1.5 rounded-full bg-primary bounce-2" />
                                                     <span className="w-1.5 h-1.5 rounded-full bg-primary bounce-3" />
                                                 </div>
-                                                <span>teste está digitando...</span>
+                                                <span>
+                                                    teste está digitando...
+                                                </span>
                                             </div>
                                         </div>
 
@@ -499,15 +451,12 @@ export default function HomePage() {
                     {/* Right: Text Content */}
                     <div className="lg:col-span-5 order-1 lg:order-2 space-y-6">
                         <Reveal>
-                            <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                                Comunicação Instantânea
-                            </span>
-                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface mt-4">
-                                Mais do que apenas mensagens
-                            </h2>
-                            <p className="text-base text-on-surface-variant mt-3 leading-relaxed">
-                                Uma experiência de comunicação pensada para conversas que não param. Mantenha-se sempre sincronizado com respostas rápidas e contexto preservado.
-                            </p>
+                            <SectionHeader
+                                badge="Comunicação Instantânea"
+                                title="Mais do que apenas mensagens"
+                                subtitle="Uma experiência de comunicação pensada para conversas que não param. Mantenha-se sempre sincronizado com respostas rápidas e contexto preservado."
+                                align="left"
+                            />
                         </Reveal>
 
                         <div className="space-y-3 pt-2">
@@ -522,12 +471,10 @@ export default function HomePage() {
                             ].map((feature, idx) => (
                                 <Reveal key={idx} delay={idx * 60}>
                                     <div className="flex items-center gap-3 text-sm text-on-surface">
-                                        <span
-                                            className="material-symbols-outlined text-primary text-xl"
-                                            style={{ fontVariationSettings: "'FILL' 1" }}
-                                        >
-                                            check_circle
-                                        </span>
+                                        <IconBadge
+                                            name="check_circle"
+                                            size="lg"
+                                        />
                                         <span>{feature}</span>
                                     </div>
                                 </Reveal>
@@ -543,27 +490,27 @@ export default function HomePage() {
                     {/* Left: Text */}
                     <div className="lg:col-span-5 space-y-6">
                         <Reveal>
-                            <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                                WebRTC Nativo
-                            </span>
-                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface mt-4">
-                                Quando uma mensagem não é suficiente
-                            </h2>
-                            <p className="text-base text-on-surface-variant mt-3 leading-relaxed">
-                                Comece uma chamada de áudio ou vídeo diretamente da conversa com zero atrito e sem precisar de softwares externos ou plugins.
-                            </p>
+                            <SectionHeader
+                                badge="WebRTC Nativo"
+                                title="Quando uma mensagem não é suficiente"
+                                subtitle="Comece uma chamada de áudio ou vídeo diretamente da conversa com zero atrito e sem precisar de softwares externos ou plugins."
+                                align="left"
+                            />
                         </Reveal>
 
                         <div className="space-y-4 pt-2">
                             <Reveal delay={100}>
                                 <div className="flex items-start gap-3.5 p-3 rounded-lg bg-surface-container-low border border-outline-variant/60">
-                                    <span className="text-xl">🎙️</span>
+                                    <IconBadge name="mic" size="lg" />
                                     <div>
                                         <h4 className="text-sm font-bold text-on-surface">
-                                            Áudio em tempo real com cancelamento de ruído
+                                            Áudio em tempo real com cancelamento
+                                            de ruído
                                         </h4>
                                         <p className="text-xs text-on-surface-variant mt-0.5">
-                                            Voz cristalina processada pelo navegador com supressão de eco nativa.
+                                            Voz cristalina processada pelo
+                                            navegador com supressão de eco
+                                            nativa.
                                         </p>
                                     </div>
                                 </div>
@@ -571,13 +518,15 @@ export default function HomePage() {
 
                             <Reveal delay={200}>
                                 <div className="flex items-start gap-3.5 p-3 rounded-lg bg-surface-container-low border border-outline-variant/60">
-                                    <span className="text-xl">📹</span>
+                                    <IconBadge name="videocam" size="lg" />
                                     <div>
                                         <h4 className="text-sm font-bold text-on-surface">
-                                            Vídeo HD de baixa latência ponto a ponto
+                                            Vídeo HD de baixa latência ponto a
+                                            ponto
                                         </h4>
                                         <p className="text-xs text-on-surface-variant mt-0.5">
-                                            Resolução fluida adaptável de acordo com a velocidade da conexão.
+                                            Resolução fluida adaptável de acordo
+                                            com a velocidade da conexão.
                                         </p>
                                     </div>
                                 </div>
@@ -585,13 +534,14 @@ export default function HomePage() {
 
                             <Reveal delay={300}>
                                 <div className="flex items-start gap-3.5 p-3 rounded-lg bg-surface-container-low border border-outline-variant/60">
-                                    <span className="text-xl">⚙️</span>
+                                    <IconBadge name="settings" size="lg" />
                                     <div>
                                         <h4 className="text-sm font-bold text-on-surface">
                                             Controles intuitivos na tela
                                         </h4>
                                         <p className="text-xs text-on-surface-variant mt-0.5">
-                                            Mude microfone, ligue câmera ou compartilhe sua tela em 1 clique.
+                                            Mude microfone, ligue câmera ou
+                                            compartilhe sua tela em 1 clique.
                                         </p>
                                     </div>
                                 </div>
@@ -604,7 +554,7 @@ export default function HomePage() {
                         <Reveal>
                             <div className="glass-card rounded-2xl overflow-hidden shadow-2xl border border-primary/30 relative">
                                 {/* Main video area */}
-                                <div className="relative bg-gradient-to-b from-[#161d16] to-[#091009] h-96 flex flex-col justify-between p-6">
+                                <div className="relative bg-gradient-to-b from-surface-container-low to-surface-container-lowest h-96 flex flex-col justify-between p-6">
                                     {/* Participant Video Simulated Center */}
                                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                         <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary-container to-primary flex items-center justify-center text-3xl font-bold text-white shadow-[0_0_40px_rgba(89,224,123,0.3)]">
@@ -615,19 +565,27 @@ export default function HomePage() {
                                             <span className="w-1 h-5 bg-primary rounded-full animate-pulse" />
                                             <span
                                                 className="w-1 h-8 bg-primary rounded-full animate-pulse"
-                                                style={{ animationDelay: "0.15s" }}
+                                                style={{
+                                                    animationDelay: "0.15s",
+                                                }}
                                             />
                                             <span
                                                 className="w-1 h-3 bg-primary rounded-full animate-pulse"
-                                                style={{ animationDelay: "0.3s" }}
+                                                style={{
+                                                    animationDelay: "0.3s",
+                                                }}
                                             />
                                             <span
                                                 className="w-1 h-7 bg-primary rounded-full animate-pulse"
-                                                style={{ animationDelay: "0.45s" }}
+                                                style={{
+                                                    animationDelay: "0.45s",
+                                                }}
                                             />
                                             <span
                                                 className="w-1 h-4 bg-primary rounded-full animate-pulse"
-                                                style={{ animationDelay: "0.2s" }}
+                                                style={{
+                                                    animationDelay: "0.2s",
+                                                }}
                                             />
                                         </div>
                                     </div>
@@ -636,9 +594,15 @@ export default function HomePage() {
                                     <div className="relative z-10 flex items-center justify-between">
                                         <div className="flex items-center gap-2 bg-surface-container-lowest/80 backdrop-blur px-3 py-1.5 rounded-lg border border-outline-variant/60 text-xs">
                                             <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
-                                            <span className="font-bold text-on-surface">Paulo</span>
-                                            <span className="text-outline-variant">•</span>
-                                            <span className="text-primary font-mono">1080p 60fps</span>
+                                            <span className="font-bold text-on-surface">
+                                                Paulo
+                                            </span>
+                                            <span className="text-outline-variant">
+                                                •
+                                            </span>
+                                            <span className="text-primary font-mono">
+                                                1080p 60fps
+                                            </span>
                                         </div>
                                         <div className="text-xs font-mono text-on-surface-variant bg-surface-container-lowest/80 px-2.5 py-1 rounded-md border border-outline-variant/60">
                                             09:42
@@ -706,15 +670,11 @@ export default function HomePage() {
             <section className="py-24 px-4 sm:px-6 lg:px-8 bg-surface-container-lowest border-t border-outline-variant/50">
                 <div className="max-w-6xl mx-auto text-center">
                     <Reveal>
-                        <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                            Espaços Colaborativos
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface mt-4">
-                            Converse do seu jeito: de 1-a-1 a grandes equipes
-                        </h2>
-                        <p className="mt-4 text-base sm:text-lg text-on-surface-variant max-w-2xl mx-auto">
-                            Crie salas temáticas, gerencie participantes e centralize discussões com controle total de moderação e privilégios.
-                        </p>
+                        <SectionHeader
+                            badge="Espaços Colaborativos"
+                            title="Converse do seu jeito: de 1-a-1 a grandes equipes"
+                            subtitle="Crie salas temáticas, gerencie participantes e centralize discussões com controle total de moderação e privilégios."
+                        />
                     </Reveal>
 
                     {/* Group Management Mockup */}
@@ -765,7 +725,8 @@ export default function HomePage() {
                                     Anúncio Fixado:
                                 </span>
                                 <span className="text-on-surface-variant">
-                                    Atualização da stack ConvoTalk v2.4 realizada com sucesso às 10:00 UTC.
+                                    Atualização da stack ConvoTalk v2.4
+                                    realizada com sucesso às 10:00 UTC.
                                 </span>
                             </div>
 
@@ -790,7 +751,9 @@ export default function HomePage() {
                                                 </span>
                                             </div>
                                             <p className="text-xs text-on-surface mt-1">
-                                                Pessoal, o canal de chamadas para a daily está aberto na sala de reuniões.
+                                                Pessoal, o canal de chamadas
+                                                para a daily está aberto na sala
+                                                de reuniões.
                                             </p>
                                         </div>
                                     </div>
@@ -812,7 +775,8 @@ export default function HomePage() {
                                                 </span>
                                             </div>
                                             <p className="text-xs text-on-surface mt-1">
-                                                Conectando agora! Já deixei o pull request pronto pra revisão.
+                                                Conectando agora! Já deixei o
+                                                pull request pronto pra revisão.
                                             </p>
                                         </div>
                                     </div>
@@ -830,7 +794,9 @@ export default function HomePage() {
                                                 Lucas (Lead)
                                             </span>
                                         </div>
-                                        <span className="text-[10px] text-primary">Admin</span>
+                                        <span className="text-[10px] text-primary">
+                                            Admin
+                                        </span>
                                     </div>
                                     <div className="flex items-center justify-between text-xs py-1">
                                         <div className="flex items-center gap-2">
@@ -861,7 +827,9 @@ export default function HomePage() {
                                                 Rodrigo Alves
                                             </span>
                                         </div>
-                                        <span className="text-[10px] text-outline">Ausente</span>
+                                        <span className="text-[10px] text-outline">
+                                            Ausente
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -881,7 +849,9 @@ export default function HomePage() {
                                     Membros & Permissões
                                 </h4>
                                 <p className="text-xs text-on-surface-variant leading-relaxed">
-                                    Papéis granulares de administrador, moderador e membro para controlar quem pode enviar mensagens, fixar ou moderar.
+                                    Papéis granulares de administrador,
+                                    moderador e membro para controlar quem pode
+                                    enviar mensagens, fixar ou moderar.
                                 </p>
                             </div>
                         </Reveal>
@@ -897,7 +867,9 @@ export default function HomePage() {
                                     Notificações por Canal
                                 </h4>
                                 <p className="text-xs text-on-surface-variant leading-relaxed">
-                                    Silencie conversas secundárias ou receba notificações imediatas somente quando for mencionado com @nome.
+                                    Silencie conversas secundárias ou receba
+                                    notificações imediatas somente quando for
+                                    mencionado com @nome.
                                 </p>
                             </div>
                         </Reveal>
@@ -913,7 +885,9 @@ export default function HomePage() {
                                     Perfis & Avatares Personalizados
                                 </h4>
                                 <p className="text-xs text-on-surface-variant leading-relaxed">
-                                    Identidade rica com status customizados, bio, links e avatares que facilitam o reconhecimento de cada membro.
+                                    Identidade rica com status customizados,
+                                    bio, links e avatares que facilitam o
+                                    reconhecimento de cada membro.
                                 </p>
                             </div>
                         </Reveal>
@@ -976,7 +950,10 @@ export default function HomePage() {
                                     >
                                         <span
                                             className="material-symbols-outlined text-[20px]"
-                                            style={{ fontVariationSettings: "'FILL' 1" }}
+                                            style={{
+                                                fontVariationSettings:
+                                                    "'FILL' 1",
+                                            }}
                                         >
                                             play_arrow
                                         </span>
@@ -1007,7 +984,9 @@ export default function HomePage() {
                             <div className="glass-card rounded-xl border border-outline-variant overflow-hidden">
                                 <div className="bg-surface-container-low px-4 py-2 border-b border-outline-variant/60 flex items-center justify-between text-[11px] font-mono text-on-surface-variant">
                                     <span>socket.handler.ts</span>
-                                    <span className="text-primary font-bold">TypeScript</span>
+                                    <span className="text-primary font-bold">
+                                        TypeScript
+                                    </span>
                                 </div>
                                 <pre className="p-4 text-xs font-mono text-on-surface bg-surface-container-lowest/80 overflow-x-auto leading-relaxed">
                                     <code>{`socket.on('message:send', async (payload) => {
@@ -1023,39 +1002,36 @@ export default function HomePage() {
                     {/* Right: Text Content */}
                     <div className="lg:col-span-6 space-y-6">
                         <Reveal>
-                            <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                                Produtividade & Arquivos
-                            </span>
-                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface mt-4">
-                                Compartilhe mais do que mensagens
-                            </h2>
-                            <p className="text-base text-on-surface-variant mt-3 leading-relaxed">
-                                Envie arquivos sem perder a qualidade original. Centralize documentos importantes, notas de voz e capturas de tela diretamente no fluxo contínuo da conversa.
-                            </p>
+                            <SectionHeader
+                                badge="Produtividade & Arquivos"
+                                title="Compartilhe mais do que mensagens"
+                                subtitle="Envie arquivos sem perder a qualidade original. Centralize documentos importantes, notas de voz e capturas de tela diretamente no fluxo contínuo da conversa."
+                                align="left"
+                            />
                         </Reveal>
 
                         <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm text-on-surface">
                             <Reveal delay={100}>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-primary font-bold">📷</span>
+                                    <IconBadge name="photo_camera" />
                                     <span>Imagens em alta definição</span>
                                 </div>
                             </Reveal>
                             <Reveal delay={150}>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-primary font-bold">📄</span>
+                                    <IconBadge name="description" />
                                     <span>Documentos & PDFs</span>
                                 </div>
                             </Reveal>
                             <Reveal delay={200}>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-primary font-bold">🎵</span>
+                                    <IconBadge name="music_note" />
                                     <span>Mensagens de áudio contínuas</span>
                                 </div>
                             </Reveal>
                             <Reveal delay={250}>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-primary font-bold">📎</span>
+                                    <IconBadge name="attach_file" />
                                     <span>Arquivos compactados e código</span>
                                 </div>
                             </Reveal>
@@ -1064,13 +1040,16 @@ export default function HomePage() {
                         {/* Special feature callout box */}
                         <Reveal delay={300}>
                             <div className="p-4 rounded-xl bg-surface-container-high/60 border border-primary/30 flex items-start gap-3">
-                                <span className="text-2xl">📑</span>
+                                <IconBadge name="folder_open" size="xl" />
                                 <div className="text-xs sm:text-sm">
                                     <span className="font-bold text-primary">
                                         Exporte suas conversas:
                                     </span>
                                     <p className="text-on-surface-variant mt-1 leading-relaxed">
-                                        Guarde o histórico das suas conversas e canais exportando-os com facilidade para PDF formatado com carimbos de data/hora oficiais.
+                                        Guarde o histórico das suas conversas e
+                                        canais exportando-os com facilidade para
+                                        PDF formatado com carimbos de data/hora
+                                        oficiais.
                                     </p>
                                 </div>
                             </div>
@@ -1083,15 +1062,11 @@ export default function HomePage() {
             <section className="py-24 px-4 sm:px-6 lg:px-8 bg-surface-container-lowest border-t border-outline-variant/50">
                 <div className="max-w-7xl mx-auto text-center">
                     <Reveal>
-                        <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                            Sempre Disponível
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface mt-4">
-                            Suas conversas, onde você estiver
-                        </h2>
-                        <p className="mt-4 text-base sm:text-lg text-on-surface-variant max-w-2xl mx-auto">
-                            Uma experiência web moderna, responsiva e preparada para qualquer dispositivo, até mesmo quando o sinal cai.
-                        </p>
+                        <SectionHeader
+                            badge="Sempre Disponível"
+                            title="Suas conversas, onde você estiver"
+                            subtitle="Uma experiência web moderna, responsiva e preparada para qualquer dispositivo, até mesmo quando o sinal cai."
+                        />
                     </Reveal>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-14 text-left">
@@ -1108,7 +1083,10 @@ export default function HomePage() {
                                         Progressive Web App (PWA)
                                     </h3>
                                     <p className="text-sm text-on-surface-variant leading-relaxed">
-                                        Instale no Windows, macOS, Android ou iOS sem passar por lojas de aplicativos. Experiência em tela cheia idêntica a um app nativo.
+                                        Instale no Windows, macOS, Android ou
+                                        iOS sem passar por lojas de aplicativos.
+                                        Experiência em tela cheia idêntica a um
+                                        app nativo.
                                     </p>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-outline-variant/40 flex items-center gap-2 text-xs text-primary font-semibold">
@@ -1133,7 +1111,10 @@ export default function HomePage() {
                                         Persistência Offline & IndexedDB
                                     </h3>
                                     <p className="text-sm text-on-surface-variant leading-relaxed">
-                                        Consulte seu histórico de mensagens e anexos recentes mesmo sem conexão à internet. Cache local instantâneo com zero tela branca.
+                                        Consulte seu histórico de mensagens e
+                                        anexos recentes mesmo sem conexão à
+                                        internet. Cache local instantâneo com
+                                        zero tela branca.
                                     </p>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-outline-variant/40 flex items-center gap-2 text-xs text-primary font-semibold">
@@ -1158,7 +1139,10 @@ export default function HomePage() {
                                         Fila de Envio Inteligente (Queue)
                                     </h3>
                                     <p className="text-sm text-on-surface-variant leading-relaxed">
-                                        Envie mensagens mesmo offline; o ConvoTalk enfileira e sincroniza tudo automaticamente no servidor assim que a conexão retornar.
+                                        Envie mensagens mesmo offline; o
+                                        ConvoTalk enfileira e sincroniza tudo
+                                        automaticamente no servidor assim que a
+                                        conexão retornar.
                                     </p>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-outline-variant/40 flex items-center gap-2 text-xs text-primary font-semibold">
@@ -1174,19 +1158,18 @@ export default function HomePage() {
             </section>
 
             {/* 10. SECURITY */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 bg-surface" id="seguranca">
+            <section
+                className="py-24 px-4 sm:px-6 lg:px-8 bg-surface"
+                id="seguranca"
+            >
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <Reveal>
-                            <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                                Confiabilidade & Privacidade
-                            </span>
-                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface mt-3">
-                                Segurança em cada camada
-                            </h2>
-                            <p className="mt-4 text-base sm:text-lg text-on-surface-variant">
-                                Projetado com rigor técnico para manter suas conversas e dados completamente protegidos contra acessos indesejados.
-                            </p>
+                            <SectionHeader
+                                badge="Confiabilidade & Privacidade"
+                                title="Segurança em cada camada"
+                                subtitle="Projetado com rigor técnico para manter suas conversas e dados completamente protegidos contra acessos indesejados."
+                            />
                         </Reveal>
                     </div>
 
@@ -1197,15 +1180,19 @@ export default function HomePage() {
                             <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition-colors h-full">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xl">
-                                        🔐
+                                        <IconBadge name="lock" />
                                     </div>
                                     <h3 className="text-base sm:text-lg font-bold text-on-surface">
                                         Autenticação Segura
                                     </h3>
                                 </div>
                                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Access tokens JWT de curta duração com rotação contínua de refresh tokens armazenados exclusivamente em cookies{" "}
-                                    <code className="text-primary font-mono text-xs">HTTP-only</code>{" "}
+                                    Access tokens JWT de curta duração com
+                                    rotação contínua de refresh tokens
+                                    armazenados exclusivamente em cookies{" "}
+                                    <code className="text-primary font-mono text-xs">
+                                        HTTP-only
+                                    </code>{" "}
                                     e protegidos contra ataques XSS.
                                 </p>
                             </div>
@@ -1216,14 +1203,17 @@ export default function HomePage() {
                             <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition-colors h-full">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xl">
-                                        🛡️
+                                        <IconBadge name="shield" />
                                     </div>
                                     <h3 className="text-base sm:text-lg font-bold text-on-surface">
                                         Proteção contra Abuso
                                     </h3>
                                 </div>
                                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Rate limiting em múltiplas camadas tanto para endpoints REST na API Express quanto para eventos em tempo real no Socket.IO, neutralizando abusos e spam.
+                                    Rate limiting em múltiplas camadas tanto
+                                    para endpoints REST na API Express quanto
+                                    para eventos em tempo real no Socket.IO,
+                                    neutralizando abusos e spam.
                                 </p>
                             </div>
                         </Reveal>
@@ -1232,15 +1222,18 @@ export default function HomePage() {
                         <Reveal delay={300}>
                             <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition-colors h-full">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xl font-bold">
-                                        ✓
+                                    <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xl">
+                                        <IconBadge name="check" />
                                     </div>
                                     <h3 className="text-base sm:text-lg font-bold text-on-surface">
                                         Validação Estrita de Dados
                                     </h3>
                                 </div>
                                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Validação integral e sanitização de payloads com schemas rigorosos Zod em runtime, garantindo prevenção estrutural contra injeções SQL/NoSQL e dados maliciosos.
+                                    Validação integral e sanitização de payloads
+                                    com schemas rigorosos Zod em runtime,
+                                    garantindo prevenção estrutural contra
+                                    injeções SQL/NoSQL e dados maliciosos.
                                 </p>
                             </div>
                         </Reveal>
@@ -1250,14 +1243,17 @@ export default function HomePage() {
                             <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition-colors h-full">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xl">
-                                        🌐
+                                        <IconBadge name="language" />
                                     </div>
                                     <h3 className="text-base sm:text-lg font-bold text-on-surface">
                                         Comunicação Segura
                                     </h3>
                                 </div>
                                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Túneis criptografados via HTTPS e WebSockets seguros (WSS), além de headers de segurança CSP modernos e políticas CORS restritivas de ponta a ponta.
+                                    Túneis criptografados via HTTPS e WebSockets
+                                    seguros (WSS), além de headers de segurança
+                                    CSP modernos e políticas CORS restritivas de
+                                    ponta a ponta.
                                 </p>
                             </div>
                         </Reveal>
@@ -1267,11 +1263,10 @@ export default function HomePage() {
                     <Reveal delay={500}>
                         <div className="mt-10 text-center">
                             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high border border-outline-variant text-xs text-on-surface font-medium">
-                                <span className="material-symbols-outlined text-primary text-[18px]">
-                                    verified
-                                </span>
+                                <IconBadge name="verified" />
                                 <span>
-                                    Arquivos protegidos com verificação de tipo MIME e armazenamento seguro.
+                                    Arquivos protegidos com verificação de tipo
+                                    MIME e armazenamento seguro.
                                 </span>
                             </div>
                         </div>
@@ -1286,15 +1281,11 @@ export default function HomePage() {
             >
                 <div className="max-w-6xl mx-auto text-center">
                     <Reveal>
-                        <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                            Engenharia Robusta
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface mt-4">
-                            Construído para comunicação em tempo real
-                        </h2>
-                        <p className="mt-4 text-base sm:text-lg text-on-surface-variant max-w-2xl mx-auto">
-                            Uma arquitetura moderna e reativa criada para oferecer altíssima performance, baixa latência e escalabilidade horizontal contínua.
-                        </p>
+                        <SectionHeader
+                            badge="Engenharia Robusta"
+                            title="Construído para comunicação em tempo real"
+                            subtitle="Uma arquitetura moderna e reativa criada para oferecer altíssima performance, baixa latência e escalabilidade horizontal contínua."
+                        />
                     </Reveal>
 
                     {/* Architecture Diagram Flow */}
@@ -1310,10 +1301,11 @@ export default function HomePage() {
                                         <span>Cliente Frontend</span>
                                     </div>
                                     <h4 className="font-bold text-sm text-on-surface">
-                                        React 18 + Tailwind
+                                        React 19 + Tailwind
                                     </h4>
                                     <p className="text-xs text-on-surface-variant mt-1">
-                                        PWA offline-first, WebSockets Client & WebRTC Media Engine.
+                                        PWA offline-first, WebSockets Client &
+                                        WebRTC Media Engine.
                                     </p>
                                 </div>
 
@@ -1338,7 +1330,8 @@ export default function HomePage() {
                                         Node.js + Express
                                     </h4>
                                     <p className="text-xs text-on-surface-variant mt-1">
-                                        Socket.IO Clusters, Auth JWT Middleware e Rate Limiters.
+                                        Socket.IO Clusters, Auth JWT Middleware
+                                        e Rate Limiters.
                                     </p>
                                 </div>
 
@@ -1363,7 +1356,8 @@ export default function HomePage() {
                                         MongoDB & Storage
                                     </h4>
                                     <p className="text-xs text-on-surface-variant mt-1">
-                                        Coleções indexadas, persistência de canais e upload de mídias.
+                                        Coleções indexadas, persistência de
+                                        canais e upload de mídias.
                                     </p>
                                 </div>
                             </div>
@@ -1403,18 +1397,17 @@ export default function HomePage() {
             </section>
 
             {/* 12. HOW IT WORKS (Timeline) */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 bg-surface" id="como-funciona">
+            <section
+                className="py-24 px-4 sm:px-6 lg:px-8 bg-surface"
+                id="como-funciona"
+            >
                 <div className="max-w-7xl mx-auto text-center">
                     <Reveal>
-                        <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                            Onboarding Simples
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface mt-4">
-                            Comece em poucos segundos
-                        </h2>
-                        <p className="mt-4 text-base sm:text-lg text-on-surface-variant max-w-xl mx-auto">
-                            Sem configurações complicadas ou instalações pesadas.
-                        </p>
+                        <SectionHeader
+                            badge="Onboarding Simples"
+                            title="Comece em poucos segundos"
+                            subtitle="Sem configurações complicadas ou instalações pesadas."
+                        />
                     </Reveal>
 
                     {/* Timeline with connecting glowing line */}
@@ -1425,14 +1418,15 @@ export default function HomePage() {
                         {/* Step 01 */}
                         <Reveal delay={100}>
                             <div className="flex flex-col items-center text-center relative z-10">
-                                <div className="w-16 h-16 rounded-full bg-surface-container-high border-2 border-primary flex items-center justify-center text-primary font-bold text-xl mb-6 shadow-[0_0_20px_rgba(89,224,123,0.3)] bg-[#0e150e]">
+                                <div className="w-16 h-16 rounded-full bg-surface-container-high border-2 border-primary flex items-center justify-center text-primary font-bold text-xl mb-6 shadow-[0_0_20px_rgba(89,224,123,0.3)]">
                                     01
                                 </div>
                                 <h3 className="text-lg font-bold text-on-surface mb-2">
                                     Crie sua conta
                                 </h3>
                                 <p className="text-sm text-on-surface-variant leading-relaxed max-w-xs">
-                                    Configure seu perfil, escolha seu nome de usuário e personalize sua conta em segundos.
+                                    Configure seu perfil, escolha seu nome de
+                                    usuário e personalize sua conta em segundos.
                                 </p>
                             </div>
                         </Reveal>
@@ -1440,14 +1434,16 @@ export default function HomePage() {
                         {/* Step 02 */}
                         <Reveal delay={200}>
                             <div className="flex flex-col items-center text-center relative z-10">
-                                <div className="w-16 h-16 rounded-full bg-surface-container-high border-2 border-primary flex items-center justify-center text-primary font-bold text-xl mb-6 shadow-[0_0_20px_rgba(89,224,123,0.3)] bg-[#0e150e]">
+                                <div className="w-16 h-16 rounded-full bg-surface-container-high border-2 border-primary flex items-center justify-center text-primary font-bold text-xl mb-6 shadow-[0_0_20px_rgba(89,224,123,0.3)]">
                                     02
                                 </div>
                                 <h3 className="text-lg font-bold text-on-surface mb-2">
                                     Encontre alguém
                                 </h3>
                                 <p className="text-sm text-on-surface-variant leading-relaxed max-w-xs">
-                                    Procure contatos cadastrados através da busca instantânea ou entre em salas públicas e grupos temáticos.
+                                    Procure contatos cadastrados através da
+                                    busca instantânea ou entre em salas públicas
+                                    e grupos temáticos.
                                 </p>
                             </div>
                         </Reveal>
@@ -1455,14 +1451,16 @@ export default function HomePage() {
                         {/* Step 03 */}
                         <Reveal delay={300}>
                             <div className="flex flex-col items-center text-center relative z-10">
-                                <div className="w-16 h-16 rounded-full bg-surface-container-high border-2 border-primary flex items-center justify-center text-primary font-bold text-xl mb-6 shadow-[0_0_20px_rgba(89,224,123,0.3)] bg-[#0e150e]">
+                                <div className="w-16 h-16 rounded-full bg-surface-container-high border-2 border-primary flex items-center justify-center text-primary font-bold text-xl mb-6 shadow-[0_0_20px_rgba(89,224,123,0.3)]">
                                     03
                                 </div>
                                 <h3 className="text-lg font-bold text-on-surface mb-2">
                                     Comece a conversar
                                 </h3>
                                 <p className="text-sm text-on-surface-variant leading-relaxed max-w-xs">
-                                    Envie mensagens, transfira arquivos ou inicie uma videoconferência com um único clique.
+                                    Envie mensagens, transfira arquivos ou
+                                    inicie uma videoconferência com um único
+                                    clique.
                                 </p>
                             </div>
                         </Reveal>
@@ -1471,19 +1469,18 @@ export default function HomePage() {
             </section>
 
             {/* 13. FAQ (Interactive Accordion) */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 bg-surface-container-lowest border-t border-outline-variant/50">
+            <section
+                id="perguntas-frequentes"
+                className="py-24 px-4 sm:px-6 lg:px-8 bg-surface-container-lowest border-t border-outline-variant/50"
+            >
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-16">
                         <Reveal>
-                            <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                                Dúvidas Frequentes
-                            </span>
-                            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface mt-4">
-                                Perguntas Frequentes
-                            </h2>
-                            <p className="mt-4 text-base text-on-surface-variant">
-                                Tudo o que você precisa saber sobre o ConvoTalk.
-                            </p>
+                            <SectionHeader
+                                badge="Dúvidas Frequentes"
+                                title="Perguntas Frequentes"
+                                subtitle="Tudo o que você precisa saber sobre o ConvoTalk."
+                            />
                         </Reveal>
                     </div>
 
@@ -1491,11 +1488,16 @@ export default function HomePage() {
                     <div className="space-y-4">
                         {FAQ_ITEMS.map((faq, index) => {
                             const isOpen = openFaq === index;
+                            const panelId = `faq-panel-${index}`;
+                            const buttonId = `faq-button-${index}`;
                             return (
                                 <Reveal key={index} delay={index * 50}>
                                     <div className="glass-card rounded-xl border border-outline-variant/70 overflow-hidden transition-colors">
                                         <button
                                             type="button"
+                                            id={buttonId}
+                                            aria-expanded={isOpen}
+                                            aria-controls={panelId}
                                             onClick={() => toggleFaq(index)}
                                             className="w-full p-5 text-left flex items-center justify-between gap-4 hover:text-primary transition-colors focus:outline-none cursor-pointer"
                                         >
@@ -1510,11 +1512,15 @@ export default function HomePage() {
                                                 expand_more
                                             </span>
                                         </button>
-                                        {isOpen && (
-                                            <div className="px-5 pb-5 pt-0 text-sm text-on-surface-variant leading-relaxed border-t border-outline-variant/30 pt-3">
-                                                {faq.answer}
-                                            </div>
-                                        )}
+                                        <div
+                                            id={panelId}
+                                            role="region"
+                                            aria-labelledby={buttonId}
+                                            hidden={!isOpen}
+                                            className="px-5 pb-5 text-sm text-on-surface-variant leading-relaxed border-t border-outline-variant/30 pt-3"
+                                        >
+                                            {faq.answer}
+                                        </div>
                                     </div>
                                 </Reveal>
                             );
@@ -1537,12 +1543,14 @@ export default function HomePage() {
                                     Sua próxima conversa começa aqui.
                                 </h2>
                                 <p className="text-base sm:text-xl text-on-surface-variant max-w-2xl mx-auto mb-10 leading-relaxed">
-                                    Crie sua conta e experimente uma experiência de comunicação feita para acontecer em tempo real.
+                                    Crie sua conta e experimente uma experiência
+                                    de comunicação feita para acontecer em tempo
+                                    real.
                                 </p>
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                                     <Link
                                         to="/login?mode=register"
-                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary-container to-[#00be55] text-white px-8 py-4 rounded-xl font-bold text-sm shadow-[0_0_30px_rgba(0,168,75,0.5)] hover:shadow-[0_0_40px_rgba(89,224,123,0.7)] hover:-translate-y-0.5 transition-all"
+                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary-container to-primary text-white px-8 py-4 rounded-xl font-bold text-sm shadow-[0_0_30px_rgba(0,168,75,0.5)] hover:shadow-[0_0_40px_rgba(89,224,123,0.7)] hover:-translate-y-0.5 transition-all"
                                     >
                                         <span>Começar agora</span>
                                         <span className="material-symbols-outlined text-lg">
@@ -1560,7 +1568,7 @@ export default function HomePage() {
             <footer className="w-full bg-surface-container-low border-t border-outline-variant/60 pt-16 pb-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
                     {/* Top Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 pb-12 border-b border-outline-variant/40">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-outline-variant/40">
                         {/* Brand column */}
                         <div className="lg:col-span-2 space-y-4">
                             <div className="flex items-center gap-2">
@@ -1574,7 +1582,10 @@ export default function HomePage() {
                                 </span>
                             </div>
                             <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed max-w-sm">
-                                Comunicação em tempo real, segura e fluida. Desenvolvido para simplificar conversas particulares, salas públicas e videoconferências.
+                                Comunicação em tempo real, segura e fluida.
+                                Desenvolvido para simplificar conversas
+                                particulares, salas públicas e
+                                videoconferências.
                             </p>
                             <div className="flex items-center gap-2 text-xs text-primary font-medium">
                                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -1589,27 +1600,42 @@ export default function HomePage() {
                             </h5>
                             <ul className="space-y-2 text-xs sm:text-sm text-on-surface-variant">
                                 <li>
-                                    <a className="hover:text-primary transition-colors" href="#recursos">
+                                    <a
+                                        className="hover:text-primary transition-colors"
+                                        href="#recursos"
+                                    >
                                         Recursos
                                     </a>
                                 </li>
                                 <li>
-                                    <Link className="hover:text-primary transition-colors" to="/login?mode=register">
+                                    <Link
+                                        className="hover:text-primary transition-colors"
+                                        to="/login?mode=register"
+                                    >
                                         Demonstração
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link className="hover:text-primary transition-colors" to="/login">
+                                    <Link
+                                        className="hover:text-primary transition-colors"
+                                        to="/login"
+                                    >
                                         Chamadas WebRTC
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link className="hover:text-primary transition-colors" to="/login">
+                                    <Link
+                                        className="hover:text-primary transition-colors"
+                                        to="/login"
+                                    >
                                         Grupos & Canais
                                     </Link>
                                 </li>
                                 <li>
-                                    <a className="hover:text-primary transition-colors" href="#recursos">
+                                    <a
+                                        className="hover:text-primary transition-colors"
+                                        href="#recursos"
+                                    >
                                         PWA Mobile
                                     </a>
                                 </li>
@@ -1623,30 +1649,39 @@ export default function HomePage() {
                             </h5>
                             <ul className="space-y-2 text-xs sm:text-sm text-on-surface-variant">
                                 <li>
-                                    <a className="hover:text-primary transition-colors" href="#como-funciona">
+                                    <a
+                                        className="hover:text-primary transition-colors"
+                                        href="#como-funciona"
+                                    >
                                         Como funciona
                                     </a>
                                 </li>
                                 <li>
-                                    <a className="hover:text-primary transition-colors" href="#arquitetura">
+                                    <a
+                                        className="hover:text-primary transition-colors"
+                                        href="#arquitetura"
+                                    >
                                         Arquitetura
                                     </a>
                                 </li>
                                 <li>
-                                    <a className="hover:text-primary transition-colors" href="#seguranca">
+                                    <a
+                                        className="hover:text-primary transition-colors"
+                                        href="#seguranca"
+                                    >
                                         Segurança
                                     </a>
                                 </li>
                                 <li>
-                                    <a className="hover:text-primary transition-colors" href="#como-funciona">
+                                    <a
+                                        className="hover:text-primary transition-colors"
+                                        href="#perguntas-frequentes"
+                                    >
                                         Perguntas Frequentes
                                     </a>
                                 </li>
                             </ul>
                         </div>
-
-                        {/* Empty column / spacer in 6-col grid */}
-                        <div className="hidden lg:block space-y-3" />
 
                         {/* Nav Column 4: Legal */}
                         <div className="space-y-3">
@@ -1655,23 +1690,19 @@ export default function HomePage() {
                             </h5>
                             <ul className="space-y-2 text-xs sm:text-sm text-on-surface-variant">
                                 <li>
-                                    <Link className="hover:text-primary transition-colors" to="/privacy">
+                                    <Link
+                                        className="hover:text-primary transition-colors"
+                                        to="/privacy"
+                                    >
                                         Privacidade
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link className="hover:text-primary transition-colors" to="/terms">
+                                    <Link
+                                        className="hover:text-primary transition-colors"
+                                        to="/terms"
+                                    >
                                         Termos de Uso
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link className="hover:text-primary transition-colors" to="/privacy">
-                                        Suporte
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link className="hover:text-primary transition-colors" to="/privacy">
-                                        Contato
                                     </Link>
                                 </li>
                             </ul>
@@ -1680,12 +1711,19 @@ export default function HomePage() {
 
                     {/* Bottom Bar */}
                     <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
-                        <p>© {new Date().getFullYear()} ConvoTalk. Todos os direitos reservados.</p>
+                        <p>
+                            © {new Date().getFullYear()} ConvoTalk. Todos os
+                            direitos reservados.
+                        </p>
                         <p className="flex items-center gap-2">
                             <span>Construído com</span>
-                            <span className="text-primary font-semibold">Socket.IO</span>
+                            <span className="text-primary font-semibold">
+                                Socket.IO
+                            </span>
                             <span>e</span>
-                            <span className="text-primary font-semibold">WebRTC</span>
+                            <span className="text-primary font-semibold">
+                                WebRTC
+                            </span>
                         </p>
                     </div>
                 </div>

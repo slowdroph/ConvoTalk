@@ -10,11 +10,13 @@ const NAME_STORAGE_KEY = "previewName";
 const TYPING_TIMEOUT_MS = 2500;
 
 function getGuestName(): string {
-    const stored = localStorage.getItem(NAME_STORAGE_KEY);
-    if (stored && stored.trim()) return stored.trim();
-    const generated = `Visitante-${Math.floor(1000 + Math.random() * 9000)}`;
-    localStorage.setItem(NAME_STORAGE_KEY, generated);
-    return generated;
+    try {
+        const stored = localStorage.getItem(NAME_STORAGE_KEY);
+        if (stored && stored.trim()) return stored.trim();
+    } catch {
+        // localStorage unavailable
+    }
+    return `Visitante-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
 function formatTime(iso: string): string {
@@ -177,7 +179,11 @@ export default function PreviewChat() {
     const saveName = () => {
         const trimmed = nameDraft.trim();
         const next = trimmed ? trimmed.slice(0, 30) : name;
-        localStorage.setItem(NAME_STORAGE_KEY, next);
+        try {
+            localStorage.setItem(NAME_STORAGE_KEY, next);
+        } catch {
+            // Silently fail - name still updates in session
+        }
         setName(next);
         setEditingName(false);
     };
@@ -190,102 +196,109 @@ export default function PreviewChat() {
 
     return (
         <div className="glass-card rounded-2xl overflow-hidden shadow-2xl border border-outline-variant/80">
-                {/* Top bar */}
-                <div className="bg-surface-container-lowest/90 px-4 py-3 border-b border-outline-variant/60 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
-                            <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
-                            <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
-                        </div>
-                        <div className="h-4 w-px bg-outline-variant" />
-                        <div className="flex items-center gap-2">
-                            <span className="w-6 h-6 rounded bg-primary/15 text-primary text-xs font-bold flex items-center justify-center">
-                                #
-                            </span>
-                            <span className="font-semibold text-xs sm:text-sm text-on-surface">
-                                Preview: Sala Geral
-                            </span>
-                        </div>
+            {/* Top bar */}
+            <div className="bg-surface-container-lowest/90 px-4 py-3 border-b border-outline-variant/60 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
+                        <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+                        <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
                     </div>
+                    <div className="h-4 w-px bg-outline-variant" />
                     <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary border border-primary/20">
-                            <span className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-primary animate-ping" : "bg-error"}`} />
-                            {onlineCount} online
+                        <span className="w-6 h-6 rounded bg-primary/15 text-primary text-xs font-bold flex items-center justify-center">
+                            #
+                        </span>
+                        <span className="font-semibold text-xs sm:text-sm text-on-surface">
+                            Preview: Sala Geral
                         </span>
                     </div>
                 </div>
+                <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary border border-primary/20">
+                        <span
+                            className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-primary animate-ping" : "bg-error"}`}
+                        />
+                        {onlineCount} online
+                    </span>
+                </div>
+            </div>
 
-                {/* Message Body */}
-                <div
-                    ref={listRef}
-                    className="p-6 bg-surface-container-lowest/60 min-h-[240px] max-h-[360px] overflow-y-auto custom-scrollbar flex flex-col justify-end gap-3 text-xs sm:text-sm"
-                >
-                    {/* Welcome Bot message */}
-                    <div className="flex items-end gap-2 max-w-[85%] sm:max-w-[70%]">
-                        <div className="w-7 h-7 rounded-full bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary shrink-0 text-xs font-bold">
-                            CT
-                        </div>
-                        <div className="bg-surface-container-high border border-outline-variant rounded-2xl rounded-bl-sm px-4 py-2.5 text-on-surface shadow-sm">
-                            <p className="leading-relaxed">
-                                Olá! Bem-vindo ao ConvoTalk. Experimente a latência ultra-baixa com WebSockets em tempo real.
-                            </p>
-                            <div className="flex items-center justify-end mt-1 gap-1 text-[10px] text-on-surface-variant">
-                                <span>Agora</span>
-                            </div>
+            {/* Message Body */}
+            <div
+                ref={listRef}
+                className="p-6 bg-surface-container-lowest/60 min-h-[240px] max-h-[360px] overflow-y-auto custom-scrollbar flex flex-col justify-end gap-3 text-xs sm:text-sm"
+            >
+                {/* Welcome Bot message */}
+                <div className="flex items-end gap-2 max-w-[85%] sm:max-w-[70%]">
+                    <div className="w-7 h-7 rounded-full bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary shrink-0 text-xs font-bold">
+                        CT
+                    </div>
+                    <div className="bg-surface-container-high border border-outline-variant rounded-2xl rounded-bl-sm px-4 py-2.5 text-on-surface shadow-sm">
+                        <p className="leading-relaxed">
+                            Olá! Bem-vindo ao ConvoTalk. Experimente a latência
+                            ultra-baixa com WebSockets em tempo real.
+                        </p>
+                        <div className="flex items-center justify-end mt-1 gap-1 text-[10px] text-on-surface-variant">
+                            <span>Agora</span>
                         </div>
                     </div>
+                </div>
 
-                    {/* Socket Messages */}
-                    {messages.map((msg) => {
-                        const mine = isMyMessage(msg.senderId);
-                        return (
+                {/* Socket Messages */}
+                {messages.map((msg) => {
+                    const mine = isMyMessage(msg.senderId);
+                    return (
+                        <div
+                            key={msg.id}
+                            className={`flex items-end gap-2 max-w-[85%] sm:max-w-[70%] ${
+                                mine
+                                    ? "self-end justify-end"
+                                    : "self-start justify-start"
+                            }`}
+                        >
+                            {!mine && <Avatar name={msg.name} size="xs" />}
                             <div
-                                key={msg.id}
-                                className={`flex items-end gap-2 max-w-[85%] sm:max-w-[70%] ${
-                                    mine ? "self-end justify-end" : "self-start justify-start"
+                                className={`px-4 py-2.5 rounded-2xl ${
+                                    mine
+                                        ? "bg-primary-container/25 border border-primary/40 rounded-br-sm text-on-surface backdrop-blur"
+                                        : "bg-surface-container-high border border-outline-variant rounded-bl-sm text-on-surface shadow-sm"
                                 }`}
                             >
                                 {!mine && (
-                                    <Avatar name={msg.name} size="xs" />
+                                    <p className="text-[10px] font-bold text-primary mb-0.5">
+                                        {msg.name}
+                                    </p>
                                 )}
+                                <p className="leading-relaxed">{msg.content}</p>
                                 <div
-                                    className={`px-4 py-2.5 rounded-2xl ${
+                                    className={`flex items-center gap-1.5 mt-1 text-[10px] ${
                                         mine
-                                            ? "bg-primary-container/25 border border-primary/40 rounded-br-sm text-on-surface backdrop-blur"
-                                            : "bg-surface-container-high border border-outline-variant rounded-bl-sm text-on-surface shadow-sm"
+                                            ? "justify-end text-primary"
+                                            : "justify-end text-on-surface-variant"
                                     }`}
                                 >
-                                    {!mine && (
-                                        <p className="text-[10px] font-bold text-primary mb-0.5">
-                                            {msg.name}
-                                        </p>
+                                    <span>{formatTime(msg.createdAt)}</span>
+                                    {mine && (
+                                        <span className="font-bold">✓✓</span>
                                     )}
-                                    <p className="leading-relaxed">{msg.content}</p>
-                                    <div
-                                        className={`flex items-center gap-1.5 mt-1 text-[10px] ${
-                                            mine ? "justify-end text-primary" : "justify-end text-on-surface-variant"
-                                        }`}
-                                    >
-                                        <span>{formatTime(msg.createdAt)}</span>
-                                        {mine && <span className="font-bold">✓✓</span>}
-                                    </div>
                                 </div>
                             </div>
-                        );
-                    })}
-
-                    {typingName && (
-                        <div className="flex items-center gap-2 text-[11px] text-on-surface-variant italic pt-1">
-                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-high border border-outline-variant">
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary bounce-1" />
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary bounce-2" />
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary bounce-3" />
-                            </div>
-                            <span>{typingName} está digitando...</span>
                         </div>
-                    )}
-                </div>
+                    );
+                })}
+
+                {typingName && (
+                    <div className="flex items-center gap-2 text-[11px] text-on-surface-variant italic pt-1">
+                        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-high border border-outline-variant">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary bounce-1" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary bounce-2" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary bounce-3" />
+                        </div>
+                        <span>{typingName} está digitando...</span>
+                    </div>
+                )}
+            </div>
 
             <div className="p-3 bg-surface-container-lowest/80 border-t border-outline-variant/30">
                 {error && (
@@ -327,7 +340,9 @@ export default function PreviewChat() {
                                 <span className="max-w-40 truncate text-on-surface/80 font-medium">
                                     {name}
                                 </span>
-                                <span className="material-symbols-outlined text-[13px] text-on-surface-variant">edit</span>
+                                <span className="material-symbols-outlined text-[13px] text-on-surface-variant">
+                                    edit
+                                </span>
                             </>
                         )}
                     </button>
@@ -343,9 +358,10 @@ export default function PreviewChat() {
                         {charCount}/{MAX_LENGTH}
                     </span>
                 </div>
-                <form onSubmit={handleSubmit} className="flex items-center gap-2">
-                    <button type="button" aria-label="Emoji" className="text-on-surface-variant hover:text-primary transition-colors text-sm px-1">😊</button>
-                    <button type="button" aria-label="Anexo" className="text-on-surface-variant hover:text-primary transition-colors text-sm px-1">📎</button>
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex items-center gap-2"
+                >
                     <input
                         type="text"
                         name="message"
@@ -365,7 +381,9 @@ export default function PreviewChat() {
                         aria-label="Enviar mensagem"
                         className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary text-xs shadow-lg shadow-primary/20 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed"
                     >
-                        <span className="material-symbols-outlined text-[16px]">send</span>
+                        <span className="material-symbols-outlined text-[16px]">
+                            send
+                        </span>
                     </button>
                 </form>
             </div>

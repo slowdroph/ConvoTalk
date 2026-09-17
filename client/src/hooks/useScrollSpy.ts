@@ -1,6 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const SECTIONS = ["recursos", "como-funciona", "seguranca"] as const;
+const SECTIONS = [
+    "recursos",
+    "como-funciona",
+    "seguranca",
+    "arquitetura",
+] as const;
 
 export type SectionId = (typeof SECTIONS)[number];
 
@@ -18,7 +23,9 @@ function getActiveSection(): SectionId | "" {
 
 export function useScrollSpy() {
     const [activeSection, setActiveSection] = useState<SectionId | "">("");
-    const [scrollY, setScrollY] = useState(0);
+    const [scrolled, setScrolled] = useState(false);
+    const [showBackToTop, setShowBackToTop] = useState(false);
+    const scrollYRef = useRef(0);
 
     useEffect(() => {
         let ticking = false;
@@ -27,8 +34,20 @@ export function useScrollSpy() {
             if (ticking) return;
             ticking = true;
             window.requestAnimationFrame(() => {
+                const y = window.scrollY;
+                scrollYRef.current = y;
+
                 setActiveSection(getActiveSection());
-                setScrollY(window.scrollY);
+
+                setScrolled((prev) => {
+                    const next = y > 40;
+                    return prev === next ? prev : next;
+                });
+                setShowBackToTop((prev) => {
+                    const next = y > 400;
+                    return prev === next ? prev : next;
+                });
+
                 ticking = false;
             });
         };
@@ -41,5 +60,5 @@ export function useScrollSpy() {
         };
     }, []);
 
-    return { activeSection, scrollY };
+    return { activeSection, scrollYRef, scrolled, showBackToTop };
 }

@@ -22,13 +22,13 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
         <nav
             className={`fixed top-0 left-0 w-full z-50 border-b transition-all duration-300 ${
                 scrolled
-                    ? "glass-card border-outline-variant/60 bg-[#0e150e]/90 shadow-lg shadow-black/30"
-                    : "glass-card border-outline-variant/40 bg-[#0e150e]/75"
+                    ? "glass-card border-outline-variant/60 bg-background/90 shadow-lg shadow-black/30"
+                    : "glass-card border-outline-variant/40 bg-background/75"
             }`}
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 {/* Brand */}
-                <a href="#" className="flex items-center gap-2 group">
+                <Link to="/" className="flex items-center gap-2 group">
                     <img
                         src="/convo_talk_logo.png"
                         alt="ConvoTalk"
@@ -37,7 +37,7 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                     <span className="text-xl font-bold text-primary tracking-tight font-hanken">
                         ConvoTalk
                     </span>
-                </a>
+                </Link>
 
                 {/* Nav Links */}
                 <div className="hidden md:flex items-center gap-7">
@@ -45,6 +45,9 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                         <a
                             key={link.id}
                             href={`#${link.id}`}
+                            aria-current={
+                                activeSection === link.id ? "true" : undefined
+                            }
                             className={`text-sm font-medium transition-colors ${
                                 activeSection === link.id
                                     ? "text-primary font-semibold"
@@ -74,7 +77,9 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                         type="button"
                         onClick={() => setMenuOpen((v) => !v)}
                         className="md:hidden p-2 -mr-2 text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
-                        aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+                        aria-label={
+                            menuOpen ? "Fechar menu" : "Abrir menu"
+                        }
                         aria-expanded={menuOpen}
                     >
                         <svg
@@ -106,13 +111,18 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
 
             {/* Mobile dropdown */}
             {menuOpen && (
-                <div className="md:hidden border-t border-outline-variant/40 bg-[#0e150e]/95 backdrop-blur-xl">
+                <div className="md:hidden border-t border-outline-variant/40 bg-background/95 backdrop-blur-xl">
                     <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-3">
                         {NAV_LINKS.map((link) => (
                             <a
                                 key={link.id}
                                 href={`#${link.id}`}
                                 onClick={handleNavClick}
+                                aria-current={
+                                    activeSection === link.id
+                                        ? "true"
+                                        : undefined
+                                }
                                 className={`text-sm font-medium py-1 transition-colors ${
                                     activeSection === link.id
                                         ? "text-primary font-semibold"
@@ -144,4 +154,3 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
         </nav>
     );
 }
-
