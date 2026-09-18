@@ -3,7 +3,6 @@ import { io, Socket } from "socket.io-client";
 import { SocketContext, type OnlineUser } from "../contexts/SocketContext";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
-import api from "../services/api";
 import { getAccessToken } from "../services/api";
 import { SOCKET_URL } from "../lib/apiUrl";
 
@@ -31,7 +30,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             randomizationFactor: 0.5,
         });
 
-        newSocket.on("connect", async () => {
+        newSocket.on("connect", () => {
             setConnected(true);
             setReconnecting(false);
             setReconnectAttempt(0);
@@ -43,14 +42,6 @@ export function SocketProvider({ children }: { children: ReactNode }) {
                 });
             }
             wasConnected.current = true;
-            try {
-                const { data } = await api.get("/rooms");
-                for (const room of data) {
-                    newSocket.emit("join", room._id);
-                }
-            } catch {
-                // ignore
-            }
         });
         newSocket.on("disconnect", (reason) => {
             setConnected(false);

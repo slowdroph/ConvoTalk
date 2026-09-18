@@ -113,7 +113,7 @@ function cleanupIpRateLimits(): void {
 
 setInterval(cleanupIpRateLimits, 60_000).unref();
 
-export function cleanupSocketRateLimits(socketId: string): void {
+export function cleanupSocketRateLimits(socketId: string, userId?: string): void {
     messageAttempts.delete(socketId);
     for (const [roomId, perRoom] of roomMessageAttempts) {
         perRoom.delete(socketId);
@@ -121,9 +121,11 @@ export function cleanupSocketRateLimits(socketId: string): void {
             roomMessageAttempts.delete(roomId);
         }
     }
-    for (const key of Array.from(typingThrottle.keys())) {
-        if (key.startsWith(`${socketId}:`)) {
-            typingThrottle.delete(key);
+    if (userId) {
+        for (const key of Array.from(typingThrottle.keys())) {
+            if (key.startsWith(`${userId}:`)) {
+                typingThrottle.delete(key);
+            }
         }
     }
 }

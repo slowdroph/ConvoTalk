@@ -2,7 +2,7 @@ import { Router } from "express";
 import auth from "../middleware/auth";
 import { validate } from "../middleware/validate";
 import { searchQuerySchema } from "../validations";
-import { searchUsers } from "../controllers/usersController";
+import { searchUsers } from "../controllers/userSearchController";
 
 const router = Router();
 

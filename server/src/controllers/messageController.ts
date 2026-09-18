@@ -1,16 +1,8 @@
 import { Response } from "express";
 import multer from "multer";
-import Message from "../models/Message";
-import Room from "../models/Room";
-import User from "../models/User";
-import ReadLog from "../models/ReadLog";
-import { AuthRequest } from "../middleware/auth";
+import * as messageService from "../services/message";
 import { objectId } from "../validations";
-import {
-    generateConversationPdf,
-    createConversationPdfWriter,
-} from "../services/export";
-import cloudinary from "../config/cloudinary";
+import { AuthRequest } from "../middleware/auth";
 import {
     ForbiddenError,
     NotFoundError,
@@ -19,7 +11,6 @@ import {
     sendError,
 } from "../utils/errors";
 import { logger } from "../config/logger";
-import { escapeRegex } from "../utils/regex";
 
 const ALLOWED_MIME_TYPES = [
     "image/jpeg",
@@ -64,69 +55,8 @@ export async function searchMessages(
             throw new ValidationError("Termo de busca é obrigatório.");
         }
 
-        const escaped = escapeRegex(q);
-        const messages = await Message.aggregate([
-            {
-                $lookup: {
-                    from: "rooms",
-                    localField: "room",
-                    foreignField: "_id",
-                    as: "room",
-                },
-            },
-            { $unwind: "$room" },
-            {
-                $match: {
-                    "room.participants": userId,
-                    deleted: { $ne: true },
-                    content: { $regex: escaped, $options: "i" },
-                },
-            },
-            { $sort: { createdAt: -1, _id: -1 } },
-            { $limit: Number(limit) || 20 },
-            {
-                $project: {
-                    content: 1,
-                    createdAt: 1,
-                    sender: 1,
-                    type: 1,
-                    room: {
-                        _id: "$room._id",
-                        name: "$room.name",
-                        type: "$room.type",
-                    },
-                },
-            },
-        ]);
-
-        const roomIds = [...new Set(messages.map((m) => m.room._id))];
-        const users = await User.find({
-            _id: { $in: messages.filter((m) => m.sender).map((m) => m.sender) },
-        })
-            .select("name avatar status")
-            .lean();
-        const userMap = new Map(users.map((u) => [u._id.toString(), u]));
-
-        const result = messages
-            .filter((m) => m.sender == null || userMap.has(m.sender.toString()))
-            .map((m) => ({
-                ...m,
-                sender: m.sender
-                    ? (userMap.get(m.sender.toString()) ?? null)
-                    : null,
-                room: {
-                    _id: m.room._id,
-                    name: m.room.name,
-                    type: m.room.type,
-                },
-            }))
-            .sort((a, b) => {
-                const aTime = new Date(a.createdAt).getTime();
-                const bTime = new Date(b.createdAt).getTime();
-                return bTime - aTime;
-            });
-
-        res.json({ messages: result, roomIds });
+        const result = await messageService.searchMessagesGlobally(q, userId, limit);
+        res.json(result);
     } catch (error) {
         handleError(error, res, "Erro ao buscar mensagens.");
     }
@@ -137,61 +67,21 @@ export async function searchRoomMessages(
     res: Response,
 ): Promise<void> {
     try {
-        const { roomId } = req.params;
+        const roomId = req.params.roomId as string;
         const { q, filter, limit } = req.query as unknown as {
             q: string;
             filter: "all" | "mentions";
             limit: number;
         };
 
-        const room = await Room.findById(roomId).select("participants").lean();
-        if (!room) {
-            throw new NotFoundError("Sala não encontrada.");
-        }
-
-        if (
-            !room.participants.some(
-                (p) => p.toString() === req.user!._id.toString(),
-            )
-        ) {
-            throw new ForbiddenError("Acesso negado.");
-        }
-
-        const userId = req.user!._id.toString();
-        let query: Record<string, unknown> = {
-            room: roomId,
-            deleted: { $ne: true },
-        };
-
-        if (filter === "mentions") {
-            query.mentions = userId;
-            if (q && q.trim()) {
-                const escaped = escapeRegex(q);
-                query.content = { $regex: escaped, $options: "i" };
-            }
-        } else {
-            if (!q || !q.trim()) {
-                throw new ValidationError("Termo de busca é obrigatório.");
-            }
-            const escaped = escapeRegex(q);
-            query.content = { $regex: escaped, $options: "i" };
-        }
-
-        const messages = await Message.find(query)
-            .sort({ createdAt: -1 })
-            .limit(limit ?? 20)
-            .populate("sender", "name avatar status")
-            .lean();
-
-        const result = messages
-            .filter((m) => m.sender != null)
-            .sort((a, b) => {
-                const aTime = new Date(a.createdAt).getTime();
-                const bTime = new Date(b.createdAt).getTime();
-                return aTime - bTime;
-            });
-
-        res.json({ messages: result });
+        const messages = await messageService.searchRoomMessages(
+            roomId,
+            q,
+            filter,
+            limit,
+            req.user!._id,
+        );
+        res.json({ messages });
     } catch (error) {
         handleError(error, res, "Erro ao buscar mensagens.");
     }
@@ -202,99 +92,8 @@ export async function exportRoom(
     res: Response,
 ): Promise<void> {
     try {
-        const { roomId } = req.params;
-        const parsedRoomId = objectId.safeParse(roomId);
-        if (!parsedRoomId.success) {
-            throw new ValidationError("Sala inválida.");
-        }
-
-        const room = await Room.findById(parsedRoomId.data)
-            .select("name type participants")
-            .lean();
-        if (!room) {
-            throw new NotFoundError("Sala não encontrada.");
-        }
-
-        if (
-            !room.participants.some(
-                (p) => p.toString() === req.user!._id.toString(),
-            )
-        ) {
-            throw new ForbiddenError("Acesso negado.");
-        }
-
-        const users = await User.find({ _id: { $in: room.participants } })
-            .select("name")
-            .lean();
-
-        const roomTitle =
-            room.type === "group" && room.name
-                ? room.name
-                : users
-                      .map((u) => u.name)
-                      .filter(Boolean)
-                      .join(" e ") || "Conversa";
-
-        const participantsLabel = `${users.length} participante${users.length === 1 ? "" : "s"}: ${users
-            .map((u) => u.name)
-            .join(", ")}`;
-
-        const messageCount = await Message.countDocuments({
-            room: parsedRoomId.data,
-        });
-
-        const safeTitle =
-            roomTitle
-                .replace(/[^\w\- ]+/g, "")
-                .replace(/\s+/g, "-")
-                .slice(0, 40) || "conversa";
-        const filename = `conversa-${safeTitle}-${new Date()
-            .toISOString()
-            .slice(0, 10)}.pdf`;
-
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader(
-            "Content-Disposition",
-            `attachment; filename="${filename}"`,
-        );
-
-        const { doc, writeMessage, end } = createConversationPdfWriter({
-            roomTitle,
-            participantsLabel,
-            messageCount,
-            exportedAt: new Date(),
-        });
-        doc.pipe(res);
-
-        const BATCH = 500;
-        let lastId: string | null = null;
-        for (;;) {
-            const query: Record<string, unknown> = { room: parsedRoomId.data };
-            if (lastId) query._id = { $gt: lastId };
-            const messages = await Message.find(query)
-                .sort({ _id: 1 })
-                .limit(BATCH)
-                .populate("sender", "name avatar status")
-                .lean();
-
-            if (messages.length === 0) break;
-
-            for (const m of messages) {
-                if (!m.sender) continue;
-                writeMessage({
-                    senderName: (m.sender as unknown as { name: string }).name,
-                    content: m.content,
-                    createdAt: m.createdAt,
-                    deleted: m.deleted,
-                });
-            }
-            lastId = (
-                messages[messages.length - 1] as unknown as {
-                    _id: { toString(): string };
-                }
-            )._id.toString();
-        }
-        end();
+        const roomId = req.params.roomId as string;
+        await messageService.exportRoomToPdf(roomId, req.user!._id, res);
     } catch (error) {
         if (!res.headersSent) {
             handleError(error, res, "Erro ao exportar a conversa.");
@@ -315,57 +114,17 @@ export async function uploadAttachments(
     res: Response,
 ): Promise<void> {
     try {
-        const { roomId } = req.params;
-        const parsedRoomId = objectId.safeParse(roomId);
-        if (!parsedRoomId.success) {
-            throw new ValidationError("Sala inválida.");
-        }
-
-        const room = await Room.findById(parsedRoomId.data)
-            .select("participants")
-            .lean();
-        if (!room) {
-            throw new NotFoundError("Sala não encontrada.");
-        }
-
-        if (
-            !room.participants.some(
-                (p) => p.toString() === req.user!._id.toString(),
-            )
-        ) {
-            throw new ForbiddenError("Acesso negado.");
-        }
-
+        const roomId = req.params.roomId as string;
         const files = req.files as Express.Multer.File[] | undefined;
         if (!files || files.length === 0) {
             throw new ValidationError("Nenhum arquivo enviado.");
         }
 
-        const uploaded: {
-            url: string;
-            filename: string;
-            mimetype: string;
-            size: number;
-            publicId: string;
-        }[] = [];
-        for (const file of files) {
-            const b64 = Buffer.from(file.buffer).toString("base64");
-            const dataURI = `data:${file.mimetype};base64,${b64}`;
-            const result = await cloudinary.uploader.upload(dataURI, {
-                folder: "chat_app_attachments",
-                resource_type: file.mimetype.startsWith("image/")
-                    ? "image"
-                    : "raw",
-            });
-            uploaded.push({
-                url: result.secure_url,
-                publicId: result.public_id,
-                filename: file.originalname,
-                mimetype: file.mimetype,
-                size: file.size,
-            });
-        }
-
+        const uploaded = await messageService.uploadAttachments(
+            roomId,
+            req.user!._id,
+            files,
+        );
         res.status(201).json({ files: uploaded });
     } catch (error) {
         if (error instanceof multer.MulterError) {
@@ -386,51 +145,19 @@ export async function getThreadMessages(
     res: Response,
 ): Promise<void> {
     try {
-        const { roomId, messageId } = req.params;
+        const roomId = req.params.roomId as string;
+        const messageId = req.params.messageId as string;
         const parsedRoomId = objectId.safeParse(roomId);
         const parsedMessageId = objectId.safeParse(messageId);
         if (!parsedRoomId.success || !parsedMessageId.success) {
             throw new ValidationError("Parâmetros inválidos.");
         }
 
-        const room = await Room.findById(parsedRoomId.data)
-            .select("participants")
-            .lean();
-        if (!room) {
-            throw new NotFoundError("Sala não encontrada.");
-        }
-
-        if (
-            !room.participants.some(
-                (p) => p.toString() === req.user!._id.toString(),
-            )
-        ) {
-            throw new ForbiddenError("Acesso negado.");
-        }
-
-        const parent = await Message.findOne({
-            _id: parsedMessageId.data,
-            room: parsedRoomId.data,
-        }).lean();
-        if (!parent) {
-            throw new NotFoundError("Mensagem não encontrada.");
-        }
-
-        const replies = await Message.find({
-            parentMessage: parsedMessageId.data,
-            room: parsedRoomId.data,
-            deleted: { $ne: true },
-            deletedFor: { $ne: req.user!._id },
-        })
-            .sort({ createdAt: 1, _id: 1 })
-            .populate("sender", "name avatar status")
-            .populate({
-                path: "parentMessage",
-                select: "sender content attachments deleted",
-                populate: { path: "sender", select: "name avatar status" },
-            })
-            .lean();
-
+        const replies = await messageService.getThreadReplies(
+            parsedRoomId.data,
+            parsedMessageId.data,
+            req.user!._id,
+        );
         res.json({ replies });
     } catch (error) {
         handleError(error, res, "Erro ao buscar respostas.");
@@ -442,60 +169,19 @@ export async function getRoomMessages(
     res: Response,
 ): Promise<void> {
     try {
-        const { roomId } = req.params;
+        const roomId = req.params.roomId as string;
         const { limit, before, beforeId } = req.query as unknown as {
             limit: number;
             before?: string;
             beforeId?: string;
         };
 
-        const room = await Room.findById(roomId)
-            .select("type participants")
-            .lean();
-        if (!room) {
-            throw new NotFoundError("Sala não encontrada.");
-        }
-
-        if (
-            !room.participants.some(
-                (p) => p.toString() === req.user!._id.toString(),
-            )
-        ) {
-            throw new ForbiddenError("Acesso negado.");
-        }
-
-        const query: Record<string, unknown> = {
-            room: roomId,
-            deletedFor: { $ne: req.user!._id },
-        };
-        if (before) {
-            if (beforeId) {
-                query.$or = [
-                    { createdAt: { $lt: new Date(before) } },
-                    { createdAt: new Date(before), _id: { $lt: beforeId } },
-                ];
-            } else {
-                query.createdAt = { $lt: new Date(before) };
-            }
-        }
-
-        const safeLimit = Number(limit) || 50;
-
-        const messages = await Message.find(query)
-            .sort({ createdAt: -1, _id: -1 })
-            .limit(safeLimit + 1)
-            .populate("sender", "name avatar status")
-            .populate({
-                path: "parentMessage",
-                select: "sender content attachments deleted",
-                populate: { path: "sender", select: "name avatar status" },
-            })
-            .lean();
-
-        const hasMore = messages.length > safeLimit;
-        const result = messages.slice(0, safeLimit).reverse();
-
-        res.json({ messages: result, hasMore });
+        const result = await messageService.getRoomMessages(
+            roomId,
+            req.user!._id,
+            { limit, before, beforeId },
+        );
+        res.json(result);
     } catch (error) {
         handleError(error, res, "Erro ao buscar mensagens.");
     }
@@ -506,7 +192,7 @@ export async function getMessageReadDetails(
     res: Response,
 ): Promise<void> {
     try {
-        const { messageId } = req.params;
+        const messageId = req.params.messageId as string;
         const userId = req.user!._id;
 
         const parsed = objectId.safeParse(messageId);
@@ -515,41 +201,10 @@ export async function getMessageReadDetails(
             return;
         }
 
-        const message = await Message.findById(parsed.data).lean();
-        if (!message) {
-            throw new NotFoundError("Mensagem não encontrada.");
-        }
-
-        const room = await Room.findById(message.room)
-            .select("participants")
-            .lean();
-        if (!room) {
-            throw new NotFoundError("Sala não encontrada.");
-        }
-
-        const isParticipant = room.participants.some(
-            (p) => p.toString() === userId,
+        const readDetails = await messageService.getMessageReadDetails(
+            parsed.data,
+            userId,
         );
-        if (!isParticipant) {
-            throw new ForbiddenError("Você não tem acesso a esta mensagem.");
-        }
-
-        const readLogs = await ReadLog.find({ messageId: parsed.data })
-            .populate("userId", "name avatar")
-            .sort({ readAt: -1 })
-            .lean();
-
-        const readDetails = readLogs.map((log) => {
-            const user = log.userId as unknown as { _id?: { toString(): string }; name?: string; avatar?: string };
-            return {
-                userId: user._id?.toString() || (log.userId as unknown as { toString(): string }).toString(),
-                name: user.name || "Usuário",
-                avatar: user.avatar || "",
-                readAt: log.readAt.toISOString(),
-                sessionId: log.sessionId.toString(),
-            };
-        });
-
         res.json({ readDetails });
     } catch (error) {
         handleError(error, res, "Erro ao buscar detalhes de leitura.");
