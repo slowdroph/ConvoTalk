@@ -2,7 +2,7 @@
 
 Full-stack real-time chat application built with the MERN stack, Socket.IO and WebRTC.
 
-[![CI]](https://github.com/slowdroph/chat-app/actions/workflows/ci.yml)
+[![CI](https://github.com/slowdroph/chat-app/actions/workflows/ci.yml/badge.svg)](https://github.com/slowdroph/chat-app/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white)
@@ -91,15 +91,147 @@ ConvoTalk is a production-grade chat platform featuring real-time messaging with
 | Testing | Vitest, Supertest, MongoDB Memory Server, Playwright |
 | Infrastructure | Docker, Docker Compose, Nginx, GitHub Actions CI |
 
-## Architecture
+## Prerequisites
 
-```text
-├── client/   React SPA (Vite + TypeScript + Tailwind CSS v4)
-├── server/   REST API + Socket.IO + WebRTC signaling (Express + TypeScript)
-└── shared/   Type contracts shared between client and server
+- [Node.js](https://nodejs.org/) 22+
+- [MongoDB](https://www.mongodb.com/) 7+ (local instance or [MongoDB Atlas](https://www.mongodb.com/atlas))
+- [npm](https://www.npmjs.com/) (comes with Node)
+- [Docker](https://www.docker.com/) and Docker Compose (optional, for containerized setup)
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/slowdroph/chat-app.git
+cd chat-app
 ```
 
-Message flow:
+### 2. Install dependencies
+
+```bash
+# Client
+cd client && npm install
+
+# Server
+cd ../server && npm install
+```
+
+### 3. Configure environment variables
+
+```bash
+cd server
+cp .env.example .env
+```
+
+Edit `server/.env` with your own values. See [Environment Variables](#environment-variables) for the full reference.
+
+At minimum, set:
+
+```
+MONGO_URI=mongodb://localhost:27017/convotalk
+JWT_SECRET=<any-random-string-32-chars-min>
+REFRESH_TOKEN_SECRET=<different-random-string>
+CLIENT_URL=http://localhost:5173
+```
+
+### 4. Run the application
+
+#### Option A: Docker Compose (recommended)
+
+```bash
+docker compose up
+```
+
+This starts MongoDB, the API server and the Nginx-served client. The client will be available at `http://localhost:8080`.
+
+#### Option B: Manual (development)
+
+In two separate terminals:
+
+```bash
+# Terminal 1 — Server (API + Socket.IO)
+cd server
+npm run dev
+# Runs on http://localhost:3001
+
+# Terminal 2 — Client (Vite dev server)
+cd client
+npm run dev
+# Runs on http://localhost:5173
+```
+
+The Vite dev server automatically proxies `/api` and `/socket.io` requests to the backend.
+
+## Environment Variables
+
+All server environment variables are defined in `server/.env.example`. The server validates required variables at startup and will refuse to start if they are missing.
+
+### Required
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/convotalk` |
+| `JWT_SECRET` | Secret for signing access tokens (min 32 chars in production) | `your-secure-random-string` |
+| `REFRESH_TOKEN_SECRET` | Secret for refresh tokens (must differ from `JWT_SECRET` in production) | `your-refresh-secret` |
+| `CLIENT_URL` | Frontend URL for CORS and email links | `http://localhost:5173` |
+
+### Optional
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `PORT` | Server listening port | `3001` |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name (enables image uploads) | — |
+| `CLOUDINARY_API_KEY` | Cloudinary API key | — |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret | — |
+| `RESEND_API_KEY` | Resend API key (enables email verification and password reset) | — |
+| `VAPID_PUBLIC_KEY` | Web Push public key (enables push notifications) | — |
+| `VAPID_PRIVATE_KEY` | Web Push private key | — |
+| `VAPID_SUBJECT` | Web Push subject | `mailto:admin@convotalk.com` |
+| `COOKIE_SECURE` | Set secure flag on cookies | `false` |
+| `COOKIE_SAMESITE` | SameSite cookie policy | `lax` |
+| `CORS_ORIGINS` | Extra CORS origins (comma-separated) | — |
+| `EMAIL_FROM` | Sender email address for Resend | `ConvoTalk <noreply@convotalk.live>` |
+| `LOG_LEVEL` | Pino log level (`trace`, `debug`, `info`, `warn`, `error`, `fatal`) | `info` |
+
+## Project Structure
+
+```text
+├── client/              React SPA (Vite + TypeScript + Tailwind CSS v4)
+│   ├── src/
+│   │   ├── components/  UI components (Auth, Chat, Home, Settings, Sidebar, Skeletons, ui)
+│   │   ├── contexts/    React contexts (Auth, Socket, Theme, Toast)
+│   │   ├── hooks/       Custom hooks (useAuth, useChatSocket, useWebRTC, etc.)
+│   │   ├── lib/         Utilities (API URL builder, IndexedDB offline storage)
+│   │   ├── pages/       Route pages (Chat, Home, Login, Settings, etc.)
+│   │   ├── providers/   Context providers
+│   │   ├── services/    API client and push notification service
+│   │   ├── types/       Re-exports from @shared/types
+│   │   └── utils/       Formatting, error handling, sounds
+│   ├── e2e/             Playwright end-to-end tests
+│   └── public/          Static assets, manifest, service worker
+│
+├── server/              REST API + Socket.IO + WebRTC signaling (Express + TypeScript)
+│   └── src/
+│       ├── config/      Environment validation, database, Cloudinary, logger
+│       ├── controllers/ Request handlers
+│       ├── middleware/   Auth, rate limiting, validation, error handling, uploads
+│       ├── models/      Mongoose schemas (User, Room, Message, Session, ReadLog, PushSubscription)
+│       ├── routes/      Express route definitions
+│       ├── services/    Business logic (auth, messages, rooms, export, email, etc.)
+│       ├── socket/      Socket.IO event handlers (messaging, typing, read, pin, WebRTC)
+│       ├── utils/       Audit logging, SSRF protection, regex, room auth
+│       └── validations/ Zod schemas for REST and Socket.IO payloads
+│
+├── shared/              Type contracts and utilities shared between client and server
+│   ├── types.ts         API payloads, socket events, database entities
+│   └── mentions.ts      Mention token parsing
+│
+├── design/              UI mockups (HTML + PNG)
+└── docker-compose.yml   Local orchestration (MongoDB + Server + Client)
+```
+
+## Architecture
 
 ```text
 Client → Socket.IO event → auth middleware → Zod validation
@@ -109,9 +241,73 @@ Client → Socket.IO event → auth middleware → Zod validation
 
 Messages are persisted before broadcast, ordered by database timestamps, and deduplicated through a unique index on `(senderId, clientMessageId)`.
 
+The client and server share type contracts via `@shared/*` path alias, ensuring type safety across the entire stack without duplication.
+
+## Development
+
+### Available Scripts
+
+| Location | Command | Description |
+| --- | --- | --- |
+| Root | `npm run client` | Start the client dev server |
+| Root | `npm run server` | Start the server dev server |
+| Client | `npm run dev` | Start Vite dev server (port 5173) |
+| Client | `npm run build` | Type-check and build for production |
+| Client | `npm run lint` | Run ESLint |
+| Client | `npm run preview` | Preview the production build |
+| Server | `npm run dev` | Start server with nodemon (auto-reload) |
+| Server | `npm run build` | Compile TypeScript |
+| Server | `npm run start` | Run the compiled server |
+
+### Code Quality
+
+- **TypeScript** strict mode on both client and server
+- **ESLint** for the client (flat config)
+- **Zod** validation on every REST endpoint and Socket.IO event
+
+## Testing
+
+### Unit & Integration Tests
+
+The project uses [Vitest](https://vitest.dev/) on both client and server.
+
+```bash
+# Server tests (integration tests with MongoDB Memory Server)
+cd server
+npm test
+
+# Client tests (component and hook tests with jsdom)
+cd client
+npm test
+
+# With coverage
+cd client
+npx vitest run --coverage
+```
+
+### End-to-End Tests
+
+E2E tests use [Playwright](https://playwright.dev/) with Chromium.
+
+```bash
+cd client
+npx playwright install --with-deps chromium
+npx playwright test
+```
+
+Playwright auto-starts the server (port 3100) and the Vite dev server (port 5174) before running tests.
+
+### CI Pipeline
+
+The GitHub Actions CI workflow (`.github/workflows/ci.yml`) runs three jobs on push/PR to `main`:
+
+1. **Server** — install, build, test (with MongoDB 7 service)
+2. **Client** — install, lint, build, test with coverage
+3. **E2E** — install both, Playwright tests
+
 ## API Reference
 
-Summary of the main REST endpoints (all authenticated routes require a Bearer access token):
+All authenticated routes require a Bearer access token in the `Authorization` header.
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
@@ -136,12 +332,12 @@ Real-time communication runs over Socket.IO with explicit event names (`message`
 
 The project ships with deployment configurations for multiple platforms:
 
-- **Docker Compose** — local orchestration of MongoDB, the API server and the Nginx-served client
+- **Docker Compose** — local orchestration of MongoDB, the API server and the Nginx-served client (`docker-compose.yml`, `server/Dockerfile`, `client/Dockerfile`)
 - **Railway** — backend deployment via Nixpacks (`railway.json`, `nixpacks.toml`)
-- **Netlify** — frontend hosting with API/WebSocket proxying (`netlify.toml`)
-- **GitHub Actions** — CI pipeline running server tests, client lint/build/tests and Playwright end-to-end tests
+- **Netlify** — frontend hosting with API/WebSocket proxying (`client/netlify.toml`)
+- **GitHub Actions** — CI pipeline running server tests, client lint/build/tests and Playwright end-to-end tests (`.github/workflows/ci.yml`)
 
-Both Dockerfiles are multi-stage builds running as non-root users; the production Nginx image handles SPA fallback, gzip, API proxying and WebSocket upgrades.
+Both Dockerfiles are multi-stage builds running as non-root users. The production Nginx image handles SPA fallback, gzip, API proxying and WebSocket upgrades.
 
 ## Security
 
@@ -155,6 +351,22 @@ Both Dockerfiles are multi-stage builds running as non-root users; the productio
 - Structured audit logging for authentication, moderation and account actions
 - Startup validation of environment variables (secret length, URL formats)
 - Upload restrictions by MIME type and size
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Make your changes following the existing code conventions
+4. Run lint and tests before committing:
+   ```bash
+   # Client
+   cd client && npm run lint && npm test
+
+   # Server
+   cd server && npm test
+   ```
+5. Commit with a descriptive message
+6. Push to your fork and open a Pull Request against `main`
 
 ## License
 
