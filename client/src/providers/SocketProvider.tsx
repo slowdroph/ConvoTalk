@@ -1,4 +1,11 @@
-import { useState, useEffect, useMemo, useRef, type ReactNode } from "react";
+import {
+    useState,
+    useEffect,
+    useMemo,
+    useRef,
+    useSyncExternalStore,
+    type ReactNode,
+} from "react";
 import { io, Socket } from "socket.io-client";
 import { SocketContext, type OnlineUser } from "../contexts/SocketContext";
 import { useAuth } from "../hooks/useAuth";
@@ -6,16 +13,35 @@ import { useToast } from "../contexts/ToastContext";
 import { getAccessToken } from "../services/api";
 import { SOCKET_URL } from "../lib/apiUrl";
 
+let currentSocket: Socket | null = null;
+let socketListeners: Array<() => void> = [];
+
+function emitSocketChange() {
+    for (const listener of socketListeners) listener();
+}
+
+function subscribeSocket(cb: () => void) {
+    socketListeners = [...socketListeners, cb];
+    return () => {
+        socketListeners = socketListeners.filter((l) => l !== cb);
+    };
+}
+
+function getSocketSnapshot() {
+    return currentSocket;
+}
+
 export function SocketProvider({ children }: { children: ReactNode }) {
     const { token, logout } = useAuth();
     const { showToast } = useToast();
-    const [socket, setSocket] = useState<Socket | null>(null);
     const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
     const [connected, setConnected] = useState(false);
     const [reconnecting, setReconnecting] = useState(false);
     const [reconnectAttempt, setReconnectAttempt] = useState(0);
     const [hasConnectedOnce, setHasConnectedOnce] = useState(false);
     const wasConnected = useRef(false);
+
+    const socket = useSyncExternalStore(subscribeSocket, getSocketSnapshot);
 
     useEffect(() => {
         if (!token) return;
@@ -86,11 +112,13 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             logout();
         });
 
-        setSocket(newSocket);
+        currentSocket = newSocket;
+        emitSocketChange();
 
         return () => {
             newSocket.disconnect();
-            setSocket(null);
+            currentSocket = null;
+            emitSocketChange();
             setConnected(false);
             setReconnecting(false);
             setReconnectAttempt(0);

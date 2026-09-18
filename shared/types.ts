@@ -166,6 +166,13 @@ export interface CallSignalPayload {
     payload: unknown;
 }
 
+export interface TurnCredentialsResponse {
+    urls: string[];
+    username: string;
+    credential: string;
+    ttl: number;
+}
+
 export interface LinkPreview {
     url: string;
     title: string;

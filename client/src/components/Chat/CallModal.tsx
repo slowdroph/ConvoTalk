@@ -1,6 +1,27 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CallPhase, CallType } from "../../hooks/useWebRTC";
 import Avatar from "../ui/Avatar";
+
+function CallDuration({ startTime }: { startTime: number }) {
+    const [elapsed, setElapsed] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setElapsed(Math.floor((Date.now() - startTime) / 1000));
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [startTime]);
+
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    const pad = (n: number) => n.toString().padStart(2, "0");
+
+    return (
+        <span className="text-noir-text-muted text-sm">
+            {pad(minutes)}:{pad(seconds)}
+        </span>
+    );
+}
 
 function VideoView({
     stream,
@@ -66,11 +87,14 @@ interface CallModalProps {
     callType: CallType;
     remoteName: string;
     remoteAvatar?: string;
+    localName?: string;
+    localAvatar?: string;
     localStream: MediaStream | null;
     remoteStream: MediaStream | null;
     muted: boolean;
     cameraOff: boolean;
     isOtherOnline: boolean;
+    callStartTime: number | null;
     onAccept: () => void;
     onReject: () => void;
     onEnd: () => void;
@@ -83,11 +107,14 @@ export default function CallModal({
     callType,
     remoteName,
     remoteAvatar,
+    localName,
+    localAvatar,
     localStream,
     remoteStream,
     muted,
     cameraOff,
     isOtherOnline,
+    callStartTime,
     onAccept,
     onReject,
     onEnd,
@@ -98,11 +125,12 @@ export default function CallModal({
 
     const isVideo = callType === "video";
     const hasRemote = Boolean(remoteStream);
+    const isConnected = phase === "active" || phase === "connecting";
 
     return (
         <div className="fixed inset-x-0 top-0 z-50 h-dvh-fallback bg-noir-base/95 flex flex-col">
             {/* Video remote */}
-            {phase === "active" && isVideo ? (
+            {isConnected && isVideo ? (
                 <div className="flex-1 relative bg-black">
                     {hasRemote ? (
                         <VideoView
@@ -134,8 +162,8 @@ export default function CallModal({
                         ) : (
                             <div className="w-full h-full bg-noir-surface-alt flex items-center justify-center">
                                 <Avatar
-                                    src={remoteAvatar}
-                                    name={remoteName}
+                                    src={localAvatar}
+                                    name={localName ?? "Você"}
                                     size="sm"
                                 />
                             </div>
@@ -162,13 +190,21 @@ export default function CallModal({
                                     : "Usuário indisponível no momento"}
                             </p>
                         )}
+                        {phase === "connecting" && (
+                            <p className="text-noir-text-muted text-sm mt-1">
+                                Conectando...
+                            </p>
+                        )}
                         {phase === "active" && (
                             <p className="text-noir-text-muted text-sm mt-1">
-                                Em chamada
+                                Em chamada{" "}
+                                {callStartTime && (
+                                    <CallDuration startTime={callStartTime} />
+                                )}
                             </p>
                         )}
                     </div>
-                    {phase === "active" && !isVideo && (
+                    {isConnected && !isVideo && (
                         <div className="flex items-end gap-1 h-12" aria-hidden>
                             {Array.from({ length: 18 }).map((_, i) => (
                                 <span
@@ -232,7 +268,7 @@ export default function CallModal({
                     </>
                 ) : (
                     <>
-                        {phase === "active" && (
+                        {isConnected && (
                             <>
                                 <ControlButton
                                     onClick={onToggleMute}
@@ -331,7 +367,7 @@ export default function CallModal({
                             </>
                         )}
                         <ControlButton
-                            onClick={phase === "outgoing" ? onEnd : onEnd}
+                            onClick={onEnd}
                             danger
                             label="Encerrar"
                         >

@@ -528,11 +528,14 @@ export default function ChatWindow({
                 callType={webrtc.callType}
                 remoteName={displayName}
                 remoteAvatar={otherUser?.avatar}
+                localName={user?.name}
+                localAvatar={user?.avatar}
                 localStream={webrtc.localStream}
                 remoteStream={webrtc.remoteStream}
                 muted={webrtc.muted}
                 cameraOff={webrtc.cameraOff}
                 isOtherOnline={isOtherOnline}
+                callStartTime={webrtc.callStartTime}
                 onAccept={webrtc.acceptCall}
                 onReject={webrtc.rejectCall}
                 onEnd={webrtc.endCall}

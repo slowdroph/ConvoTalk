@@ -8,6 +8,7 @@ import {
     socketWebRtcSignalSchema,
     safeParse,
 } from "../validations/socket";
+import { getUserSocketIds } from "./onlineUsers";
 
 interface ActiveCall {
     callId: string;
@@ -18,6 +19,8 @@ interface ActiveCall {
 }
 
 const calls = new Map<string, ActiveCall>();
+const disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const DISCONNECT_GRACE_MS = 7_000;
 
 function isParticipant(
     room: { participants: unknown[] } | null,
@@ -41,6 +44,16 @@ function removeCall(callId: string): void {
 const webrtcHandler = (io: SocketIOServer): void => {
     io.on("connection", (socket: Socket) => {
         const userId = socket.userId!;
+
+        for (const [callId, call] of Array.from(calls.entries())) {
+            if (call.callerId === userId || call.calleeId === userId) {
+                const timer = disconnectTimers.get(callId);
+                if (timer) {
+                    clearTimeout(timer);
+                    disconnectTimers.delete(callId);
+                }
+            }
+        }
 
         socket.on(
             "call:initiate",
@@ -71,6 +84,11 @@ const webrtcHandler = (io: SocketIOServer): void => {
                             ack({ error: "Você já está em uma chamada." });
                         return;
                     }
+                    if (isInCall(calleeId)) {
+                        if (typeof ack === "function")
+                            ack({ error: "O usuário já está em outra chamada." });
+                        return;
+                    }
 
                     const room = await Room.findById(roomId)
                         .select("type participants")
@@ -98,12 +116,17 @@ const webrtcHandler = (io: SocketIOServer): void => {
                     };
                     calls.set(call.callId, call);
 
-                    io.to(roomId).except(socket.id).emit("call:incoming", {
-                        callId: call.callId,
-                        roomId,
-                        callerId: userId,
-                        callType,
-                    });
+                    const calleeSocketIds = getUserSocketIds(calleeId);
+                    if (calleeSocketIds) {
+                        for (const socketId of calleeSocketIds) {
+                            io.to(socketId).emit("call:incoming", {
+                                callId: call.callId,
+                                roomId,
+                                callerId: userId,
+                                callType,
+                            });
+                        }
+                    }
 
                     if (typeof ack === "function") ack({ callId: call.callId });
                 } catch {
@@ -166,6 +189,11 @@ const webrtcHandler = (io: SocketIOServer): void => {
                     if (call.calleeId !== calleeId || calleeId !== userId)
                         return;
                     removeCall(callId);
+                    const rejectTimer = disconnectTimers.get(callId);
+                    if (rejectTimer) {
+                        clearTimeout(rejectTimer);
+                        disconnectTimers.delete(callId);
+                    }
                     io.to(call.roomId).except(socket.id).emit("call:rejected", {
                         callId,
                         roomId: call.roomId,
@@ -192,6 +220,11 @@ const webrtcHandler = (io: SocketIOServer): void => {
                     if (call.callerId !== userId && call.calleeId !== userId)
                         return;
                     removeCall(callId);
+                    const endTimer = disconnectTimers.get(callId);
+                    if (endTimer) {
+                        clearTimeout(endTimer);
+                        disconnectTimers.delete(callId);
+                    }
                     io.to(call.roomId).emit("call:ended", {
                         callId,
                         roomId: call.roomId,
@@ -252,13 +285,25 @@ const webrtcHandler = (io: SocketIOServer): void => {
         handleSignal("webrtc:ice-candidate");
 
         socket.on("disconnect", () => {
+            const remainingSockets = getUserSocketIds(userId);
+            const hasOtherSockets =
+                remainingSockets && remainingSockets.size > 0;
+
             for (const [callId, call] of Array.from(calls.entries())) {
                 if (call.callerId === userId || call.calleeId === userId) {
-                    removeCall(callId);
-                    io.to(call.roomId).emit("call:ended", {
-                        callId,
-                        roomId: call.roomId,
-                    });
+                    if (hasOtherSockets) continue;
+                    const timer = setTimeout(() => {
+                        disconnectTimers.delete(callId);
+                        const currentCall = calls.get(callId);
+                        if (currentCall) {
+                            removeCall(callId);
+                            io.to(currentCall.roomId).emit("call:ended", {
+                                callId,
+                                roomId: currentCall.roomId,
+                            });
+                        }
+                    }, DISCONNECT_GRACE_MS);
+                    disconnectTimers.set(callId, timer);
                 }
             }
         });

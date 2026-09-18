@@ -133,10 +133,23 @@ export const socketCallEndSchema = z.object({
     callId: z.string().trim().min(1).max(64),
 });
 
+const sdpPayloadSchema = z.union([
+    z.object({
+        type: z.enum(["offer", "answer"]),
+        sdp: z.string().min(1).max(65536),
+    }),
+    z.object({
+        candidate: z.string().min(1).max(4096),
+        sdpMid: z.string().max(256).optional(),
+        sdpMLineIndex: z.number().int().min(0).max(65535).optional(),
+        usernameFragment: z.string().optional(),
+    }),
+]);
+
 export const socketWebRtcSignalSchema = z.object({
     callId: z.string().trim().min(1).max(64),
     targetId: objectId,
-    payload: z.unknown(),
+    payload: sdpPayloadSchema,
 });
 
 export function safeParse<T extends z.ZodTypeAny>(
