@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Message from "../models/Message";
 import Room from "../models/Room";
 import User from "../models/User";
@@ -39,6 +40,7 @@ export async function searchMessagesGlobally(
     limit?: number,
 ) {
     const escaped = escapeRegex(query);
+    const userObjectId = new mongoose.Types.ObjectId(userId);
     const messages = await Message.aggregate([
         {
             $lookup: {
@@ -51,7 +53,7 @@ export async function searchMessagesGlobally(
         { $unwind: "$room" },
         {
             $match: {
-                "room.participants": userId,
+                "room.participants": userObjectId,
                 deleted: { $ne: true },
                 content: { $regex: escaped, $options: "i" },
             },
