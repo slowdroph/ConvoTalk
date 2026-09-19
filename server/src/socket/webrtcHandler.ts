@@ -41,6 +41,19 @@ function removeCall(callId: string): void {
     calls.delete(callId);
 }
 
+function emitToUser(
+    io: SocketIOServer,
+    userId: string,
+    event: string,
+    data: unknown,
+): void {
+    const socketIds = getUserSocketIds(userId);
+    if (!socketIds) return;
+    for (const socketId of socketIds) {
+        io.to(socketId).emit(event, data);
+    }
+}
+
 const webrtcHandler = (io: SocketIOServer): void => {
     io.on("connection", (socket: Socket) => {
         const userId = socket.userId!;
@@ -160,7 +173,7 @@ const webrtcHandler = (io: SocketIOServer): void => {
                             ack({ error: "Chamada não encontrada." });
                         return;
                     }
-                    io.to(call.roomId).except(socket.id).emit("call:accepted", {
+                    emitToUser(io, call.callerId, "call:accepted", {
                         callId,
                         calleeId,
                         callType: call.callType,
@@ -194,7 +207,7 @@ const webrtcHandler = (io: SocketIOServer): void => {
                         clearTimeout(rejectTimer);
                         disconnectTimers.delete(callId);
                     }
-                    io.to(call.roomId).except(socket.id).emit("call:rejected", {
+                    emitToUser(io, call.callerId, "call:rejected", {
                         callId,
                         roomId: call.roomId,
                     });
@@ -225,10 +238,9 @@ const webrtcHandler = (io: SocketIOServer): void => {
                         clearTimeout(endTimer);
                         disconnectTimers.delete(callId);
                     }
-                    io.to(call.roomId).emit("call:ended", {
-                        callId,
-                        roomId: call.roomId,
-                    });
+                    const endedData = { callId, roomId: call.roomId };
+                    emitToUser(io, call.callerId, "call:ended", endedData);
+                    emitToUser(io, call.calleeId, "call:ended", endedData);
                     if (typeof ack === "function") ack({});
                 } catch {
                     // silencioso
@@ -265,14 +277,12 @@ const webrtcHandler = (io: SocketIOServer): void => {
                             : call.callerId;
                         if (targetId !== expectedTarget) return;
 
-                        io.to(call.roomId)
-                            .except(socket.id)
-                            .emit(event, {
-                                callId,
-                                roomId: call.roomId,
-                                from: userId,
-                                payload,
-                            });
+                        emitToUser(io, targetId, event, {
+                            callId,
+                            roomId: call.roomId,
+                            from: userId,
+                            payload,
+                        });
                     } catch {
                         // silencioso
                     }
@@ -297,10 +307,16 @@ const webrtcHandler = (io: SocketIOServer): void => {
                         const currentCall = calls.get(callId);
                         if (currentCall) {
                             removeCall(callId);
-                            io.to(currentCall.roomId).emit("call:ended", {
-                                callId,
-                                roomId: currentCall.roomId,
-                            });
+                            const otherUserId =
+                                currentCall.callerId === userId
+                                    ? currentCall.calleeId
+                                    : currentCall.callerId;
+                            emitToUser(
+                                io,
+                                otherUserId,
+                                "call:ended",
+                                { callId, roomId: currentCall.roomId },
+                            );
                         }
                     }, DISCONNECT_GRACE_MS);
                     disconnectTimers.set(callId, timer);

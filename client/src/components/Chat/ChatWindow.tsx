@@ -9,7 +9,6 @@ import MessageInput from "./MessageInput";
 import MessageSearch from "./MessageSearch";
 import ExportDialog from "./ExportDialog";
 import GroupSettings from "./GroupSettings";
-import CallModal from "./CallModal";
 import ThreadPanel from "./ThreadPanel";
 import PinnedMessagesDialog from "./PinnedMessagesDialog";
 import ConfirmDialog from "../ui/ConfirmDialog";
@@ -31,6 +30,7 @@ interface ChatWindowProps {
     onRoomDeleted?: (roomId: string) => void;
     onOpenSidebar?: () => void;
     highlightMessageId?: string | null;
+    onWebRTCState?: (state: import("../../contexts/WebRTCStateContext").WebRTCState | null) => void;
 }
 
 export default function ChatWindow({
@@ -46,6 +46,7 @@ export default function ChatWindow({
     onRoomDeleted,
     onOpenSidebar,
     highlightMessageId = null,
+    onWebRTCState,
 }: ChatWindowProps) {
     const { socket, onlineUsers, connected } = useSocket();
     const { user } = useAuth();
@@ -206,6 +207,34 @@ export default function ChatWindow({
         otherUserId,
         onNotify: (type, message) => showToast({ type, message }),
     });
+
+    useEffect(() => {
+        onWebRTCState?.({
+            phase: webrtc.phase,
+            callType: webrtc.callType,
+            localStream: webrtc.localStream,
+            remoteStream: webrtc.remoteStream,
+            muted: webrtc.muted,
+            cameraOff: webrtc.cameraOff,
+            callStartTime: webrtc.callStartTime,
+            toggleMute: webrtc.toggleMute,
+            toggleCamera: webrtc.toggleCamera,
+            endCall: webrtc.endCall,
+        });
+        return () => onWebRTCState?.(null);
+    }, [
+        webrtc.phase,
+        webrtc.callType,
+        webrtc.localStream,
+        webrtc.remoteStream,
+        webrtc.muted,
+        webrtc.cameraOff,
+        webrtc.callStartTime,
+        webrtc.toggleMute,
+        webrtc.toggleCamera,
+        webrtc.endCall,
+        onWebRTCState,
+    ]);
 
     const otherUser = otherUserId
         ? participants.find((p) => p._id === otherUserId)
@@ -521,26 +550,6 @@ export default function ChatWindow({
                         prev.filter((id) => id !== messageId),
                     );
                 }}
-            />
-
-            <CallModal
-                phase={webrtc.phase}
-                callType={webrtc.callType}
-                remoteName={displayName}
-                remoteAvatar={otherUser?.avatar}
-                localName={user?.name}
-                localAvatar={user?.avatar}
-                localStream={webrtc.localStream}
-                remoteStream={webrtc.remoteStream}
-                muted={webrtc.muted}
-                cameraOff={webrtc.cameraOff}
-                isOtherOnline={isOtherOnline}
-                callStartTime={webrtc.callStartTime}
-                onAccept={webrtc.acceptCall}
-                onReject={webrtc.rejectCall}
-                onEnd={webrtc.endCall}
-                onToggleMute={webrtc.toggleMute}
-                onToggleCamera={webrtc.toggleCamera}
             />
 
             {searchOpen && (

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Socket } from "socket.io-client";
-import { playRingtone, stopRingtone } from "../utils/sound";
+import { stopRingtone } from "../utils/sound";
 import api from "../services/api";
 import type { TurnCredentialsResponse } from "../../../shared/types";
+import { useIncomingCall, type IncomingCallData } from "../contexts/IncomingCallContext";
 
 export type CallType = "audio" | "video";
 export type CallPhase = "idle" | "outgoing" | "incoming" | "connecting" | "active";
@@ -104,6 +105,8 @@ export function useWebRTC({
     const iceRestartInProgressRef = useRef(false);
     const negotiationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const notifyRef = useRef(onNotify);
+    const isCrossRoomAcceptRef = useRef(false);
+    const { pendingAcceptedCall, setPendingAcceptedCall } = useIncomingCall();
 
     const MAX_ICE_RESTARTS = 2;
     const NEGOTIATION_TIMEOUT_MS = 30_000;
@@ -366,9 +369,10 @@ export function useWebRTC({
         [socket, otherUserId, roomId, getLocalStream, setPhaseSafe],
     );
 
-    const acceptCall = useCallback(async () => {
-        if (!socket || !incomingCall) return;
-        const stream = await getLocalStream(incomingCall.callType);
+    const acceptCall = useCallback(async (call?: IncomingCallData | null) => {
+        const targetCall = call || incomingCall;
+        if (!socket || !targetCall) return;
+        const stream = await getLocalStream(targetCall.callType);
         if (!stream) {
             notifyRef.current?.(
                 "error",
@@ -377,10 +381,10 @@ export function useWebRTC({
             return;
         }
 
-        callIdRef.current = incomingCall.callId;
+        callIdRef.current = targetCall.callId;
         incomingCallIdRef.current = null;
-        peerIdRef.current = incomingCall.callerId;
-        setCallType(incomingCall.callType);
+        peerIdRef.current = targetCall.callerId;
+        setCallType(targetCall.callType);
         setPhaseSafe("connecting");
 
         const peer = createPeer();
@@ -388,7 +392,7 @@ export function useWebRTC({
 
         socket.emit(
             "call:accept",
-            { callId: incomingCall.callId, calleeId: currentUserId },
+            { callId: targetCall.callId, calleeId: currentUserId },
             (res: { error?: string }) => {
                 if (res?.error) {
                     cleanup();
@@ -401,8 +405,8 @@ export function useWebRTC({
             const offer = await peer.createOffer();
             await peer.setLocalDescription(offer);
             socket.emit("webrtc:offer", {
-                callId: incomingCall.callId,
-                targetId: incomingCall.callerId,
+                callId: targetCall.callId,
+                targetId: targetCall.callerId,
                 payload: peer.localDescription,
             });
         } catch {
@@ -453,18 +457,6 @@ export function useWebRTC({
 
     useEffect(() => {
         if (!socket) return;
-
-        const handleIncoming = (data: IncomingCall & { roomId: string }) => {
-            if (data.roomId !== roomId) return;
-            incomingCallIdRef.current = data.callId;
-            setIncomingCall({
-                callId: data.callId,
-                callerId: data.callerId,
-                callType: data.callType,
-            });
-            setPhaseSafe("incoming");
-            playRingtone();
-        };
 
         const handleAccepted = (data: {
             callId: string;
@@ -563,7 +555,6 @@ export function useWebRTC({
             }
         };
 
-        socket.on("call:incoming", handleIncoming);
         socket.on("call:accepted", handleAccepted);
         socket.on("call:rejected", handleRejected);
         socket.on("call:ended", handleEnded);
@@ -572,20 +563,74 @@ export function useWebRTC({
         socket.on("webrtc:ice-candidate", handleIce);
 
         return () => {
-            socket.off("call:incoming", handleIncoming);
             socket.off("call:accepted", handleAccepted);
             socket.off("call:rejected", handleRejected);
             socket.off("call:ended", handleEnded);
             socket.off("webrtc:offer", handleOffer);
             socket.off("webrtc:answer", handleAnswer);
             socket.off("webrtc:ice-candidate", handleIce);
-            if (callIdRef.current && socket.connected) {
+            if (callIdRef.current && socket.connected && !isCrossRoomAcceptRef.current) {
                 socket.emit("call:end", { callId: callIdRef.current });
             }
+            isCrossRoomAcceptRef.current = false;
             cleanup();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [socket, roomId]);
+
+    useEffect(() => {
+        if (!pendingAcceptedCall || !socket || phaseRef.current !== "idle" || pendingAcceptedCall.roomId !== roomId) return;
+
+        const pending = pendingAcceptedCall;
+        setPendingAcceptedCall(null);
+        isCrossRoomAcceptRef.current = true;
+
+        callIdRef.current = pending.callId;
+        peerIdRef.current = pending.callerId;
+        setCallType(pending.callType);
+        setPhaseSafe("outgoing");
+
+        const setupCall = async () => {
+            const stream = await getLocalStream(pending.callType);
+            if (!stream) {
+                initiatingRef.current = false;
+                socket.emit("call:end", { callId: pending.callId });
+                isCrossRoomAcceptRef.current = false;
+                return;
+            }
+            initiatingRef.current = false;
+
+            socket.emit(
+                "call:accept",
+                { callId: pending.callId, calleeId: currentUserId },
+                (res: { error?: string }) => {
+                    if (res?.error) {
+                        cleanup();
+                        notifyRef.current?.("error", res.error);
+                    }
+                },
+            );
+
+            const peer = createPeer();
+            addLocalTracks(peer, stream);
+            setPhaseSafe("connecting");
+
+            try {
+                const offer = await peer.createOffer();
+                await peer.setLocalDescription(offer);
+                socket.emit("webrtc:offer", {
+                    callId: pending.callId,
+                    targetId: pending.callerId,
+                    payload: peer.localDescription,
+                });
+            } catch {
+                cleanup();
+            }
+        };
+
+        setupCall();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [socket, roomId, pendingAcceptedCall, setPendingAcceptedCall]);
 
     return {
         phase,

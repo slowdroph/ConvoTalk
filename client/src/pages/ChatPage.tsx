@@ -3,11 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
 import ChatWindow from "../components/Chat/ChatWindow";
 import ConnectionBanner from "../components/Chat/ConnectionBanner";
+import CallModal from "../components/Chat/CallModal";
 import api from "../services/api";
 import { useSocket } from "../hooks/useSocket";
 import { useAuth } from "../hooks/useAuth";
 import { useNotifications } from "../hooks/useNotifications";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import { IncomingCallProvider, useIncomingCall } from "../contexts/IncomingCallContext";
+import { WebRTCStateContext } from "../contexts/WebRTCStateContext";
+import type { WebRTCState } from "../contexts/WebRTCStateContext";
 import {
     getPendingMessages,
     removePendingMessage,
@@ -15,6 +19,15 @@ import {
 import type { Room, Message } from "../types";
 
 export default function ChatPage() {
+    const { socket } = useSocket();
+    return (
+        <IncomingCallProvider socket={socket}>
+            <ChatPageInner />
+        </IncomingCallProvider>
+    );
+}
+
+function ChatPageInner() {
     const { roomId } = useParams();
     const navigate = useNavigate();
     const [rooms, setRooms] = useState<Room[]>([]);
@@ -34,9 +47,11 @@ export default function ChatPage() {
     const [highlightMessageId, setHighlightMessageId] = useState<string | null>(
         null,
     );
+    const [webrtcState, setWebrtcState] = useState<WebRTCState | null>(null);
     const initialized = useRef(false);
     const { socket, connected } = useSocket();
     const { user } = useAuth();
+    const { incomingCall, setIncomingCall, setPendingAcceptedCall } = useIncomingCall();
 
     // Ajusta a sala ativa quando a URL muda (ex.: clique em notificação push)
     if (roomId !== lastUrlRoomId) {
@@ -232,8 +247,6 @@ export default function ChatPage() {
         };
     }, [socket, user, activeRoom]);
 
-    const activeRoomData = rooms.find((r) => r._id === activeRoom);
-
     useKeyboardShortcuts(
         Array.from({ length: Math.min(9, rooms.length) }, (_, i) => ({
             key: String(i + 1),
@@ -248,6 +261,50 @@ export default function ChatPage() {
             handler: () => setSidebarOpen(false),
         },
     ]);
+
+    const handleAcceptGlobal = useCallback(() => {
+        if (!incomingCall) return;
+        setPendingAcceptedCall(incomingCall);
+        const targetRoomId = incomingCall.roomId;
+        const isSameRoom = targetRoomId === activeRoom;
+
+        if (!isSameRoom) {
+            navigate(`/chat/${targetRoomId}`, { replace: true });
+        }
+
+        setIncomingCall(null);
+    }, [incomingCall, activeRoom, navigate, setIncomingCall, setPendingAcceptedCall]);
+
+    const handleRejectGlobal = useCallback(() => {
+        if (!incomingCall || !socket) return;
+        socket.emit("call:reject", {
+            callId: incomingCall.callId,
+            calleeId: user?._id,
+        });
+        setIncomingCall(null);
+    }, [incomingCall, socket, user, setIncomingCall]);
+
+    const handleEndGlobal = useCallback(() => {
+        if (webrtcState) {
+            webrtcState.endCall();
+        }
+        setIncomingCall(null);
+    }, [webrtcState, setIncomingCall]);
+
+    const activeRoomData = rooms.find((r) => r._id === activeRoom);
+
+    const callerParticipant = incomingCall && activeRoomData
+        ? rooms.find((r) => r._id === incomingCall.roomId)?.participants.find(
+              (p) => p._id === incomingCall.callerId,
+          )
+        : null;
+
+    const callerName = callerParticipant?.name ?? "Usuário";
+    const callerAvatar = callerParticipant?.avatar;
+
+    const otherUser = activeRoomData?.type === "direct"
+        ? activeRoomData.participants.find((p) => p._id !== user?._id)
+        : null;
 
     return (
         <div className="h-dvh-fallback flex flex-col bg-noir-base pt-[env(safe-area-inset-top)]">
@@ -282,21 +339,24 @@ export default function ChatPage() {
                         </button>
                     </div>
                 ) : activeRoomData ? (
-                    <ChatWindow
-                        key={activeRoom}
-                        roomId={activeRoomData._id}
-                        roomName={activeRoomData.name}
-                        roomDescription={activeRoomData.description}
-                        roomType={activeRoomData.type}
-                        participants={activeRoomData.participants}
-                        admins={activeRoomData.admins ?? []}
-                        avatar={activeRoomData.avatar ?? ""}
-                        createdBy={activeRoomData.createdBy ?? null}
-                        onRoomUpdated={handleGroupUpdated}
-                        onRoomDeleted={handleDeleteRoom}
-                        onOpenSidebar={() => setSidebarOpen(true)}
-                        highlightMessageId={highlightMessageId}
-                    />
+                    <WebRTCStateContext.Provider value={webrtcState}>
+                        <ChatWindow
+                            key={activeRoom}
+                            roomId={activeRoomData._id}
+                            roomName={activeRoomData.name}
+                            roomDescription={activeRoomData.description}
+                            roomType={activeRoomData.type}
+                            participants={activeRoomData.participants}
+                            admins={activeRoomData.admins ?? []}
+                            avatar={activeRoomData.avatar ?? ""}
+                            createdBy={activeRoomData.createdBy ?? null}
+                            onRoomUpdated={handleGroupUpdated}
+                            onRoomDeleted={handleDeleteRoom}
+                            onOpenSidebar={() => setSidebarOpen(true)}
+                            highlightMessageId={highlightMessageId}
+                            onWebRTCState={setWebrtcState}
+                        />
+                    </WebRTCStateContext.Provider>
                 ) : rooms.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
                         <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center dark:bg-noir-surface-alt">
@@ -368,6 +428,50 @@ export default function ChatPage() {
                     </div>
                 )}
             </div>
+
+            {incomingCall && (
+                <CallModal
+                    phase="incoming"
+                    callType={incomingCall.callType}
+                    remoteName={callerName}
+                    remoteAvatar={callerAvatar}
+                    localName={user?.name}
+                    localAvatar={user?.avatar}
+                    localStream={null}
+                    remoteStream={null}
+                    muted={false}
+                    cameraOff={false}
+                    isOtherOnline={true}
+                    callStartTime={null}
+                    onAccept={handleAcceptGlobal}
+                    onReject={handleRejectGlobal}
+                    onEnd={handleEndGlobal}
+                    onToggleMute={() => {}}
+                    onToggleCamera={() => {}}
+                />
+            )}
+
+            {webrtcState && webrtcState.phase !== "idle" && !incomingCall && (
+                <CallModal
+                    phase={webrtcState.phase}
+                    callType={webrtcState.callType}
+                    remoteName={otherUser?.name ?? "Usuário"}
+                    remoteAvatar={otherUser?.avatar}
+                    localName={user?.name}
+                    localAvatar={user?.avatar}
+                    localStream={webrtcState.localStream}
+                    remoteStream={webrtcState.remoteStream}
+                    muted={webrtcState.muted}
+                    cameraOff={webrtcState.cameraOff}
+                    isOtherOnline={true}
+                    callStartTime={webrtcState.callStartTime}
+                    onAccept={() => {}}
+                    onReject={() => {}}
+                    onEnd={webrtcState.endCall}
+                    onToggleMute={webrtcState.toggleMute}
+                    onToggleCamera={webrtcState.toggleCamera}
+                />
+            )}
         </div>
     );
 }
