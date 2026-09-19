@@ -585,6 +585,9 @@ export function useWebRTC({
             socket.off("webrtc:offer", handleOffer);
             socket.off("webrtc:answer", handleAnswer);
             socket.off("webrtc:ice-candidate", handleIce);
+            if (callIdRef.current && socket.connected) {
+                socket.emit("call:end", { callId: callIdRef.current });
+            }
             cleanup();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
