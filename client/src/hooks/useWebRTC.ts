@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Socket } from "socket.io-client";
 import { playRingtone, stopRingtone } from "../utils/sound";
-import { BASE_URL } from "../lib/apiUrl";
+import api from "../services/api";
 import type { TurnCredentialsResponse } from "../../../shared/types";
 
 export type CallType = "audio" | "video";
@@ -27,14 +27,8 @@ async function fetchIceServers(): Promise<RTCIceServer[]> {
 
     iceServersPromise = (async () => {
         try {
-            const res = await fetch(`${BASE_URL}/webrtc/turn-credentials`, {
-                credentials: "include",
-            });
-            if (!res.ok) {
-                iceServersPromise = null;
-                return STUN_SERVERS;
-            }
-            const data: TurnCredentialsResponse = await res.json();
+            const res = await api.get("/webrtc/turn-credentials");
+            const data: TurnCredentialsResponse = res.data;
             if (!data.urls?.length) {
                 iceServersPromise = null;
                 return STUN_SERVERS;
