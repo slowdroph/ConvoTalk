@@ -140,7 +140,7 @@ export default function CallModal({
             <audio ref={audioRef} autoPlay playsInline className="hidden" />
             {/* Video remote */}
             {isConnected && isVideo ? (
-                <div className="flex-1 relative bg-black">
+                <div className="flex-1 min-h-0 relative bg-black overflow-hidden">
                     {hasRemote ? (
                         <VideoView
                             stream={remoteStream}
@@ -231,7 +231,7 @@ export default function CallModal({
             )}
 
             {/* Controls */}
-            <div className="flex items-center justify-center gap-4 px-4 pt-6 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
+            <div className="flex items-center justify-center gap-4 px-4 pt-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] shrink-0">
                 {phase === "incoming" ? (
                     <>
                         <ControlButton
@@ -375,11 +375,7 @@ export default function CallModal({
                                 )}
                             </>
                         )}
-                        <ControlButton
-                            onClick={onEnd}
-                            danger
-                            label="Encerrar"
-                        >
+                        <ControlButton onClick={onEnd} danger label="Encerrar">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 className="h-6 w-6"
