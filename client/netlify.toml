@@ -1,12 +1,12 @@
 [[redirects]]
   from = "/api/*"
-  to = "https://agile-luck-production-f93d.up.railway.app/api/:splat"
+  to = "https://convopl.up.railway.app/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/socket.io/*"
-  to = "https://agile-luck-production-f93d.up.railway.app/socket.io/:splat"
+  to = "https://convopl.up.railway.app/socket.io/:splat"
   status = 200
   force = true
 
