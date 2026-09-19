@@ -121,6 +121,14 @@ export default function CallModal({
     onToggleMute,
     onToggleCamera,
 }: CallModalProps) {
+    const audioRef = useRef<HTMLAudioElement>(null);
+
+    useEffect(() => {
+        if (audioRef.current && remoteStream && callType === "audio") {
+            audioRef.current.srcObject = remoteStream;
+        }
+    }, [remoteStream, callType]);
+
     if (phase === "idle") return null;
 
     const isVideo = callType === "video";
@@ -129,6 +137,7 @@ export default function CallModal({
 
     return (
         <div className="fixed inset-x-0 top-0 z-50 h-dvh-fallback bg-noir-base/95 flex flex-col">
+            <audio ref={audioRef} autoPlay playsInline className="hidden" />
             {/* Video remote */}
             {isConnected && isVideo ? (
                 <div className="flex-1 relative bg-black">

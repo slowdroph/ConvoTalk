@@ -353,6 +353,11 @@ export function useWebRTC({
                         return;
                     }
                     if (res?.callId) {
+                        callIdRef.current = res.callId;
+                        peerIdRef.current = otherUserId;
+                        setCallType(type);
+                        setPhaseSafe("outgoing");
+
                         const stream = await getLocalStream(type);
                         if (!stream) {
                             initiatingRef.current = false;
@@ -360,10 +365,6 @@ export function useWebRTC({
                             return;
                         }
                         initiatingRef.current = false;
-                        callIdRef.current = res.callId;
-                        peerIdRef.current = otherUserId;
-                        setCallType(type);
-                        setPhaseSafe("outgoing");
                     }
                 },
             );
@@ -480,7 +481,10 @@ export function useWebRTC({
                 return;
             if (phaseRef.current !== "outgoing") return;
             setCallType(data.callType);
-            createPeer();
+            const peer = createPeer();
+            if (localStreamRef.current) {
+                addLocalTracks(peer, localStreamRef.current);
+            }
             setPhaseSafe("connecting");
         };
 
@@ -504,6 +508,9 @@ export function useWebRTC({
         }) => {
             if (data.callId !== callIdRef.current) return;
             const peer = createPeer();
+            if (localStreamRef.current && peer.getSenders().length === 0) {
+                addLocalTracks(peer, localStreamRef.current);
+            }
             if (phaseRef.current === "outgoing") setPhaseSafe("connecting");
             try {
                 await setRemote(
