@@ -4,6 +4,7 @@ import UserSearchModal from "./UserSearchModal";
 import CreateGroupModal from "./CreateGroupModal";
 import Avatar from "../ui/Avatar";
 import api from "../../services/api";
+import { APP_VERSION } from "../../utils/version";
 import { useEffect, useRef, useState } from "react";
 import type { Room } from "../../types";
 
@@ -208,7 +209,10 @@ export default function Sidebar({
                             <button
                                 key={result._id}
                                 onClick={() =>
-                                    handleSelectResult(result.room._id, result._id)
+                                    handleSelectResult(
+                                        result.room._id,
+                                        result._id,
+                                    )
                                 }
                                 className="w-full text-left px-3 py-3 border-b border-slate-200 hover:bg-slate-100 transition-colors flex items-start gap-3 dark:border-noir-border/50 dark:hover:bg-noir-surface-alt/60"
                             >
@@ -251,7 +255,9 @@ export default function Sidebar({
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                         <span className="text-[11px]">ConvoTalk</span>
                     </div>
-                    <span className="text-[10px] text-noir-text-muted/70 font-mono">v1.0.0</span>
+                    <span className="text-[10px] text-noir-text-muted/70 font-mono">
+                        v{APP_VERSION}
+                    </span>
                 </div>
 
                 <CreateGroupModal

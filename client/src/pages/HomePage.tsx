@@ -10,11 +10,12 @@ import { useScrollSpy } from "../hooks/useScrollSpy";
 import SectionHeader from "../components/Home/SectionHeader";
 import IconBadge from "../components/Home/IconBadge";
 import FeatureCard from "../components/Home/FeatureCard";
+import { APP_VERSION } from "../utils/version";
 
 const FAQ_ITEMS = [
     {
         question: "O ConvoTalk é gratuito?",
-        answer: "Sim! O ConvoTalk oferece planos gratuitos para uso individual e soluções corporativas seguras e privadas para equipes de qualquer porte.",
+        answer: "Sim! O ConvoTalk é uma plataforma gratuita.",
     },
     {
         question: "Preciso criar uma conta para usar?",
@@ -26,7 +27,7 @@ const FAQ_ITEMS = [
     },
     {
         question: "Posso criar grupos?",
-        answer: "Sim, você pode criar salas e canais em grupo com múltiplos membros, controle de administradores, moderação e mensagens fixadas.",
+        answer: "Sim, você pode criar grupos com múltiplos membros, controle de administradores e mensagens fixadas.",
     },
     {
         question: "Posso enviar arquivos?",
@@ -34,7 +35,7 @@ const FAQ_ITEMS = [
     },
     {
         question: "Posso usar o ConvoTalk no celular?",
-        answer: "Sim! O ConvoTalk foi desenvolvido como PWA (Progressive Web App), funcionando perfeitamente em navegadores mobile ou instalado diretamente na tela inicial do seu celular.",
+        answer: "Sim! O ConvoTalk foi desenvolvido como PWA (Progressive Web App), funcionando perfeitamente em navegadores mobile.",
     },
     {
         question: "Como minhas mensagens são protegidas?",
@@ -96,7 +97,7 @@ export default function HomePage() {
                         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/30 bg-surface-container-high/60 backdrop-blur text-xs font-medium text-on-surface mb-8 shadow-sm">
                             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                             <span className="text-primary font-semibold">
-                                Nova versão v2.4
+                                Nova versão v{APP_VERSION}
                             </span>
                             <span className="text-outline-variant">•</span>
                             <span className="text-on-surface-variant">
@@ -1605,38 +1606,6 @@ export default function HomePage() {
                                         href="#recursos"
                                     >
                                         Recursos
-                                    </a>
-                                </li>
-                                <li>
-                                    <Link
-                                        className="hover:text-primary transition-colors"
-                                        to="/login?mode=register"
-                                    >
-                                        Demonstração
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        className="hover:text-primary transition-colors"
-                                        to="/login"
-                                    >
-                                        Chamadas WebRTC
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        className="hover:text-primary transition-colors"
-                                        to="/login"
-                                    >
-                                        Grupos & Canais
-                                    </Link>
-                                </li>
-                                <li>
-                                    <a
-                                        className="hover:text-primary transition-colors"
-                                        href="#recursos"
-                                    >
-                                        PWA Mobile
                                     </a>
                                 </li>
                             </ul>
