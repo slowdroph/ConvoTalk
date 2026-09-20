@@ -26,6 +26,7 @@ interface ChatWindowProps {
     admins?: Participant[];
     avatar?: string;
     createdBy?: string | null;
+    visibility?: "private" | "public";
     onRoomUpdated?: (room: Room) => void;
     onRoomDeleted?: (roomId: string) => void;
     onOpenSidebar?: () => void;
@@ -42,6 +43,7 @@ export default function ChatWindow({
     admins = [],
     avatar = "",
     createdBy = null,
+    visibility,
     onRoomUpdated,
     onRoomDeleted,
     onOpenSidebar,
@@ -480,10 +482,16 @@ export default function ChatWindow({
         setHighlightedMessageId(null);
     };
 
+    const canManageGroup =
+        roomType === "group" &&
+        (createdBy === user?._id ||
+            (admins ?? []).some((a) => a._id === user?._id));
+
     return (
         <div className="flex-1 flex flex-col bg-noir-base h-full">
             <ChatHeader
                 roomType={roomType}
+                canManageGroup={canManageGroup}
                 displayName={displayName}
                 avatarUrl={roomType === "direct" ? otherUser?.avatar : avatar}
                 avatarName={displayName}
@@ -513,6 +521,7 @@ export default function ChatWindow({
                     name: roomName,
                     description: roomDescription,
                     type: roomType,
+                    visibility,
                     createdBy,
                     participants,
                     admins,

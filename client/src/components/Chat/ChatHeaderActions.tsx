@@ -2,6 +2,7 @@ import DropdownMenu from "../ui/DropdownMenu";
 
 interface ChatHeaderActionsProps {
     roomType: "group" | "direct";
+    canManageGroup: boolean;
     callDisabled: boolean;
     onStartCall: (type: "audio" | "video") => void;
     isBlocked: boolean;
@@ -26,6 +27,7 @@ const moreButtonClass =
 
 export default function ChatHeaderActions({
     roomType,
+    canManageGroup,
     callDisabled,
     onStartCall,
     isBlocked,
@@ -210,7 +212,7 @@ export default function ChatHeaderActions({
                             <span>Exportar conversa</span>
                         </span>
                     </button>
-                    {roomType === "group" && (
+                    {roomType === "group" && canManageGroup && (
                         <button
                             onClick={onOpenGroupSettings}
                             className={`${menuItemClass} text-noir-text-bright hover:bg-emerald-600/15 hover:text-emerald-300`}

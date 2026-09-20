@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import { useAuth } from "../../hooks/useAuth";
 import Avatar from "../ui/Avatar";
 import ConfirmDialog from "../ui/ConfirmDialog";
-import Button from "../ui/Button";
 import type { Room, Participant } from "../../types";
 
 interface SearchResult {
@@ -95,7 +95,7 @@ export default function GroupSettings({
         };
     }, [query, search]);
 
-    if (!isOpen) return null;
+    if (!isOpen || !canEdit) return null;
 
     const handleSave = async () => {
         setError("");
@@ -217,6 +217,13 @@ export default function GroupSettings({
         }
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Escape") {
+            e.stopPropagation();
+            onClose();
+        }
+    };
+
     const { participants } = room;
     const admins = room.admins ?? [];
     const isMemberInSearch = (u: SearchResult) =>
@@ -226,257 +233,318 @@ export default function GroupSettings({
         admins.some((a) => a._id === participantId);
     const currentAvatar = avatarPreview || room.avatar;
 
-    return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md mx-4 max-h-[90vh] flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">
-                        Configurações do grupo
-                    </h3>
+    const visibilityCard = (
+        value: "private" | "public",
+        title: string,
+        hint: string,
+    ) => {
+        const active = visibility === value;
+        return (
+            <button
+                key={value}
+                type="button"
+                onClick={() => setVisibility(value)}
+                aria-pressed={active}
+                className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                    active
+                        ? "border-emerald-500/50 bg-emerald-950/25 shadow-sm hover:border-emerald-400"
+                        : "border-white/10 bg-[#090f09] hover:border-white/20"
+                }`}
+            >
+                <span className="min-w-0">
+                    <span className="flex items-center gap-1.5">
+                        <span
+                            className={`text-xs font-semibold ${active ? "text-white" : "text-noir-text-muted"}`}
+                        >
+                            {title}
+                        </span>
+                        {active && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        )}
+                    </span>
+                    <span className="block text-[10px] text-noir-text-muted leading-tight truncate">
+                        {hint}
+                    </span>
+                </span>
+            </button>
+        );
+    };
+
+    return createPortal(
+        <div
+            className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={onClose}
+            onKeyDown={handleKeyDown}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Configurações do grupo"
+        >
+            <div
+                className="relative w-full max-w-xl bg-[#111711] border border-emerald-500/25 rounded-2xl p-6 text-noir-text-bright flex flex-col gap-5 overflow-hidden max-h-[90vh] shadow-2xl shadow-black/90"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
+
+                <header className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5">
+                            <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.8}
+                                />
+                                <path
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.8}
+                                />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white tracking-tight">
+                                Configurações do grupo
+                            </h2>
+                            <p className="text-xs text-noir-text-muted mt-0.5">
+                                Gerencie foto, membros e privacidade.
+                            </p>
+                        </div>
+                    </div>
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="text-zinc-400 hover:text-white transition-colors"
-                        title="Fechar"
+                        title="Fechar (ESC)"
+                        className="group flex items-center gap-1.5 p-1.5 rounded-lg text-noir-text-muted hover:text-white hover:bg-white/5 transition"
                     >
+                        <kbd className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-black/40 border border-white/10 rounded text-noir-text-muted group-hover:text-noir-text-bright">
+                            esc
+                        </kbd>
                         <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
+                            className="w-4 h-4"
                             fill="none"
-                            viewBox="0 0 24 24"
                             stroke="currentColor"
+                            viewBox="0 0 24 24"
                         >
                             <path
+                                d="M6 18L18 6M6 6l12 12"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
                             />
                         </svg>
                     </button>
-                </div>
+                </header>
 
                 <div className="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-3 py-2 rounded-lg text-xs">
+                        <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-3 py-2 rounded-xl text-xs">
                             {error}
                         </div>
                     )}
 
-                    <div className="flex flex-col items-center gap-3">
-                        <Avatar
-                            src={currentAvatar}
-                            name={room.name}
-                            size="lg"
-                        />
-                        {canEdit && (
-                            <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
+                        <div className="shrink-0">
+                            <Avatar
+                                src={currentAvatar}
+                                name={room.name}
+                                size="lg"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={avatarLoading}
+                                className="px-3 py-1.5 bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 text-emerald-300 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                            >
+                                {avatarLoading
+                                    ? "Enviando..."
+                                    : "Alterar foto"}
+                            </button>
+                            {room.avatar && (
                                 <button
-                                    onClick={() =>
-                                        fileInputRef.current?.click()
-                                    }
+                                    type="button"
+                                    onClick={handleRemoveAvatar}
                                     disabled={avatarLoading}
-                                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                                    className="px-3 py-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
                                 >
-                                    {avatarLoading
-                                        ? "Enviando..."
-                                        : "Alterar foto"}
+                                    Remover
                                 </button>
-                                {room.avatar && (
-                                    <button
-                                        onClick={handleRemoveAvatar}
-                                        disabled={avatarLoading}
-                                        className="px-3 py-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
-                                    >
-                                        Remover
-                                    </button>
-                                )}
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    name="avatar"
-                                    id="avatar"
-                                    accept="image/*"
-                                    onChange={handleAvatarChange}
-                                    className="hidden"
+                            )}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                name="avatar"
+                                id="group-settings-avatar"
+                                accept="image/*"
+                                onChange={handleAvatarChange}
+                                className="hidden"
+                            />
+                        </div>
+                    </div>
+
+                    {isCreator && (
+                        <div>
+                            <div className="flex justify-between items-center mb-1.5">
+                                <label
+                                    htmlFor="groupSettingsName"
+                                    className="text-[11px] font-semibold tracking-wider text-noir-text-bright uppercase"
+                                >
+                                    Nome do grupo
+                                </label>
+                                <span className="text-[10px] text-noir-text-muted font-mono">
+                                    {name.length}/50
+                                </span>
+                            </div>
+                            <input
+                                type="text"
+                                name="name"
+                                id="groupSettingsName"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                maxLength={50}
+                                autoComplete="off"
+                                className="w-full bg-[#090f09] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-noir-text-muted focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition shadow-sm"
+                            />
+                        </div>
+                    )}
+
+                    <div>
+                        <label
+                            htmlFor="groupSettingsDescription"
+                            className="block text-[11px] font-semibold tracking-wider text-noir-text-muted uppercase mb-1.5"
+                        >
+                            Descrição
+                        </label>
+                        <textarea
+                            name="description"
+                            id="groupSettingsDescription"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            maxLength={200}
+                            rows={2}
+                            placeholder="Sobre o que é o grupo?"
+                            className="w-full bg-[#090f09] border border-white/10 rounded-xl px-3.5 py-2 text-sm text-noir-text-bright placeholder-noir-text-muted focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none resize-none transition"
+                        />
+                    </div>
+
+                    <div>
+                        <span className="block text-[11px] font-semibold tracking-wider text-noir-text-muted uppercase mb-1.5">
+                            Privacidade
+                        </span>
+                        <div className="grid grid-cols-2 gap-2.5">
+                            {visibilityCard(
+                                "private",
+                                "Privado",
+                                "Apenas convidados",
+                            )}
+                            {visibilityCard(
+                                "public",
+                                "Público",
+                                "Qualquer um entra",
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label
+                            htmlFor="settingsAddMemberSearch"
+                            className="block text-[11px] font-semibold tracking-wider text-noir-text-bright uppercase"
+                        >
+                            Adicionar membro
+                        </label>
+                        <div className="relative">
+                            <svg
+                                className="w-4 h-4 absolute left-3.5 top-3 text-emerald-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18a7.5 7.5 0 006.15-3.35z"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
                                 />
+                            </svg>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                name="search"
+                                id="settingsAddMemberSearch"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                placeholder="Buscar por nome, email ou #ID..."
+                                maxLength={100}
+                                autoComplete="off"
+                                className="w-full bg-[#090f09] border border-emerald-500/40 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-noir-text-muted focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 focus:outline-none transition"
+                            />
+                        </div>
+                        {loading && (
+                            <p className="text-noir-text-muted text-xs px-1">
+                                Buscando...
+                            </p>
+                        )}
+                        {results.length > 0 && (
+                            <div className="border border-white/10 rounded-xl bg-[#090f09]/80 divide-y divide-white/5 overflow-hidden max-h-40 overflow-y-auto custom-scrollbar">
+                                {results.map((u) => {
+                                    const member = isMemberInSearch(u);
+                                    return (
+                                        <div
+                                            key={u._id}
+                                            onClick={() =>
+                                                !member &&
+                                                handleAddMember(u._id)
+                                            }
+                                            className={`px-3 py-2 flex items-center justify-between transition ${
+                                                member
+                                                    ? "opacity-50 cursor-not-allowed"
+                                                    : "hover:bg-emerald-950/20 cursor-pointer"
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <Avatar
+                                                    src={u.avatar}
+                                                    name={u.name}
+                                                    size="sm"
+                                                />
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-semibold text-white truncate">
+                                                        {u.name}
+                                                    </p>
+                                                    <p className="text-[11px] text-noir-text-muted truncate">
+                                                        {u.email}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span className="text-[11px] text-emerald-400 shrink-0">
+                                                {member
+                                                    ? "Já é membro"
+                                                    : "+ Adicionar"}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
 
-                    {canEdit ? (
-                        <>
-                            {isCreator && (
-                                <div>
-                                    <label htmlFor="groupName" className="block text-xs text-zinc-400 mb-1">
-                                        Nome do grupo
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        id="groupName"
-                                        value={name}
-                                        onChange={(e) =>
-                                            setName(e.target.value)
-                                        }
-                                        maxLength={50}
-                                        className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
-                                    />
-                                </div>
-                            )}
-                            <div>
-                                <label htmlFor="groupDescription" className="block text-xs text-zinc-400 mb-1">
-                                    Descrição
-                                </label>
-                                <textarea
-                                    name="description"
-                                    id="groupDescription"
-                                    value={description}
-                                    onChange={(e) =>
-                                        setDescription(e.target.value)
-                                    }
-                                    maxLength={200}
-                                    rows={2}
-                                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors resize-none"
-                                />
-                            </div>
-                            <div>
-                                <span className="block text-xs text-zinc-400 mb-1">
-                                    Privacidade
-                                </span>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {(
-                                        [
-                                            {
-                                                value: "private",
-                                                title: "Privado",
-                                                hint: "Apenas convidados",
-                                            },
-                                            {
-                                                value: "public",
-                                                title: "Público",
-                                                hint: "Qualquer um entra",
-                                            },
-                                        ] as const
-                                    ).map((opt) => {
-                                        const active =
-                                            visibility === opt.value;
-                                        return (
-                                            <button
-                                                key={opt.value}
-                                                type="button"
-                                                onClick={() =>
-                                                    setVisibility(opt.value)
-                                                }
-                                                aria-pressed={active}
-                                                className={`p-2.5 rounded-lg border text-left transition ${
-                                                    active
-                                                        ? "border-green-500/60 bg-green-950/30"
-                                                        : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                                                }`}
-                                            >
-                                                <span className="flex items-center gap-1.5">
-                                                    <span
-                                                        className={`text-xs font-semibold ${active ? "text-white" : "text-zinc-400"}`}
-                                                    >
-                                                        {opt.title}
-                                                    </span>
-                                                    {active && (
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                                                    )}
-                                                </span>
-                                                <span className="block text-[10px] text-zinc-500 leading-tight mt-0.5">
-                                                    {opt.hint}
-                                                </span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                            <button
-                                onClick={handleSave}
-                                disabled={
-                                    saving ||
-                                    (isCreator && name.trim().length < 2)
-                                }
-                                className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-on-accent font-medium rounded-lg transition-colors text-sm"
-                            >
-                                {saving ? "Salvando..." : "Salvar alterações"}
-                            </button>
-
-                            <div>
-                                <label htmlFor="addMemberSearch" className="block text-xs text-zinc-400 mb-1">
-                                    Adicionar membro
-                                </label>
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    name="search"
-                                    id="addMemberSearch"
-                                    value={query}
-                                    onChange={(e) => setQuery(e.target.value)}
-                                    placeholder="Buscar por nome ou email..."
-                                    maxLength={100}
-                                    autoComplete="off"
-                                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
-                                />
-                                {loading && (
-                                    <p className="text-zinc-500 text-xs mt-2 px-1">
-                                        Buscando...
-                                    </p>
-                                )}
-                                {results.length > 0 && (
-                                    <ul className="mt-2 max-h-40 overflow-y-auto custom-scrollbar border border-zinc-700 rounded-lg">
-                                        {results.map((u) => (
-                                            <li key={u._id}>
-                                                <button
-                                                    onClick={() =>
-                                                        handleAddMember(u._id)
-                                                    }
-                                                    disabled={isMemberInSearch(
-                                                        u,
-                                                    )}
-                                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
-                                                        isMemberInSearch(u)
-                                                            ? "opacity-50 cursor-not-allowed"
-                                                            : "hover:bg-zinc-800"
-                                                    }`}
-                                                >
-                                                    <Avatar
-                                                        src={u.avatar}
-                                                        name={u.name}
-                                                        size="sm"
-                                                    />
-                                                    <div className="min-w-0">
-                                                        <p className="text-sm text-white truncate">
-                                                            {u.name}
-                                                        </p>
-                                                        <p className="text-xs text-zinc-500 truncate">
-                                                            {u.email}
-                                                        </p>
-                                                    </div>
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-                        </>
-                    ) : (
-                        <p className="text-sm text-zinc-400">
-                            Apenas o criador e os administradores do grupo podem
-                            editar as configurações.
-                        </p>
-                    )}
-
                     <div>
-                        <label className="block text-xs text-zinc-400 mb-1">
+                        <span className="block text-[11px] font-semibold tracking-wider text-noir-text-muted uppercase mb-1.5">
                             Participantes ({participants.length})
-                        </label>
-                        <ul className="space-y-1">
+                        </span>
+                        <ul className="border border-white/10 rounded-xl bg-[#090f09]/80 divide-y divide-white/5 overflow-hidden">
                             {participants.map((p: Participant) => (
                                 <li
                                     key={p._id}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                                    className="flex items-center gap-3 px-3 py-2"
                                 >
                                     <Avatar
                                         src={p.avatar}
@@ -484,37 +552,37 @@ export default function GroupSettings({
                                         size="sm"
                                     />
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm text-white truncate">
+                                        <p className="text-xs font-semibold text-white truncate">
                                             {p.name}
                                         </p>
                                         {p._id === room.createdBy ? (
-                                            <p className="text-xs text-green-400">
+                                            <p className="text-[11px] text-emerald-400">
                                                 Criador
                                             </p>
                                         ) : isAdminOf(p._id) ? (
-                                            <p className="text-xs text-amber-400">
+                                            <p className="text-[11px] text-amber-400">
                                                 Administrador
                                             </p>
                                         ) : (
-                                            <p className="text-xs text-zinc-500">
+                                            <p className="text-[11px] text-noir-text-muted">
                                                 Membro
                                             </p>
                                         )}
                                     </div>
                                     {isCreator && p._id !== user?._id && (
                                         <button
+                                            type="button"
                                             onClick={() =>
                                                 handleRemoveMember(p._id)
                                             }
-                                            className="text-zinc-500 hover:text-red-400 transition-colors p-1"
+                                            className="text-noir-text-muted hover:text-red-400 transition-colors p-1"
                                             title="Remover do grupo"
                                         >
                                             <svg
-                                                xmlns="http://www.w3.org/2000/svg"
                                                 className="h-4 w-4"
                                                 fill="none"
-                                                viewBox="0 0 24 24"
                                                 stroke="currentColor"
+                                                viewBox="0 0 24 24"
                                             >
                                                 <path
                                                     strokeLinecap="round"
@@ -530,18 +598,18 @@ export default function GroupSettings({
                                         p._id !== room.createdBy &&
                                         (isAdminOf(p._id) ? (
                                             <button
+                                                type="button"
                                                 onClick={() =>
                                                     handleDemoteAdmin(p._id)
                                                 }
-                                                className="text-zinc-500 hover:text-amber-400 transition-colors p-1"
+                                                className="text-noir-text-muted hover:text-amber-400 transition-colors p-1"
                                                 title="Rebaixar administrador"
                                             >
                                                 <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
                                                     className="h-4 w-4"
                                                     fill="none"
-                                                    viewBox="0 0 24 24"
                                                     stroke="currentColor"
+                                                    viewBox="0 0 24 24"
                                                 >
                                                     <path
                                                         strokeLinecap="round"
@@ -553,18 +621,18 @@ export default function GroupSettings({
                                             </button>
                                         ) : (
                                             <button
+                                                type="button"
                                                 onClick={() =>
                                                     handlePromoteAdmin(p._id)
                                                 }
-                                                className="text-zinc-500 hover:text-green-400 transition-colors p-1"
+                                                className="text-noir-text-muted hover:text-emerald-400 transition-colors p-1"
                                                 title="Promover a administrador"
                                             >
                                                 <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
                                                     className="h-4 w-4"
                                                     fill="none"
-                                                    viewBox="0 0 24 24"
                                                     stroke="currentColor"
+                                                    viewBox="0 0 24 24"
                                                 >
                                                     <path
                                                         strokeLinecap="round"
@@ -581,10 +649,11 @@ export default function GroupSettings({
                     </div>
 
                     {isCreator && (
-                        <div className="pt-2 border-t border-zinc-700">
+                        <div className="pt-1">
                             <button
+                                type="button"
                                 onClick={() => setDeleteConfirm(true)}
-                                className="w-full px-4 py-3 bg-red-600/10 hover:bg-red-600/20 text-red-400 font-medium rounded-lg transition-colors text-sm"
+                                className="w-full px-4 py-2.5 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 font-medium rounded-xl transition-colors text-xs"
                             >
                                 Excluir grupo
                             </button>
@@ -592,15 +661,34 @@ export default function GroupSettings({
                     )}
                 </div>
 
-                <div className="flex gap-3 mt-4">
-                    <Button
-                        variant="secondary"
-                        className="flex-1"
-                        onClick={onClose}
-                    >
-                        Fechar
-                    </Button>
-                </div>
+                <footer className="border-t border-white/10 pt-4 mt-2 flex items-center justify-between">
+                    <span className="text-xs text-noir-text-muted hidden sm:inline-block">
+                        Pressione{" "}
+                        <kbd className="px-1 py-0.5 bg-black/40 border border-white/10 rounded font-mono text-[10px] text-noir-text-muted">
+                            esc
+                        </kbd>{" "}
+                        para fechar
+                    </span>
+                    <div className="flex items-center gap-2 ml-auto">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 rounded-xl text-xs font-medium text-noir-text-muted hover:text-white hover:bg-white/5 transition"
+                        >
+                            Fechar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleSave}
+                            disabled={
+                                saving || (isCreator && name.trim().length < 2)
+                            }
+                            className="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 shadow-lg shadow-emerald-950/60"
+                        >
+                            {saving ? "Salvando..." : "Salvar alterações"}
+                        </button>
+                    </div>
+                </footer>
             </div>
 
             <ConfirmDialog
@@ -615,6 +703,7 @@ export default function GroupSettings({
                     onRoomDeleted(room._id);
                 }}
             />
-        </div>
+        </div>,
+        document.body,
     );
 }

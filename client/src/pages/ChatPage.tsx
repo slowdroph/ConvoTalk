@@ -350,6 +350,7 @@ function ChatPageInner() {
                             admins={activeRoomData.admins ?? []}
                             avatar={activeRoomData.avatar ?? ""}
                             createdBy={activeRoomData.createdBy ?? null}
+                            visibility={activeRoomData.visibility}
                             onRoomUpdated={handleGroupUpdated}
                             onRoomDeleted={handleDeleteRoom}
                             onOpenSidebar={() => setSidebarOpen(true)}

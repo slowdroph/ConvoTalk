@@ -4,6 +4,7 @@ import ChatHeaderActions from "./ChatHeaderActions";
 
 interface ChatHeaderProps {
     roomType: "group" | "direct";
+    canManageGroup: boolean;
     displayName: string;
     avatarUrl?: string;
     avatarName: string;
@@ -28,6 +29,7 @@ interface ChatHeaderProps {
 
 export default function ChatHeader({
     roomType,
+    canManageGroup,
     displayName,
     avatarUrl,
     avatarName,
@@ -119,6 +121,7 @@ export default function ChatHeader({
             </h2>
             <ChatHeaderActions
                 roomType={roomType}
+                canManageGroup={canManageGroup}
                 callDisabled={callDisabled}
                 onStartCall={onStartCall}
                 isBlocked={isBlocked}
