@@ -18,6 +18,7 @@ import {
     listRooms,
     listPublicRooms,
     joinPublicRoom,
+    leaveGroupRoom,
     createDirectRoom,
     createGroupRoom,
     updateGroupRoom,
@@ -47,6 +48,7 @@ router.patch(
     updateGroupVisibility,
 );
 router.post("/:id/join", auth, validate(deleteRoomParams), joinPublicRoom);
+router.post("/:id/leave", auth, validate(deleteRoomParams), leaveGroupRoom);
 router.post("/:id/members", auth, validate(addMemberSchema), addMember);
 router.delete(
     "/:id/members/:userId",

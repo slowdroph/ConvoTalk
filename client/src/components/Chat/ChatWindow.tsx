@@ -9,6 +9,7 @@ import MessageInput from "./MessageInput";
 import MessageSearch from "./MessageSearch";
 import ExportDialog from "./ExportDialog";
 import GroupSettings from "./GroupSettings";
+import GroupInfoModal from "./GroupInfoModal";
 import ThreadPanel from "./ThreadPanel";
 import PinnedMessagesDialog from "./PinnedMessagesDialog";
 import ConfirmDialog from "../ui/ConfirmDialog";
@@ -29,6 +30,7 @@ interface ChatWindowProps {
     visibility?: "private" | "public";
     onRoomUpdated?: (room: Room) => void;
     onRoomDeleted?: (roomId: string) => void;
+    onRoomLeft?: (roomId: string) => void;
     onOpenSidebar?: () => void;
     highlightMessageId?: string | null;
     onWebRTCState?: (state: import("../../contexts/WebRTCStateContext").WebRTCState | null) => void;
@@ -46,6 +48,7 @@ export default function ChatWindow({
     visibility,
     onRoomUpdated,
     onRoomDeleted,
+    onRoomLeft,
     onOpenSidebar,
     highlightMessageId = null,
     onWebRTCState,
@@ -76,6 +79,7 @@ export default function ChatWindow({
     const [searchOpen, setSearchOpen] = useState(false);
     const [exportOpen, setExportOpen] = useState(false);
     const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
+    const [groupInfoOpen, setGroupInfoOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [threadParent, setThreadParent] = useState<Message | null>(null);
@@ -510,6 +514,7 @@ export default function ChatWindow({
                 onOpenExport={() => setExportOpen(true)}
                 onOpenPinned={() => setPinnedOpen(true)}
                 onOpenGroupSettings={() => setGroupSettingsOpen(true)}
+                onOpenGroupInfo={() => setGroupInfoOpen(true)}
                 onClearConversation={() => setClearConfirmOpen(true)}
                 pinnedCount={pinnedMessageIds.length}
             />
@@ -534,6 +539,27 @@ export default function ChatWindow({
                 onRoomDeleted={(id) => {
                     onRoomDeleted?.(id);
                     setGroupSettingsOpen(false);
+                }}
+            />
+
+            <GroupInfoModal
+                isOpen={groupInfoOpen}
+                room={{
+                    _id: roomId,
+                    name: roomName,
+                    description: roomDescription,
+                    type: roomType,
+                    visibility,
+                    createdBy,
+                    participants,
+                    admins,
+                    avatar,
+                }}
+                currentUserId={user?._id ?? null}
+                onClose={() => setGroupInfoOpen(false)}
+                onLeft={(id) => {
+                    onRoomLeft?.(id);
+                    setGroupInfoOpen(false);
                 }}
             />
 

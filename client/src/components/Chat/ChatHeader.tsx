@@ -23,6 +23,7 @@ interface ChatHeaderProps {
     onOpenExport: () => void;
     onOpenPinned: () => void;
     onOpenGroupSettings: () => void;
+    onOpenGroupInfo: () => void;
     onClearConversation: () => void;
     pinnedCount?: number;
 }
@@ -48,6 +49,7 @@ export default function ChatHeader({
     onOpenExport,
     onOpenPinned,
     onOpenGroupSettings,
+    onOpenGroupInfo,
     onClearConversation,
     pinnedCount,
 }: ChatHeaderProps) {
@@ -119,7 +121,31 @@ export default function ChatHeader({
                     )}
                 </span>
             </h2>
-            <ChatHeaderActions
+            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                {roomType === "group" && (
+                    <button
+                        onClick={onOpenGroupInfo}
+                        title="Ver informações do grupo"
+                        aria-label="Ver informações do grupo"
+                        className="p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.8}
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+                    </button>
+                )}
+                <ChatHeaderActions
                 roomType={roomType}
                 canManageGroup={canManageGroup}
                 callDisabled={callDisabled}
@@ -133,7 +159,8 @@ export default function ChatHeader({
                 onOpenGroupSettings={onOpenGroupSettings}
                 onClearConversation={onClearConversation}
                 pinnedCount={pinnedCount}
-            />
+                />
+            </div>
         </div>
     );
 }

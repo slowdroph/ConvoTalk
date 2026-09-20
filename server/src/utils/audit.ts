@@ -22,6 +22,7 @@ export type AuditAction =
     | "room.create_group"
     | "room.update_visibility"
     | "room.join_public"
+    | "room.leave"
     | "room.delete"
     | "room.update"
     | "room.add_member"

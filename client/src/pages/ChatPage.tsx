@@ -188,6 +188,18 @@ function ChatPageInner() {
         }
     };
 
+    const handleLeaveRoom = (roomId: string) => {
+        setRooms((prev) => {
+            const remaining = prev.filter((r) => r._id !== roomId);
+            if (activeRoom === roomId) {
+                const next = remaining.length > 0 ? remaining[0]._id : null;
+                setActiveRoom(next);
+                navigate(next ? `/chat/${next}` : "/chat", { replace: true });
+            }
+            return remaining;
+        });
+    };
+
     useEffect(() => {
         if (!socket) return;
         const handleRoomDeleted = (roomId: string) => {
@@ -353,6 +365,7 @@ function ChatPageInner() {
                             visibility={activeRoomData.visibility}
                             onRoomUpdated={handleGroupUpdated}
                             onRoomDeleted={handleDeleteRoom}
+                            onRoomLeft={handleLeaveRoom}
                             onOpenSidebar={() => setSidebarOpen(true)}
                             highlightMessageId={highlightMessageId}
                             onWebRTCState={setWebrtcState}

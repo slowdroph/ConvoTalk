@@ -290,6 +290,25 @@ export async function joinPublicRoom(
     }
 }
 
+export async function leaveGroupRoom(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const id = getParamId(req.params.id);
+        const updated = await roomService.leaveGroupRoom(id, req.user!._id);
+        audit({
+            action: "room.leave",
+            actorId: req.user!._id.toString(),
+            ip: getHttpClientIp(req),
+            details: { roomId: id },
+        });
+        res.json(updated);
+    } catch (error) {
+        handleError(error, res, "Erro ao sair do grupo.");
+    }
+}
+
 export async function updateGroupAvatar(
     req: AuthRequest,
     res: Response,

@@ -562,6 +562,91 @@ export async function removeMemberFromRoom(roomId: string, myId: string, removeI
     return updated;
 }
 
+export async function leaveGroupRoom(roomId: string, myId: string) {
+    const room = await Room.findById(roomId)
+        .select("type createdBy participants admins")
+        .lean();
+    if (!room) {
+        throw new NotFoundError("Sala não encontrada.");
+    }
+
+    if (room.type !== "group") {
+        throw new BadRequestError("Apenas grupos possuem saída de membros.");
+    }
+
+    const participantIds = (room.participants ?? []).map((p) => p.toString());
+    if (!participantIds.includes(myId.toString())) {
+        throw new ForbiddenError("Você não participa deste grupo.");
+    }
+
+    const isCreator = isRoomCreator(room, myId.toString());
+
+    if (isCreator) {
+        if (participantIds.length <= 1) {
+            throw new BadRequestError(
+                "Você é o único membro. Exclua o grupo em vez de sair.",
+            );
+        }
+        const otherAdmins = (room.admins ?? [])
+            .map((a) => a.toString())
+            .filter((id) => id !== myId.toString());
+        if (otherAdmins.length === 0) {
+            throw new BadRequestError(
+                "Promova um administrador antes de sair do grupo.",
+            );
+        }
+        const successor = otherAdmins[0];
+        const updated = await Room.findByIdAndUpdate(
+            roomId,
+            {
+                $pull: {
+                    participants: new mongoose.Types.ObjectId(myId),
+                    admins: new mongoose.Types.ObjectId(myId),
+                },
+                $set: { createdBy: new mongoose.Types.ObjectId(successor) },
+            },
+            { new: true, runValidators: true },
+        )
+            .populate("participants", "name email publicId avatar status")
+            .populate("admins", "name email publicId avatar status")
+            .lean();
+        invalidateRoom(roomId);
+
+        const [actor, successorDoc] = await Promise.all([
+            User.findById(myId).select("name").lean(),
+            User.findById(successor).select("name").lean(),
+        ]);
+        emitSystemMessage(
+            roomId,
+            `${actor?.name || "Alguém"} saiu do grupo. ${successorDoc?.name || "Um administrador"} agora é o criador.`,
+        );
+
+        broadcastRoomUpdated(roomId, updated);
+        return updated;
+    }
+
+    const updated = await Room.findByIdAndUpdate(
+        roomId,
+        {
+            $pull: {
+                participants: new mongoose.Types.ObjectId(myId),
+                admins: new mongoose.Types.ObjectId(myId),
+            },
+        },
+        { new: true, runValidators: true },
+    )
+        .populate("participants", "name email publicId avatar status")
+        .populate("admins", "name email publicId avatar status")
+        .lean();
+    invalidateRoom(roomId);
+
+    const actor = await User.findById(myId).select("name").lean();
+    emitSystemMessage(roomId, `${actor?.name || "Alguém"} saiu do grupo.`);
+
+    broadcastRoomUpdated(roomId, updated);
+    return updated;
+}
+
 export async function deleteRoomService(roomId: string, myId: string) {
     const room = await Room.findById(roomId)
         .select("type participants createdBy avatar")

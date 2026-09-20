@@ -16,6 +16,7 @@ import {
     updateGroupVisibility,
     getPublicRooms,
     joinPublicRoom,
+    leaveGroupRoom,
 } from "../services/room";
 import { generatePublicId } from "../utils/publicId";
 import type { AuthRequest } from "../middleware/auth";
@@ -349,6 +350,68 @@ describe("integração: grupos públicos", () => {
         await expect(
             joinPublicRoom(priv._id.toString(), joiner._id.toString()),
         ).rejects.toThrow();
+    });
+
+    it("membro sai do grupo; criador só sai com outro admin e transfere a criação", async () => {
+        const creator = await createUser("Dono", "dono-leave@test.com");
+        const admin = await createUser("Admin", "admin-leave@test.com");
+        const member = await createUser("Membro", "membro-leave@test.com");
+
+        const room = await Room.create({
+            type: "group",
+            name: "Saída",
+            createdBy: creator._id,
+            admins: [admin._id],
+            participants: [creator._id, admin._id, member._id],
+        });
+
+        await leaveGroupRoom(room._id.toString(), member._id.toString());
+        const afterMember = (await Room.findById(room._id)
+            .select("participants")
+            .lean()) as { participants?: { toString(): string }[] } | null;
+        expect(
+            (afterMember?.participants ?? []).map((p) => p.toString()),
+        ).not.toContain(member._id.toString());
+
+        await expect(
+            leaveGroupRoom(room._id.toString(), member._id.toString()),
+        ).rejects.toThrow();
+
+        const solo = await Room.create({
+            type: "group",
+            name: "Só Eu",
+            createdBy: creator._id,
+            participants: [creator._id],
+        });
+        await expect(
+            leaveGroupRoom(solo._id.toString(), creator._id.toString()),
+        ).rejects.toThrow();
+
+        const noAdmin = await Room.create({
+            type: "group",
+            name: "Sem Admin",
+            createdBy: creator._id,
+            participants: [creator._id, member._id],
+        });
+        await expect(
+            leaveGroupRoom(noAdmin._id.toString(), creator._id.toString()),
+        ).rejects.toThrow();
+
+        const transferred = (await leaveGroupRoom(
+            room._id.toString(),
+            creator._id.toString(),
+        )) as unknown as {
+            createdBy?: { toString(): string } | string;
+            participants?: { toString(): string }[];
+        };
+        const newCreatorId =
+            typeof transferred?.createdBy === "string"
+                ? transferred.createdBy
+                : transferred?.createdBy?.toString();
+        expect(newCreatorId).toBe(admin._id.toString());
+        expect(
+            (transferred?.participants ?? []).map((p) => p.toString()),
+        ).not.toContain(creator._id.toString());
     });
 });
 
