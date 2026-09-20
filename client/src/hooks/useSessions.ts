@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { getSessions, deleteSession, deleteAllSessions } from "../services/api";
 import type { Session } from "../types";
 
@@ -6,24 +6,19 @@ export function useSessions() {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const mountedRef = useRef(true);
-    const fetchedRef = useRef(false);
 
     useEffect(() => {
         let cancelled = false;
 
         async function fetchData() {
-            if (fetchedRef.current) return;
-            fetchedRef.current = true;
-
             try {
                 const data = await getSessions();
-                if (!cancelled && mountedRef.current) {
+                if (!cancelled) {
                     setSessions(data);
                     setLoading(false);
                 }
             } catch {
-                if (!cancelled && mountedRef.current) {
+                if (!cancelled) {
                     setError("Erro ao carregar sessões.");
                     setLoading(false);
                 }
@@ -42,17 +37,11 @@ export function useSessions() {
             setLoading(true);
             setError(null);
             const data = await getSessions();
-            if (mountedRef.current) {
-                setSessions(data);
-            }
+            setSessions(data);
         } catch {
-            if (mountedRef.current) {
-                setError("Erro ao carregar sessões.");
-            }
+            setError("Erro ao carregar sessões.");
         } finally {
-            if (mountedRef.current) {
-                setLoading(false);
-            }
+            setLoading(false);
         }
     }, []);
 
