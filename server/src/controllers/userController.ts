@@ -2,6 +2,7 @@
 import { AuthRequest } from "../middleware/auth";
 import { objectId } from "../validations";
 import * as userService from "../services/user";
+import { getHttpClientIp } from "../utils/clientIp";
 import { audit } from "../utils/audit";
 import { ValidationError, handleError } from "../utils/errors";
 
@@ -44,7 +45,7 @@ export async function updateProfile(
             audit({
                 action: "user.request_email_change",
                 actorId: req.user!._id.toString(),
-                ip: req.ip,
+                ip: getHttpClientIp(req),
                 details: { previousEmail: result.previousEmail, newEmail: result.newEmail },
             });
         }
@@ -64,7 +65,7 @@ export async function confirmEmailChange(
         audit({
             action: "user.confirm_email_change",
             actorId: result.previousEmail,
-            ip: req.ip,
+            ip: getHttpClientIp(req),
             details: { previousEmail: result.previousEmail, newEmail: result.newEmail },
         });
         res.json({
@@ -103,7 +104,7 @@ export async function updatePassword(
         audit({
             action: "user.update_password",
             actorId: req.user!._id.toString(),
-            ip: req.ip,
+            ip: getHttpClientIp(req),
         });
         res.json({ message: "Senha alterada com sucesso." });
     } catch (error) {
@@ -121,7 +122,7 @@ export async function deleteAccount(
         audit({
             action: "user.delete_account",
             actorId: req.user!._id.toString(),
-            ip: req.ip,
+            ip: getHttpClientIp(req),
             details: { email: result.email },
         });
         res.json({ message: "Conta excluída com sucesso." });
@@ -176,7 +177,7 @@ export async function blockUser(
             action: "user.block",
             actorId: req.user!._id.toString(),
             targetId: parsed.data,
-            ip: req.ip,
+            ip: getHttpClientIp(req),
         });
         res.json({ blocked: true });
     } catch (error) {
@@ -198,7 +199,7 @@ export async function unblockUser(
             action: "user.unblock",
             actorId: req.user!._id.toString(),
             targetId: parsed.data,
-            ip: req.ip,
+            ip: getHttpClientIp(req),
         });
         res.json({ blocked: false });
     } catch (error) {

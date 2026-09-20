@@ -27,6 +27,7 @@ import { setSocketIO } from "./config/io";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { socketAuth } from "./middleware/socketAuth";
 import { logger } from "./config/logger";
+import { getHttpClientIp } from "./utils/clientIp";
 import { randomUUID } from "crypto";
 import {
     generalLimiter,
@@ -45,10 +46,23 @@ const ALLOWED_ORIGINS = getAllowedOrigins();
 const corsOrigin =
     ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS : ["http://localhost:5173"];
 
+function parseTrustProxy(): boolean | string | number {
+    const raw = process.env.TRUST_PROXY;
+    if (!raw) {
+        return process.env.NODE_ENV === "production" ? true : "loopback";
+    }
+    const normalized = raw.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+    const asNumber = Number(normalized);
+    if (Number.isInteger(asNumber) && asNumber >= 0) return asNumber;
+    return raw;
+}
+
 const app = express();
 const httpServer = createServer(app);
 
-app.set("trust proxy", process.env.NODE_ENV === "production" ? 1 : "loopback");
+app.set("trust proxy", parseTrustProxy());
 
 const io = new SocketIOServer(httpServer, {
     cors: {
@@ -114,7 +128,8 @@ app.use((req, res, next) => {
                 path: req.originalUrl,
                 status: res.statusCode,
                 durationMs: duration,
-                ip: req.ip,
+                ip: getHttpClientIp(req),
+                xff: req.header("x-forwarded-for") ?? null,
             },
             "request",
         );

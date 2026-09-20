@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth";
 import * as roomService from "../services/room";
+import { getHttpClientIp } from "../utils/clientIp";
 import { audit } from "../utils/audit";
 import { handleError } from "../utils/errors";
 
@@ -34,7 +35,7 @@ export async function createDirectRoom(
             action: "room.create_direct",
             actorId: req.user!._id.toString(),
             targetId: req.body.userId,
-            ip: req.ip,
+            ip: getHttpClientIp(req),
             details: { roomId: (room as { _id: { toString(): string } })._id.toString() },
         });
         res.status(created ? 201 : 200).json(room);
@@ -58,7 +59,7 @@ export async function createGroupRoom(
         audit({
             action: "room.create_group",
             actorId: req.user!._id.toString(),
-            ip: req.ip,
+            ip: getHttpClientIp(req),
             details: {
                 roomId: (populated as { _id: { toString(): string } })._id.toString(),
                 name,
@@ -109,7 +110,7 @@ export async function addMember(
             action: "room.add_member",
             actorId: req.user!._id.toString(),
             targetId: newMemberId,
-            ip: req.ip,
+            ip: getHttpClientIp(req),
             details: { roomId: id },
         });
         res.json(updated);
@@ -137,7 +138,7 @@ export async function removeMember(
             action: "room.remove_member",
             actorId: req.user!._id.toString(),
             targetId: removeId,
-            ip: req.ip,
+            ip: getHttpClientIp(req),
             details: { roomId: id },
         });
         res.json(updated);
@@ -156,7 +157,7 @@ export async function deleteRoom(
         audit({
             action: "room.delete",
             actorId: req.user!._id.toString(),
-            ip: req.ip,
+            ip: getHttpClientIp(req),
             details: { roomId: id, type: result.type },
         });
         res.json({ message: "Conversa excluída com sucesso." });
@@ -179,7 +180,7 @@ export async function addAdmin(req: AuthRequest, res: Response): Promise<void> {
             action: "room.add_admin",
             actorId: req.user!._id.toString(),
             targetId: newAdminId,
-            ip: req.ip,
+            ip: getHttpClientIp(req),
             details: { roomId: id },
         });
         res.json(updated);
@@ -207,7 +208,7 @@ export async function removeAdmin(
             action: "room.remove_admin",
             actorId: req.user!._id.toString(),
             targetId: removeAdminId,
-            ip: req.ip,
+            ip: getHttpClientIp(req),
             details: { roomId: id },
         });
         res.json(updated);

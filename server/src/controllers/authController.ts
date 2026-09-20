@@ -11,13 +11,15 @@ import {
     refreshCookieOptions,
     REFRESH_COOKIE_NAME,
 } from "../services/token";
+import { getHttpClientIp } from "../utils/clientIp";
 
 export async function register(req: Request, res: Response): Promise<void> {
     try {
         const { name, email, password } = req.body;
+        const clientIp = getHttpClientIp(req);
         const result = await authService.registerUser(
             { name, email, password },
-            req.ip,
+            clientIp,
         );
 
         if (result.emailSendingFailed) {
@@ -32,7 +34,7 @@ export async function register(req: Request, res: Response): Promise<void> {
         audit({
             action: "auth.register",
             actorId: "system",
-            ip: req.ip,
+            ip: getHttpClientIp(req),
             details: { email, acceptedTerms: true },
         });
 
@@ -49,12 +51,13 @@ export async function login(req: Request, res: Response): Promise<void> {
     try {
         const { email, password } = req.body;
         const userAgent = req.header("User-Agent") || "";
+        const clientIp = getHttpClientIp(req);
 
         const result = await authService.loginUser(
             email,
             password,
             userAgent,
-            req.ip,
+            clientIp,
         );
 
         if ("emailNotVerified" in result && result.emailNotVerified) {
@@ -73,7 +76,7 @@ export async function login(req: Request, res: Response): Promise<void> {
         audit({
             action: "auth.login",
             actorId: result.user._id.toString(),
-            ip: req.ip,
+            ip: clientIp,
             details: { email, sessionId: result.sessionId, deviceType: result.deviceType },
         });
 
@@ -96,7 +99,7 @@ export async function refresh(req: Request, res: Response): Promise<void> {
             throw new UnauthorizedError("Sessão expirada.");
         }
 
-        const result = await authService.refreshSession(refreshToken);
+        const result = await authService.refreshSession(refreshToken, getHttpClientIp(req));
         res.cookie(
             REFRESH_COOKIE_NAME,
             result.refreshToken,

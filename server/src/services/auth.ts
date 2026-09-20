@@ -207,7 +207,7 @@ export async function loginUser(
     };
 }
 
-export async function refreshSession(refreshToken: string) {
+export async function refreshSession(refreshToken: string, ip?: string) {
     const { userId, sessionId } = verifyRefreshToken(refreshToken);
     const user = await User.findById(userId);
     if (!user) {
@@ -226,6 +226,9 @@ export async function refreshSession(refreshToken: string) {
     const newRefreshToken = signRefreshToken(userId, sessionId);
     session.token = hashRefreshToken(newRefreshToken);
     session.lastActiveAt = new Date();
+    if (ip && ip !== "unknown" && session.ip !== ip) {
+        session.ip = ip;
+    }
     await session.save();
 
     const accessToken = signAccessToken(userId, sessionId);
