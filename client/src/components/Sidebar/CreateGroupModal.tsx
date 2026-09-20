@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import Avatar from "../ui/Avatar";
@@ -109,7 +110,7 @@ export default function CreateGroupModal({
         }
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 bg-noir-base/60 backdrop-blur-xs flex items-center justify-center z-50">
             <div className="bg-noir-card border border-noir-border rounded-2xl p-6 w-full max-w-md mx-4 max-h-[90vh] flex flex-col shadow-2xl">
                 <div className="flex items-center justify-between mb-4">
@@ -308,6 +309,7 @@ export default function CreateGroupModal({
                     </Button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }

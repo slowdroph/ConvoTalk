@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useSocket } from "../../hooks/useSocket";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import Avatar from "../ui/Avatar";
+import type { Room } from "../../types";
 
-interface SearchResult {
+interface UserResult {
     _id: string;
     name: string;
     email: string;
@@ -12,21 +14,35 @@ interface SearchResult {
     avatar?: string;
 }
 
+type Tab = "all" | "users" | "groups";
+
+type Item =
+    | { kind: "user"; user: UserResult }
+    | { kind: "group"; room: Room };
+
 interface UserSearchModalProps {
     isOpen: boolean;
     onClose: () => void;
     onConversationCreated: (roomId: string) => void;
+    onSelectRoom?: (roomId: string) => void;
+    onCreateGroup?: () => void;
+    rooms?: Room[];
 }
 
 export default function UserSearchModal({
     isOpen,
     onClose,
     onConversationCreated,
+    onSelectRoom,
+    onCreateGroup,
+    rooms = [],
 }: UserSearchModalProps) {
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState<SearchResult[]>([]);
+    const [results, setResults] = useState<UserResult[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [creatingId, setCreatingId] = useState<string | null>(null);
+    const [tab, setTab] = useState<Tab>("all");
     const [selectedIndex, setSelectedIndex] = useState(0);
     const { onlineUsers } = useSocket();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -37,13 +53,28 @@ export default function UserSearchModal({
         if (isOpen) setTimeout(() => inputRef.current?.focus(), 50);
     }, [isOpen]);
 
-    const handleClose = () => {
+    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+    if (prevIsOpen !== isOpen) {
+        setPrevIsOpen(isOpen);
+        if (isOpen) {
+            setQuery("");
+            setResults([]);
+            setError("");
+            setTab("all");
+            setSelectedIndex(0);
+            setCreatingId(null);
+        }
+    }
+
+    const handleClose = useCallback(() => {
         setQuery("");
         setResults([]);
         setError("");
+        setTab("all");
         setSelectedIndex(0);
+        setCreatingId(null);
         onClose();
-    };
+    }, [onClose]);
 
     const search = useCallback(async (term: string) => {
         if (term.trim().length < 1) {
@@ -57,7 +88,8 @@ export default function UserSearchModal({
             const { data } = await api.get(
                 `/users/search?q=${encodeURIComponent(term)}`,
             );
-            setResults(data);
+            setResults(Array.isArray(data) ? data : []);
+            setSelectedIndex(0);
             setError("");
         } catch (err: unknown) {
             setResults([]);
@@ -75,10 +107,40 @@ export default function UserSearchModal({
         };
     }, [query, search]);
 
+    const selectTab = (next: Tab) => {
+        setTab(next);
+        setSelectedIndex(0);
+    };
+
     const isOnline = (userId: string) =>
         onlineUsers.some((u) => u.userId === userId);
 
+    const groupResults = useMemo(() => {
+        const term = query.trim().toLowerCase();
+        const groups = rooms.filter((r) => r.type === "group");
+        if (!term) return groups.slice(0, 5);
+        return groups.filter((r) => r.name.toLowerCase().includes(term));
+    }, [rooms, query]);
+
+    const items: Item[] = useMemo(() => {
+        const users: Item[] = results.map((user) => ({ kind: "user", user }));
+        const groups: Item[] = groupResults.map((room) => ({
+            kind: "group",
+            room,
+        }));
+        if (tab === "users") return users;
+        if (tab === "groups") return groups;
+        return [...users, ...groups];
+    }, [results, groupResults, tab]);
+
+    const selectedIndexSafe = Math.min(
+        selectedIndex,
+        Math.max(items.length - 1, 0),
+    );
+
     const handleStartConversation = async (userId: string) => {
+        if (creatingId) return;
+        setCreatingId(userId);
         setError("");
         try {
             const { data } = await api.post("/rooms/direct", { userId });
@@ -86,7 +148,19 @@ export default function UserSearchModal({
             handleClose();
         } catch (err: unknown) {
             setError(getErrorMessage(err, "Erro ao criar conversa"));
+        } finally {
+            setCreatingId(null);
         }
+    };
+
+    const handleSelectGroup = (roomId: string) => {
+        handleClose();
+        onSelectRoom?.(roomId);
+    };
+
+    const activateItem = (item: Item) => {
+        if (item.kind === "user") handleStartConversation(item.user._id);
+        else handleSelectGroup(item.room._id);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -98,162 +172,372 @@ export default function UserSearchModal({
         if (e.key === "ArrowDown") {
             e.preventDefault();
             setSelectedIndex((prev) =>
-                prev < results.length - 1 ? prev + 1 : prev,
+                prev < items.length - 1 ? prev + 1 : prev,
             );
         } else if (e.key === "ArrowUp") {
             e.preventDefault();
             setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
-        } else if (e.key === "Enter" && results.length > 0) {
+        } else if (e.key === "Enter" && items.length > 0) {
             e.preventDefault();
-            handleStartConversation(results[selectedIndex]._id);
+            activateItem(items[selectedIndexSafe]);
         }
     };
 
     useEffect(() => {
-        if (selectedIndex > 0 && listRef.current) {
-            const items = listRef.current.children;
-            if (items[selectedIndex]) {
-                (items[selectedIndex] as HTMLElement).scrollIntoView({
-                    block: "nearest",
-                });
-            }
-        }
-    }, [selectedIndex]);
+        if (!listRef.current) return;
+        const el = listRef.current.querySelector<HTMLElement>(
+            `[data-index="${selectedIndexSafe}"]`,
+        );
+        el?.scrollIntoView({ block: "nearest" });
+    }, [selectedIndexSafe]);
 
     if (!isOpen) return null;
 
-    return (
+    const userCount = results.length;
+    const totalCount = items.length;
+    const showEmpty =
+        query.trim().length > 0 && items.length === 0 && !loading && !error;
+
+    const tabButton = (id: Tab, label: string, count?: number) => {
+        const active = tab === id;
+        return (
+            <button
+                type="button"
+                onClick={() => selectTab(id)}
+                className={`px-2.5 py-1 rounded-lg text-xs transition flex items-center gap-1.5 ${
+                    active
+                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold"
+                        : "text-noir-text-muted hover:text-noir-text-bright hover:bg-noir-surface-alt font-medium"
+                }`}
+            >
+                {active && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                )}
+                <span>
+                    {label}
+                    {count !== undefined ? ` (${count})` : ""}
+                </span>
+            </button>
+        );
+    };
+
+    return createPortal(
         <div
-            className="fixed inset-0 bg-black/60 flex items-start justify-center z-50 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
             onClick={handleClose}
             onKeyDown={handleKeyDown}
             role="dialog"
             aria-modal="true"
-            aria-label="Buscar usuário"
+            aria-label="Nova conversa"
         >
             <div
-                className="w-full max-w-lg mt-16 bg-white border border-slate-200 rounded-xl shadow-2xl flex flex-col max-h-[70vh] dark:bg-noir-card dark:border-noir-border"
+                className="w-full max-w-xl bg-[#111714] border border-emerald-500/30 rounded-2xl shadow-2xl shadow-black/90 overflow-hidden flex flex-col max-h-[80vh]"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="px-4 py-3 border-b border-slate-200 flex items-center gap-3 dark:border-noir-border">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-slate-400 dark:text-noir-text-muted"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                    </svg>
+                <div className="p-4 pb-3 border-b border-noir-border/70 flex items-center gap-3 bg-noir-surface-alt/60">
+                    <span className="flex-shrink-0 text-emerald-400">
+                        <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2.2}
+                            />
+                        </svg>
+                    </span>
                     <input
                         ref={inputRef}
                         name="search"
-                        id="userSearch"
+                        id="newConversationSearch"
                         value={query}
                         onChange={(e) => {
                             setQuery(e.target.value);
+                            setSelectedIndex(0);
                             setError("");
                         }}
-                        placeholder="Buscar por nome, email ou #ID..."
-                        className="flex-1 bg-transparent text-slate-900 placeholder-slate-400 outline-none dark:text-noir-text-bright dark:placeholder-noir-text-muted/70"
-                        aria-label="Buscar usuário"
+                        placeholder="Buscar por nome, e-mail ou #ID..."
+                        maxLength={100}
+                        autoComplete="off"
+                        aria-label="Buscar usuário ou grupo"
                         aria-autocomplete="list"
-                        aria-controls="user-search-results"
+                        aria-controls="new-conversation-results"
                         aria-activedescendant={
-                            results.length > 0
-                                ? `user-search-result-${selectedIndex}`
+                            items.length > 0
+                                ? `new-conversation-result-${selectedIndexSafe}`
                                 : undefined
                         }
-                        autoComplete="off"
+                        className="flex-1 bg-transparent text-sm text-noir-text-bright placeholder-noir-text-muted/70 focus:outline-none font-medium"
                     />
                     {loading && (
                         <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0" />
                     )}
-                    <button
-                        onClick={handleClose}
-                        className="text-slate-400 hover:text-slate-900 transition-colors dark:text-noir-text-muted dark:hover:text-noir-text-bright"
-                        aria-label="Fechar busca"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                    <div className="flex items-center gap-2">
+                        <kbd className="text-[10px] bg-noir-surface border border-noir-border px-2 py-0.5 rounded text-noir-text-muted font-mono font-medium shadow-sm">
+                            ESC
+                        </kbd>
+                        <button
+                            type="button"
+                            onClick={handleClose}
+                            aria-label="Fechar"
+                            className="p-1 text-noir-text-muted hover:text-noir-text-bright hover:bg-noir-surface-alt rounded-lg transition"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
+                            <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    d="M6 18L18 6M6 6l12 12"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div className="px-4 py-2.5 flex items-center gap-2 border-b border-noir-border/50 bg-[#0d1310]">
+                    {tabButton("all", "Todos", userCount + groupResults.length)}
+                    {tabButton("users", "Usuários", userCount)}
+                    {tabButton("groups", "Grupos")}
                 </div>
 
                 {error && (
-                    <div className="px-4 py-2 bg-red-500/10 border-b border-slate-200 dark:border-noir-border">
-                        <p className="text-red-600 text-sm dark:text-red-400">{error}</p>
+                    <div className="px-4 py-2 bg-red-500/10 border-b border-noir-border/50">
+                        <p className="text-red-400 text-sm">{error}</p>
                     </div>
                 )}
 
                 <div
-                    id="user-search-results"
-                    className="overflow-y-auto"
+                    id="new-conversation-results"
                     ref={listRef}
                     role="listbox"
                     aria-label="Resultados da busca"
+                    className="p-3 overflow-y-auto max-h-[360px] space-y-2 custom-scrollbar"
                 >
-                    {query.trim() && results.length === 0 && !loading && !error && (
-                        <p className="px-4 py-8 text-center text-slate-500 text-sm dark:text-noir-text-muted">
-                            Nenhum usuário encontrado.
+                    <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-noir-text-muted flex items-center justify-between">
+                        <span>
+                            {query.trim()
+                                ? "Contatos sugeridos"
+                                : "Buscar para começar"}
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-400/80 lowercase">
+                            {totalCount} resultado{totalCount === 1 ? "" : "s"}
+                        </span>
+                    </div>
+
+                    {!query.trim() && items.length === 0 && (
+                        <p className="px-2 py-8 text-center text-noir-text-muted text-sm">
+                            Digite um nome, e-mail ou #ID para buscar pessoas
+                            {groupResults.length > 0
+                                ? " ou escolha um grupo abaixo."
+                                : "."}
                         </p>
                     )}
-                    {results.map((user, index) => (
-                        <button
-                            key={user._id}
-                            id={`user-search-result-${index}`}
-                            onClick={() => handleStartConversation(user._id)}
-                            role="option"
-                            aria-selected={index === selectedIndex}
-                            className={`w-full text-left px-4 py-3 border-b border-slate-200 transition-colors flex items-center gap-3 dark:border-noir-border ${
-                                index === selectedIndex
-                                    ? "bg-slate-200/70 dark:bg-noir-surface-alt/80"
-                                    : "hover:bg-slate-100 dark:hover:bg-noir-surface-alt/60"
-                            }`}
-                        >
-                            <div className="relative shrink-0">
-                                <Avatar
-                                    src={user.avatar}
-                                    name={user.name}
-                                    size="sm"
-                                />
-                                {isOnline(user._id) && (
-                                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-noir-card" />
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-slate-900 text-sm font-semibold truncate dark:text-noir-text-bright">
-                                        {user.name}
-                                    </span>
-                                    <span className="text-slate-500 text-xs font-mono shrink-0 dark:text-noir-text-muted">
-                                        #{user.publicId}
+
+                    {showEmpty && (
+                        <p className="px-2 py-8 text-center text-noir-text-muted text-sm">
+                            {tab === "groups"
+                                ? "Nenhum grupo encontrado."
+                                : "Nenhum usuário encontrado."}
+                        </p>
+                    )}
+
+                    {items.map((item, index) => {
+                        const selected = index === selectedIndexSafe;
+                        if (item.kind === "group") {
+                            const room = item.room;
+                            return (
+                                <div
+                                    key={`group-${room._id}`}
+                                    data-index={index}
+                                    id={`new-conversation-result-${index}`}
+                                    role="option"
+                                    aria-selected={selected}
+                                    onClick={() => handleSelectGroup(room._id)}
+                                    onMouseEnter={() => setSelectedIndex(index)}
+                                    className={`group flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${
+                                        selected
+                                            ? "bg-emerald-500/10 border-emerald-500/20 border-l-2 border-l-emerald-500 shadow-sm"
+                                            : "border-transparent hover:bg-noir-surface-alt/70 hover:border-noir-border/60"
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="relative flex-shrink-0">
+                                            <Avatar
+                                                src={room.avatar}
+                                                name={room.name}
+                                                size="md"
+                                            />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span
+                                                    className={`font-bold text-sm text-noir-text-bright ${selected ? "" : "group-hover:text-emerald-300"} transition`}
+                                                >
+                                                    {room.name}
+                                                </span>
+                                                <span className="text-[10px] bg-noir-surface border border-noir-border/80 text-noir-text-muted font-mono px-1.5 py-0.2 rounded">
+                                                    GRUPO
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-noir-text-muted truncate mt-0.5">
+                                                {room.participants.length}{" "}
+                                                participante
+                                                {room.participants.length === 1
+                                                    ? ""
+                                                    : "s"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-noir-text-muted group-hover:text-emerald-400 p-1.5 flex-shrink-0 hidden sm:inline text-[11px]">
+                                        {selected ? "↵ Abrir" : "Abrir"}
                                     </span>
                                 </div>
-                                <p className="text-slate-500 text-xs truncate dark:text-noir-text-muted">
-                                    {user.email}
-                                </p>
+                            );
+                        }
+
+                        const user = item.user;
+                        const online = isOnline(user._id);
+                        const busy = creatingId === user._id;
+                        return (
+                            <div
+                                key={user._id}
+                                data-index={index}
+                                id={`new-conversation-result-${index}`}
+                                role="option"
+                                aria-selected={selected}
+                                onClick={() =>
+                                    handleStartConversation(user._id)
+                                }
+                                onMouseEnter={() => setSelectedIndex(index)}
+                                className={`group flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${
+                                    selected
+                                        ? "bg-emerald-500/10 border-emerald-500/20 border-l-2 border-l-emerald-500 shadow-sm"
+                                        : "border-transparent hover:bg-noir-surface-alt/70 hover:border-noir-border/60"
+                                }`}
+                            >
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="relative flex-shrink-0">
+                                        <Avatar
+                                            src={user.avatar}
+                                            name={user.name}
+                                            size="md"
+                                        />
+                                        <span
+                                            className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-[#111714] rounded-full ${
+                                                online
+                                                    ? "bg-emerald-500 animate-pulse"
+                                                    : "bg-zinc-500"
+                                            }`}
+                                        />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span
+                                                className={`font-bold text-sm text-noir-text-bright ${selected ? "" : "group-hover:text-emerald-300"} transition`}
+                                            >
+                                                {user.name}
+                                            </span>
+                                            <span className="text-[10px] bg-noir-surface border border-noir-border/80 text-emerald-400 font-mono px-1.5 py-0.2 rounded">
+                                                #{user.publicId}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-noir-text-muted truncate mt-0.5">
+                                            {user.email}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    {busy ? (
+                                        <span className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                    ) : selected ? (
+                                        <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-emerald-300 bg-emerald-600/20 border border-emerald-500/40 px-2 py-1 rounded-lg">
+                                            <span className="font-mono text-xs">
+                                                ↵
+                                            </span>{" "}
+                                            Conversar
+                                        </span>
+                                    ) : (
+                                        <span className="text-xs text-noir-text-muted group-hover:text-emerald-400 p-1.5 rounded-lg hover:bg-noir-surface transition flex items-center gap-1">
+                                            <svg
+                                                className="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={1.8}
+                                                />
+                                            </svg>
+                                            <span className="hidden sm:inline text-[11px]">
+                                                Iniciar chat
+                                            </span>
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                        </button>
-                    ))}
+                        );
+                    })}
+                </div>
+
+                <div className="px-4 py-3 bg-[#0d1310] border-t border-noir-border/70 flex items-center justify-between text-xs text-noir-text-muted">
+                    <div className="flex items-center gap-3 font-mono text-[11px]">
+                        <span className="flex items-center gap-1">
+                            <kbd className="px-1.5 py-0.5 rounded bg-noir-surface border border-noir-border text-noir-text-bright">
+                                ↑↓
+                            </kbd>{" "}
+                            navegar
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <kbd className="px-1.5 py-0.5 rounded bg-noir-surface border border-noir-border text-noir-text-bright">
+                                ↵
+                            </kbd>{" "}
+                            selecionar
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <kbd className="px-1.5 py-0.5 rounded bg-noir-surface border border-noir-border text-noir-text-bright">
+                                esc
+                            </kbd>{" "}
+                            fechar
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            handleClose();
+                            onCreateGroup?.();
+                        }}
+                        className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-medium transition"
+                    >
+                        <svg
+                            className="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                d="M12 4v16m8-8H4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                            />
+                        </svg>
+                        <span>Criar novo grupo</span>
+                    </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }

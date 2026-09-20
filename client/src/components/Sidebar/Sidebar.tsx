@@ -262,10 +262,17 @@ export default function Sidebar({
                 <UserSearchModal
                     isOpen={userSearchOpen}
                     onClose={() => setUserSearchOpen(false)}
+                    rooms={rooms}
                     onConversationCreated={(roomId) => {
                         setUserSearchOpen(false);
                         onConversationCreated(roomId);
                     }}
+                    onSelectRoom={(roomId) => {
+                        setUserSearchOpen(false);
+                        onClose?.();
+                        onSelectRoom(roomId);
+                    }}
+                    onCreateGroup={() => setGroupModalOpen(true)}
                 />
             </aside>
         </>
