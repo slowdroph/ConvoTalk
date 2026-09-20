@@ -14,6 +14,14 @@ interface UserResult {
     avatar?: string;
 }
 
+interface PublicGroup {
+    _id: string;
+    name: string;
+    description: string;
+    avatar: string;
+    participantCount: number;
+}
+
 type Tab = "all" | "users" | "groups";
 
 type Item =
@@ -26,6 +34,7 @@ interface UserSearchModalProps {
     onConversationCreated: (roomId: string) => void;
     onSelectRoom?: (roomId: string) => void;
     onCreateGroup?: () => void;
+    onGroupJoined?: (roomId: string) => void;
     rooms?: Room[];
 }
 
@@ -35,6 +44,7 @@ export default function UserSearchModal({
     onConversationCreated,
     onSelectRoom,
     onCreateGroup,
+    onGroupJoined,
     rooms = [],
 }: UserSearchModalProps) {
     const [query, setQuery] = useState("");
@@ -42,6 +52,9 @@ export default function UserSearchModal({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [creatingId, setCreatingId] = useState<string | null>(null);
+    const [publicGroups, setPublicGroups] = useState<PublicGroup[]>([]);
+    const [publicLoading, setPublicLoading] = useState(false);
+    const [joiningId, setJoiningId] = useState<string | null>(null);
     const [tab, setTab] = useState<Tab>("all");
     const [selectedIndex, setSelectedIndex] = useState(0);
     const { onlineUsers } = useSocket();
@@ -63,6 +76,8 @@ export default function UserSearchModal({
             setTab("all");
             setSelectedIndex(0);
             setCreatingId(null);
+            setPublicGroups([]);
+            setJoiningId(null);
         }
     }
 
@@ -73,6 +88,8 @@ export default function UserSearchModal({
         setTab("all");
         setSelectedIndex(0);
         setCreatingId(null);
+        setPublicGroups([]);
+        setJoiningId(null);
         onClose();
     }, [onClose]);
 
@@ -99,13 +116,32 @@ export default function UserSearchModal({
         }
     }, []);
 
+    const searchPublic = useCallback(async (term: string) => {
+        setPublicLoading(true);
+        try {
+            const { data } = await api.get("/rooms/public", {
+                params: { q: term.trim(), limit: 8 },
+            });
+            setPublicGroups(
+                Array.isArray(data?.rooms) ? data.rooms : [],
+            );
+        } catch {
+            setPublicGroups([]);
+        } finally {
+            setPublicLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => search(query), 300);
+        debounceRef.current = setTimeout(() => {
+            search(query);
+            searchPublic(query);
+        }, 300);
         return () => {
             if (debounceRef.current) clearTimeout(debounceRef.current);
         };
-    }, [query, search]);
+    }, [query, search, searchPublic]);
 
     const selectTab = (next: Tab) => {
         setTab(next);
@@ -156,6 +192,21 @@ export default function UserSearchModal({
     const handleSelectGroup = (roomId: string) => {
         handleClose();
         onSelectRoom?.(roomId);
+    };
+
+    const handleJoinPublic = async (roomId: string) => {
+        if (joiningId) return;
+        setJoiningId(roomId);
+        setError("");
+        try {
+            const { data } = await api.post(`/rooms/${roomId}/join`);
+            onGroupJoined?.(data._id);
+            handleClose();
+        } catch (err: unknown) {
+            setError(getErrorMessage(err, "Erro ao entrar no grupo"));
+        } finally {
+            setJoiningId(null);
+        }
     };
 
     const activateItem = (item: Item) => {
@@ -489,6 +540,77 @@ export default function UserSearchModal({
                             </div>
                         );
                     })}
+                    {tab !== "users" && (
+                        <>
+                            <div className="px-2 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-noir-text-muted flex items-center justify-between">
+                                <span>Grupos públicos</span>
+                                <span className="text-[10px] font-mono text-emerald-400/80 lowercase">
+                                    {publicGroups.length} disponíve
+                                    {publicGroups.length === 1 ? "l" : "is"}
+                                </span>
+                            </div>
+
+                            {publicLoading && publicGroups.length === 0 && (
+                                <p className="px-2 py-4 text-center text-noir-text-muted text-sm">
+                                    Buscando grupos públicos...
+                                </p>
+                            )}
+
+                            {!publicLoading && publicGroups.length === 0 && (
+                                <p className="px-2 py-4 text-center text-noir-text-muted text-sm">
+                                    Nenhum grupo público disponível.
+                                </p>
+                            )}
+
+                            {publicGroups.map((g) => {
+                                const joining = joiningId === g._id;
+                                return (
+                                    <div
+                                        key={`public-${g._id}`}
+                                        className="flex items-center justify-between p-2.5 rounded-xl border border-transparent hover:bg-noir-surface-alt/70 hover:border-noir-border/60 transition"
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="flex-shrink-0">
+                                                <Avatar
+                                                    src={g.avatar}
+                                                    name={g.name}
+                                                    size="md"
+                                                />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-sm text-noir-text-bright truncate">
+                                                        {g.name}
+                                                    </span>
+                                                    <span className="text-[10px] bg-noir-surface border border-noir-border/80 text-emerald-400 font-mono px-1.5 py-0.2 rounded shrink-0">
+                                                        PÚBLICO
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-noir-text-muted truncate mt-0.5">
+                                                    {g.description ||
+                                                        `${g.participantCount} participante${g.participantCount === 1 ? "" : "s"}`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            disabled={joining}
+                                            onClick={() =>
+                                                handleJoinPublic(g._id)
+                                            }
+                                            className="flex-shrink-0 ml-2 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-300 bg-emerald-600/20 border border-emerald-500/40 px-2 py-1 rounded-lg hover:bg-emerald-600/30 transition disabled:opacity-50"
+                                        >
+                                            {joining ? (
+                                                <span className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                                            ) : (
+                                                "Entrar"
+                                            )}
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </>
+                    )}
                 </div>
 
                 <div className="px-4 py-3 bg-[#0d1310] border-t border-noir-border/70 flex items-center justify-between text-xs text-noir-text-muted">

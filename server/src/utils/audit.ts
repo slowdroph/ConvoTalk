@@ -20,6 +20,8 @@ export type AuditAction =
     | "user.remove_avatar"
     | "room.create_direct"
     | "room.create_group"
+    | "room.update_visibility"
+    | "room.join_public"
     | "room.delete"
     | "room.update"
     | "room.add_member"

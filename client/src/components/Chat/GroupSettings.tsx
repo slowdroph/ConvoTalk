@@ -32,6 +32,9 @@ export default function GroupSettings({
     const { user } = useAuth();
     const [name, setName] = useState(room.name);
     const [description, setDescription] = useState(room.description);
+    const [visibility, setVisibility] = useState<"private" | "public">(
+        room.visibility ?? "private",
+    );
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);
@@ -76,6 +79,7 @@ export default function GroupSettings({
         if (isOpen) {
             setName(room.name);
             setDescription(room.description);
+            setVisibility(room.visibility ?? "private");
             setQuery("");
             setResults([]);
             setError("");
@@ -97,6 +101,11 @@ export default function GroupSettings({
         setError("");
         setSaving(true);
         try {
+            if (visibility !== (room.visibility ?? "private")) {
+                await api.patch(`/rooms/${room._id}/visibility`, {
+                    visibility,
+                });
+            }
             const { data } = await api.put(`/rooms/${room._id}`, {
                 name,
                 description,
@@ -329,6 +338,59 @@ export default function GroupSettings({
                                     rows={2}
                                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors resize-none"
                                 />
+                            </div>
+                            <div>
+                                <span className="block text-xs text-zinc-400 mb-1">
+                                    Privacidade
+                                </span>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {(
+                                        [
+                                            {
+                                                value: "private",
+                                                title: "Privado",
+                                                hint: "Apenas convidados",
+                                            },
+                                            {
+                                                value: "public",
+                                                title: "Público",
+                                                hint: "Qualquer um entra",
+                                            },
+                                        ] as const
+                                    ).map((opt) => {
+                                        const active =
+                                            visibility === opt.value;
+                                        return (
+                                            <button
+                                                key={opt.value}
+                                                type="button"
+                                                onClick={() =>
+                                                    setVisibility(opt.value)
+                                                }
+                                                aria-pressed={active}
+                                                className={`p-2.5 rounded-lg border text-left transition ${
+                                                    active
+                                                        ? "border-green-500/60 bg-green-950/30"
+                                                        : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                                }`}
+                                            >
+                                                <span className="flex items-center gap-1.5">
+                                                    <span
+                                                        className={`text-xs font-semibold ${active ? "text-white" : "text-zinc-400"}`}
+                                                    >
+                                                        {opt.title}
+                                                    </span>
+                                                    {active && (
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                                                    )}
+                                                </span>
+                                                <span className="block text-[10px] text-zinc-500 leading-tight mt-0.5">
+                                                    {opt.hint}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                             <button
                                 onClick={handleSave}

@@ -267,6 +267,10 @@ export default function Sidebar({
                         setUserSearchOpen(false);
                         onConversationCreated(roomId);
                     }}
+                    onGroupJoined={(roomId) => {
+                        setUserSearchOpen(false);
+                        onConversationCreated(roomId);
+                    }}
                     onSelectRoom={(roomId) => {
                         setUserSearchOpen(false);
                         onClose?.();

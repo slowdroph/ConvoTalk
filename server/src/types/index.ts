@@ -26,6 +26,7 @@ export interface IRoom extends Document {
     name: string;
     description: string;
     type: "group" | "direct";
+    visibility: "private" | "public";
     createdBy: IUser["_id"] | null;
     participants: IUser["_id"][];
     admins: IUser["_id"][];

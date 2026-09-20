@@ -6,6 +6,9 @@ import {
     messageSearchQuerySchema,
     deleteRoomParams,
     directRoomSchema,
+    createGroupRoomSchema,
+    patchVisibilitySchema,
+    publicRoomsQuerySchema,
 } from "../validations";
 
 describe("auth validations", () => {
@@ -120,6 +123,62 @@ describe("room validations", () => {
     it("rejeita deleteRoomParams com id inválido", () => {
         const result = deleteRoomParams.safeParse({
             params: { id: "não-é-id" },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("aceita grupo público na criação", () => {
+        const result = createGroupRoomSchema.safeParse({
+            body: { name: "Estudos", visibility: "public" },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("aplica visibilidade private por padrão na criação", () => {
+        const result = createGroupRoomSchema.safeParse({
+            body: { name: "Estudos" },
+        });
+        expect(result.success).toBe(true);
+        if (result.success) {
+            expect(result.data.body.visibility).toBe("private");
+        }
+    });
+
+    it("rejeita visibilidade inválida na criação", () => {
+        const result = createGroupRoomSchema.safeParse({
+            body: { name: "Estudos", visibility: "aberto" },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("aceita troca de visibilidade válida", () => {
+        const result = patchVisibilitySchema.safeParse({
+            params: { id: "507f1f77bcf86cd799439011" },
+            body: { visibility: "public" },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("rejeita troca de visibilidade inválida", () => {
+        const result = patchVisibilitySchema.safeParse({
+            params: { id: "507f1f77bcf86cd799439011" },
+            body: { visibility: "aberto" },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("aplica padrões na busca de grupos públicos", () => {
+        const result = publicRoomsQuerySchema.safeParse({ query: {} });
+        expect(result.success).toBe(true);
+        if (result.success) {
+            expect(result.data.query.q).toBe("");
+            expect(result.data.query.limit).toBe(20);
+        }
+    });
+
+    it("rejeita limit acima do máximo na busca de grupos públicos", () => {
+        const result = publicRoomsQuerySchema.safeParse({
+            query: { q: "estudos", limit: 51 },
         });
         expect(result.success).toBe(false);
     });

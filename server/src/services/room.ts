@@ -1,8 +1,10 @@
-import mongoose from "mongoose";
+import mongoose, { type QueryFilter } from "mongoose";
 import Room from "../models/Room";
 import User from "../models/User";
 import Message from "../models/Message";
+import type { IRoom } from "../types";
 import { emitSystemMessage } from "./systemMessages";
+import { escapeRegex } from "../utils/regex";
 import cloudinary from "../config/cloudinary";
 import { getSocketIO } from "../config/io";
 import { isRoomCreator, isRoomCreatorOrAdmin } from "../utils/roomAuth";
@@ -202,6 +204,7 @@ export async function createGroupRoom(
     name: string,
     description: string,
     participantIds: string[],
+    visibility: "private" | "public" = "private",
 ) {
     const memberIds = Array.from(
         new Set<string>([
@@ -225,6 +228,7 @@ export async function createGroupRoom(
         name,
         description: description || "",
         type: "group",
+        visibility,
         createdBy: creatorId,
         participants: memberIds,
     });
@@ -302,6 +306,154 @@ export async function updateGroupRoom(
             `${actor?.name || "Alguém"} atualizou a descrição do grupo.`,
         );
     }
+
+    broadcastRoomUpdated(roomId, updated);
+    return updated;
+}
+
+export async function updateGroupVisibility(
+    roomId: string,
+    myId: string,
+    visibility: "private" | "public",
+) {
+    const room = await Room.findById(roomId)
+        .select("type visibility createdBy admins participants name")
+        .lean();
+    if (!room) {
+        throw new NotFoundError("Sala não encontrada.");
+    }
+
+    if (room.type !== "group") {
+        throw new BadRequestError("Apenas grupos possuem visibilidade.");
+    }
+
+    if (!isRoomCreatorOrAdmin(room, myId.toString())) {
+        throw new ForbiddenError(
+            "Apenas o criador ou administradores podem alterar a visibilidade.",
+        );
+    }
+
+    if (room.visibility === visibility) {
+        return Room.findById(roomId)
+            .populate("participants", "name email publicId avatar status")
+            .populate("admins", "name email publicId avatar status")
+            .lean();
+    }
+
+    const updated = await Room.findByIdAndUpdate(
+        roomId,
+        { visibility },
+        { new: true, runValidators: true },
+    )
+        .populate("participants", "name email publicId avatar status")
+        .populate("admins", "name email publicId avatar status")
+        .lean();
+
+    invalidateRoom(roomId);
+
+    const actor = await User.findById(myId).select("name").lean();
+    emitSystemMessage(
+        roomId,
+        visibility === "public"
+            ? `${actor?.name || "Alguém"} tornou o grupo público. Qualquer pessoa pode entrar.`
+            : `${actor?.name || "Alguém"} tornou o grupo privado.`,
+    );
+
+    broadcastRoomUpdated(roomId, updated);
+    return updated;
+}
+
+export interface PublicRoomListing {
+    _id: mongoose.Types.ObjectId;
+    name: string;
+    description: string;
+    avatar: string;
+    participantCount: number;
+    createdAt: Date;
+    visibility: "public";
+}
+
+export async function getPublicRooms(
+    userId: string,
+    query: string,
+    limit: number,
+    before?: string,
+) {
+    const filter: QueryFilter<IRoom> = {
+        visibility: "public",
+        type: "group",
+        participants: { $ne: new mongoose.Types.ObjectId(userId) },
+    };
+
+    const term = query.trim();
+    if (term) {
+        filter.name = { $regex: escapeRegex(term), $options: "i" };
+    }
+
+    if (before) {
+        filter._id = { $gt: new mongoose.Types.ObjectId(before) };
+    }
+
+    const found = await Room.find(filter)
+        .sort({ _id: 1 })
+        .limit(limit + 1)
+        .select("name description avatar participants createdAt visibility")
+        .lean();
+
+    const hasMore = found.length > limit;
+    const page = hasMore ? found.slice(0, limit) : found;
+
+    const rooms: PublicRoomListing[] = page.map((r) => ({
+        _id: r._id,
+        name: r.name,
+        description: r.description ?? "",
+        avatar: r.avatar ?? "",
+        participantCount: (r.participants ?? []).length,
+        createdAt: r.createdAt,
+        visibility: "public" as const,
+    }));
+
+    return {
+        rooms,
+        nextCursor: hasMore ? page[page.length - 1]._id.toString() : null,
+    };
+}
+
+export async function joinPublicRoom(roomId: string, myId: string) {
+    const room = await Room.findById(roomId)
+        .select("type visibility participants")
+        .lean();
+    if (!room) {
+        throw new NotFoundError("Sala não encontrada.");
+    }
+
+    if (room.type !== "group") {
+        throw new BadRequestError("Apenas grupos podem ser ingressados.");
+    }
+
+    if (room.visibility !== "public") {
+        throw new ForbiddenError("Este grupo é privado.");
+    }
+
+    if (
+        (room.participants ?? []).some((p) => p.toString() === myId.toString())
+    ) {
+        throw new BadRequestError("Você já participa deste grupo.");
+    }
+
+    const updated = await Room.findByIdAndUpdate(
+        roomId,
+        { $addToSet: { participants: new mongoose.Types.ObjectId(myId) } },
+        { new: true, runValidators: true },
+    )
+        .populate("participants", "name email publicId avatar status")
+        .populate("admins", "name email publicId avatar status")
+        .lean();
+
+    invalidateRoom(roomId);
+
+    const actor = await User.findById(myId).select("name").lean();
+    emitSystemMessage(roomId, `${actor?.name || "Alguém"} entrou no grupo.`);
 
     broadcastRoomUpdated(roomId, updated);
     return updated;

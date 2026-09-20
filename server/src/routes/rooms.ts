@@ -6,6 +6,8 @@ import {
     directRoomSchema,
     createGroupRoomSchema,
     updateGroupRoomSchema,
+    patchVisibilitySchema,
+    publicRoomsQuerySchema,
     addMemberSchema,
     removeMemberParams,
     addAdminSchema,
@@ -14,9 +16,12 @@ import {
 } from "../validations";
 import {
     listRooms,
+    listPublicRooms,
+    joinPublicRoom,
     createDirectRoom,
     createGroupRoom,
     updateGroupRoom,
+    updateGroupVisibility,
     addMember,
     removeMember,
     deleteRoom,
@@ -30,10 +35,18 @@ import {
 const router = Router();
 
 router.get("/", auth, listRooms);
+router.get("/public", auth, validate(publicRoomsQuerySchema), listPublicRooms);
 router.get("/:id/pinned", auth, getPinnedMessages);
 router.post("/direct", auth, validate(directRoomSchema), createDirectRoom);
 router.post("/group", auth, validate(createGroupRoomSchema), createGroupRoom);
 router.put("/:id", auth, validate(updateGroupRoomSchema), updateGroupRoom);
+router.patch(
+    "/:id/visibility",
+    auth,
+    validate(patchVisibilitySchema),
+    updateGroupVisibility,
+);
+router.post("/:id/join", auth, validate(deleteRoomParams), joinPublicRoom);
 router.post("/:id/members", auth, validate(addMemberSchema), addMember);
 router.delete(
     "/:id/members/:userId",

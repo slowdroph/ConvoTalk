@@ -36,6 +36,7 @@ export interface RoomPayload {
     name: string;
     description: string;
     type: "group" | "direct";
+    visibility?: "private" | "public";
     createdBy?: string | null;
     participants: UserPayload[];
     admins?: UserPayload[];

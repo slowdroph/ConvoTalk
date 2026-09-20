@@ -16,6 +16,11 @@ const roomSchema = new Schema<IRoom>({
         enum: ["group", "direct"],
         default: "group",
     },
+    visibility: {
+        type: String,
+        enum: ["private", "public"],
+        default: "private",
+    },
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "User",
@@ -72,5 +77,6 @@ const roomSchema = new Schema<IRoom>({
 
 roomSchema.index({ type: 1, participants: 1 });
 roomSchema.index({ participants: 1, lastMessageAt: -1 });
+roomSchema.index({ visibility: 1, type: 1, name: 1 });
 
 export default mongoose.model<IRoom>("Room", roomSchema);

@@ -36,7 +36,11 @@ export async function createDirectRoom(
             actorId: req.user!._id.toString(),
             targetId: req.body.userId,
             ip: getHttpClientIp(req),
-            details: { roomId: (room as { _id: { toString(): string } })._id.toString() },
+            details: {
+                roomId: (
+                    room as { _id: { toString(): string } }
+                )._id.toString(),
+            },
         });
         res.status(created ? 201 : 200).json(room);
     } catch (error) {
@@ -49,21 +53,25 @@ export async function createGroupRoom(
     res: Response,
 ): Promise<void> {
     try {
-        const { name, description, participantIds } = req.body;
+        const { name, description, participantIds, visibility } = req.body;
         const populated = await roomService.createGroupRoom(
             req.user!._id,
             name,
             description,
             participantIds,
+            visibility,
         );
         audit({
             action: "room.create_group",
             actorId: req.user!._id.toString(),
             ip: getHttpClientIp(req),
             details: {
-                roomId: (populated as { _id: { toString(): string } })._id.toString(),
+                roomId: (
+                    populated as { _id: { toString(): string } }
+                )._id.toString(),
                 name,
                 memberCount: participantIds.length,
+                visibility,
             },
         });
         res.status(201).json(populated);
@@ -80,7 +88,8 @@ export async function updateGroupRoom(
         const id = getParamId(req.params.id);
         const updates: { name?: string; description?: string } = {};
         if (req.body.name !== undefined) updates.name = req.body.name;
-        if (req.body.description !== undefined) updates.description = req.body.description;
+        if (req.body.description !== undefined)
+            updates.description = req.body.description;
 
         const updated = await roomService.updateGroupRoom(
             id,
@@ -217,6 +226,70 @@ export async function removeAdmin(
     }
 }
 
+export async function updateGroupVisibility(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const id = getParamId(req.params.id);
+        const updated = await roomService.updateGroupVisibility(
+            id,
+            req.user!._id,
+            req.body.visibility,
+        );
+        audit({
+            action: "room.update_visibility",
+            actorId: req.user!._id.toString(),
+            ip: getHttpClientIp(req),
+            details: { roomId: id, visibility: req.body.visibility },
+        });
+        res.json(updated);
+    } catch (error) {
+        handleError(error, res, "Erro ao alterar visibilidade do grupo.");
+    }
+}
+
+export async function listPublicRooms(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { q, limit, before } = req.query as unknown as {
+            q: string;
+            limit: number;
+            before?: string;
+        };
+        const result = await roomService.getPublicRooms(
+            req.user!._id,
+            q,
+            limit,
+            before,
+        );
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao buscar grupos públicos.");
+    }
+}
+
+export async function joinPublicRoom(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const id = getParamId(req.params.id);
+        const updated = await roomService.joinPublicRoom(id, req.user!._id);
+        audit({
+            action: "room.join_public",
+            actorId: req.user!._id.toString(),
+            ip: getHttpClientIp(req),
+            details: { roomId: id },
+        });
+        res.json(updated);
+    } catch (error) {
+        handleError(error, res, "Erro ao entrar no grupo.");
+    }
+}
+
 export async function updateGroupAvatar(
     req: AuthRequest,
     res: Response,
@@ -247,7 +320,10 @@ export async function removeGroupAvatar(
 ): Promise<void> {
     try {
         const id = getParamId(req.params.id);
-        const updated = await roomService.removeGroupAvatarService(id, req.user!._id);
+        const updated = await roomService.removeGroupAvatarService(
+            id,
+            req.user!._id,
+        );
         res.json(updated);
     } catch (error) {
         handleError(error, res, "Erro ao remover avatar do grupo.");

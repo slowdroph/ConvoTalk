@@ -110,6 +110,39 @@ export const createGroupRoomSchema = z.object({
             .max(50, "No máximo 50 participantes por grupo.")
             .optional()
             .default([]),
+        visibility: z
+            .enum(["private", "public"])
+            .optional()
+            .default("private"),
+    }),
+});
+
+export const patchVisibilitySchema = z.object({
+    params: z.object({
+        id: objectId,
+    }),
+    body: z.object({
+        visibility: z.enum(["private", "public"], {
+            message: "Visibilidade inválida.",
+        }),
+    }),
+});
+
+export const publicRoomsQuerySchema = z.object({
+    query: z.object({
+        q: z
+            .string()
+            .trim()
+            .max(100, "Termo de busca deve ter no máximo 100 caracteres.")
+            .optional()
+            .default(""),
+        limit: z.coerce
+            .number()
+            .int()
+            .min(1, "Limite deve ser no mínimo 1.")
+            .max(50, "Limite deve ser no máximo 50.")
+            .default(20),
+        before: objectId.optional(),
     }),
 });
 

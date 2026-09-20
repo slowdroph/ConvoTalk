@@ -5,6 +5,7 @@ interface CachedRoom {
     name?: string;
     participants: string[];
     type: "group" | "direct";
+    visibility: "private" | "public";
     expiresAt: number;
 }
 
@@ -41,11 +42,12 @@ export async function getRoomInfo(roomId: string): Promise<CachedRoom | null> {
     }
 
     const room = await Room.findById(roomId)
-        .select("name participants type")
+        .select("name participants type visibility")
         .lean<{
             name?: string;
             participants: (Types.ObjectId | string)[];
             type: "group" | "direct";
+            visibility?: "private" | "public";
         }>();
     if (!room) return null;
 
@@ -53,6 +55,7 @@ export async function getRoomInfo(roomId: string): Promise<CachedRoom | null> {
         name: room.name,
         participants: room.participants.map((p) => p.toString()),
         type: room.type,
+        visibility: room.visibility ?? "private",
         expiresAt: now + ROOM_CACHE_TTL_MS,
     };
     roomCache.set(roomId, entry);
