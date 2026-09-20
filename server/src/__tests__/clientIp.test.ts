@@ -4,8 +4,8 @@ import { getHttpClientIp } from "../utils/clientIp";
 
 function mockReq(
     headers: Record<string, string> = {},
-    remoteAddress = "10.0.0.5",
-    ip = "10.0.0.5",
+    remoteAddress?: string,
+    ip?: string,
 ): Request {
     const lower: Record<string, string> = {};
     for (const [key, value] of Object.entries(headers)) {
@@ -13,13 +13,22 @@ function mockReq(
     }
     return {
         header: (name: string) => lower[name.toLowerCase()],
-        socket: { remoteAddress },
-        ip,
+        socket: remoteAddress ? { remoteAddress } : undefined,
+        ...(ip !== undefined ? { ip } : {}),
     } as unknown as Request;
 }
 
 describe("getHttpClientIp", () => {
-    it("usa o primeiro IP do X-Forwarded-For atrás de proxy privado", () => {
+    it("prefere o req.ip resolvido pelo Express (anti-spoof)", () => {
+        const req = mockReq(
+            { "x-forwarded-for": "9.9.9.9, 158.173.156.225, 152.233.13.166" },
+            "10.0.0.5",
+            "158.173.156.225",
+        );
+        expect(getHttpClientIp(req)).toBe("158.173.156.225");
+    });
+
+    it("usa o primeiro IP do X-Forwarded-For quando req.ip ausente", () => {
         const req = mockReq(
             { "x-forwarded-for": "158.173.156.225, 152.233.13.166" },
             "10.0.0.5",

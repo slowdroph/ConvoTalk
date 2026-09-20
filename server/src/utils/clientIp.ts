@@ -35,8 +35,7 @@ function readHeader(req: Request, name: string): string | undefined {
         const headers = (req as { headers?: Record<string, unknown> }).headers;
         const value = headers?.[name.toLowerCase()];
         if (typeof value === "string") return value;
-        if (Array.isArray(value) && typeof value[0] === "string")
-            return value[0];
+        if (Array.isArray(value) && typeof value[0] === "string") return value[0];
         return undefined;
     } catch {
         return undefined;
@@ -45,6 +44,8 @@ function readHeader(req: Request, name: string): string | undefined {
 
 export function getHttpClientIp(req: Request): string {
     try {
+        if (typeof req.ip === "string" && req.ip) return normalizeIp(req.ip);
+
         const direct = req.socket?.remoteAddress ?? "";
         const trustForwarded = !direct || isTrustedDirectAddress(direct);
 
@@ -62,7 +63,6 @@ export function getHttpClientIp(req: Request): string {
             if (realIp) return normalizeIp(realIp);
         }
 
-        if (typeof req.ip === "string" && req.ip) return normalizeIp(req.ip);
         if (direct) return normalizeIp(direct);
         return "unknown";
     } catch {

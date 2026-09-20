@@ -49,7 +49,7 @@ const corsOrigin =
 function parseTrustProxy(): boolean | string | number {
     const raw = process.env.TRUST_PROXY;
     if (!raw) {
-        return process.env.NODE_ENV === "production" ? true : "loopback";
+        return process.env.NODE_ENV === "production" ? 2 : "loopback";
     }
     const normalized = raw.trim().toLowerCase();
     if (normalized === "true") return true;
