@@ -1,10 +1,14 @@
+import { useContext } from "react";
 import { useSocket } from "../../hooks/useSocket";
+import { AuthContext } from "../../contexts/AuthContext";
 
 const MAX_ATTEMPTS = 20;
 
 export default function ConnectionBanner() {
     const { connected, reconnecting, reconnectAttempt, hasConnectedOnce } =
         useSocket();
+    const auth = useContext(AuthContext);
+    if (auth && !auth.user) return null;
 
     if (connected) return null;
     if (!hasConnectedOnce && !reconnecting) return null;

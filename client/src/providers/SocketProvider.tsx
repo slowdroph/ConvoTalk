@@ -70,6 +70,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             wasConnected.current = true;
         });
         newSocket.on("disconnect", (reason) => {
+            if (!getAccessToken()) return;
             setConnected(false);
             setReconnecting(
                 reason === "io server disconnect" ||
@@ -98,6 +99,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             setOnlineUsers(users),
         );
         newSocket.on("session:force_logout", (data?: { reason?: string }) => {
+            if (!getAccessToken()) return;
             const reasonMessages: Record<string, string> = {
                 password_changed: "Sua senha foi alterada. Faça login novamente.",
                 email_changed: "Seu email foi alterado. Faça login novamente.",

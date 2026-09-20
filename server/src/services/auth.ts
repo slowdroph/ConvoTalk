@@ -239,12 +239,8 @@ export async function refreshSession(refreshToken: string) {
 
 export async function logoutSession(refreshToken: string) {
     try {
-        const { userId, sessionId } = verifyRefreshToken(refreshToken);
+        const { sessionId } = verifyRefreshToken(refreshToken);
         if (sessionId) {
-            const io = getSocketIO();
-            if (io) {
-                await emitForceLogout(io, userId, "remote_logout", sessionId);
-            }
             await Session.findByIdAndDelete(sessionId);
         }
     } catch {

@@ -115,6 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     const logout = useCallback(async () => {
+        setAccessToken(null);
+        clearSessionFlag();
+        localStorage.removeItem("user");
+        setToken(null);
+        setUser(null);
         try {
             await unsubscribeFromPush();
         } catch {
@@ -125,11 +130,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {
             // Ignora falhas na chamada de logout
         }
-        setAccessToken(null);
-        clearSessionFlag();
-        localStorage.removeItem("user");
-        setToken(null);
-        setUser(null);
     }, []);
 
     const updateUser = useCallback((updatedUser: User) => {
