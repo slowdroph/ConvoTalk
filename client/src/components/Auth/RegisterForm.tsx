@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../utils/errors";
+import { reportSignupConversion } from "../../lib/ads";
 import api from "../../services/api";
 
 interface RegisterFormProps {
@@ -27,6 +28,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
         try {
             await register(name, email, password);
+            reportSignupConversion();
             setRegisteredEmail(email);
         } catch (err: unknown) {
             setError(getErrorMessage(err, "Erro ao criar conta"));
