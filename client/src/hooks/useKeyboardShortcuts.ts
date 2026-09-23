@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export interface ShortcutBinding {
     key: string;
@@ -23,30 +23,70 @@ function matchesBinding(e: KeyboardEvent, binding: ShortcutBinding): boolean {
     return true;
 }
 
+type BindingsSource = { getBindings: () => ShortcutBinding[] };
+
+const subscribers = new Set<BindingsSource>();
+let listening = false;
+
+function isTypingTarget(target: EventTarget | null): boolean {
+    const el = target as HTMLElement | null;
+    return (
+        !!el &&
+        (el.tagName === "INPUT" ||
+            el.tagName === "TEXTAREA" ||
+            el.isContentEditable)
+    );
+}
+
+function handleGlobalKeyDown(e: KeyboardEvent): void {
+    const isTyping = isTypingTarget(e.target);
+
+    for (const sub of subscribers) {
+        const bindings = sub.getBindings();
+        for (const binding of bindings) {
+            if (binding.enabled === false) continue;
+            if (!matchesBinding(e, binding)) continue;
+
+            const usesModifier =
+                binding.ctrl || binding.meta || binding.alt;
+            if (isTyping && !usesModifier) continue;
+
+            binding.handler(e);
+            break;
+        }
+    }
+}
+
+function ensureListening(): void {
+    if (!listening && typeof window !== "undefined") {
+        window.addEventListener("keydown", handleGlobalKeyDown);
+        listening = true;
+    }
+}
+
+function releaseIfIdle(): void {
+    if (listening && subscribers.size === 0 && typeof window !== "undefined") {
+        window.removeEventListener("keydown", handleGlobalKeyDown);
+        listening = false;
+    }
+}
+
 export function useKeyboardShortcuts(bindings: ShortcutBinding[]): void {
+    const bindingsRef = useRef(bindings);
+
     useEffect(() => {
-        const handler = (e: KeyboardEvent) => {
-            const target = e.target as HTMLElement | null;
-            const isTyping =
-                !!target &&
-                (target.tagName === "INPUT" ||
-                    target.tagName === "TEXTAREA" ||
-                    target.isContentEditable);
+        bindingsRef.current = bindings;
+    });
 
-            for (const binding of bindings) {
-                if (binding.enabled === false) continue;
-                if (!matchesBinding(e, binding)) continue;
-
-                const usesModifier =
-                    binding.ctrl || binding.meta || binding.alt;
-                if (isTyping && !usesModifier) continue;
-
-                binding.handler(e);
-                return;
-            }
+    useEffect(() => {
+        const source: BindingsSource = {
+            getBindings: () => bindingsRef.current,
         };
-
-        window.addEventListener("keydown", handler);
-        return () => window.removeEventListener("keydown", handler);
-    }, [bindings]);
+        subscribers.add(source);
+        ensureListening();
+        return () => {
+            subscribers.delete(source);
+            releaseIfIdle();
+        };
+    }, []);
 }
