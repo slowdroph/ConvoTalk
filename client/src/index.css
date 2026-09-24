@@ -465,3 +465,21 @@ html[data-theme="light"] .glass-card {
 .bounce-2 { animation: dot-bounce 1.2s infinite ease-in-out 0.2s; }
 .bounce-3 { animation: dot-bounce 1.2s infinite ease-in-out 0.4s;
 }
+
+.login-dark {
+    background-color: #080d08;
+    font-family: var(--font-hanken);
+}
+
+.login-dark .login-dot-matrix {
+    background-image: radial-gradient(rgba(16, 185, 129, 0.12) 1px, transparent 1px);
+    background-size: 28px 28px;
+}
+
+.login-dark .login-radial-glow {
+    background: radial-gradient(circle at 30% 40%, rgba(0, 168, 75, 0.14) 0%, rgba(14, 21, 14, 0) 65%);
+}
+
+.login-dark .login-radial-glow-right {
+    background: radial-gradient(circle at 80% 60%, rgba(16, 185, 129, 0.08) 0%, rgba(14, 21, 14, 0) 55%);
+}
