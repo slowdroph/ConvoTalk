@@ -40,7 +40,7 @@ export async function register(req: Request, res: Response): Promise<void> {
 
         res.status(201).json({
             message:
-                "Conta criada com sucesso! Enviamos um email de verificação. Verifique sua caixa de entrada.",
+                "Se o email for válido, enviamos um link de confirmação. Verifique sua caixa de entrada.",
         });
     } catch (error) {
         handleError(error, res);
@@ -147,7 +147,7 @@ export async function resendVerification(
         await authService.resendVerification(email);
         res.json({
             message:
-                "Email de verificação reenviado! Verifique sua caixa de entrada.",
+                "Se o email for válido e ainda não confirmado, enviamos um novo link de confirmação.",
         });
     } catch (error) {
         handleError(error, res);

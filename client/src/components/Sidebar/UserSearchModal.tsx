@@ -9,9 +9,9 @@ import type { Room } from "../../types";
 interface UserResult {
     _id: string;
     name: string;
-    email: string;
     publicId: string;
     avatar?: string;
+    status?: string;
 }
 
 interface PublicGroup {
@@ -94,8 +94,15 @@ export default function UserSearchModal({
     }, [onClose]);
 
     const search = useCallback(async (term: string) => {
-        if (term.trim().length < 1) {
+        if (term.trim().length < 3) {
             setResults([]);
+            return;
+        }
+
+        if (term.includes("@")) {
+            setResults([]);
+            setError("Busque por nome ou #ID. Busca por email foi desativada.");
+            setLoading(false);
             return;
         }
 
@@ -311,8 +318,8 @@ export default function UserSearchModal({
                             setSelectedIndex(0);
                             setError("");
                         }}
-                        placeholder="Buscar por nome, e-mail ou #ID..."
-                        maxLength={100}
+                        placeholder="Buscar por nome ou #ID..."
+                        maxLength={50}
                         autoComplete="off"
                         aria-label="Buscar usuário ou grupo"
                         aria-autocomplete="list"
@@ -386,7 +393,7 @@ export default function UserSearchModal({
 
                     {!query.trim() && items.length === 0 && (
                         <p className="px-2 py-8 text-center text-noir-text-muted text-sm">
-                            Digite um nome, e-mail ou #ID para buscar pessoas
+                            Digite um nome ou #ID para buscar pessoas
                             {groupResults.length > 0
                                 ? " ou escolha um grupo abaixo."
                                 : "."}
@@ -501,8 +508,8 @@ export default function UserSearchModal({
                                                 #{user.publicId}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-noir-text-muted truncate mt-0.5">
-                                            {user.email}
+                                        <p className="text-xs text-noir-text-muted truncate mt-0.5 font-mono">
+                                            #{user.publicId}
                                         </p>
                                     </div>
                                 </div>

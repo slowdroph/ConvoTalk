@@ -7,8 +7,9 @@ import Avatar from "../ui/Avatar";
 interface SearchResult {
     _id: string;
     name: string;
-    email: string;
+    publicId: string;
     avatar?: string;
+    status?: string;
 }
 
 interface UserSearchProps {
@@ -26,8 +27,15 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
     const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     const search = useCallback(async (term: string) => {
-        if (term.trim().length < 1) {
+        if (term.trim().length < 3) {
             setResults([]);
+            return;
+        }
+
+        if (term.includes("@")) {
+            setResults([]);
+            setError("Busque por nome ou #ID. Busca por email foi desativada.");
+            setLoading(false);
             return;
         }
 
@@ -113,8 +121,8 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
                         setQuery(e.target.value);
                         setError("");
                     }}
-                    placeholder="Nome ou email..."
-                    maxLength={100}
+                    placeholder="Nome ou #ID..."
+                    maxLength={50}
                     autoComplete="off"
                     className="flex-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
                 />
@@ -164,8 +172,8 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
                                     <p className="text-sm text-white truncate">
                                         {user.name}
                                     </p>
-                                    <p className="text-xs text-zinc-500 truncate">
-                                        {user.email}
+                                    <p className="text-xs text-zinc-500 truncate font-mono">
+                                        #{user.publicId}
                                     </p>
                                 </div>
                             </button>

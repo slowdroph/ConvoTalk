@@ -8,7 +8,7 @@ import {
     verifyAccessToken,
 } from "../services/token";
 import auth, { AuthRequest } from "../middleware/auth";
-import { authLimiter } from "../middleware/rateLimiter";
+import { authLimiter, searchUserKeyGenerator } from "../middleware/rateLimiter";
 import { notFoundHandler } from "../middleware/errorHandler";
 import { validateEnv } from "../config/env";
 
@@ -108,6 +108,20 @@ describe("segurança: rate limiting", () => {
         }
         expect(lastStatus).toBe(429);
     }, 30_000);
+});
+
+describe("segurança: chave do rate-limit de busca", () => {
+    it("chaveia por userId quando autenticado", () => {
+        const req = {
+            user: { _id: "user-123", sessionId: "session-456" },
+        } as AuthRequest;
+        expect(searchUserKeyGenerator(req)).toBe("user:user-123");
+    });
+
+    it("recorre ao IP quando anônimo", () => {
+        const req = {} as AuthRequest;
+        expect(typeof searchUserKeyGenerator(req)).toBe("string");
+    });
 });
 
 describe("segurança: 404 JSON para API", () => {

@@ -2,13 +2,12 @@ import bcrypt from "bcryptjs";
 import User from "../models/User";
 import Session from "../models/Session";
 import {
-    ConflictError,
-    NotFoundError,
     UnauthorizedError,
     ValidationError,
 } from "../utils/errors";
 import {
     sendVerificationEmail,
+    sendAlreadyRegisteredEmail,
     sendPasswordResetEmail,
 } from "./email";
 import {
@@ -82,7 +81,15 @@ export async function registerUser(
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-        throw new ConflictError("Email já cadastrado.");
+        try {
+            await sendAlreadyRegisteredEmail(email);
+        } catch (error) {
+            logger.error(
+                { error },
+                "erro ao enviar email de conta já existente no cadastro",
+            );
+        }
+        return { alreadyExists: true as const, emailSendingFailed: false };
     }
 
     const salt = await bcrypt.genSalt(SALT_ROUNDS);
@@ -136,7 +143,7 @@ export async function registerUser(
         emailSendingFailed = true;
     }
 
-    return { emailSendingFailed };
+    return { alreadyExists: false as const, emailSendingFailed };
 }
 
 export async function loginUser(
@@ -268,14 +275,8 @@ export async function verifyEmailToken(token: string) {
 
 export async function resendVerification(email: string) {
     const user = await User.findOne({ email });
-    if (!user) {
-        throw new NotFoundError("Nenhuma conta encontrada com este email.");
-    }
-
-    if (user.verified) {
-        throw new ValidationError(
-            "Este email já foi verificado. Faça login.",
-        );
+    if (!user || user.verified) {
+        return;
     }
 
     const verificationToken = generateSecretToken();

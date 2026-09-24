@@ -8,7 +8,7 @@ interface UserProfilePopoverProps {
     userId?: string;
     name?: string;
     avatar?: string;
-    email?: string;
+    publicId?: string;
     status?: string;
     isOnline?: boolean;
     lastSeen?: string | null;
@@ -19,7 +19,7 @@ export default function UserProfilePopover({
     userId,
     name,
     avatar,
-    email,
+    publicId,
     status,
     isOnline,
     lastSeen,
@@ -117,9 +117,9 @@ export default function UserProfilePopover({
                                 <p className="text-white font-semibold text-sm truncate">
                                     {name}
                                 </p>
-                                {email && (
-                                    <p className="text-zinc-500 text-xs truncate">
-                                        {email}
+                                {publicId && (
+                                    <p className="text-zinc-500 text-xs truncate font-mono">
+                                        #{publicId}
                                     </p>
                                 )}
                             </div>

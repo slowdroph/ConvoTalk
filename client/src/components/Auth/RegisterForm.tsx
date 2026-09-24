@@ -79,7 +79,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                     Verifique seu email
                 </h2>
                 <p className="text-zinc-400 text-sm">
-                    Enviamos um email de verificação para{" "}
+                    Se o email for válido, enviamos um link de confirmação para{" "}
                     <span className="text-white font-medium">
                         {registeredEmail}
                     </span>

@@ -16,7 +16,7 @@ function renderPopover() {
             userId="u1"
             name="Ana"
             avatar=""
-            email="ana@test.com"
+            publicId="ABCD1234"
             status="em reunião"
             isOnline={true}
         >

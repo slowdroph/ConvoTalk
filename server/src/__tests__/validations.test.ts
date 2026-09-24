@@ -4,6 +4,7 @@ import {
     loginSchema,
     messagesQuerySchema,
     messageSearchQuerySchema,
+    userSearchQuerySchema,
     deleteRoomParams,
     directRoomSchema,
     createGroupRoomSchema,
@@ -181,6 +182,48 @@ describe("room validations", () => {
             query: { q: "estudos", limit: 51 },
         });
         expect(result.success).toBe(false);
+    });
+});
+
+describe("user search validations", () => {
+    it("aceita busca com 3+ caracteres", () => {
+        const result = userSearchQuerySchema.safeParse({
+            query: { q: "ana" },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("rejeita busca curta que permitiria enumeração", () => {
+        const result = userSearchQuerySchema.safeParse({
+            query: { q: "a" },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita termo acima de 50 caracteres", () => {
+        const result = userSearchQuerySchema.safeParse({
+            query: { q: "a".repeat(51) },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita busca por email com mensagem clara", () => {
+        const result = userSearchQuerySchema.safeParse({
+            query: { q: "ana@test.com" },
+        });
+        expect(result.success).toBe(false);
+        if (!result.success) {
+            expect(result.error.issues[0].message).toContain(
+                "Busca por email foi desativada",
+            );
+        }
+    });
+
+    it("aceita busca por #ID", () => {
+        const result = userSearchQuerySchema.safeParse({
+            query: { q: "#ABCD1234" },
+        });
+        expect(result.success).toBe(true);
     });
 });
 

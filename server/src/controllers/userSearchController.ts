@@ -8,8 +8,11 @@ export async function searchUsers(
     res: Response,
 ): Promise<void> {
     try {
-        const { q } = req.query as { q: string };
-        const result = await userService.searchUsers(q, req.user!._id);
+        const { q, limit } = req.query as unknown as {
+            q: string;
+            limit: number;
+        };
+        const result = await userService.searchUsers(q, req.user!._id, limit);
         res.json(result);
     } catch (error) {
         handleError(error, res, "Erro ao buscar usuários.");

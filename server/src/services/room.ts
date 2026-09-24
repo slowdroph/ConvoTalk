@@ -19,6 +19,7 @@ import {
 } from "../utils/errors";
 import { logger } from "../config/logger";
 import { invalidateRoom } from "../socket/roomCache";
+import { PUBLIC_USER_SELECT } from "../constants";
 
 const GROUP_PHOTO_FOLDER = "chat_app_groupPhoto";
 
@@ -36,8 +37,8 @@ export async function getRoomsWithMeta(userId: string) {
 
     const rooms = await Room.find({ participants: userId })
         .sort({ lastMessageAt: -1, createdAt: -1 })
-        .populate("participants", "name email publicId avatar status")
-        .populate("admins", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
+        .populate("admins", PUBLIC_USER_SELECT)
         .lean();
 
     const visibleRooms = rooms.filter((r) => {
@@ -179,7 +180,7 @@ export async function createDirectRoom(myId: string, otherUserId: string) {
         type: "direct",
         participants: { $all: [myId, otherUserId], $size: 2 },
     })
-        .populate("participants", "name email publicId")
+        .populate("participants", PUBLIC_USER_SELECT)
         .lean();
 
     if (existing) {
@@ -193,7 +194,7 @@ export async function createDirectRoom(myId: string, otherUserId: string) {
     });
 
     const populated = await Room.findById(room._id)
-        .populate("participants", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
         .lean();
 
     return { room: populated, created: true };
@@ -234,7 +235,7 @@ export async function createGroupRoom(
     });
 
     const populated = await Room.findById(room._id)
-        .populate("participants", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
         .lean();
 
     const creator = await User.findById(creatorId).select("name").lean();
@@ -287,8 +288,8 @@ export async function updateGroupRoom(
         new: true,
         runValidators: true,
     })
-        .populate("participants", "name email publicId avatar status")
-        .populate("admins", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
+        .populate("admins", PUBLIC_USER_SELECT)
         .lean();
 
     const actor = await User.findById(myId).select("name").lean();
@@ -335,8 +336,8 @@ export async function updateGroupVisibility(
 
     if (room.visibility === visibility) {
         return Room.findById(roomId)
-            .populate("participants", "name email publicId avatar status")
-            .populate("admins", "name email publicId avatar status")
+            .populate("participants", PUBLIC_USER_SELECT)
+            .populate("admins", PUBLIC_USER_SELECT)
             .lean();
     }
 
@@ -345,8 +346,8 @@ export async function updateGroupVisibility(
         { visibility },
         { new: true, runValidators: true },
     )
-        .populate("participants", "name email publicId avatar status")
-        .populate("admins", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
+        .populate("admins", PUBLIC_USER_SELECT)
         .lean();
 
     invalidateRoom(roomId);
@@ -446,8 +447,8 @@ export async function joinPublicRoom(roomId: string, myId: string) {
         { $addToSet: { participants: new mongoose.Types.ObjectId(myId) } },
         { new: true, runValidators: true },
     )
-        .populate("participants", "name email publicId avatar status")
-        .populate("admins", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
+        .populate("admins", PUBLIC_USER_SELECT)
         .lean();
 
     invalidateRoom(roomId);
@@ -493,8 +494,8 @@ export async function addMemberToRoom(roomId: string, myId: string, newMemberId:
         { $addToSet: { participants: newMemberId } },
         { new: true, runValidators: true },
     )
-        .populate("participants", "name email publicId avatar status")
-        .populate("admins", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
+        .populate("admins", PUBLIC_USER_SELECT)
         .lean();
     invalidateRoom(roomId);
 
@@ -544,8 +545,8 @@ export async function removeMemberFromRoom(roomId: string, myId: string, removeI
         { $pull: { participants: removeId, admins: removeId } },
         { new: true, runValidators: true },
     )
-        .populate("participants", "name email publicId avatar status")
-        .populate("admins", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
+        .populate("admins", PUBLIC_USER_SELECT)
         .lean();
     invalidateRoom(roomId);
 
@@ -607,8 +608,8 @@ export async function leaveGroupRoom(roomId: string, myId: string) {
             },
             { new: true, runValidators: true },
         )
-            .populate("participants", "name email publicId avatar status")
-            .populate("admins", "name email publicId avatar status")
+            .populate("participants", PUBLIC_USER_SELECT)
+            .populate("admins", PUBLIC_USER_SELECT)
             .lean();
         invalidateRoom(roomId);
 
@@ -635,8 +636,8 @@ export async function leaveGroupRoom(roomId: string, myId: string) {
         },
         { new: true, runValidators: true },
     )
-        .populate("participants", "name email publicId avatar status")
-        .populate("admins", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
+        .populate("admins", PUBLIC_USER_SELECT)
         .lean();
     invalidateRoom(roomId);
 
@@ -672,7 +673,7 @@ export async function deleteRoomService(roomId: string, myId: string) {
             { new: true },
         )
             .select("participants type name")
-            .populate("participants", "name email publicId avatar status")
+            .populate("participants", PUBLIC_USER_SELECT)
             .lean();
         invalidateRoom(roomId);
 
@@ -778,8 +779,8 @@ export async function addAdminToRoom(roomId: string, myId: string, newAdminId: s
         { $addToSet: { admins: newAdminId } },
         { new: true, runValidators: true },
     )
-        .populate("participants", "name email publicId avatar status")
-        .populate("admins", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
+        .populate("admins", PUBLIC_USER_SELECT)
         .lean();
 
     const [actor, targetUserDoc] = await Promise.all([
@@ -824,8 +825,8 @@ export async function removeAdminFromRoom(roomId: string, myId: string, removeAd
         { $pull: { admins: removeAdminId } },
         { new: true, runValidators: true },
     )
-        .populate("participants", "name email publicId avatar status")
-        .populate("admins", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
+        .populate("admins", PUBLIC_USER_SELECT)
         .lean();
 
     const [actor, targetUserDoc] = await Promise.all([
@@ -893,8 +894,8 @@ export async function updateGroupAvatar(
         { avatar: result.secure_url },
         { new: true, runValidators: true },
     )
-        .populate("participants", "name email publicId avatar status")
-        .populate("admins", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
+        .populate("admins", PUBLIC_USER_SELECT)
         .lean();
 
     const actor = await User.findById(myId).select("name").lean();
@@ -947,8 +948,8 @@ export async function removeGroupAvatarService(roomId: string, myId: string) {
         { avatar: "" },
         { new: true, runValidators: true },
     )
-        .populate("participants", "name email publicId avatar status")
-        .populate("admins", "name email publicId avatar status")
+        .populate("participants", PUBLIC_USER_SELECT)
+        .populate("admins", PUBLIC_USER_SELECT)
         .lean();
 
     broadcastRoomUpdated(roomId, updated);

@@ -1,5 +1,6 @@
 import type {
     UserPayload,
+    PublicUserPayload,
     SenderPayload,
     AttachmentPayload,
     RoomPayload,
@@ -14,6 +15,7 @@ import type {
 } from "@shared/types";
 
 export type User = UserPayload;
+export type PublicUser = PublicUserPayload;
 export type Sender = SenderPayload;
 export type Attachment = AttachmentPayload;
 export type Room = RoomPayload;
@@ -29,7 +31,6 @@ export type ReadDetail = ReadDetailPayloadShared;
 export interface Participant {
     _id: string;
     name: string;
-    email: string;
     publicId: string;
     avatar?: string;
     status?: string;

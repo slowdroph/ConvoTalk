@@ -1,10 +1,13 @@
-export interface UserPayload {
+export interface PublicUserPayload {
     _id: string;
     name: string;
-    email: string;
     publicId: string;
     avatar?: string;
     status?: string;
+}
+
+export interface UserPayload extends PublicUserPayload {
+    email: string;
     emailPending?: boolean;
     pendingEmail?: string;
 }
@@ -38,8 +41,8 @@ export interface RoomPayload {
     type: "group" | "direct";
     visibility?: "private" | "public";
     createdBy?: string | null;
-    participants: UserPayload[];
-    admins?: UserPayload[];
+    participants: PublicUserPayload[];
+    admins?: PublicUserPayload[];
     avatar?: string;
     unreadCount?: number;
     mentionUnreadCount?: number;

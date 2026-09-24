@@ -25,6 +25,7 @@ import type { Request, Response } from "express";
 vi.mock("../services/email", () => ({
     sendEmailChangeConfirmation: vi.fn().mockResolvedValue(undefined),
     sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
+    sendAlreadyRegisteredEmail: vi.fn().mockResolvedValue(undefined),
     sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -660,5 +661,47 @@ describe("integração: alteração de email", () => {
         expect(body.emailPending).toBe(false);
         const updated = await User.findById(user._id).lean();
         expect(updated?.pendingEmail).toBeNull();
+    });
+});
+
+describe("integração: cadastro sem oráculo", () => {
+    it("email repetido não lança erro e não duplica conta", async () => {
+        const { registerUser } = await import(
+            "../services/auth"
+        );
+        const { sendAlreadyRegisteredEmail } = await import(
+            "../services/email"
+        );
+
+        await registerUser(
+            { name: "Ana", email: "ana@test.com", password: "12345678" },
+            "127.0.0.1",
+        );
+        const second = await registerUser(
+            { name: "Outra", email: "ana@test.com", password: "12345678" },
+            "127.0.0.1",
+        );
+
+        expect(second).toEqual({
+            alreadyExists: true,
+            emailSendingFailed: false,
+        });
+        expect(sendAlreadyRegisteredEmail).toHaveBeenCalledWith(
+            "ana@test.com",
+        );
+        expect(await User.countDocuments({ email: "ana@test.com" })).toBe(1);
+    });
+
+    it("resend genérico não revela conta inexistente ou verificada", async () => {
+        const { resendVerification } = await import("../services/auth");
+
+        await expect(
+            resendVerification("fantasma@test.com"),
+        ).resolves.toBeUndefined();
+
+        await createUser("Ana", "ana@test.com");
+        await expect(
+            resendVerification("ana@test.com"),
+        ).resolves.toBeUndefined();
     });
 });

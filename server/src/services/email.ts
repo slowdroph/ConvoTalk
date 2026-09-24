@@ -292,6 +292,31 @@ export async function sendEmailChangeConfirmation(
     });
 }
 
+export async function sendAlreadyRegisteredEmail(
+    email: string,
+): Promise<void> {
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+
+    const html = buildEmailHtml({
+        preheader: "Faça login para continuar no ConvoTalk",
+        heading: "Você já tem conta!",
+        content: `
+          <p>Recebemos uma tentativa de cadastro com este email, mas ele já está em uso no ConvoTalk.</p>
+          <p>Você já tem conta. Faça login para continuar.</p>
+        `,
+        cta: { url: `${clientUrl}/login`, label: "Fazer login" },
+        footerNote:
+            "Esqueceu a senha? Redefina em sua tela de login. Se não foi você, ignore este email.",
+    });
+
+    await getResend().emails.send({
+        from: EMAIL_FROM,
+        to: email,
+        subject: "Você já tem conta no ConvoTalk",
+        html,
+    });
+}
+
 export async function sendPasswordResetEmail(
     email: string,
     name: string,

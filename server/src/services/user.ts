@@ -23,7 +23,7 @@ import {
     hashSecretToken,
     VERIFICATION_TOKEN_EXPIRES_MIN,
 } from "./token";
-import { SALT_ROUNDS } from "../constants";
+import { SALT_ROUNDS, PUBLIC_USER_SELECT } from "../constants";
 import { logger } from "../config/logger";
 import { getSocketIO } from "../config/io";
 import { emitForceLogout } from "../utils/socket";
@@ -47,9 +47,7 @@ function toSafeUserObject(doc: ReturnType<typeof User.prototype.toObject>) {
 }
 
 export async function getMe(userId: string) {
-    const user = await User.findById(userId)
-        .select(SENSITIVE_SELECT)
-        .lean();
+    const user = await User.findById(userId).select(SENSITIVE_SELECT).lean();
     if (!user) {
         throw new NotFoundError("Usuário não encontrado.");
     }
@@ -92,11 +90,7 @@ export async function updateProfile(
     const normalizedEmail = input.email?.toLowerCase();
     const isPendingEmail =
         normalizedEmail && normalizedEmail === user.pendingEmail;
-    if (
-        normalizedEmail &&
-        normalizedEmail !== user.email &&
-        !isPendingEmail
-    ) {
+    if (normalizedEmail && normalizedEmail !== user.email && !isPendingEmail) {
         const existingUser = await User.findOne({
             email: normalizedEmail,
             _id: { $ne: userId },
@@ -170,9 +164,7 @@ export async function confirmEmailChange(token: string) {
         _id: { $ne: user._id },
     });
     if (existingUser) {
-        throw new ConflictError(
-            "Este email já está em uso por outra conta.",
-        );
+        throw new ConflictError("Este email já está em uso por outra conta.");
     }
 
     const previousEmail = user.email;
@@ -255,9 +247,7 @@ export async function deleteAccount(userId: string, password: string) {
         .lean();
     const myRoomIds = myRooms.map((r) => r._id);
 
-    const dmIds = myRooms
-        .filter((r) => r.type === "direct")
-        .map((r) => r._id);
+    const dmIds = myRooms.filter((r) => r.type === "direct").map((r) => r._id);
 
     if (dmIds.length > 0) {
         const dmMessages = await Message.find({ room: { $in: dmIds } })
@@ -375,9 +365,7 @@ export async function blockUserService(myId: string, targetId: string) {
         throw new NotFoundError("Usuário não encontrado.");
     }
 
-    const me = await User.findById(myId)
-        .select("blockedUsers")
-        .lean();
+    const me = await User.findById(myId).select("blockedUsers").lean();
     if (!me) {
         throw new NotFoundError("Usuário não encontrado.");
     }
@@ -396,47 +384,57 @@ export async function blockUserService(myId: string, targetId: string) {
 }
 
 export async function unblockUserService(myId: string, targetId: string) {
-    await User.updateOne(
-        { _id: myId },
-        { $pull: { blockedUsers: targetId } },
-    );
+    await User.updateOne({ _id: myId }, { $pull: { blockedUsers: targetId } });
 }
 
 export async function getBlockedUsers(userId: string) {
     const me = await User.findById(userId)
-        .populate("blockedUsers", "name email publicId avatar")
+        .populate("blockedUsers", PUBLIC_USER_SELECT)
         .select("blockedUsers")
         .lean();
 
     return me?.blockedUsers ?? [];
 }
 
-export async function searchUsers(query: string, currentUserId: string) {
-    const safe = escapeRegex(query.trim());
-    const regex = new RegExp(safe, "i");
+export async function searchUsers(
+    query: string,
+    currentUserId: string,
+    limit = 20,
+) {
+    const trimmed = query.trim();
+    const isIdQuery = trimmed.startsWith("#");
+    const cleanQuery = trimmed.replace(/^#/, "");
 
-    const me = await User.findById(currentUserId)
-        .select("blockedUsers")
-        .lean();
+    const me = await User.findById(currentUserId).select("blockedUsers").lean();
 
     const blocked = new Set(
         (me?.blockedUsers ?? []).map((id) => id.toString()),
     );
 
-    const isIdQuery = query.trim().startsWith("#");
-    const cleanQuery = query.trim().replace(/^#/, "");
-
     const orFilters: Record<string, unknown>[] = isIdQuery
-        ? [{ publicId: new RegExp(`^${escapeRegex(cleanQuery)}`, "i") }]
-        : [{ name: regex }, { email: regex }, { publicId: new RegExp(`^${escapeRegex(cleanQuery)}`, "i") }];
+        ? [
+              {
+                  publicId: new RegExp(
+                      `^${escapeRegex(cleanQuery.toUpperCase())}`,
+                  ),
+              },
+          ]
+        : [
+              { name: new RegExp(escapeRegex(trimmed), "i") },
+              {
+                  publicId: new RegExp(
+                      `^${escapeRegex(cleanQuery.toUpperCase())}`,
+                  ),
+              },
+          ];
 
     const users = await User.find({
         _id: { $ne: currentUserId },
         blockedUsers: { $ne: currentUserId },
         $or: orFilters,
     })
-        .select("name email publicId avatar")
-        .limit(20)
+        .select(PUBLIC_USER_SELECT)
+        .limit(limit)
         .lean();
 
     return users.filter((u) => !blocked.has(u._id.toString()));

@@ -143,8 +143,8 @@ export default function MentionAutocomplete({
                             <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
                                 {user.name}
                             </p>
-                            <p className="text-xs text-slate-500 dark:text-noir-text-muted truncate">
-                                {user.email}
+                            <p className="text-xs text-slate-500 dark:text-noir-text-muted truncate font-mono">
+                                #{user.publicId}
                             </p>
                         </div>
                     </li>

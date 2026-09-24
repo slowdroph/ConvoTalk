@@ -256,6 +256,26 @@ export const searchQuerySchema = z.object({
     }),
 });
 
+export const userSearchQuerySchema = z.object({
+    query: z.object({
+        q: z
+            .string()
+            .trim()
+            .min(3, "Digite pelo menos 3 caracteres para buscar.")
+            .max(50, "Termo de busca deve ter no máximo 50 caracteres.")
+            .refine((val) => !val.includes("@"), {
+                message:
+                    "Busque por nome ou #ID. Busca por email foi desativada.",
+            }),
+        limit: z.coerce
+            .number()
+            .int()
+            .min(1, "Limite deve ser no mínimo 1.")
+            .max(50, "Limite deve ser no máximo 50.")
+            .default(20),
+    }),
+});
+
 export const resendVerificationSchema = z.object({
     body: z.object({
         email: z

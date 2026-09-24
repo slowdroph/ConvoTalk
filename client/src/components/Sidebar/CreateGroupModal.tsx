@@ -7,9 +7,9 @@ import Avatar from "../ui/Avatar";
 interface SearchResult {
     _id: string;
     name: string;
-    email: string;
     publicId: string;
     avatar?: string;
+    status?: string;
 }
 
 type Visibility = "private" | "public";
@@ -41,8 +41,14 @@ export default function CreateGroupModal({
     const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     const search = useCallback(async (term: string) => {
-        if (term.trim().length < 1) {
+        if (term.trim().length < 3) {
             setResults([]);
+            return;
+        }
+        if (term.includes("@")) {
+            setResults([]);
+            setError("Busque por nome ou #ID. Busca por email foi desativada.");
+            setLoading(false);
             return;
         }
         setLoading(true);
@@ -409,8 +415,8 @@ export default function CreateGroupModal({
                                 id="addParticipantsSearch"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                placeholder="Buscar por nome, email ou #ID..."
-                                maxLength={100}
+                                placeholder="Buscar por nome ou #ID..."
+                                maxLength={50}
                                 autoComplete="off"
                                 className="w-full bg-[#090f09] border border-emerald-500/40 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-noir-text-muted focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 focus:outline-none transition"
                             />
@@ -495,8 +501,8 @@ export default function CreateGroupModal({
                                                             #{u.publicId}
                                                         </span>
                                                     </div>
-                                                    <p className="text-[11px] text-noir-text-muted truncate">
-                                                        {u.email}
+                                                    <p className="text-[11px] text-noir-text-muted truncate font-mono">
+                                                        #{u.publicId}
                                                     </p>
                                                 </div>
                                             </div>

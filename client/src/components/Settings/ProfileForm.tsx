@@ -215,6 +215,37 @@ export default function ProfileForm() {
                 </div>
             </div>
 
+            {/* Seu ID público */}
+            <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-emerald-500/25 bg-emerald-950/20 max-w-2xl">
+                <div className="min-w-0">
+                    <p className="text-xs font-semibold text-noir-text-bright">
+                        Seu ID para conversas
+                    </p>
+                    <p className="text-xs text-noir-text-muted mt-0.5">
+                        Compartilhe{" "}
+                        <span className="font-mono text-emerald-300">
+                            #{user?.publicId}
+                        </span>{" "}
+                        para que outras pessoas iniciem conversa com você sem
+                        expor seu email.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => {
+                        if (user?.publicId) {
+                            navigator.clipboard?.writeText(
+                                `#${user.publicId}`,
+                            );
+                            setSuccess("ID copiado!");
+                        }
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-medium transition shrink-0 cursor-pointer"
+                >
+                    Copiar ID
+                </button>
+            </div>
+
             {/* Formulário Principal */}
             <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
                 <div>
