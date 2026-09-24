@@ -67,7 +67,7 @@ describe("integração: mensagens", () => {
         });
 
         const found = (await Message.findById(msg._id)
-            .populate("sender", "name email")
+            .populate("sender", "name publicId")
             .lean()) as { content?: string; sender?: { name?: string } | null };
         expect(found?.content).toBe("Olá mundo");
         expect(found?.sender?.name).toBe("Alice");
@@ -686,6 +686,8 @@ describe("integração: cadastro sem oráculo", () => {
             alreadyExists: true,
             emailSendingFailed: false,
         });
+        const { flushEmailQueue } = await import("../services/emailQueue");
+        await flushEmailQueue();
         expect(sendAlreadyRegisteredEmail).toHaveBeenCalledWith(
             "ana@test.com",
         );
@@ -703,5 +705,105 @@ describe("integração: cadastro sem oráculo", () => {
         await expect(
             resendVerification("ana@test.com"),
         ).resolves.toBeUndefined();
+    });
+});
+
+describe("integração: busca pública sem email", () => {
+    it("searchUsers projeta só campos públicos e acha por nome/#ID", async () => {
+        const { searchUsers } = await import("../services/user");
+
+        const ana = await createUser("Ana Souza", "ana@test.com");
+        const bruno = await createUser("Bruno", "bruno@test.com");
+
+        const byName = await searchUsers("ana", bruno._id.toString());
+        expect(byName).toHaveLength(1);
+        expect(byName[0]._id.toString()).toBe(ana._id.toString());
+        expect(byName[0]).not.toHaveProperty("email");
+        expect(byName[0]).toHaveProperty("publicId");
+
+        const byId = await searchUsers(
+            `#${ana.publicId.slice(0, 4)}`,
+            bruno._id.toString(),
+        );
+        expect(byId.map((u) => u._id.toString())).toContain(
+            ana._id.toString(),
+        );
+        for (const item of byId) {
+            expect(item).not.toHaveProperty("email");
+        }
+    });
+
+    it("controller de busca responde array público sem email", async () => {
+        const { searchUsers: searchController } = await import(
+            "../controllers/userSearchController"
+        );
+
+        const ana = await createUser("Ana Souza", "ana@test.com");
+        const bruno = await createUser("Bruno", "bruno@test.com");
+
+        const state = { body: undefined as unknown };
+        const res = {
+            json(body: unknown) {
+                state.body = body;
+                return res;
+            },
+        };
+        await searchController(
+            {
+                query: { q: "ana", limit: 20 },
+                user: { _id: bruno._id.toString() },
+            } as unknown as AuthRequest,
+            res as unknown as Response,
+        );
+
+        const body = state.body as { _id: unknown; email?: unknown }[];
+        expect(Array.isArray(body)).toBe(true);
+        expect(body.map((u) => String(u._id))).toContain(
+            ana._id.toString(),
+        );
+        for (const item of body) {
+            expect(item).not.toHaveProperty("email");
+        }
+    });
+});
+
+describe("integração: rooms sem email", () => {
+    it("participantes de DM, grupo e listagem não expõem email", async () => {
+        const { createDirectRoom, createGroupRoom, getRoomsWithMeta } =
+            await import("../services/room");
+
+        const ana = await createUser("Ana", "ana@test.com");
+        const bruno = await createUser("Bruno", "bruno@test.com");
+
+        const { room: dm } = await createDirectRoom(
+            ana._id.toString(),
+            bruno._id.toString(),
+        );
+        for (const p of (dm as unknown as { participants: object[] })
+            .participants) {
+            expect(p).not.toHaveProperty("email");
+            expect(p).toHaveProperty("publicId");
+        }
+
+        const group = await createGroupRoom(
+            ana._id.toString(),
+            "Estudos",
+            "",
+            [bruno._id.toString()],
+        );
+        for (const p of (
+            group as unknown as { participants: object[] }
+        ).participants) {
+            expect(p).not.toHaveProperty("email");
+            expect(p).toHaveProperty("publicId");
+        }
+
+        const rooms = await getRoomsWithMeta(bruno._id.toString());
+        expect(rooms.length).toBeGreaterThanOrEqual(2);
+        for (const r of rooms) {
+            for (const p of (r.participants ?? []) as object[]) {
+                expect(p).not.toHaveProperty("email");
+            }
+        }
     });
 });

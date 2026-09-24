@@ -35,7 +35,10 @@ export async function register(req: Request, res: Response): Promise<void> {
             action: "auth.register",
             actorId: "system",
             ip: getHttpClientIp(req),
-            details: { email, acceptedTerms: true },
+            details: {
+                emailDomain: email.split("@")[1] ?? null,
+                acceptedTerms: true,
+            },
         });
 
         res.status(201).json({

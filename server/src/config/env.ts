@@ -98,6 +98,13 @@ export function validateEnv(): void {
             "Variáveis de ambiente opcionais ausentes. Recursos correspondentes ficarão indisponíveis.",
         );
     }
+
+    if (!process.env.RESEND_API_KEY) {
+        logger.warn(
+            {},
+            "RESEND_API_KEY ausente: emails transacionais serão enfileirados e falharão no envio. Configure para ativar verificação de email e redefinição de senha.",
+        );
+    }
 }
 
 export function getAllowedOrigins(): string[] {

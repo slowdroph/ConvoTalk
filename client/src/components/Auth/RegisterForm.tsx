@@ -47,7 +47,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                 email: registeredEmail,
             });
             setResendMessage(
-                "Email reenviado! Verifique sua caixa de entrada.",
+                "Se o email for válido e ainda não confirmado, enviamos um novo link de confirmação.",
             );
         } catch (err: unknown) {
             setResendMessage(getErrorMessage(err, "Erro ao reenviar email"));

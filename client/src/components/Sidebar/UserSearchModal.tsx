@@ -112,7 +112,8 @@ export default function UserSearchModal({
             const { data } = await api.get(
                 `/users/search?q=${encodeURIComponent(term)}`,
             );
-            setResults(Array.isArray(data) ? data : []);
+            const list = Array.isArray(data) ? data : (data?.data ?? []);
+            setResults(list);
             setSelectedIndex(0);
             setError("");
         } catch (err: unknown) {

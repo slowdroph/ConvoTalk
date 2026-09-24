@@ -68,7 +68,8 @@ export default function GroupSettings({
             const { data } = await api.get(
                 `/users/search?q=${encodeURIComponent(term)}`,
             );
-            setResults(data);
+            const list = Array.isArray(data) ? data : (data?.data ?? []);
+            setResults(list);
         } catch {
             setResults([]);
         } finally {

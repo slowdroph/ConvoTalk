@@ -256,6 +256,9 @@ export const searchQuerySchema = z.object({
     }),
 });
 
+// Busca global de mensagens (texto livre, permite @ e 1+ caracteres).
+export const messageSearchAllQuerySchema = searchQuerySchema;
+
 export const userSearchQuerySchema = z.object({
     query: z.object({
         q: z

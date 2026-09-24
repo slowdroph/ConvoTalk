@@ -101,5 +101,6 @@ const userSchema = new Schema<IUser>({
 userSchema.index({ verificationToken: 1 }, { sparse: true });
 userSchema.index({ pendingEmailToken: 1 }, { sparse: true });
 userSchema.index({ resetToken: 1 }, { sparse: true });
+userSchema.index({ name: 1 });
 
 export default mongoose.model<IUser>("User", userSchema);

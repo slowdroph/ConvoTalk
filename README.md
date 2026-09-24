@@ -311,7 +311,7 @@ All authenticated routes require a Bearer access token in the `Authorization` he
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| POST | `/api/auth/register` | Create account |
+| POST | `/api/auth/register` | Create account (generic response, no account oracle) |
 | POST | `/api/auth/login` | Authenticate |
 | POST | `/api/auth/refresh` | Rotate access token |
 | GET | `/api/messages/:roomId` | Paginated message history |
@@ -323,10 +323,12 @@ All authenticated routes require a Bearer access token in the `Authorization` he
 | POST | `/api/rooms/group` | Create a group |
 | PUT | `/api/user/profile` | Update profile |
 | POST | `/api/user/:id/block` | Block a user |
-| GET | `/api/users/search?q=` | Search users |
+| GET | `/api/users/search?q=` | Search users by name or #publicId (min 3 chars, email search disabled) |
 | GET | `/api/health` | Readiness probe |
 
 Real-time communication runs over Socket.IO with explicit event names (`message`, `typing`, `read_messages`, `call:initiate`, `webrtc:offer`, etc.), all payloads validated with Zod schemas.
+
+User discovery is privacy-first: search matches `name` or `#publicId` only (queries with `@` are rejected), responses and room participants expose `{_id, name, publicId, avatar, status}` — never `email`. Transactional emails (verification, password reset, already-registered notice) are sent through an in-memory queue with retry outside the request path.
 
 ## Deployment
 
@@ -343,7 +345,7 @@ Both Dockerfiles are multi-stage builds running as non-root users. The productio
 
 - Access (15 min) and refresh (7 days) tokens, refresh stored hashed and delivered via httpOnly cookies
 - bcrypt password hashing
-- Six dedicated REST rate limiters plus per-socket, per-room and per-IP limits on socket events
+- Nine dedicated REST rate limiters (including per-user search limiting) plus per-socket, per-room and per-IP limits on socket events
 - Zod validation on every REST endpoint and Socket.IO event
 - SSRF-hardened link previews: DNS resolution pinning, private IP rejection, redirect limits and response caching
 - Helmet security headers and origin-restricted CORS

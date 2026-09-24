@@ -56,7 +56,8 @@ export default function CreateGroupModal({
             const { data } = await api.get(
                 `/users/search?q=${encodeURIComponent(term)}`,
             );
-            setResults(Array.isArray(data) ? data : []);
+            const list = Array.isArray(data) ? data : (data?.data ?? []);
+            setResults(list);
         } catch {
             setResults([]);
         } finally {
@@ -142,8 +143,8 @@ export default function CreateGroupModal({
                     await api.put(`/rooms/${data._id}/avatar`, formData, {
                         headers: { "Content-Type": "multipart/form-data" },
                     });
-                } catch (err: unknown) {
-                    console.error("Erro ao enviar foto do grupo:", err);
+                } catch {
+                    setError("Grupo criado, mas a foto não pôde ser enviada.");
                 }
             }
 

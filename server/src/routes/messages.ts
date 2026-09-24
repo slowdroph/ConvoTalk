@@ -4,7 +4,7 @@ import { validate } from "../middleware/validate";
 import {
     messagesQuerySchema,
     messageSearchQuerySchema,
-    searchQuerySchema,
+    messageSearchAllQuerySchema,
 } from "../validations";
 import {
     messageUpload,
@@ -19,7 +19,7 @@ import {
 
 const router = Router();
 
-router.get("/search", auth, validate(searchQuerySchema), searchMessages);
+router.get("/search", auth, validate(messageSearchAllQuerySchema), searchMessages);
 router.get(
     "/:roomId/search",
     auth,

@@ -45,7 +45,8 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
             const { data } = await api.get(
                 `/users/search?q=${encodeURIComponent(term)}`,
             );
-            setResults(data);
+            const list = Array.isArray(data) ? data : (data?.data ?? []);
+            setResults(list);
             setError("");
         } catch (err: unknown) {
             setResults([]);

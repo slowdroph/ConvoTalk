@@ -17,7 +17,7 @@ import {
     deleteCloudinaryAttachments,
     cloudinaryPublicIdFromUrl,
 } from "./cloudinary";
-import { sendEmailChangeConfirmation } from "./email";
+import { enqueueEmail } from "./emailQueue";
 import {
     generateSecretToken,
     hashSecretToken,
@@ -123,18 +123,12 @@ export async function updateProfile(
     }
 
     if (emailChanged) {
-        try {
-            await sendEmailChangeConfirmation(
-                user.pendingEmail!,
-                user.name,
-                confirmationToken,
-            );
-        } catch (error) {
-            logger.error(
-                { error },
-                "erro ao enviar email de confirmação de alteração de email",
-            );
-        }
+        enqueueEmail({
+            kind: "emailChange",
+            to: user.pendingEmail!,
+            name: user.name,
+            token: confirmationToken,
+        });
     }
 
     return {

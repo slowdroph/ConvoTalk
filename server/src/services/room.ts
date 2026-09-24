@@ -730,6 +730,7 @@ export async function deleteRoomService(roomId: string, myId: string) {
 
     await Message.deleteMany({ room: roomId });
     await Room.findByIdAndDelete(roomId);
+    invalidateRoom(roomId);
 
     if (io) {
         io.to(roomId).emit("room_deleted", roomId);
@@ -978,11 +979,11 @@ export async function getPinnedMessages(roomId: string, myId: string) {
 
     const messageIds = pinned.map((p) => p.message);
     const messages = await Message.find({ _id: { $in: messageIds } })
-        .populate("sender", "name avatar status")
+        .populate("sender", PUBLIC_USER_SELECT)
         .populate({
             path: "parentMessage",
             select: "sender content attachments deleted",
-            populate: { path: "sender", select: "name avatar status" },
+            populate: { path: "sender", select: PUBLIC_USER_SELECT },
         })
         .lean();
 

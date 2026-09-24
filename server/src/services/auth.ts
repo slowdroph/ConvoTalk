@@ -7,9 +7,8 @@ import {
 } from "../utils/errors";
 import {
     sendVerificationEmail,
-    sendAlreadyRegisteredEmail,
-    sendPasswordResetEmail,
 } from "./email";
+import { enqueueEmail } from "./emailQueue";
 import {
     signAccessToken,
     signRefreshToken,
@@ -81,14 +80,7 @@ export async function registerUser(
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-        try {
-            await sendAlreadyRegisteredEmail(email);
-        } catch (error) {
-            logger.error(
-                { error },
-                "erro ao enviar email de conta já existente no cadastro",
-            );
-        }
+        enqueueEmail({ kind: "alreadyRegistered", to: email });
         return { alreadyExists: true as const, emailSendingFailed: false };
     }
 
@@ -286,16 +278,12 @@ export async function resendVerification(email: string) {
     );
     await user.save();
 
-    try {
-        await sendVerificationEmail(
-            user.email,
-            user.name,
-            verificationToken,
-        );
-    } catch (error) {
-        logger.error({ error }, "erro ao reenviar email de verificação");
-        throw new Error("Não foi possível enviar o email de verificação.");
-    }
+    enqueueEmail({
+        kind: "verification",
+        to: user.email,
+        name: user.name,
+        token: verificationToken,
+    });
 }
 
 export async function requestPasswordReset(email: string) {
@@ -308,14 +296,12 @@ export async function requestPasswordReset(email: string) {
         );
         await user.save();
 
-        try {
-            await sendPasswordResetEmail(user.email, user.name, resetToken);
-        } catch (error) {
-            logger.error(
-                { error },
-                "erro ao enviar email de redefinição de senha",
-            );
-        }
+        enqueueEmail({
+            kind: "passwordReset",
+            to: user.email,
+            name: user.name,
+            token: resetToken,
+        });
     }
 }
 
