@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useGesture } from "../../hooks/useGesture";
 import { useSocket } from "../../hooks/useSocket";
 import { useMessageActionsPosition } from "../../hooks/useMessageActionsPosition";
-import type { Message, ParentMessage, User } from "../../types";
+import type { Message, ParentMessage, PublicUser } from "../../types";
 import Avatar from "../ui/Avatar";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import UserProfilePopover from "../ui/UserProfilePopover";
@@ -27,7 +27,7 @@ interface MessageBubbleProps {
     highlighted?: boolean;
     roomType: "group" | "direct";
     currentUserId: string;
-    participants?: User[];
+    participants?: PublicUser[];
 }
 
 function formatFileSize(bytes: number): string {

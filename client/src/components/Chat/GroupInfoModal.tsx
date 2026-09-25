@@ -4,7 +4,7 @@ import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import Avatar from "../ui/Avatar";
 import ConfirmDialog from "../ui/ConfirmDialog";
-import type { Room, Participant } from "../../types";
+import type { Room, PublicUser } from "../../types";
 
 interface GroupInfoModalProps {
     isOpen: boolean;
@@ -34,7 +34,7 @@ export default function GroupInfoModal({
     const creatorBlocked =
         isCreator && (participants.length <= 1 || otherAdmins.length === 0);
 
-    const roleOf = (p: Participant) => {
+    const roleOf = (p: PublicUser) => {
         if (p._id === room.createdBy) return "Criador";
         if (admins.some((a) => a._id === p._id)) return "Administrador";
         return "Membro";

@@ -15,7 +15,7 @@ import PinnedMessagesDialog from "./PinnedMessagesDialog";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import ChatHeader from "./ChatHeader";
 import api from "../../services/api";
-import type { Message, Participant, Room } from "../../types";
+import type { Message, PublicUser, Room } from "../../types";
 import { getErrorMessage } from "../../utils/errors";
 
 interface ChatWindowProps {
@@ -23,8 +23,8 @@ interface ChatWindowProps {
     roomName: string;
     roomDescription?: string;
     roomType: "group" | "direct";
-    participants: Participant[];
-    admins?: Participant[];
+    participants: PublicUser[];
+    admins?: PublicUser[];
     avatar?: string;
     createdBy?: string | null;
     visibility?: "private" | "public";

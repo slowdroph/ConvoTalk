@@ -1,9 +1,9 @@
 import { parseMentionTokens, type MentionParticipant } from "@shared/mentions";
-import type { User } from "../../types";
+import type { PublicUser } from "../../types";
 
 interface MentionTextProps {
     content: string;
-    participants: User[];
+    participants: PublicUser[];
     searchQuery?: string;
 }
 

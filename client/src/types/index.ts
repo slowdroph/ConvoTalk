@@ -28,14 +28,6 @@ export type MentionNotificationPayload = MentionNotificationPayloadShared;
 export type Session = SessionPayloadShared;
 export type ReadDetail = ReadDetailPayloadShared;
 
-export interface Participant {
-    _id: string;
-    name: string;
-    publicId: string;
-    avatar?: string;
-    status?: string;
-}
-
 export interface PreviewMessage {
     id: string;
     senderId: string;

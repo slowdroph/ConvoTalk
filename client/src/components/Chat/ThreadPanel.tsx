@@ -3,7 +3,7 @@ import { useSocket } from "../../hooks/useSocket";
 import { useAuth } from "../../hooks/useAuth";
 import MessageBubble from "./MessageBubble";
 import api from "../../services/api";
-import type { Message, Participant } from "../../types";
+import type { Message, PublicUser } from "../../types";
 
 interface ThreadPanelProps {
     roomId: string;
@@ -16,7 +16,7 @@ interface ThreadPanelProps {
     onToggleReaction: (messageId: string, emoji: string) => void;
     onTogglePin?: (message: Message) => void;
     isPinned?: (messageId: string) => boolean;
-    participants?: Participant[];
+    participants?: PublicUser[];
 }
 
 export default function ThreadPanel({

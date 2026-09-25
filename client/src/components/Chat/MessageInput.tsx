@@ -9,7 +9,7 @@ import AudioRecorder from "./AudioRecorder";
 import MentionAutocomplete from "./MentionAutocomplete";
 import { queuePendingMessage } from "../../lib/offlineStorage";
 import { parseMentionTokens, getUniqueMentionUserIds } from "@shared/mentions";
-import type { Message, User } from "../../types";
+import type { Message, PublicUser } from "../../types";
 
 const MAX_LENGTH = 2000;
 const WARN_LENGTH = 1800;
@@ -23,7 +23,7 @@ interface MessageInputProps {
     isBlocked?: boolean;
     onOptimisticMessage?: (msg: Message) => void;
     onOptimisticFailed?: (clientMessageId: string) => void;
-    participants?: User[];
+    participants?: PublicUser[];
 }
 
 const ALLOWED_DROP_TYPES = [
@@ -102,7 +102,7 @@ export default function MessageInput({
     }, [socket, isTyping, roomId]);
 
     const handleMentionSelect = useCallback(
-        (selectedUser: User) => {
+        (selectedUser: PublicUser) => {
             const textarea = textareaRef.current;
             if (!textarea) return;
 

@@ -2,7 +2,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import MessageBubble from "./MessageBubble";
 import Avatar from "../ui/Avatar";
-import type { Message, User } from "../../types";
+import type { Message, PublicUser } from "../../types";
 
 export interface TypingUser {
     userId: string;
@@ -28,7 +28,7 @@ interface MessageListProps {
     onOpenThread?: (message: Message) => void;
     pinnedMessageIds?: string[];
     onTogglePin?: (message: Message) => void;
-    participants?: User[];
+    participants?: PublicUser[];
 }
 
 const SCROLL_THRESHOLD = 150;

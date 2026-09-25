@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { User } from "../../types";
+import type { PublicUser } from "../../types";
 
 interface MentionAutocompleteProps {
     isOpen: boolean;
-    participants: User[];
+    participants: PublicUser[];
     currentUserId: string;
     query: string;
-    onSelect: (user: User) => void;
+    onSelect: (user: PublicUser) => void;
     onClose: () => void;
     position?: { left: number; top: number };
 }

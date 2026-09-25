@@ -5,7 +5,7 @@ import { getErrorMessage } from "../../utils/errors";
 import { useAuth } from "../../hooks/useAuth";
 import Avatar from "../ui/Avatar";
 import ConfirmDialog from "../ui/ConfirmDialog";
-import type { Room, Participant } from "../../types";
+import type { Room, PublicUser } from "../../types";
 
 interface SearchResult {
     _id: string;
@@ -549,7 +549,7 @@ export default function GroupSettings({
                             Participantes ({participants.length})
                         </span>
                         <ul className="border border-white/10 rounded-xl bg-[#090f09]/80 divide-y divide-white/5 overflow-hidden">
-                            {participants.map((p: Participant) => (
+                            {participants.map((p: PublicUser) => (
                                 <li
                                     key={p._id}
                                     className="flex items-center gap-3 px-3 py-2"
