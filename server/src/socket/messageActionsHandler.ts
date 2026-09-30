@@ -79,7 +79,7 @@ export function registerMessageActionsHandlers(ctx: ConnectionContext): void {
                     type: { $ne: "system" },
                 })
                     .sort({ createdAt: -1 })
-                    .select("createdAt")
+                    .select("content createdAt")
                     .lean();
 
                 await Room.findByIdAndUpdate(roomId, {
@@ -87,6 +87,11 @@ export function registerMessageActionsHandlers(ctx: ConnectionContext): void {
                 });
 
                 io.to(roomId).emit("message_deleted", messageId);
+                io.to(roomId).emit("room_updated", {
+                    _id: roomId,
+                    lastMessageAt: lastMsg?.createdAt ?? null,
+                    lastMessagePreview: lastMsg?.content ?? null,
+                });
             } catch (error) {
                 logger.error({ userId, error }, "erro ao excluir mensagem");
             }
@@ -185,17 +190,26 @@ export function registerMessageActionsHandlers(ctx: ConnectionContext): void {
 
     socket.on(
         "toggle_reaction",
-        async (data: {
-            messageId: string;
-            roomId: string;
-            emoji: string;
-        }) => {
+        async (
+            data: {
+                messageId: string;
+                roomId: string;
+                emoji: string;
+            },
+            ack?: (res: { error?: string }) => void,
+        ) => {
             try {
                 const parsed = safeParse(socketReactionSchema, data);
-                if (!parsed.success) return;
+                if (!parsed.success) {
+                    ack?.({ error: parsed.error });
+                    return;
+                }
                 const { messageId, roomId, emoji } = parsed.data;
 
-                if (!(await isRoomParticipant(roomId, userId))) return;
+                if (!(await isRoomParticipant(roomId, userId))) {
+                    ack?.({ error: "Você não participa desta conversa." });
+                    return;
+                }
 
                 const messageExists = await Message.findOne({
                     _id: messageId,
@@ -203,35 +217,38 @@ export function registerMessageActionsHandlers(ctx: ConnectionContext): void {
                 })
                     .select("_id")
                     .lean();
-                if (!messageExists) return;
+                if (!messageExists) {
+                    ack?.({ error: "Mensagem não encontrada." });
+                    return;
+                }
 
-                await Message.updateOne(
-                    { _id: messageId },
-                    [
-                        {
-                            $set: {
-                                [`reactions.${emoji}`]: {
-                                    $cond: {
-                                        if: { $in: [userId, `$reactions.${emoji}`] },
-                                        then: {
-                                            $filter: {
-                                                input: { $ifNull: [`$reactions.${emoji}`, []] },
-                                                as: "u",
-                                                cond: { $ne: ["$$u", userId] },
-                                            },
-                                        },
-                                        else: {
-                                            $setUnion: [
-                                                { $ifNull: [`$reactions.${emoji}`, []] },
-                                                [userId],
-                                            ],
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    ],
-                );
+                const current = await Message.findById(messageId)
+                    .select("reactions")
+                    .lean();
+                if (!current) {
+                    ack?.({ error: "Mensagem não encontrada." });
+                    return;
+                }
+                const users = (
+                    (current.reactions as unknown as Record<string, unknown[]>)?.[
+                        emoji
+                    ] ?? []
+                ).map(String);
+                const next = users.includes(userId)
+                    ? users.filter((u) => u !== userId)
+                    : [...users, userId];
+
+                if (next.length === 0) {
+                    await Message.updateOne(
+                        { _id: messageId },
+                        { $unset: { [`reactions.${emoji}`]: 1 } },
+                    );
+                } else {
+                    await Message.updateOne(
+                        { _id: messageId },
+                        { $set: { [`reactions.${emoji}`]: next } },
+                    );
+                }
 
                 const updated = await Message.findById(messageId)
                     .select("reactions")
@@ -252,11 +269,13 @@ export function registerMessageActionsHandlers(ctx: ConnectionContext): void {
                     messageId,
                     reactions: formatted,
                 });
+                ack?.({});
             } catch (error) {
                 logger.error(
                     { userId, error },
                     "erro ao reagir à mensagem",
                 );
+                ack?.({ error: "Erro ao reagir à mensagem." });
             }
         },
     );

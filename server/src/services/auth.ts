@@ -71,6 +71,7 @@ function buildDeviceLabel(userAgent: string): string {
 }
 
 const MAX_SESSIONS_PER_USER = 10;
+const REFRESH_REUSE_GRACE_MS = 60 * 1000;
 
 export async function registerUser(
     input: { name: string; email: string; password: string },
@@ -218,25 +219,51 @@ export async function refreshSession(refreshToken: string, ip?: string) {
     }
 
     const session = await Session.findById(sessionId);
-    if (!session || session.token !== hashRefreshToken(refreshToken)) {
+    if (!session) {
         throw new UnauthorizedError("Sessão expirada.");
     }
 
-    const newRefreshToken = signRefreshToken(userId, sessionId);
-    session.token = hashRefreshToken(newRefreshToken);
-    session.lastActiveAt = new Date();
-    if (ip && ip !== "unknown" && session.ip !== ip) {
-        session.ip = ip;
+    const presentedHash = hashRefreshToken(refreshToken);
+
+    if (session.token === presentedHash) {
+        const newRefreshToken = signRefreshToken(userId, sessionId);
+        session.previousToken = session.token;
+        session.previousExpiresAt = new Date(Date.now() + REFRESH_REUSE_GRACE_MS);
+        session.token = hashRefreshToken(newRefreshToken);
+        session.lastActiveAt = new Date();
+        if (ip && ip !== "unknown" && session.ip !== ip) {
+            session.ip = ip;
+        }
+        await session.save();
+
+        const accessToken = signAccessToken(userId, sessionId);
+
+        return {
+            accessToken,
+            refreshToken: newRefreshToken,
+            user: publicUser(user),
+        };
     }
-    await session.save();
 
-    const accessToken = signAccessToken(userId, sessionId);
+    if (
+        session.previousToken === presentedHash &&
+        session.previousExpiresAt &&
+        session.previousExpiresAt.getTime() > Date.now()
+    ) {
+        logger.warn({ userId, sessionId }, "refresh token reutilizado dentro da janela de tolerância");
+        session.lastActiveAt = new Date();
+        await session.save();
 
-    return {
-        accessToken,
-        refreshToken: newRefreshToken,
-        user: publicUser(user),
-    };
+        const accessToken = signAccessToken(userId, sessionId);
+
+        return {
+            accessToken,
+            refreshToken,
+            user: publicUser(user),
+        };
+    }
+
+    throw new UnauthorizedError("Sessão expirada.");
 }
 
 export async function logoutSession(refreshToken: string) {

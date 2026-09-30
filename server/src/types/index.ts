@@ -78,6 +78,8 @@ export interface OnlineUser {
 export interface ISession extends Document {
     userId: IUser["_id"];
     token: string;
+    previousToken?: string | null;
+    previousExpiresAt?: Date | null;
     deviceType: "web" | "mobile" | "desktop" | "unknown";
     userAgent: string;
     ip: string | null;

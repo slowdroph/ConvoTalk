@@ -33,6 +33,7 @@ interface ChatWindowProps {
     onRoomLeft?: (roomId: string) => void;
     onOpenSidebar?: () => void;
     highlightMessageId?: string | null;
+    initialPinnedMessageIds?: string[];
     onWebRTCState?: (state: import("../../contexts/WebRTCStateContext").WebRTCState | null) => void;
 }
 
@@ -51,6 +52,7 @@ export default function ChatWindow({
     onRoomLeft,
     onOpenSidebar,
     highlightMessageId = null,
+    initialPinnedMessageIds,
     onWebRTCState,
 }: ChatWindowProps) {
     const { socket, onlineUsers, connected } = useSocket();
@@ -64,10 +66,13 @@ export default function ChatWindow({
         setPinnedMessageIds,
         addOptimisticMessage,
         markOptimisticFailed,
+        toggleReaction,
     } = useChatSocket({
         socket,
         roomId,
         currentUserId: user?._id ?? null,
+        onError: (message) => showToast({ type: "error", message }),
+        initialPinnedMessageIds,
     });
     const [messagesLoading, setMessagesLoading] = useState(true);
     const [messagesError, setMessagesError] = useState<string | null>(null);
@@ -346,11 +351,9 @@ export default function ChatWindow({
 
     const handleToggleReaction = useCallback(
         (messageId: string, emoji: string) => {
-            if (socket) {
-                socket.emit("toggle_reaction", { messageId, roomId, emoji });
-            }
+            toggleReaction(messageId, emoji);
         },
-        [socket, roomId],
+        [toggleReaction],
     );
 
     const handleReply = useCallback((message: Message) => {

@@ -7,16 +7,22 @@ interface UseChatSocketOptions {
     socket: Socket | null;
     roomId: string;
     currentUserId: string | null;
+    onError?: (message: string) => void;
+    initialPinnedMessageIds?: string[];
 }
 
 export function useChatSocket({
     socket,
     roomId,
     currentUserId,
+    onError,
+    initialPinnedMessageIds,
 }: UseChatSocketOptions) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
-    const [pinnedMessageIds, setPinnedMessageIds] = useState<string[]>([]);
+    const [pinnedMessageIds, setPinnedMessageIds] = useState<string[]>(
+        initialPinnedMessageIds ?? [],
+    );
 
     useEffect(() => {
         if (!socket) return;
@@ -72,11 +78,7 @@ export function useChatSocket({
         socket.on("typing", handleTyping);
 
         const handleMessageDeleted = (messageId: string) => {
-            setMessages((prev) =>
-                prev.map((msg) =>
-                    msg._id === messageId ? { ...msg, deleted: true } : msg,
-                ),
-            );
+            setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
         };
 
         socket.on("message_deleted", handleMessageDeleted);
@@ -220,6 +222,48 @@ export function useChatSocket({
         );
     }, []);
 
+    const toggleReaction = useCallback(
+        (messageId: string, emoji: string) => {
+            if (!socket || !currentUserId) return;
+            let previous: Record<string, string[]> | undefined;
+            setMessages((prev) =>
+                prev.map((msg) => {
+                    if (msg._id !== messageId) return msg;
+                    previous = msg.reactions || {};
+                    const users = previous[emoji] || [];
+                    const hasReacted = users.includes(currentUserId);
+                    return {
+                        ...msg,
+                        reactions: {
+                            ...previous,
+                            [emoji]: hasReacted
+                                ? users.filter((u) => u !== currentUserId)
+                                : [...users, currentUserId],
+                        },
+                    };
+                }),
+            );
+            socket.emit(
+                "toggle_reaction",
+                { messageId, roomId, emoji },
+                (response: { error?: string } | undefined) => {
+                    if (response?.error) {
+                        const snapshot = previous;
+                        setMessages((prev) =>
+                            prev.map((msg) =>
+                                msg._id === messageId && snapshot
+                                    ? { ...msg, reactions: snapshot }
+                                    : msg,
+                            ),
+                        );
+                        onError?.(response.error);
+                    }
+                },
+            );
+        },
+        [socket, roomId, currentUserId, onError],
+    );
+
     return {
         messages,
         setMessages,
@@ -229,5 +273,6 @@ export function useChatSocket({
         setPinnedMessageIds,
         addOptimisticMessage,
         markOptimisticFailed,
+        toggleReaction,
     };
 }

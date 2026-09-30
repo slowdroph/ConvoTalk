@@ -63,8 +63,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     setUser(me.data);
                     setToken(currentToken);
                 }
-            } catch {
+            } catch (error) {
                 if (!cancelled) {
+                    const status = (
+                        error as { response?: { status?: number } }
+                    )?.response?.status;
+                    if (status === undefined) {
+                        setLoading(false);
+                        return;
+                    }
                     setAccessToken(null);
                     clearSessionFlag();
                     localStorage.removeItem("user");

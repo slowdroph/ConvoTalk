@@ -36,8 +36,12 @@ export async function refreshAccessToken(): Promise<string | null> {
                 localStorage.setItem(SESSION_FLAG_KEY, "1");
                 return accessToken;
             })
-            .catch(() => {
+            .catch((error) => {
                 accessToken = null;
+                const status = error?.response?.status;
+                if (status === undefined) {
+                    throw error;
+                }
                 localStorage.removeItem(SESSION_FLAG_KEY);
                 return null;
             })

@@ -12,6 +12,14 @@ const sessionSchema = new Schema<ISession>({
         type: String,
         required: true,
     },
+    previousToken: {
+        type: String,
+        default: null,
+    },
+    previousExpiresAt: {
+        type: Date,
+        default: null,
+    },
     deviceType: {
         type: String,
         enum: ["web", "mobile", "desktop", "unknown"],

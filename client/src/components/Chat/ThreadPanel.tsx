@@ -126,11 +126,7 @@ export default function ThreadPanel({
         };
 
         const handleMessageDeleted = (messageId: string) => {
-            setReplies((prev) =>
-                prev.map((m) =>
-                    m._id === messageId ? { ...m, deleted: true } : m,
-                ),
-            );
+            setReplies((prev) => prev.filter((m) => m._id !== messageId));
         };
 
         socket.on("message_edited", handleMessageEdited);

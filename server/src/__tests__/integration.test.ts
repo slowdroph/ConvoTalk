@@ -807,3 +807,36 @@ describe("integração: rooms sem email", () => {
         }
     });
 });
+
+describe("integração: refresh com janela de tolerância", () => {
+    it("aceita o token anterior dentro da janela após rotação", async () => {
+        const { default: Session } = await import("../models/Session");
+        const { refreshSession } = await import("../services/auth");
+        const {
+            signRefreshToken,
+            hashRefreshToken,
+        } = await import("../services/token");
+
+        const user = await createUser("Refresh", "refresh-s@test.com");
+        const session = await Session.create({
+            userId: user._id,
+            token: "placeholder",
+            deviceType: "web",
+            userAgent: "vitest",
+        });
+        const first = signRefreshToken(
+            user._id.toString(),
+            session._id.toString(),
+        );
+        session.token = hashRefreshToken(first);
+        await session.save();
+
+        const rotated = await refreshSession(first);
+        expect(rotated.accessToken).toBeTruthy();
+
+        const grace = await refreshSession(first);
+        expect(grace.accessToken).toBeTruthy();
+
+        await expect(refreshSession("token-invalido")).rejects.toThrow();
+    });
+});

@@ -239,4 +239,105 @@ describe("socket handlers", () => {
 
         clientAlice.close();
     });
+
+    it("reage com ack e transmite reaction_updated", async () => {
+        const alice = await createUser("Alice4", "alice4-s@test.com");
+        const bob = await createUser("Bob4", "bob4-s@test.com");
+        const room = await Room.create({
+            type: "group",
+            participants: [alice._id, bob._id],
+        });
+        const message = await Message.create({
+            sender: alice._id,
+            room: room._id,
+            content: "reaja aqui",
+        });
+
+        const clientAlice = await connectClient(alice._id.toString());
+        const clientBob = await connectClient(bob._id.toString());
+        await joinRoom(clientAlice, room._id.toString());
+        await joinRoom(clientBob, room._id.toString());
+
+        const updatedPromise = waitFor(clientBob, "reaction_updated");
+        const ackError = await new Promise<string | undefined>((resolve) => {
+            clientAlice.emit(
+                "toggle_reaction",
+                {
+                    roomId: room._id.toString(),
+                    messageId: message._id.toString(),
+                    emoji: "👍",
+                },
+                (res: { error?: string }) => resolve(res?.error),
+            );
+        });
+        expect(ackError).toBeUndefined();
+
+        const updated = (await updatedPromise) as {
+            messageId: string;
+            reactions: Record<string, string[]>;
+        };
+        expect(updated.messageId).toBe(message._id.toString());
+        expect(updated.reactions["👍"]).toContain(alice._id.toString());
+
+        const invalidAck = await new Promise<string | undefined>((resolve) => {
+            clientAlice.emit(
+                "toggle_reaction",
+                {
+                    roomId: room._id.toString(),
+                    messageId: message._id.toString(),
+                    emoji: "",
+                },
+                (res: { error?: string }) => resolve(res?.error),
+            );
+        });
+        expect(invalidAck).toBeTruthy();
+
+        clientAlice.close();
+        clientBob.close();
+    });
+
+    it("exclui para todos, remove e atualiza preview da sala", async () => {
+        const alice = await createUser("Alice5", "alice5-s@test.com");
+        const bob = await createUser("Bob5", "bob5-s@test.com");
+        const room = await Room.create({
+            type: "group",
+            participants: [alice._id, bob._id],
+        });
+        await Message.create({
+            sender: alice._id,
+            room: room._id,
+            content: "anterior",
+        });
+        const latest = await Message.create({
+            sender: alice._id,
+            room: room._id,
+            content: "a excluir",
+        });
+
+        const clientAlice = await connectClient(alice._id.toString());
+        const clientBob = await connectClient(bob._id.toString());
+        await joinRoom(clientAlice, room._id.toString());
+        await joinRoom(clientBob, room._id.toString());
+
+        const deletedPromise = waitFor(clientBob, "message_deleted");
+        const roomUpdatedPromise = waitFor(clientBob, "room_updated");
+        clientAlice.emit("delete_message", {
+            roomId: room._id.toString(),
+            messageId: latest._id.toString(),
+        });
+
+        const deletedId = await deletedPromise;
+        expect(deletedId).toBe(latest._id.toString());
+
+        const roomUpdated = (await roomUpdatedPromise) as {
+            _id: string;
+            lastMessagePreview: string | null;
+        };
+        expect(roomUpdated._id).toBe(room._id.toString());
+        expect(roomUpdated.lastMessagePreview).toBe("anterior");
+        expect(await Message.findById(latest._id).lean()).toBeNull();
+
+        clientAlice.close();
+        clientBob.close();
+    });
 });

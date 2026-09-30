@@ -216,7 +216,9 @@ function ChatPageInner() {
         const handleRoomUpdated = (updatedRoom: Room) => {
             if (!updatedRoom?._id) return;
             setRooms((prev) =>
-                prev.map((r) => (r._id === updatedRoom._id ? updatedRoom : r)),
+                prev.map((r) =>
+                    r._id === updatedRoom._id ? { ...r, ...updatedRoom } : r,
+                ),
             );
         };
         socket.on("room_deleted", handleRoomDeleted);
@@ -368,6 +370,9 @@ function ChatPageInner() {
                             onRoomLeft={handleLeaveRoom}
                             onOpenSidebar={() => setSidebarOpen(true)}
                             highlightMessageId={highlightMessageId}
+                            initialPinnedMessageIds={(
+                                activeRoomData.pinnedMessages ?? []
+                            ).map((p) => String(p.message))}
                             onWebRTCState={setWebrtcState}
                         />
                     </WebRTCStateContext.Provider>
