@@ -57,7 +57,7 @@ export default function LoginPage() {
 
             <main className="relative z-10 grow flex items-center justify-center px-4 py-8 lg:px-12">
                 <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-                    <section aria-label="Apresentação do Produto" className="lg:col-span-7 flex flex-col justify-center space-y-8">
+                    <section aria-label="Apresentação do Produto" className="sr-only lg:not-sr-only lg:col-span-7 flex flex-col justify-center space-y-8">
                         <div className="space-y-4 max-w-xl">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
                                 Nova versão 2.0 lançada
