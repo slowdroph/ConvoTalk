@@ -18,3 +18,16 @@ export async function searchUsers(
         handleError(error, res, "Erro ao buscar usuários.");
     }
 }
+
+export async function getSuggestions(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { limit } = req.query as unknown as { limit: number };
+        const users = await userService.getSuggestedUsers(req.user!._id, limit);
+        res.json(users);
+    } catch (error) {
+        handleError(error, res, "Erro ao carregar sugestões.");
+    }
+}

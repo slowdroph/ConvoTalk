@@ -4,6 +4,7 @@ import Sidebar from "../components/Sidebar/Sidebar";
 import ChatWindow from "../components/Chat/ChatWindow";
 import ConnectionBanner from "../components/Chat/ConnectionBanner";
 import CallModal from "../components/Chat/CallModal";
+import SuggestedUsers from "../components/Chat/SuggestedUsers";
 import api from "../services/api";
 import { useSocket } from "../hooks/useSocket";
 import { useAuth } from "../hooks/useAuth";
@@ -398,9 +399,12 @@ function ChatPageInner() {
                             Nenhuma conversa ainda
                         </h3>
                         <p className="text-slate-500 text-sm max-w-sm dark:text-noir-text-muted">
-                            Comece pesquisando um usuário no menu lateral ou
-                            criando um novo grupo.
+                            Comece uma nova conversa com alguém abaixo ou crie
+                            um grupo.
                         </p>
+                        <SuggestedUsers
+                            onConversationCreated={handleConversationCreated}
+                        />
                         <button
                             onClick={() => setSidebarOpen(true)}
                             className="md:hidden flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-border dark:text-noir-text-bright"

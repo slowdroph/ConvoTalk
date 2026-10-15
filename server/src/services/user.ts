@@ -433,3 +433,34 @@ export async function searchUsers(
 
     return users.filter((u) => !blocked.has(u._id.toString()));
 }
+
+export async function getSuggestedUsers(
+    currentUserId: string,
+    limit = 8,
+) {
+    const me = await User.findById(currentUserId).select("blockedUsers").lean();
+    const blocked = new Set(
+        (me?.blockedUsers ?? []).map((id) => id.toString()),
+    );
+
+    const dmParticipantIds = await Room.distinct("participants", {
+        type: "direct",
+        participants: currentUserId,
+    });
+
+    const excludeIds = new Set([
+        currentUserId,
+        ...dmParticipantIds.map((id) => id.toString()),
+    ]);
+
+    const users = await User.find({
+        _id: { $nin: Array.from(excludeIds) },
+        blockedUsers: { $ne: currentUserId },
+    })
+        .select(PUBLIC_USER_SELECT)
+        .sort({ lastSeen: -1 })
+        .limit(limit)
+        .lean();
+
+    return users.filter((u) => !blocked.has(u._id.toString()));
+}

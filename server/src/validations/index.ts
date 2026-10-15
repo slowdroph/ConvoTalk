@@ -279,6 +279,17 @@ export const userSearchQuerySchema = z.object({
     }),
 });
 
+export const userSuggestionsQuerySchema = z.object({
+    query: z.object({
+        limit: z.coerce
+            .number()
+            .int()
+            .min(1, "Limite deve ser no mínimo 1.")
+            .max(12, "Limite deve ser no máximo 12.")
+            .default(8),
+    }),
+});
+
 export const resendVerificationSchema = z.object({
     body: z.object({
         email: z
