@@ -4,6 +4,8 @@ export interface PublicUserPayload {
     publicId: string;
     avatar?: string;
     status?: string;
+    countryCode?: string;
+    city?: string;
 }
 
 export interface UserPayload extends PublicUserPayload {
@@ -18,6 +20,8 @@ export interface SenderPayload {
     publicId?: string;
     avatar?: string;
     status?: string;
+    countryCode?: string;
+    city?: string;
 }
 
 export interface AttachmentPayload {
@@ -155,6 +159,8 @@ export interface OnlineUserPayload {
     name: string;
     avatar: string;
     status?: string;
+    countryCode?: string;
+    city?: string;
     online: boolean;
 }
 
