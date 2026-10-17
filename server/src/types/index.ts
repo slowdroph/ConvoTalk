@@ -6,6 +6,8 @@ export interface IUser extends Document {
     publicId: string;
     password: string;
     avatar: string;
+    countryCode: string;
+    city: string;
     verified: boolean;
     verificationToken: string | null;
     verificationTokenExpiry: Date | null;
@@ -73,6 +75,8 @@ export interface OnlineUser {
     userId: string;
     name: string;
     avatar: string;
+    countryCode?: string;
+    city?: string;
 }
 
 export interface ISession extends Document {
