@@ -8,6 +8,8 @@ interface UserProfilePopoverProps {
     userId?: string;
     name?: string;
     avatar?: string;
+    countryCode?: string;
+    city?: string;
     publicId?: string;
     status?: string;
     isOnline?: boolean;
@@ -19,6 +21,8 @@ export default function UserProfilePopover({
     userId,
     name,
     avatar,
+    countryCode,
+    city,
     publicId,
     status,
     isOnline,
@@ -112,7 +116,7 @@ export default function UserProfilePopover({
                 >
                     <div className="mt-1 ml-1 w-56 max-w-[calc(100vw-2rem)] bg-zinc-800 border border-zinc-700 rounded-xl shadow-2xl p-4">
                         <div className="flex items-center gap-3 mb-3">
-                            <Avatar src={avatar} name={name} size="md" />
+                            <Avatar src={avatar} name={name} countryCode={countryCode} size="md" />
                             <div className="min-w-0">
                                 <p className="text-white font-semibold text-sm truncate">
                                     {name}
@@ -139,6 +143,7 @@ export default function UserProfilePopover({
                                       ? formatLastSeen(lastSeen)
                                       : "Offline"}
                             </p>
+                            {city && <p className="text-zinc-300 truncate">{city}</p>}
                             {status && (
                                 <p className="text-zinc-400 truncate">
                                     {status}
