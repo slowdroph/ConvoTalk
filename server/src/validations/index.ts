@@ -44,6 +44,20 @@ export const profileSchema = z.object({
             .string()
             .email("Email inválido.")
             .max(100, "Email deve ter no máximo 100 caracteres."),
+        countryCode: z
+            .string()
+            .trim()
+            .refine((value) => value === "" || /^[A-Za-z]{2}$/.test(value), {
+                message: "Selecione um país válido.",
+            })
+            .optional()
+            .default(""),
+        city: z
+            .string()
+            .trim()
+            .max(80, "A cidade deve ter no máximo 80 caracteres.")
+            .optional()
+            .default(""),
         currentPassword: z
             .string()
             .max(128, "Senha deve ter no máximo 128 caracteres.")
