@@ -10,6 +10,8 @@ interface SearchResult {
     publicId: string;
     avatar?: string;
     status?: string;
+    countryCode?: string;
+    city?: string;
 }
 
 interface UserSearchProps {
@@ -163,6 +165,7 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
                                     <Avatar
                                         src={user.avatar}
                                         name={user.name}
+                                        countryCode={user.countryCode}
                                         size="sm"
                                     />
                                     {isOnline(user._id) && (
