@@ -56,7 +56,7 @@ export async function getMe(userId: string) {
 
 export async function getUserStatus(userId: string) {
     const user = await User.findById(userId)
-        .select("name lastSeen avatar status")
+        .select("name lastSeen avatar status countryCode city")
         .lean();
     if (!user) {
         throw new NotFoundError("Usuário não encontrado.");
@@ -67,13 +67,21 @@ export async function getUserStatus(userId: string) {
         name: user.name,
         avatar: user.avatar || "",
         status: user.status || "",
+        countryCode: user.countryCode || "",
+        city: user.city || "",
         lastSeen: user.lastSeen,
     };
 }
 
 export async function updateProfile(
     userId: string,
-    input: { name?: string; email?: string; currentPassword?: string },
+    input: {
+        name?: string;
+        email?: string;
+        currentPassword?: string;
+        countryCode?: string;
+        city?: string;
+    },
 ) {
     const user = await User.findById(userId);
     if (!user) {
@@ -85,6 +93,13 @@ export async function updateProfile(
 
     if (input.name && input.name !== user.name) {
         user.name = input.name;
+    }
+
+    if (input.countryCode !== undefined) {
+        user.countryCode = input.countryCode.trim().toUpperCase();
+    }
+    if (input.city !== undefined) {
+        user.city = input.city.trim();
     }
 
     const normalizedEmail = input.email?.toLowerCase();
