@@ -34,6 +34,20 @@ const userSchema = new Schema<IUser>({
         type: String,
         default: "",
     },
+    countryCode: {
+        type: String,
+        uppercase: true,
+        trim: true,
+        minlength: 2,
+        maxlength: 2,
+        default: "",
+    },
+    city: {
+        type: String,
+        trim: true,
+        maxlength: 80,
+        default: "",
+    },
     verified: {
         type: Boolean,
         default: false,
