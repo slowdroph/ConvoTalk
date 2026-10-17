@@ -36,10 +36,10 @@ export async function updateProfile(
     res: Response,
 ): Promise<void> {
     try {
-        const { name, email, currentPassword } = req.body;
+        const { name, email, currentPassword, countryCode, city } = req.body;
         const result = await userService.updateProfile(
             req.user!._id,
-            { name, email, currentPassword },
+            { name, email, currentPassword, countryCode, city },
         );
         if (result.emailChanged) {
             audit({
