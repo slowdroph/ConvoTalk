@@ -8,6 +8,8 @@ export default function ProfileForm() {
     const { user, updateUser } = useAuth();
     const [name, setName] = useState(user?.name || "");
     const [email, setEmail] = useState(user?.email || "");
+    const [countryCode, setCountryCode] = useState(user?.countryCode || "");
+    const [city, setCity] = useState(user?.city || "");
     const [status, setStatus] = useState(user?.status || "");
     const [currentPassword, setCurrentPassword] = useState("");
     const [success, setSuccess] = useState("");
@@ -86,6 +88,8 @@ export default function ProfileForm() {
             const { data } = await api.put("/user/profile", {
                 name,
                 email,
+                countryCode,
+                city,
                 currentPassword: emailChanged ? currentPassword : "",
             });
             updateUser(data);
@@ -173,6 +177,7 @@ export default function ProfileForm() {
                     <Avatar
                         src={avatarUrl || undefined}
                         name={user?.name || "?"}
+                        countryCode={countryCode || undefined}
                         size="lg"
                         className="w-16 h-16 rounded-full border-2 border-noir-border shadow-md ring-2 ring-emerald-500/20"
                     />
@@ -267,6 +272,16 @@ export default function ProfileForm() {
                     />
                 </div>
 
+                <div>
+                    <label htmlFor="input-country" className="block text-xs font-medium text-noir-text-bright mb-1.5">País</label>
+                    <select id="input-country" name="countryCode" value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2.5 text-sm text-noir-text-bright focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition">
+                        <option value="">Não informar</option><option value="AR">🇦🇷 Argentina</option><option value="AU">🇦🇺 Austrália</option><option value="BR">🇧🇷 Brasil</option><option value="CA">🇨🇦 Canadá</option><option value="CL">🇨🇱 Chile</option><option value="CO">🇨🇴 Colômbia</option><option value="FR">🇫🇷 França</option><option value="DE">🇩🇪 Alemanha</option><option value="IN">🇮🇳 Índia</option><option value="IT">🇮🇹 Itália</option><option value="JP">🇯🇵 Japão</option><option value="MX">🇲🇽 México</option><option value="NL">🇳🇱 Países Baixos</option><option value="PT">🇵🇹 Portugal</option><option value="ES">🇪🇸 Espanha</option><option value="GB">🇬🇧 Reino Unido</option><option value="US">🇺🇸 Estados Unidos</option>
+                    </select>
+                </div>
+                <div>
+                    <label htmlFor="input-city" className="block text-xs font-medium text-noir-text-bright mb-1.5">Cidade (opcional)</label>
+                    <input type="text" id="input-city" name="city" value={city} onChange={(e) => setCity(e.target.value)} maxLength={80} placeholder="Ex.: Amsterdam" className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2.5 text-sm text-noir-text-bright focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition" />
+                </div>
                 <div>
                     <div className="flex items-center justify-between mb-1.5">
                         <label
