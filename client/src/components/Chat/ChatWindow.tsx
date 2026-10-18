@@ -31,6 +31,7 @@ interface ChatWindowProps {
     onRoomUpdated?: (room: Room) => void;
     onRoomDeleted?: (roomId: string) => void;
     onRoomLeft?: (roomId: string) => void;
+    onConversationCreated?: (roomId: string) => void;
     onOpenSidebar?: () => void;
     highlightMessageId?: string | null;
     initialPinnedMessageIds?: string[];
@@ -50,6 +51,7 @@ export default function ChatWindow({
     onRoomUpdated,
     onRoomDeleted,
     onRoomLeft,
+    onConversationCreated,
     onOpenSidebar,
     highlightMessageId = null,
     initialPinnedMessageIds,
@@ -561,6 +563,7 @@ export default function ChatWindow({
                 }}
                 currentUserId={user?._id ?? null}
                 onClose={() => setGroupInfoOpen(false)}
+                onConversationCreated={onConversationCreated}
                 onLeft={(id) => {
                     onRoomLeft?.(id);
                     setGroupInfoOpen(false);

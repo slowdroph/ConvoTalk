@@ -22,6 +22,12 @@ export interface SenderPayload {
     status?: string;
 }
 
+export interface PublicProfilePayload extends PublicUserPayload {
+    city?: string;
+    lastSeen?: string | null;
+    createdAt?: string;
+}
+
 export interface AttachmentPayload {
     url: string;
     filename: string;

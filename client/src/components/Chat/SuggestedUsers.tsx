@@ -4,6 +4,7 @@ import { useSocket } from "../../hooks/useSocket";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import Avatar from "../ui/Avatar";
+import UserProfileModal from "../ui/UserProfileModal";
 
 interface SuggestedUser {
     _id: string;
@@ -24,6 +25,7 @@ export default function SuggestedUsers({
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [creatingId, setCreatingId] = useState<string | null>(null);
+    const [profileUserId, setProfileUserId] = useState<string | null>(null);
     const { onlineUsers } = useSocket();
 
     const fetchSuggestions = useCallback(
@@ -135,64 +137,104 @@ export default function SuggestedUsers({
                     const online = isOnline(user._id);
                     const busy = creatingId === user._id;
                     return (
-                        <button
+                        <div
                             key={user._id}
-                            onClick={() => handleStartConversation(user._id)}
-                            disabled={busy}
-                            className="w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-noir-surface-alt/70 hover:border-noir-border/60 transition group text-left"
+                            className="w-full flex items-center gap-2 p-2.5 rounded-xl border border-transparent hover:bg-noir-surface-alt/70 hover:border-noir-border/60 transition group"
                         >
-                            <div className="relative flex-shrink-0">
-                                <Avatar
-                                    src={user.avatar}
-                                    name={user.name}
-                                    size="md"
-                                />
-                                <span
-                                    className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-noir-base rounded-full ${
-                                        online
-                                            ? "bg-emerald-500"
-                                            : "bg-zinc-500"
-                                    }`}
-                                />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium text-sm text-noir-text-bright truncate group-hover:text-emerald-300 transition">
-                                        {user.name}
-                                    </span>
-                                    <span className="text-[10px] bg-noir-surface border border-noir-border/80 text-emerald-400 font-mono px-1.5 py-0.2 rounded shrink-0">
-                                        #{user.publicId}
-                                    </span>
+                            <button
+                                type="button"
+                                onClick={() => handleStartConversation(user._id)}
+                                disabled={busy}
+                                className="flex items-center gap-3 min-w-0 flex-1 text-left disabled:opacity-60"
+                            >
+                                <div className="relative flex-shrink-0">
+                                    <Avatar
+                                        src={user.avatar}
+                                        name={user.name}
+                                        size="md"
+                                    />
+                                    <span
+                                        className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-noir-base rounded-full ${
+                                            online
+                                                ? "bg-emerald-500"
+                                                : "bg-zinc-500"
+                                        }`}
+                                    />
                                 </div>
-                                <p className="text-xs text-noir-text-muted truncate mt-0.5 font-mono">
-                                    #{user.publicId}
-                                </p>
-                            </div>
-                            <div className="flex-shrink-0">
-                                {busy ? (
-                                    <span className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                    <span className="text-xs text-noir-text-muted group-hover:text-emerald-400 p-1.5 rounded-lg hover:bg-noir-surface transition flex items-center gap-1">
-                                        <svg
-                                            className="w-4 h-4"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={1.8}
-                                            />
-                                        </svg>
-                                    </span>
-                                )}
-                            </div>
-                        </button>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-sm text-noir-text-bright truncate group-hover:text-emerald-300 transition">
+                                            {user.name}
+                                        </span>
+                                        <span className="text-[10px] bg-noir-surface border border-noir-border/80 text-emerald-400 font-mono px-1.5 py-0.2 rounded shrink-0">
+                                            #{user.publicId}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-noir-text-muted truncate mt-0.5 font-mono">
+                                        #{user.publicId}
+                                    </p>
+                                </div>
+                                <div className="flex-shrink-0">
+                                    {busy ? (
+                                        <span className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        <span className="text-xs text-noir-text-muted group-hover:text-emerald-400 p-1.5 rounded-lg group-hover:bg-noir-surface transition flex items-center gap-1">
+                                            <svg
+                                                className="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={1.8}
+                                                />
+                                            </svg>
+                                        </span>
+                                    )}
+                                </div>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setProfileUserId(user._id)}
+                                title="Ver perfil"
+                                aria-label={`Ver perfil de ${user.name}`}
+                                className="flex-shrink-0 flex items-center gap-1 p-1.5 rounded-lg text-noir-text-muted hover:text-emerald-400 hover:bg-noir-surface transition"
+                            >
+                                <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={1.8}
+                                    />
+                                </svg>
+                                <span className="hidden sm:inline text-[11px]">
+                                    Perfil
+                                </span>
+                            </button>
+                        </div>
                     );
                 })}
             </div>
+
+            <UserProfileModal
+                isOpen={profileUserId !== null}
+                userId={profileUserId}
+                onClose={() => setProfileUserId(null)}
+                onConversationCreated={(roomId) => {
+                    setProfileUserId(null);
+                    onConversationCreated(roomId);
+                }}
+                initialUser={users.find((u) => u._id === profileUserId)}
+            />
         </div>
     );
 }

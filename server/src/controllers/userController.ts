@@ -31,6 +31,25 @@ export async function getUserStatus(
     }
 }
 
+export async function getUserProfile(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const parsed = objectId.safeParse(req.params.id);
+        if (!parsed.success) {
+            throw new ValidationError("ID inválido.");
+        }
+        const result = await userService.getPublicProfile(
+            parsed.data,
+            req.user!._id,
+        );
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao buscar perfil.");
+    }
+}
+
 export async function updateProfile(
     req: AuthRequest,
     res: Response,

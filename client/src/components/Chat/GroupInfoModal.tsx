@@ -4,6 +4,7 @@ import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import Avatar from "../ui/Avatar";
 import ConfirmDialog from "../ui/ConfirmDialog";
+import UserProfileModal from "../ui/UserProfileModal";
 import type { Room, PublicUser } from "../../types";
 
 interface GroupInfoModalProps {
@@ -12,6 +13,7 @@ interface GroupInfoModalProps {
     currentUserId: string | null;
     onClose: () => void;
     onLeft: (roomId: string) => void;
+    onConversationCreated?: (roomId: string) => void;
 }
 
 export default function GroupInfoModal({
@@ -20,10 +22,12 @@ export default function GroupInfoModal({
     currentUserId,
     onClose,
     onLeft,
+    onConversationCreated,
 }: GroupInfoModalProps) {
     const [leaving, setLeaving] = useState(false);
     const [confirmLeave, setConfirmLeave] = useState(false);
     const [error, setError] = useState("");
+    const [profileUserId, setProfileUserId] = useState<string | null>(null);
 
     if (!isOpen) return null;
 
@@ -64,7 +68,9 @@ export default function GroupInfoModal({
         }
     };
 
-    return createPortal(
+    return (
+        <>
+            {createPortal(
         <div
             className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4"
             onClick={onClose}
@@ -214,6 +220,29 @@ export default function GroupInfoModal({
                                             {roleOf(p)}
                                         </p>
                                     </div>
+                                    {p._id !== currentUserId && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setProfileUserId(p._id)}
+                                            title="Ver perfil"
+                                            aria-label={`Ver perfil de ${p.name}`}
+                                            className="flex-shrink-0 p-1.5 rounded-lg text-noir-text-muted hover:text-emerald-400 hover:bg-white/5 transition"
+                                        >
+                                            <svg
+                                                className="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={1.8}
+                                                />
+                                            </svg>
+                                        </button>
+                                    )}
                                 </li>
                             ))}
                         </ul>
@@ -274,5 +303,18 @@ export default function GroupInfoModal({
             />
         </div>,
         document.body,
+            )}
+            <UserProfileModal
+                isOpen={profileUserId !== null}
+                userId={profileUserId}
+                onClose={() => setProfileUserId(null)}
+                onConversationCreated={(roomId) => {
+                    setProfileUserId(null);
+                    onClose();
+                    onConversationCreated?.(roomId);
+                }}
+                initialUser={participants.find((p) => p._id === profileUserId)}
+            />
+        </>
     );
 }

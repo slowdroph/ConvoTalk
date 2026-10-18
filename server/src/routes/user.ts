@@ -16,6 +16,7 @@ import {
 import {
     getMe,
     getUserStatus,
+    getUserProfile,
     updateProfile,
     updateLocation,
     updateStatus,
@@ -33,6 +34,7 @@ const router = Router();
 
 router.get("/me", auth, getMe);
 router.get("/:id/status", auth, getUserStatus);
+router.get("/:id/profile", auth, getUserProfile);
 router.put(
     "/profile",
     auth,

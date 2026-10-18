@@ -23,11 +23,12 @@ import {
     hashSecretToken,
     VERIFICATION_TOKEN_EXPIRES_MIN,
 } from "./token";
-import { SALT_ROUNDS, PUBLIC_USER_SELECT } from "../constants";
+import { SALT_ROUNDS, PUBLIC_USER_SELECT, PROFILE_USER_SELECT } from "../constants";
 import { logger } from "../config/logger";
 import { getSocketIO } from "../config/io";
 import { emitForceLogout } from "../utils/socket";
 import { escapeRegex } from "../utils/regex";
+import { areUsersBlocked } from "../utils/blocked";
 
 const SENSITIVE_SELECT =
     "-password -verificationToken -verificationTokenExpiry -resetToken -resetTokenExpiry -pendingEmailToken -pendingEmailTokenExpiry";
@@ -70,6 +71,21 @@ export async function getUserStatus(userId: string) {
         country: user.country || "",
         lastSeen: user.lastSeen,
     };
+}
+
+export async function getPublicProfile(userId: string, requesterId: string) {
+    if (await areUsersBlocked(userId, requesterId)) {
+        throw new NotFoundError("Usuário não encontrado.");
+    }
+
+    const user = await User.findById(userId)
+        .select(PROFILE_USER_SELECT)
+        .lean();
+    if (!user) {
+        throw new NotFoundError("Usuário não encontrado.");
+    }
+
+    return user;
 }
 
 export async function updateProfile(

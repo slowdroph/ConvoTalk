@@ -4,6 +4,7 @@ import { useSocket } from "../../hooks/useSocket";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import Avatar from "../ui/Avatar";
+import UserProfileModal from "../ui/UserProfileModal";
 import type { Room } from "../../types";
 
 interface UserResult {
@@ -55,6 +56,7 @@ export default function UserSearchModal({
     const [publicGroups, setPublicGroups] = useState<PublicGroup[]>([]);
     const [publicLoading, setPublicLoading] = useState(false);
     const [joiningId, setJoiningId] = useState<string | null>(null);
+    const [profileUserId, setProfileUserId] = useState<string | null>(null);
     const [tab, setTab] = useState<Tab>("all");
     const [selectedIndex, setSelectedIndex] = useState(0);
     const { onlineUsers } = useSocket();
@@ -78,6 +80,7 @@ export default function UserSearchModal({
             setCreatingId(null);
             setPublicGroups([]);
             setJoiningId(null);
+            setProfileUserId(null);
         }
     }
 
@@ -90,6 +93,7 @@ export default function UserSearchModal({
         setCreatingId(null);
         setPublicGroups([]);
         setJoiningId(null);
+        setProfileUserId(null);
         onClose();
     }, [onClose]);
 
@@ -280,7 +284,9 @@ export default function UserSearchModal({
         );
     };
 
-    return createPortal(
+    return (
+        <>
+            {createPortal(
         <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
             onClick={handleClose}
@@ -515,6 +521,33 @@ export default function UserSearchModal({
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setProfileUserId(user._id);
+                                        }}
+                                        title="Ver perfil"
+                                        aria-label={`Ver perfil de ${user.name}`}
+                                        className="flex items-center gap-1 p-1.5 rounded-lg text-noir-text-muted hover:text-emerald-400 hover:bg-noir-surface transition"
+                                    >
+                                        <svg
+                                            className="w-4 h-4"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={1.8}
+                                            />
+                                        </svg>
+                                        <span className="hidden sm:inline text-[11px]">
+                                            Perfil
+                                        </span>
+                                    </button>
                                     {busy ? (
                                         <span className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                                     ) : selected ? (
@@ -669,5 +702,18 @@ export default function UserSearchModal({
             </div>
         </div>,
         document.body,
+            )}
+            <UserProfileModal
+                isOpen={profileUserId !== null}
+                userId={profileUserId}
+                onClose={() => setProfileUserId(null)}
+                onConversationCreated={(roomId) => {
+                    setProfileUserId(null);
+                    onConversationCreated(roomId);
+                    handleClose();
+                }}
+                initialUser={results.find((u) => u._id === profileUserId)}
+            />
+        </>
     );
 }

@@ -21,6 +21,14 @@ export function formatDateTime(dateString: string): string {
     });
 }
 
+export function formatMemberSince(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("pt-BR", {
+        month: "long",
+        year: "numeric",
+    });
+}
+
 const DAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export function formatSidebarTime(dateString: string): string {

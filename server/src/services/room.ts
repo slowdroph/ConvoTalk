@@ -20,6 +20,7 @@ import {
 import { logger } from "../config/logger";
 import { invalidateRoom } from "../socket/roomCache";
 import { PUBLIC_USER_SELECT, SENDER_USER_SELECT } from "../constants";
+import { areUsersBlocked } from "../utils/blocked";
 
 const GROUP_PHOTO_FOLDER = "chat_app_groupPhoto";
 
@@ -166,10 +167,7 @@ export async function createDirectRoom(myId: string, otherUserId: string) {
         throw new NotFoundError("Usuário não encontrado.");
     }
 
-    const isBlocked = await User.exists({
-        _id: { $in: [myId, otherUserId] },
-        blockedUsers: { $in: [myId, otherUserId] },
-    });
+    const isBlocked = await areUsersBlocked(myId, otherUserId);
     if (isBlocked) {
         throw new ForbiddenError(
             "Não é possível iniciar conversa com este usuário.",

@@ -901,6 +901,93 @@ describe("integração: rooms sem email", () => {
     });
 });
 
+describe("integração: perfil público", () => {
+    it("getPublicProfile projeta campos públicos sem vazar dados sensíveis", async () => {
+        const { getPublicProfile } = await import("../services/user");
+
+        const requester = await createUser("Req", "req-profile@test.com");
+        const ana = await createUser("Ana", "ana-profile@test.com");
+        ana.country = "BR";
+        ana.city = "São Paulo";
+        await ana.save();
+
+        const profile = await getPublicProfile(
+            ana._id.toString(),
+            requester._id.toString(),
+        );
+
+        expect(String(profile._id)).toBe(ana._id.toString());
+        expect(profile.name).toBe("Ana");
+        expect(profile).toHaveProperty("publicId");
+        expect(profile.country).toBe("BR");
+        expect(profile.city).toBe("São Paulo");
+        expect(profile).toHaveProperty("createdAt");
+        expect(profile).not.toHaveProperty("email");
+        expect(profile).not.toHaveProperty("password");
+        expect(profile).not.toHaveProperty("lastIp");
+        expect(profile).not.toHaveProperty("verificationToken");
+    });
+
+    it("getPublicProfile retorna 404 quando há bloqueio mútuo", async () => {
+        const { getPublicProfile, blockUserService } = await import(
+            "../services/user"
+        );
+
+        const a = await createUser("Ana Block", "a-block@test.com");
+        const b = await createUser("Bruno Block", "b-block@test.com");
+        await blockUserService(a._id.toString(), b._id.toString());
+
+        await expect(
+            getPublicProfile(b._id.toString(), a._id.toString()),
+        ).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it("getPublicProfile retorna 404 para usuário inexistente", async () => {
+        const { getPublicProfile } = await import("../services/user");
+        const requester = await createUser("Req", "req-missing@test.com");
+
+        await expect(
+            getPublicProfile(
+                new mongoose.Types.ObjectId().toString(),
+                requester._id.toString(),
+            ),
+        ).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it("controller getUserProfile responde perfil público", async () => {
+        const { getUserProfile } = await import(
+            "../controllers/userController"
+        );
+
+        const requester = await createUser("Req", "req-ctrl@test.com");
+        const ana = await createUser("Ana", "ana-ctrl@test.com");
+
+        const state = { body: undefined as unknown };
+        const res = {
+            json(body: unknown) {
+                state.body = body;
+                return res;
+            },
+            status() {
+                return res;
+            },
+        };
+
+        await getUserProfile(
+            {
+                params: { id: ana._id.toString() },
+                user: { _id: requester._id.toString() },
+            } as unknown as AuthRequest,
+            res as unknown as Response,
+        );
+
+        const body = state.body as { name: string; email?: unknown };
+        expect(body.name).toBe("Ana");
+        expect(body).toHaveProperty("publicId");
+        expect(body).not.toHaveProperty("email");
+    });
+});
+
 describe("integração: refresh com janela de tolerância", () => {
     it("aceita o token anterior dentro da janela após rotação", async () => {
         const { default: Session } = await import("../models/Session");

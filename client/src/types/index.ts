@@ -1,6 +1,7 @@
 import type {
     UserPayload,
     PublicUserPayload,
+    PublicProfilePayload as PublicProfilePayloadShared,
     SenderPayload,
     AttachmentPayload,
     RoomPayload,
@@ -16,6 +17,7 @@ import type {
 
 export type User = UserPayload;
 export type PublicUser = PublicUserPayload;
+export type PublicProfile = PublicProfilePayloadShared;
 export type Sender = SenderPayload;
 export type Attachment = AttachmentPayload;
 export type Room = RoomPayload;
