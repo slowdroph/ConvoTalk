@@ -19,6 +19,7 @@ interface UserProfileModalProps {
     onClose: () => void;
     onConversationCreated: (roomId: string) => void;
     initialUser?: PublicUser;
+    hideStartConversation?: boolean;
 }
 
 function statusOf(err: unknown): number | undefined {
@@ -34,6 +35,7 @@ export default function UserProfileModal({
     onClose,
     onConversationCreated,
     initialUser,
+    hideStartConversation = false,
 }: UserProfileModalProps) {
     const { onlineUsers } = useSocket();
     const { user: currentUser } = useAuth();
@@ -250,7 +252,7 @@ export default function UserProfileModal({
                             {startError}
                         </p>
                     )}
-                    {!isSelf && (
+                    {!isSelf && !hideStartConversation && (
                         <button
                             type="button"
                             onClick={handleStart}

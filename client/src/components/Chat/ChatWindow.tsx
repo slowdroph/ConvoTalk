@@ -13,6 +13,7 @@ import GroupInfoModal from "./GroupInfoModal";
 import ThreadPanel from "./ThreadPanel";
 import PinnedMessagesDialog from "./PinnedMessagesDialog";
 import ConfirmDialog from "../ui/ConfirmDialog";
+import UserProfileModal from "../ui/UserProfileModal";
 import ChatHeader from "./ChatHeader";
 import api from "../../services/api";
 import type { Message, PublicUser, Room } from "../../types";
@@ -87,6 +88,7 @@ export default function ChatWindow({
     const [exportOpen, setExportOpen] = useState(false);
     const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
     const [groupInfoOpen, setGroupInfoOpen] = useState(false);
+    const [userInfoOpen, setUserInfoOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [threadParent, setThreadParent] = useState<Message | null>(null);
@@ -521,6 +523,7 @@ export default function ChatWindow({
                 onOpenPinned={() => setPinnedOpen(true)}
                 onOpenGroupSettings={() => setGroupSettingsOpen(true)}
                 onOpenGroupInfo={() => setGroupInfoOpen(true)}
+                onOpenUserInfo={() => setUserInfoOpen(true)}
                 onClearConversation={() => setClearConfirmOpen(true)}
                 pinnedCount={pinnedMessageIds.length}
             />
@@ -568,6 +571,18 @@ export default function ChatWindow({
                     onRoomLeft?.(id);
                     setGroupInfoOpen(false);
                 }}
+            />
+
+            <UserProfileModal
+                isOpen={userInfoOpen}
+                userId={otherUserId ?? null}
+                onClose={() => setUserInfoOpen(false)}
+                onConversationCreated={(id) => {
+                    setUserInfoOpen(false);
+                    onConversationCreated?.(id);
+                }}
+                initialUser={otherUser}
+                hideStartConversation
             />
 
             <ExportDialog

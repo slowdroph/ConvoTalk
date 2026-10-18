@@ -27,6 +27,7 @@ interface ChatHeaderProps {
     onOpenPinned: () => void;
     onOpenGroupSettings: () => void;
     onOpenGroupInfo: () => void;
+    onOpenUserInfo: () => void;
     onClearConversation: () => void;
     pinnedCount?: number;
 }
@@ -54,6 +55,7 @@ export default function ChatHeader({
     onOpenPinned,
     onOpenGroupSettings,
     onOpenGroupInfo,
+    onOpenUserInfo,
     onClearConversation,
     pinnedCount,
 }: ChatHeaderProps) {
@@ -88,15 +90,17 @@ export default function ChatHeader({
                     name={avatarName}
                     size="sm"
                 />
-                {roomType === "direct" && otherCountry && (
-                    <CountryFlag
-                        country={otherCountry}
-                        name={getCountryName(otherCountry)}
-                        className="w-5 h-4"
-                    />
-                )}
                 <span className="flex flex-col truncate">
-                    <span className="truncate">{displayName}</span>
+                    <span className="flex items-center gap-1.5 min-w-0">
+                        <span className="truncate">{displayName}</span>
+                        {roomType === "direct" && otherCountry && (
+                            <CountryFlag
+                                country={otherCountry}
+                                name={getCountryName(otherCountry)}
+                                className="w-5 h-4"
+                            />
+                        )}
+                    </span>
                     {roomType === "direct" ? (
                         <span className="flex items-center gap-1 text-xs font-normal">
                             <span
@@ -138,6 +142,29 @@ export default function ChatHeader({
                         onClick={onOpenGroupInfo}
                         title="Ver informações do grupo"
                         aria-label="Ver informações do grupo"
+                        className="p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.8}
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+                    </button>
+                )}
+                {roomType === "direct" && (
+                    <button
+                        onClick={onOpenUserInfo}
+                        title="Ver informações do usuário"
+                        aria-label="Ver informações do usuário"
                         className="p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
                     >
                         <svg
