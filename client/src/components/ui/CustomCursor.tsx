@@ -83,13 +83,9 @@ export default function CustomCursor() {
 
             const { x, y } = targetPosRef.current;
 
-            dot.style.transform = `translate3d(${x - DOT_SIZE / 2}px, ${y - DOT_SIZE / 2}px, 0)`;
-
             const factor = reducedMotionRef.current ? 1 : LERP_FACTOR;
             ringPosRef.current.x = lerp(ringPosRef.current.x, x, factor);
             ringPosRef.current.y = lerp(ringPosRef.current.y, y, factor);
-
-            ring.style.transform = `translate3d(${ringPosRef.current.x - RING_SIZE / 2}px, ${ringPosRef.current.y - RING_SIZE / 2}px, 0)`;
 
             const scaleLerp = reducedMotionRef.current ? 1 : SCALE_LERP;
             const opacityLerp = reducedMotionRef.current ? 1 : OPACITY_LERP;
@@ -121,14 +117,12 @@ export default function CustomCursor() {
 
             const ds = dotScaleRef.current;
             const rs = ringScaleRef.current;
-            const doo = dotOpacityRef.current;
-            const roo = ringOpacityRef.current;
 
-            dot.style.transform += ` scale(${ds})`;
-            ring.style.transform += ` scale(${rs})`;
+            dot.style.transform = `translate3d(${x - DOT_SIZE / 2}px, ${y - DOT_SIZE / 2}px, 0) scale(${ds})`;
+            ring.style.transform = `translate3d(${ringPosRef.current.x - RING_SIZE / 2}px, ${ringPosRef.current.y - RING_SIZE / 2}px, 0) scale(${rs})`;
 
-            dot.style.opacity = String(doo);
-            ring.style.opacity = String(roo);
+            dot.style.opacity = String(dotOpacityRef.current);
+            ring.style.opacity = String(ringOpacityRef.current);
 
             const dx = ringPosRef.current.x - x;
             const dy = ringPosRef.current.y - y;

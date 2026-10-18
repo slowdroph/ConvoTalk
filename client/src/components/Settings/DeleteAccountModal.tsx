@@ -41,7 +41,7 @@ export default function DeleteAccountModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4">
             <div className="bg-noir-card border border-red-900/40 rounded-2xl p-6 w-full max-w-md mx-auto shadow-2xl space-y-4">
                 <div className="flex items-center gap-2.5 text-red-400">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

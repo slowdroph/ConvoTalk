@@ -132,7 +132,7 @@ export default function UserProfileModal({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80"
             onClick={onClose}
             role="dialog"
             aria-modal="true"

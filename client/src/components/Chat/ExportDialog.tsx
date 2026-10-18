@@ -57,7 +57,7 @@ export default function ExportDialog({
     };
 
     return (
-        <div className="fixed inset-0 bg-noir-base/60 backdrop-blur-xs flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-noir-base/75 flex items-center justify-center z-50">
             <div className="bg-noir-card border border-noir-border rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
                 <h3 className="text-lg font-semibold text-noir-text-bright mb-2">
                     Exportar conversa
