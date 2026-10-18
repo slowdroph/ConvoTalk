@@ -35,20 +35,20 @@ export default function UserStatus() {
     return (
         <div className="flex items-center justify-between p-4 border-b border-noir-border bg-noir-surface/90 backdrop-blur">
             <div className="flex items-center gap-3 min-w-0">
-                <div className="flex items-center gap-1.5 shrink-0">
-                    <Avatar src={user?.avatar} name={user?.name || "?"} />
-                    {user?.country && (
-                        <CountryFlag
-                            country={user.country}
-                            name={getCountryName(user.country)}
-                            className="w-4 h-3"
-                        />
-                    )}
-                </div>
+                <Avatar src={user?.avatar} name={user?.name || "?"} />
                 <div className="min-w-0">
-                    <p className="text-slate-900 font-medium text-sm truncate dark:text-noir-text-bright">
-                        {user?.name}
-                    </p>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <p className="text-slate-900 font-medium text-sm truncate dark:text-noir-text-bright">
+                            {user?.name}
+                        </p>
+                        {user?.country && (
+                            <CountryFlag
+                                country={user.country}
+                                name={getCountryName(user.country)}
+                                className="w-4 h-3"
+                            />
+                        )}
+                    </div>
                     <div className="flex items-center gap-1 min-w-0">
                         <p className="min-w-0 text-slate-500 text-xs font-mono truncate dark:text-noir-text-muted">
                             #{user?.publicId}

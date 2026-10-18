@@ -28,13 +28,21 @@ export default function ProfileForm() {
     const [statusLoading, setStatusLoading] = useState(false);
     const [avatarLoading, setAvatarLoading] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         return () => {
             if (preview) URL.revokeObjectURL(preview);
         };
     }, [preview]);
+
+    useEffect(() => {
+        return () => {
+            if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+        };
+    }, []);
 
     const handleAvatarChange = async (
         e: React.ChangeEvent<HTMLInputElement>,
@@ -82,6 +90,19 @@ export default function ProfileForm() {
             setError(getErrorMessage(err, "Erro ao remover avatar"));
         } finally {
             setAvatarLoading(false);
+        }
+    };
+
+    const handleCopyId = async () => {
+        if (!user?.publicId) return;
+
+        try {
+            await navigator.clipboard?.writeText(`#${user.publicId}`);
+            setCopied(true);
+            if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+            copyTimeoutRef.current = setTimeout(() => setCopied(false), 1500);
+        } catch {
+            setError("Não foi possível copiar o ID.");
         }
     };
 
@@ -201,10 +222,10 @@ export default function ProfileForm() {
                 </div>
             )}
 
-            {/* Controle de Avatar */}
-            <div className="flex items-center gap-4 sm:gap-6">
-                <div className="flex items-end gap-2">
-                    <div className="relative group">
+            {/* Cabeçalho do perfil */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4 min-w-0">
+                    <div className="relative shrink-0">
                         <Avatar
                             src={avatarUrl || undefined}
                             name={user?.name || "?"}
@@ -218,16 +239,50 @@ export default function ProfileForm() {
                             </div>
                         )}
                     </div>
-                    {country && (
-                        <CountryFlag
-                            country={country}
-                            name={getCountryName(country)}
-                            className="w-7 h-5 mb-1"
-                        />
-                    )}
+
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-noir-text-bright truncate">
+                                {user?.name}
+                            </h3>
+                            {user?.country && (
+                                <CountryFlag
+                                    country={user.country}
+                                    name={getCountryName(user.country)}
+                                    className="w-5 h-4"
+                                />
+                            )}
+                        </div>
+
+                        <div className="mt-1.5 inline-flex items-center gap-2 rounded-lg border border-noir-border bg-noir-surface-alt px-2.5 py-1">
+                            <span className="text-[11px] text-noir-text-muted">
+                                ID:
+                            </span>
+                            <span className="font-mono text-xs text-emerald-300">
+                                #{user?.publicId}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={handleCopyId}
+                                aria-label="Copiar ID"
+                                title={`Copiar ID #${user?.publicId ?? ""}`}
+                                className="text-noir-text-muted hover:text-emerald-300 transition cursor-pointer"
+                            >
+                                {copied ? (
+                                    <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2.5">
+                <div className="flex flex-wrap gap-2.5 sm:shrink-0">
                     <input
                         ref={fileInputRef}
                         type="file"
@@ -258,36 +313,7 @@ export default function ProfileForm() {
                 </div>
             </div>
 
-            {/* Seu ID público */}
-            <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-emerald-500/25 bg-emerald-950/20 max-w-2xl">
-                <div className="min-w-0">
-                    <p className="text-xs font-semibold text-noir-text-bright">
-                        Seu ID para conversas
-                    </p>
-                    <p className="text-xs text-noir-text-muted mt-0.5">
-                        Compartilhe{" "}
-                        <span className="font-mono text-emerald-300">
-                            #{user?.publicId}
-                        </span>{" "}
-                        para que outras pessoas iniciem conversa com você sem
-                        expor seu email.
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => {
-                        if (user?.publicId) {
-                            navigator.clipboard?.writeText(
-                                `#${user.publicId}`,
-                            );
-                            setSuccess("ID copiado!");
-                        }
-                    }}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-medium transition shrink-0 cursor-pointer"
-                >
-                    Copiar ID
-                </button>
-            </div>
+            <div className="border-b border-noir-border" />
 
             {/* Formulário Principal */}
             <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
