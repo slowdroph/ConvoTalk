@@ -2,17 +2,29 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
+import { COUNTRIES, getCountryName } from "../../utils/countries";
 import Avatar from "../ui/Avatar";
+import CityCombobox from "../ui/CityCombobox";
+import CountryFlag from "../ui/CountryFlag";
+
+const sortedCountries = [...COUNTRIES].sort((a, b) =>
+    a.name.localeCompare(b.name, "pt-BR"),
+);
 
 export default function ProfileForm() {
     const { user, updateUser } = useAuth();
     const [name, setName] = useState(user?.name || "");
     const [email, setEmail] = useState(user?.email || "");
     const [status, setStatus] = useState(user?.status || "");
+    const [country, setCountry] = useState(user?.country || "");
+    const [city, setCity] = useState(user?.city || "");
     const [currentPassword, setCurrentPassword] = useState("");
     const [success, setSuccess] = useState("");
     const [error, setError] = useState("");
     const [profileLoading, setProfileLoading] = useState(false);
+    const [locationLoading, setLocationLoading] = useState(false);
+    const [locationSuccess, setLocationSuccess] = useState("");
+    const [locationError, setLocationError] = useState("");
     const [statusLoading, setStatusLoading] = useState(false);
     const [avatarLoading, setAvatarLoading] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
@@ -105,6 +117,28 @@ export default function ProfileForm() {
         }
     };
 
+    const handleLocationSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLocationError("");
+        setLocationSuccess("");
+        setLocationLoading(true);
+
+        try {
+            const { data } = await api.put("/user/location", {
+                country: country || null,
+                city: city.trim() || null,
+            });
+            updateUser(data);
+            setLocationSuccess("Localização atualizada!");
+        } catch (err: unknown) {
+            setLocationError(
+                getErrorMessage(err, "Erro ao atualizar localização"),
+            );
+        } finally {
+            setLocationLoading(false);
+        }
+    };
+
     const handleStatusSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
@@ -169,18 +203,27 @@ export default function ProfileForm() {
 
             {/* Controle de Avatar */}
             <div className="flex items-center gap-4 sm:gap-6">
-                <div className="relative group">
-                    <Avatar
-                        src={avatarUrl || undefined}
-                        name={user?.name || "?"}
-                        size="lg"
-                        className="w-16 h-16 rounded-full border-2 border-noir-border shadow-md ring-2 ring-emerald-500/20"
-                    />
-                    <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-noir-card" />
-                    {avatarLoading && (
-                        <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
-                            <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                        </div>
+                <div className="flex items-end gap-2">
+                    <div className="relative group">
+                        <Avatar
+                            src={avatarUrl || undefined}
+                            name={user?.name || "?"}
+                            size="lg"
+                            className="w-16 h-16 rounded-full border-2 border-noir-border shadow-md ring-2 ring-emerald-500/20"
+                        />
+                        <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-noir-card" />
+                        {avatarLoading && (
+                            <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+                                <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                            </div>
+                        )}
+                    </div>
+                    {country && (
+                        <CountryFlag
+                            country={country}
+                            name={getCountryName(country)}
+                            className="w-7 h-5 mb-1"
+                        />
                     )}
                 </div>
 
@@ -329,6 +372,98 @@ export default function ProfileForm() {
                     </button>
                 </div>
             </form>
+
+            {/* Seção de Localização */}
+            <div className="pt-5 border-t border-noir-border max-w-2xl">
+                <div className="mb-3">
+                    <h3 className="text-sm font-semibold text-noir-text-bright">
+                        Localização
+                    </h3>
+                    <p className="text-xs text-noir-text-muted mt-0.5">
+                        O país aparece ao lado da sua foto de perfil. Sua cidade
+                        é visível apenas para você.
+                    </p>
+                </div>
+
+                {locationSuccess && (
+                    <div
+                        role="alert"
+                        className="mb-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-4 py-2.5 rounded-xl text-xs flex items-center gap-2"
+                    >
+                        <svg className="w-4 h-4 shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>{locationSuccess}</span>
+                    </div>
+                )}
+
+                {locationError && (
+                    <div
+                        role="alert"
+                        className="mb-3 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-2.5 rounded-xl text-xs flex items-center gap-2"
+                    >
+                        <svg className="w-4 h-4 shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{locationError}</span>
+                    </div>
+                )}
+
+                <form onSubmit={handleLocationSubmit} className="space-y-4">
+                    <div>
+                        <label
+                            htmlFor="input-country"
+                            className="block text-xs font-medium text-noir-text-bright mb-1.5"
+                        >
+                            País
+                        </label>
+                        <select
+                            id="input-country"
+                            name="country"
+                            value={country}
+                            onChange={(e) => setCountry(e.target.value)}
+                            className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2.5 text-sm text-noir-text-bright focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition cursor-pointer"
+                        >
+                            <option value="">Não informar</option>
+                            {sortedCountries.map((c) => (
+                                <option key={c.code} value={c.code}>
+                                    {c.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="input-city"
+                            className="block text-xs font-medium text-noir-text-bright mb-1.5"
+                        >
+                            Cidade
+                        </label>
+                        <CityCombobox
+                            id="input-city"
+                            value={city}
+                            onChange={setCity}
+                            country={country}
+                            maxLength={80}
+                            placeholder="Ex: São Paulo"
+                            disabled={locationLoading}
+                        />
+                    </div>
+
+                    <div>
+                        <button
+                            type="submit"
+                            disabled={locationLoading}
+                            className="px-4 py-2 rounded-xl bg-noir-surface-alt hover:bg-noir-card text-noir-text-bright font-medium text-xs border border-noir-border-light transition-all disabled:opacity-50 cursor-pointer"
+                        >
+                            {locationLoading
+                                ? "Salvando..."
+                                : "Salvar localização"}
+                        </button>
+                    </div>
+                </form>
+            </div>
 
             {/* Seção de Status */}
             <div className="pt-5 border-t border-noir-border max-w-2xl">

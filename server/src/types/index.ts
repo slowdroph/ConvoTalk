@@ -18,6 +18,8 @@ export interface IUser extends Document {
     lastIp: string | null;
     lastIpAt: Date | null;
     status: string;
+    country: string;
+    city: string;
     blockedUsers: IUser["_id"][];
     createdAt: Date;
 }

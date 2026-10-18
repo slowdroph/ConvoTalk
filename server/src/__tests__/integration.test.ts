@@ -662,6 +662,99 @@ describe("integração: alteração de email", () => {
         const updated = await User.findById(user._id).lean();
         expect(updated?.pendingEmail).toBeNull();
     });
+
+    it("salva country e city via updateLocation e os retorna na resposta", async () => {
+        const { updateLocation } = await import("../services/user");
+        const user = await createHashedUser("Zé", "ze@test.com");
+
+        const result = await updateLocation(String(user._id), {
+            country: "BR",
+            city: "São Paulo",
+        });
+
+        expect(result.country).toBe("BR");
+        expect(result.city).toBe("São Paulo");
+
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.country).toBe("BR");
+        expect(updated?.city).toBe("São Paulo");
+    });
+
+    it("country e city null limpam os campos", async () => {
+        const { updateLocation } = await import("../services/user");
+        const user = await createHashedUser("Zé", "ze@test.com");
+        user.country = "BR";
+        user.city = "São Paulo";
+        await user.save();
+
+        await updateLocation(String(user._id), { country: null, city: null });
+
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.country).toBe("");
+        expect(updated?.city).toBe("");
+    });
+
+    it("updateProfile não altera country/city mesmo se presentes no input", async () => {
+        const user = await createHashedUser("Zé", "ze@test.com");
+        user.country = "BR";
+        user.city = "São Paulo";
+        await user.save();
+        const res = mockRes();
+
+        await updateProfile(
+            profileReq(user, {
+                name: "Zezinho",
+                email: "ze@test.com",
+            }),
+            res,
+        );
+
+        expect(res.statusCode).toBe(200);
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.name).toBe("Zezinho");
+        expect(updated?.country).toBe("BR");
+        expect(updated?.city).toBe("São Paulo");
+    });
+
+    it("atualização de perfil sem senha não exige confirmação nem cria pendência", async () => {
+        const user = await createHashedUser("Zé", "ze@test.com");
+        const res = mockRes();
+
+        await updateProfile(
+            profileReq(user, {
+                name: "Zé",
+                email: "ze@test.com",
+            }),
+            res,
+        );
+
+        expect(res.statusCode).toBe(200);
+        const body = res.body as { emailPending?: boolean; emailChanged?: boolean };
+        expect(body.emailPending).toBe(false);
+        expect(body.emailChanged).toBe(false);
+
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.email).toBe("ze@test.com");
+        expect(updated?.pendingEmail).toBeNull();
+    });
+
+    it("getUserStatus retorna country do usuário", async () => {
+        const { getUserStatus } = await import("../services/user");
+        const user = await createHashedUser("Zé", "ze@test.com");
+        user.country = "AR";
+        await user.save();
+
+        const result = await getUserStatus(String(user._id));
+        expect(result.country).toBe("AR");
+    });
+
+    it("getUserStatus retorna country vazio para usuário sem país", async () => {
+        const { getUserStatus } = await import("../services/user");
+        const user = await createHashedUser("Zé", "ze@test.com");
+
+        const result = await getUserStatus(String(user._id));
+        expect(result.country).toBe("");
+    });
 });
 
 describe("integração: cadastro sem oráculo", () => {

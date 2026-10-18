@@ -90,6 +90,22 @@ export async function updateStatus(
     }
 }
 
+export async function updateLocation(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { country, city } = req.body;
+        const result = await userService.updateLocation(req.user!._id, {
+            country,
+            city,
+        });
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao atualizar localização.");
+    }
+}
+
 export async function updatePassword(
     req: AuthRequest,
     res: Response,

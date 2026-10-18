@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import UserProfilePopover from "../../components/ui/UserProfilePopover";
+import api from "../../services/api";
+
+vi.mock("../../services/api", () => ({
+    default: {
+        get: vi.fn().mockResolvedValue({ data: { country: "" } }),
+    },
+}));
 
 beforeEach(() => {
     vi.useFakeTimers();
@@ -64,5 +71,31 @@ describe("UserProfilePopover", () => {
         );
         hover(screen.getByText("Bruno"));
         expect(screen.getByText("Offline")).toBeInTheDocument();
+    });
+
+    it("exibe o país quando a API retorna country", async () => {
+        vi.mocked(api.get).mockResolvedValueOnce({
+            data: { country: "BR" },
+        });
+        renderPopover();
+        hover(screen.getByText("Ana"));
+        await act(async () => {
+            await Promise.resolve();
+        });
+        expect(screen.getByText("Brasil")).toBeInTheDocument();
+    });
+
+    it("não renderiza linha fantasma para country desconhecido", async () => {
+        vi.mocked(api.get).mockResolvedValueOnce({
+            data: { country: "QQ" },
+        });
+        const { container } = renderPopover();
+        hover(screen.getByText("Ana"));
+        await act(async () => {
+            await Promise.resolve();
+        });
+        const paragraphs = [...container.querySelectorAll("p")];
+        expect(paragraphs.some((p) => p.textContent === "")).toBe(false);
+        expect(screen.queryByRole("img")).not.toBeInTheDocument();
     });
 });

@@ -86,6 +86,19 @@ const userSchema = new Schema<IUser>({
         maxlength: 100,
         default: "",
     },
+    country: {
+        type: String,
+        trim: true,
+        uppercase: true,
+        maxlength: 2,
+        default: "",
+    },
+    city: {
+        type: String,
+        trim: true,
+        maxlength: 80,
+        default: "",
+    },
     blockedUsers: [
         {
             type: Schema.Types.ObjectId,

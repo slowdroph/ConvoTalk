@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import type { ReactNode } from "react";
 import Avatar from "./Avatar";
+import CountryFlag from "./CountryFlag";
+import { getCountryName } from "../../utils/countries";
 import { formatLastSeen } from "../../utils/formatLastSeen";
+import api from "../../services/api";
 
 interface UserProfilePopoverProps {
     children: ReactNode;
@@ -26,6 +29,8 @@ export default function UserProfilePopover({
 }: UserProfilePopoverProps) {
     const [open, setOpen] = useState(false);
     const [position, setPosition] = useState<"left" | "right">("right");
+    const [country, setCountry] = useState<string>("");
+    const countryFetchedRef = useRef(false);
     const [isTouch] = useState<boolean>(
         () =>
             typeof window !== "undefined" &&
@@ -50,6 +55,16 @@ export default function UserProfilePopover({
             document.removeEventListener("pointerdown", handleClickOutside);
         };
     }, [open, isTouch]);
+
+    useEffect(() => {
+        if (!open || countryFetchedRef.current || !userId) return;
+        countryFetchedRef.current = true;
+        api.get(`/user/${userId}/status`)
+            .then(({ data }) => setCountry(data.country || ""))
+            .catch(() => {
+                countryFetchedRef.current = false;
+            });
+    }, [open, userId]);
 
     useEffect(() => {
         return () => {
@@ -120,6 +135,16 @@ export default function UserProfilePopover({
                                 {publicId && (
                                     <p className="text-zinc-500 text-xs truncate font-mono">
                                         #{publicId}
+                                    </p>
+                                )}
+                                {getCountryName(country) && (
+                                    <p className="text-zinc-400 text-xs truncate flex items-center gap-1.5 mt-0.5">
+                                        <CountryFlag
+                                            country={country}
+                                            name={getCountryName(country)}
+                                            className="w-4 h-3"
+                                        />
+                                        {getCountryName(country)}
                                     </p>
                                 )}
                             </div>

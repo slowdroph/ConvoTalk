@@ -16,14 +16,14 @@ import {
     generateConversationPdf,
     createConversationPdfWriter,
 } from "./export";
-import { PUBLIC_USER_SELECT } from "../constants";
+import { SENDER_USER_SELECT } from "../constants";
 
-export const POPULATE_SENDER = `sender ${PUBLIC_USER_SELECT}`;
+export const POPULATE_SENDER = `sender ${SENDER_USER_SELECT}`;
 
 export const POPULATE_PARENT = {
     path: "parentMessage",
     select: "sender content attachments deleted",
-    populate: { path: "sender", select: PUBLIC_USER_SELECT },
+    populate: { path: "sender", select: SENDER_USER_SELECT },
 };
 
 export async function findMessageWithSenders(
@@ -80,7 +80,7 @@ export async function searchMessagesGlobally(
     const users = await User.find({
         _id: { $in: messages.filter((m) => m.sender).map((m) => m.sender) },
     })
-        .select(PUBLIC_USER_SELECT)
+        .select(SENDER_USER_SELECT)
         .lean();
     const userMap = new Map(users.map((u) => [u._id.toString(), u]));
 
@@ -148,7 +148,7 @@ export async function searchRoomMessages(
     const messages = await Message.find(mongoQuery)
         .sort({ createdAt: -1 })
         .limit(limit ?? 20)
-        .populate("sender", PUBLIC_USER_SELECT)
+        .populate("sender", SENDER_USER_SELECT)
         .lean();
 
     return messages
@@ -200,7 +200,7 @@ export async function getRoomMessages(
     const messages = await Message.find(query)
         .sort({ createdAt: -1, _id: -1 })
         .limit(safeLimit + 1)
-        .populate("sender", PUBLIC_USER_SELECT)
+        .populate("sender", SENDER_USER_SELECT)
         .populate(POPULATE_PARENT)
         .lean();
 
@@ -245,7 +245,7 @@ export async function getThreadReplies(
         deletedFor: { $ne: userId },
     })
         .sort({ createdAt: 1, _id: 1 })
-        .populate("sender", PUBLIC_USER_SELECT)
+        .populate("sender", SENDER_USER_SELECT)
         .populate(POPULATE_PARENT)
         .lean();
 
@@ -418,7 +418,7 @@ export async function exportRoomToPdf(
         const messages = await Message.find(query)
             .sort({ _id: 1 })
             .limit(BATCH)
-            .populate("sender", PUBLIC_USER_SELECT)
+            .populate("sender", SENDER_USER_SELECT)
             .lean();
 
         if (messages.length === 0) break;

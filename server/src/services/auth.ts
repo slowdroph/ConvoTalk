@@ -31,13 +31,25 @@ function publicUser(user: {
     email: string;
     publicId: string;
     avatar: string;
-}): { _id: string; name: string; email: string; publicId: string; avatar: string } {
+    country?: string;
+    city?: string;
+}): {
+    _id: string;
+    name: string;
+    email: string;
+    publicId: string;
+    avatar: string;
+    country: string;
+    city: string;
+} {
     return {
         _id: String(user._id),
         name: user.name,
         email: user.email,
         publicId: user.publicId,
         avatar: user.avatar,
+        country: user.country || "",
+        city: user.city || "",
     };
 }
 

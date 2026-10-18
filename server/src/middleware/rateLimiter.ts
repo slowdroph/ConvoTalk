@@ -86,6 +86,21 @@ export const emailChangeLimiter = rateLimit({
     },
 });
 
+// Aplicado em PUT /user/profile: só conta quando o body envia currentPassword,
+// que é o único caso em que a troca de email (ou brute-force da senha) ocorre.
+// Sem senha, o service falha com 401 antes de qualquer efeito.
+export const profileEmailGuardLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator,
+    skip: (req) => !req.body?.currentPassword,
+    message: {
+        message: "Muitas solicitações de alteração de email. Aguarde 15 minutos.",
+    },
+});
+
 export const previewLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 20,

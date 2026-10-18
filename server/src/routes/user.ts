@@ -2,10 +2,11 @@ import { Router } from "express";
 import auth from "../middleware/auth";
 import { validate } from "../middleware/validate";
 import upload from "../middleware/upload";
-import { emailChangeLimiter } from "../middleware/rateLimiter";
+import { profileEmailGuardLimiter, emailChangeLimiter } from "../middleware/rateLimiter";
 import {
     objectId,
     profileSchema,
+    locationSchema,
     passwordSchema,
     accountSchema,
     blockUserParams,
@@ -16,6 +17,7 @@ import {
     getMe,
     getUserStatus,
     updateProfile,
+    updateLocation,
     updateStatus,
     updatePassword,
     deleteAccount,
@@ -34,9 +36,15 @@ router.get("/:id/status", auth, getUserStatus);
 router.put(
     "/profile",
     auth,
-    emailChangeLimiter,
+    profileEmailGuardLimiter,
     validate(profileSchema),
     updateProfile,
+);
+router.put(
+    "/location",
+    auth,
+    validate(locationSchema),
+    updateLocation,
 );
 router.post(
     "/confirm-email-change",

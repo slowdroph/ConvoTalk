@@ -56,7 +56,7 @@ export async function getMe(userId: string) {
 
 export async function getUserStatus(userId: string) {
     const user = await User.findById(userId)
-        .select("name lastSeen avatar status")
+        .select("name lastSeen avatar status country")
         .lean();
     if (!user) {
         throw new NotFoundError("Usuário não encontrado.");
@@ -67,6 +67,7 @@ export async function getUserStatus(userId: string) {
         name: user.name,
         avatar: user.avatar || "",
         status: user.status || "",
+        country: user.country || "",
         lastSeen: user.lastSeen,
     };
 }
@@ -201,6 +202,30 @@ export async function confirmEmailChange(token: string) {
 export async function updateStatus(userId: string, status: string) {
     await User.updateOne({ _id: userId }, { status: status.trim() });
     return status.trim();
+}
+
+export async function updateLocation(
+    userId: string,
+    input: { country?: string | null; city?: string | null },
+) {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new NotFoundError("Usuário não encontrado.");
+    }
+
+    if (input.country !== undefined) {
+        user.country = input.country ?? "";
+    }
+    if (input.city !== undefined) {
+        user.city = input.city ?? "";
+    }
+
+    await user.save();
+
+    return {
+        ...toSafeUserObject(user.toObject()),
+        emailPending: Boolean(user.pendingEmail),
+    };
 }
 
 export async function updatePassword(

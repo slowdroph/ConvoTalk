@@ -507,6 +507,7 @@ export default function ChatWindow({
                 participantCount={participants.length}
                 otherUserLastSeen={otherUserLastSeen}
                 otherStatus={otherStatus}
+                otherCountry={otherUser?.country}
                 onOpenSidebar={onOpenSidebar}
                 callDisabled={!isOtherOnline}
                 onStartCall={webrtc.startCall}

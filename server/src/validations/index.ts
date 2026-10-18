@@ -52,6 +52,22 @@ export const profileSchema = z.object({
     }),
 });
 
+export const locationSchema = z.object({
+    body: z.object({
+        country: z
+            .string()
+            .regex(/^[A-Z]{2}$/, "País inválido.")
+            .nullable()
+            .optional(),
+        city: z
+            .string()
+            .trim()
+            .max(80, "Cidade deve ter no máximo 80 caracteres.")
+            .nullable()
+            .optional(),
+    }),
+});
+
 export const confirmEmailChangeSchema = z.object({
     body: z.object({
         token: z.string().min(1, "Token é obrigatório."),

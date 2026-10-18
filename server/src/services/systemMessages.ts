@@ -1,7 +1,7 @@
 import Message from "../models/Message";
 import { getSocketIO } from "../config/io";
 import { logger } from "../config/logger";
-import { PUBLIC_USER_SELECT } from "../constants";
+import { SENDER_USER_SELECT } from "../constants";
 
 export async function emitSystemMessage(
     roomId: string,
@@ -17,7 +17,7 @@ export async function emitSystemMessage(
 
         const populated = await message.populate(
             "sender",
-            PUBLIC_USER_SELECT,
+            SENDER_USER_SELECT,
         );
 
         getSocketIO()?.to(roomId).emit("message", populated.toObject());

@@ -1,4 +1,6 @@
 import Avatar from "../ui/Avatar";
+import CountryFlag from "../ui/CountryFlag";
+import { getCountryName } from "../../utils/countries";
 import { formatLastSeen } from "../../utils/formatLastSeen";
 import ChatHeaderActions from "./ChatHeaderActions";
 
@@ -13,6 +15,7 @@ interface ChatHeaderProps {
     participantCount: number;
     otherUserLastSeen: string | null;
     otherStatus?: string;
+    otherCountry?: string;
     onOpenSidebar?: () => void;
     callDisabled: boolean;
     onStartCall: (type: "audio" | "video") => void;
@@ -39,6 +42,7 @@ export default function ChatHeader({
     participantCount,
     otherUserLastSeen,
     otherStatus,
+    otherCountry,
     onOpenSidebar,
     callDisabled,
     onStartCall,
@@ -84,6 +88,13 @@ export default function ChatHeader({
                     name={avatarName}
                     size="sm"
                 />
+                {roomType === "direct" && otherCountry && (
+                    <CountryFlag
+                        country={otherCountry}
+                        name={getCountryName(otherCountry)}
+                        className="w-5 h-4"
+                    />
+                )}
                 <span className="flex flex-col truncate">
                     <span className="truncate">{displayName}</span>
                     {roomType === "direct" ? (

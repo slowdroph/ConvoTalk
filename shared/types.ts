@@ -4,12 +4,14 @@ export interface PublicUserPayload {
     publicId: string;
     avatar?: string;
     status?: string;
+    country?: string;
 }
 
 export interface UserPayload extends PublicUserPayload {
     email: string;
     emailPending?: boolean;
     pendingEmail?: string;
+    city?: string;
 }
 
 export interface SenderPayload {

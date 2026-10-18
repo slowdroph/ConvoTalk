@@ -19,7 +19,7 @@ import {
 } from "../utils/errors";
 import { logger } from "../config/logger";
 import { invalidateRoom } from "../socket/roomCache";
-import { PUBLIC_USER_SELECT } from "../constants";
+import { PUBLIC_USER_SELECT, SENDER_USER_SELECT } from "../constants";
 
 const GROUP_PHOTO_FOLDER = "chat_app_groupPhoto";
 
@@ -979,11 +979,11 @@ export async function getPinnedMessages(roomId: string, myId: string) {
 
     const messageIds = pinned.map((p) => p.message);
     const messages = await Message.find({ _id: { $in: messageIds } })
-        .populate("sender", PUBLIC_USER_SELECT)
+        .populate("sender", SENDER_USER_SELECT)
         .populate({
             path: "parentMessage",
             select: "sender content attachments deleted",
-            populate: { path: "sender", select: PUBLIC_USER_SELECT },
+            populate: { path: "sender", select: SENDER_USER_SELECT },
         })
         .lean();
 

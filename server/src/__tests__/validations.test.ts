@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
     registerSchema,
     loginSchema,
+    profileSchema,
+    locationSchema,
     messagesQuerySchema,
     messageSearchQuerySchema,
     userSearchQuerySchema,
@@ -49,6 +51,100 @@ describe("auth validations", () => {
             body: { email: "nao-e-email", password: "123456" },
         });
         expect(result.success).toBe(false);
+    });
+});
+
+describe("profile validations", () => {
+    const baseBody = { name: "Ana", email: "ana@test.com" };
+
+    it("aceita dados de perfil válidos", () => {
+        const result = profileSchema.safeParse({ body: baseBody });
+        expect(result.success).toBe(true);
+    });
+
+    it("aceita perfil com currentPassword", () => {
+        const result = profileSchema.safeParse({
+            body: { ...baseBody, currentPassword: "senha123" },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("rejeita perfil sem nome", () => {
+        const result = profileSchema.safeParse({
+            body: { email: "ana@test.com" },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita perfil com email inválido", () => {
+        const result = profileSchema.safeParse({
+            body: { ...baseBody, email: "nao-e-email" },
+        });
+        expect(result.success).toBe(false);
+    });
+});
+
+describe("location validations", () => {
+    it("aceita país e cidade válidos", () => {
+        const result = locationSchema.safeParse({
+            body: { country: "BR", city: "São Paulo" },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("aceita payload vazio (não altera nada)", () => {
+        const result = locationSchema.safeParse({ body: {} });
+        expect(result.success).toBe(true);
+    });
+
+    it("aceita country e city null para limpar os campos", () => {
+        const result = locationSchema.safeParse({
+            body: { country: null, city: null },
+        });
+        expect(result.success).toBe(true);
+        if (result.success) {
+            expect(result.data.body.country).toBeNull();
+            expect(result.data.body.city).toBeNull();
+        }
+    });
+
+    it("rejeita country com mais de 2 letras", () => {
+        const result = locationSchema.safeParse({ body: { country: "BRA" } });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita country minúsculo", () => {
+        const result = locationSchema.safeParse({ body: { country: "br" } });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita country com caracteres especiais", () => {
+        const result = locationSchema.safeParse({ body: { country: "B!" } });
+        expect(result.success).toBe(false);
+    });
+
+    it("aceita city com 80 caracteres", () => {
+        const result = locationSchema.safeParse({
+            body: { city: "a".repeat(80) },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("rejeita city com mais de 80 caracteres", () => {
+        const result = locationSchema.safeParse({
+            body: { city: "a".repeat(81) },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("aplica trim na city", () => {
+        const result = locationSchema.safeParse({
+            body: { city: "  São Paulo  " },
+        });
+        expect(result.success).toBe(true);
+        if (result.success) {
+            expect(result.data.body.city).toBe("São Paulo");
+        }
     });
 });
 
