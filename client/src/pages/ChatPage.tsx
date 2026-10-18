@@ -379,36 +379,22 @@ function ChatPageInner() {
                         />
                     </WebRTCStateContext.Provider>
                 ) : rooms.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
-                        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center dark:bg-noir-surface-alt">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-8 w-8 text-slate-400 dark:text-noir-text-muted"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                                />
-                            </svg>
+                    <div className="flex-1 flex flex-col gap-5 p-6 pt-8 overflow-y-auto min-h-0">
+                        <div className="text-center">
+                            <h3 className="text-slate-900 font-semibold dark:text-noir-text-bright">
+                                Nenhuma conversa ainda
+                            </h3>
+                            <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1 dark:text-noir-text-muted">
+                                Comece uma nova conversa com alguém abaixo ou crie
+                                um grupo.
+                            </p>
                         </div>
-                        <h3 className="text-slate-900 font-semibold dark:text-noir-text-bright">
-                            Nenhuma conversa ainda
-                        </h3>
-                        <p className="text-slate-500 text-sm max-w-sm dark:text-noir-text-muted">
-                            Comece uma nova conversa com alguém abaixo ou crie
-                            um grupo.
-                        </p>
                         <SuggestedUsers
                             onConversationCreated={handleConversationCreated}
                         />
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="md:hidden flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-border dark:text-noir-text-bright"
+                            className="md:hidden self-center flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-border dark:text-noir-text-bright"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
