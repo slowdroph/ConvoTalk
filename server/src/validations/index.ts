@@ -392,3 +392,31 @@ export const pushUnsubscribeSchema = z.object({
     }),
 });
 
+export const aiSummarizeSchema = z.object({
+    params: z.object({
+        roomId: objectId,
+    }),
+    body: z
+        .object({
+            limit: z.coerce
+                .number()
+                .int()
+                .min(1, "Limite deve ser no mínimo 1.")
+                .max(200, "Limite deve ser no máximo 200.")
+                .optional(),
+            sinceMessageId: objectId.optional(),
+        })
+        .default({}),
+});
+
+export const aiSuggestRepliesSchema = z.object({
+    params: z.object({
+        roomId: objectId,
+    }),
+    body: z
+        .object({
+            messageId: objectId.optional(),
+        })
+        .default({}),
+});
+

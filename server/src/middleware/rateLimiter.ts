@@ -118,3 +118,14 @@ export const pushLimiter = rateLimit({
     keyGenerator,
     message: { message: "Muitas requisições de push. Aguarde um minuto." },
 });
+
+export const aiLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: searchUserKeyGenerator,
+    message: {
+        message: "Muitas solicitações ao assistente. Aguarde um pouco.",
+    },
+});

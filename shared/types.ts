@@ -252,3 +252,33 @@ export interface ReadDetailPayload {
     sessionId: string;
 }
 
+export type AiTone = "short" | "friendly" | "formal";
+
+export interface AiSummarizeRequest {
+    limit?: number;
+    sinceMessageId?: string;
+}
+
+export interface AiSummaryPayload {
+    summary: string;
+    keyPoints: string[];
+    messageCount: number;
+    model: string;
+    generatedAt: string;
+}
+
+export interface AiSuggestRepliesRequest {
+    messageId?: string;
+}
+
+export interface AiReplySuggestion {
+    tone: AiTone;
+    text: string;
+}
+
+export interface AiSuggestRepliesPayload {
+    suggestions: AiReplySuggestion[];
+    model: string;
+    generatedAt: string;
+}
+

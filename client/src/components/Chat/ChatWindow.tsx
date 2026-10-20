@@ -5,7 +5,7 @@ import { useWebRTC } from "../../hooks/useWebRTC";
 import { useToast } from "../../contexts/ToastContext";
 import { useChatSocket } from "../../hooks/useChatSocket";
 import MessageList from "./MessageList";
-import MessageInput from "./MessageInput";
+import MessageInput, { type MessageInputHandle } from "./MessageInput";
 import MessageSearch from "./MessageSearch";
 import ExportDialog from "./ExportDialog";
 import GroupSettings from "./GroupSettings";
@@ -15,6 +15,7 @@ import PinnedMessagesDialog from "./PinnedMessagesDialog";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import UserProfileModal from "../ui/UserProfileModal";
 import ChatHeader from "./ChatHeader";
+import { AssistantPanel, useAssistant } from "../../features/ai";
 import api from "../../services/api";
 import type { Message, PublicUser, Room } from "../../types";
 import { getErrorMessage } from "../../utils/errors";
@@ -77,6 +78,14 @@ export default function ChatWindow({
         onError: (message) => showToast({ type: "error", message }),
         initialPinnedMessageIds,
     });
+    const {
+        summary: assistantSummary,
+        suggestions: assistantSuggestions,
+        loading: assistantLoading,
+        error: assistantError,
+        summarize: summarizeConversation,
+        suggest: suggestReplies,
+    } = useAssistant(roomId);
     const [messagesLoading, setMessagesLoading] = useState(true);
     const [messagesError, setMessagesError] = useState<string | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -95,6 +104,8 @@ export default function ChatWindow({
     const [pinnedOpen, setPinnedOpen] = useState(false);
     const [isBlocked, setIsBlocked] = useState(false);
     const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+    const [assistantOpen, setAssistantOpen] = useState(false);
+    const messageInputRef = useRef<MessageInputHandle>(null);
     const [highlightedMessageId, setHighlightedMessageId] = useState<
         string | null
     >(highlightMessageId ?? null);
@@ -326,6 +337,10 @@ export default function ChatWindow({
                     setPinnedOpen(false);
                     return;
                 }
+                if (assistantOpen) {
+                    setAssistantOpen(false);
+                    return;
+                }
                 if (replyingTo) {
                     setReplyingTo(null);
                 }
@@ -333,7 +348,7 @@ export default function ChatWindow({
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [searchOpen, threadParent, pinnedOpen, replyingTo]);
+    }, [searchOpen, threadParent, pinnedOpen, assistantOpen, replyingTo]);
 
     const handleDeleteMessage = useCallback(
         (messageId: string, forMe = false) => {
@@ -369,6 +384,16 @@ export default function ChatWindow({
         setThreadParent(message);
         setReplyingTo(null);
     }, []);
+
+    const handleSummarizeConversation = useCallback(() => {
+        setAssistantOpen(true);
+        void summarizeConversation();
+    }, [summarizeConversation]);
+
+    const handleSuggestReplies = useCallback(() => {
+        setAssistantOpen(true);
+        void suggestReplies();
+    }, [suggestReplies]);
 
     const handleTogglePin = useCallback(
         (message: Message) => {
@@ -499,7 +524,7 @@ export default function ChatWindow({
             (admins ?? []).some((a) => a._id === user?._id));
 
     return (
-        <div className="flex-1 flex flex-col bg-noir-base h-full">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-noir-base h-full">
             <ChatHeader
                 roomType={roomType}
                 canManageGroup={canManageGroup}
@@ -525,6 +550,8 @@ export default function ChatWindow({
                 onOpenGroupInfo={() => setGroupInfoOpen(true)}
                 onOpenUserInfo={() => setUserInfoOpen(true)}
                 onClearConversation={() => setClearConfirmOpen(true)}
+                onSummarizeConversation={handleSummarizeConversation}
+                onSuggestReplies={handleSuggestReplies}
                 pinnedCount={pinnedMessageIds.length}
             />
 
@@ -690,10 +717,29 @@ export default function ChatWindow({
                                 participants={participants}
                             />
                         )}
+                        {assistantOpen && (
+                            <AssistantPanel
+                                summary={assistantSummary}
+                                suggestions={assistantSuggestions}
+                                loading={assistantLoading}
+                                error={assistantError}
+                                onSummarize={() => {
+                                    void summarizeConversation();
+                                }}
+                                onSuggest={() => {
+                                    void suggestReplies();
+                                }}
+                                onUseReply={(text) =>
+                                    messageInputRef.current?.insertText(text)
+                                }
+                                onClose={() => setAssistantOpen(false)}
+                            />
+                        )}
                     </div>
                 )}
             </div>
             <MessageInput
+                ref={messageInputRef}
                 roomId={roomId}
                 replyingTo={replyingTo}
                 onCancelReply={() => setReplyingTo(null)}

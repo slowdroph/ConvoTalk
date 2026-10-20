@@ -29,6 +29,8 @@ interface ChatHeaderProps {
     onOpenGroupInfo: () => void;
     onOpenUserInfo: () => void;
     onClearConversation: () => void;
+    onSummarizeConversation: () => void;
+    onSuggestReplies: () => void;
     pinnedCount?: number;
 }
 
@@ -57,11 +59,13 @@ export default function ChatHeader({
     onOpenGroupInfo,
     onOpenUserInfo,
     onClearConversation,
+    onSummarizeConversation,
+    onSuggestReplies,
     pinnedCount,
 }: ChatHeaderProps) {
     return (
-        <div className="h-16 px-4 sm:px-6 border-b border-noir-border bg-noir-surface/90 flex items-center justify-between gap-2">
-            <h2 className="text-slate-900 font-semibold flex items-center gap-2 min-w-0 dark:text-noir-text-bright">
+        <div className="min-h-16 px-2 sm:px-6 py-1.5 border-b border-noir-border bg-noir-surface/90 flex items-center justify-between gap-2">
+            <h2 className="text-slate-900 font-semibold flex items-center gap-2 min-w-0 flex-1 dark:text-noir-text-bright">
                 {onOpenSidebar && (
                     <button
                         onClick={onOpenSidebar}
@@ -85,56 +89,71 @@ export default function ChatHeader({
                         </svg>
                     </button>
                 )}
-                <Avatar
-                    src={avatarUrl || undefined}
-                    name={avatarName}
-                    size="sm"
-                />
-                <span className="flex flex-col truncate">
-                    <span className="flex items-center gap-1.5 min-w-0">
-                        <span className="truncate">{displayName}</span>
-                        {roomType === "direct" && otherCountry && (
-                            <CountryFlag
-                                country={otherCountry}
-                                name={getCountryName(otherCountry)}
-                                className="w-5 h-4"
-                            />
+                <button
+                    type="button"
+                    onClick={
+                        roomType === "direct"
+                            ? onOpenUserInfo
+                            : onOpenGroupInfo
+                    }
+                    className="flex items-center gap-2 min-w-0 flex-1 text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
+                    title={
+                        roomType === "direct"
+                            ? "Ver informações do usuário"
+                            : "Ver informações do grupo"
+                    }
+                >
+                    <Avatar
+                        src={avatarUrl || undefined}
+                        name={avatarName}
+                        size="sm"
+                    />
+                    <span className="flex flex-col min-w-0 flex-1 truncate">
+                        <span className="flex items-center gap-1.5 min-w-0">
+                            <span className="truncate">{displayName}</span>
+                            {roomType === "direct" && otherCountry && (
+                                <CountryFlag
+                                    country={otherCountry}
+                                    name={getCountryName(otherCountry)}
+                                    className="w-5 h-4 shrink-0"
+                                />
+                            )}
+                        </span>
+                        {roomType === "direct" ? (
+                            <span className="flex items-center gap-1 text-xs font-normal">
+                                <span
+                                    className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                                        isOtherOnline
+                                            ? "bg-emerald-500"
+                                            : "dark:bg-noir-border"
+                                    }`}
+                                />
+                                <span
+                                    className={
+                                        isOtherOnline
+                                            ? "text-emerald-400"
+                                            : "dark:text-noir-text-muted"
+                                    }
+                                >
+                                    {isOtherOnline
+                                        ? "Online"
+                                        : formatLastSeen(otherUserLastSeen)}
+                                </span>
+                            </span>
+                        ) : (
+                            <span className="text-xs font-normal dark:text-noir-text-muted">
+                                {onlineCount > 0
+                                    ? `${onlineCount} online`
+                                    : `${participantCount} participantes`}
+                            </span>
+                        )}
+                        {roomType === "direct" && otherStatus && (
+                            <span className="hidden sm:block text-xs font-normal dark:text-noir-text-muted truncate">
+                                {otherStatus}
+                            </span>
                         )}
                     </span>
-                    {roomType === "direct" ? (
-                        <span className="flex items-center gap-1 text-xs font-normal">
-                            <span
-                                className={`inline-block w-2 h-2 rounded-full ${
-                                    isOtherOnline
-                                        ? "bg-emerald-500"
-                                        : "dark:bg-noir-border"
-                                }`}
-                            />
-                            <span
-                                className={
-                                    isOtherOnline
-                                        ? "text-emerald-400"
-                                        : "dark:text-noir-text-muted"
-                                }
-                            >
-                                {isOtherOnline
-                                    ? "Online"
-                                    : formatLastSeen(otherUserLastSeen)}
-                            </span>
-                        </span>
-                    ) : (
-                        <span className="text-xs font-normal dark:text-noir-text-muted">
-                            {onlineCount > 0
-                                ? `${onlineCount} online`
-                                : `${participantCount} participantes`}
-                        </span>
-                    )}
-                    {roomType === "direct" && otherStatus && (
-                        <span className="text-xs font-normal dark:text-noir-text-muted truncate">
-                            {otherStatus}
-                        </span>
-                    )}
-                </span>
+                </button>
             </h2>
             <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                 {roomType === "group" && (
@@ -142,7 +161,7 @@ export default function ChatHeader({
                         onClick={onOpenGroupInfo}
                         title="Ver informações do grupo"
                         aria-label="Ver informações do grupo"
-                        className="p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
+                        className="hidden sm:flex p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -165,7 +184,7 @@ export default function ChatHeader({
                         onClick={onOpenUserInfo}
                         title="Ver informações do usuário"
                         aria-label="Ver informações do usuário"
-                        className="p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
+                        className="hidden sm:flex p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -196,6 +215,8 @@ export default function ChatHeader({
                 onOpenPinned={onOpenPinned}
                 onOpenGroupSettings={onOpenGroupSettings}
                 onClearConversation={onClearConversation}
+                onSummarizeConversation={onSummarizeConversation}
+                onSuggestReplies={onSuggestReplies}
                 pinnedCount={pinnedCount}
                 />
             </div>

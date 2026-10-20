@@ -324,7 +324,7 @@ function ChatPageInner() {
     return (
         <div className="h-dvh-fallback flex flex-col bg-noir-base pt-[env(safe-area-inset-top)]">
             <ConnectionBanner />
-            <div className="flex flex-1 min-h-0">
+            <div className="flex flex-1 min-h-0 min-w-0">
                 <Sidebar
                     rooms={rooms}
                     activeRoom={activeRoom}

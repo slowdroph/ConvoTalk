@@ -16,6 +16,14 @@ const OPTIONAL_VARS = [
     "VAPID_PUBLIC_KEY",
     "VAPID_PRIVATE_KEY",
     "VAPID_SUBJECT",
+    "OPENROUTER_API_KEY",
+    "AI_ENABLED",
+    "AI_MODEL",
+    "AI_FALLBACK_MODELS",
+    "AI_TIMEOUT_MS",
+    "AI_MAX_CONTEXT_MESSAGES",
+    "AI_SUMMARY_MAX_TOKENS",
+    "AI_SUGGESTIONS_MAX_TOKENS",
 ] as const;
 
 
@@ -103,6 +111,14 @@ export function validateEnv(): void {
         logger.warn(
             {},
             "RESEND_API_KEY ausente: emails transacionais serão enfileirados e falharão no envio. Configure para ativar verificação de email e redefinição de senha.",
+        );
+    }
+
+    const aiEnabled = process.env.AI_ENABLED !== "false";
+    if (aiEnabled && !process.env.OPENROUTER_API_KEY) {
+        logger.warn(
+            {},
+            "OPENROUTER_API_KEY ausente: recursos do assistente de IA ficarão indisponíveis. Use AI_ENABLED=false para desativar explicitamente.",
         );
     }
 }

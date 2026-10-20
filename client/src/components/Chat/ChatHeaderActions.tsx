@@ -13,17 +13,19 @@ interface ChatHeaderActionsProps {
     onOpenPinned: () => void;
     onOpenGroupSettings: () => void;
     onClearConversation: () => void;
+    onSummarizeConversation: () => void;
+    onSuggestReplies: () => void;
     pinnedCount?: number;
 }
 
 const callButtonClass =
-    "p-2.5 rounded-xl transition-colors text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt disabled:opacity-40 disabled:cursor-not-allowed";
+    "hidden sm:inline-flex p-2 sm:p-2.5 rounded-xl transition-colors text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt disabled:opacity-40 disabled:cursor-not-allowed";
 
 const menuItemClass =
     "w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-xl transition group";
 
 const moreButtonClass =
-    "p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt";
+    "p-2 sm:p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt";
 
 export default function ChatHeaderActions({
     roomType,
@@ -38,6 +40,8 @@ export default function ChatHeaderActions({
     onOpenPinned,
     onOpenGroupSettings,
     onClearConversation,
+    onSummarizeConversation,
+    onSuggestReplies,
     pinnedCount = 0,
 }: ChatHeaderActionsProps) {
     return (
@@ -48,6 +52,7 @@ export default function ChatHeaderActions({
                         onClick={() => onStartCall("audio")}
                         disabled={callDisabled}
                         className={callButtonClass}
+                        aria-label="Chamada de voz"
                         title={
                             callDisabled
                                 ? "Usuário indisponível"
@@ -73,6 +78,7 @@ export default function ChatHeaderActions({
                         onClick={() => onStartCall("video")}
                         disabled={callDisabled}
                         className={callButtonClass}
+                        aria-label="Vídeo chamada"
                         title={
                             callDisabled
                                 ? "Usuário indisponível"
@@ -95,7 +101,7 @@ export default function ChatHeaderActions({
                         </svg>
                     </button>
                     <div
-                        className="h-6 w-px bg-noir-border mx-1"
+                        className="hidden sm:block h-6 w-px bg-noir-border mx-1"
                         aria-hidden="true"
                     />
                 </>
@@ -128,6 +134,71 @@ export default function ChatHeaderActions({
                     </button>
                 )}
             >
+                {/* Chamadas (mobile) */}
+                {roomType === "direct" && (
+                    <>
+                        <div className="space-y-0.5 sm:hidden">
+                            <button
+                                onClick={() => onStartCall("audio")}
+                                disabled={callDisabled}
+                                className={`${menuItemClass} text-noir-text-bright hover:bg-emerald-600/15 hover:text-emerald-300 disabled:opacity-40 disabled:cursor-not-allowed`}
+                                role="menuitem"
+                            >
+                                <span className="flex items-center gap-2.5">
+                                    <svg
+                                        className="w-4 h-4 text-noir-text-muted group-hover:text-emerald-400 transition"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={1.8}
+                                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                                        />
+                                    </svg>
+                                    <span>Chamada de voz</span>
+                                </span>
+                                {callDisabled && (
+                                    <span className="text-[10px] text-noir-text-muted">
+                                        Indisponível
+                                    </span>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => onStartCall("video")}
+                                disabled={callDisabled}
+                                className={`${menuItemClass} text-noir-text-bright hover:bg-emerald-600/15 hover:text-emerald-300 disabled:opacity-40 disabled:cursor-not-allowed`}
+                                role="menuitem"
+                            >
+                                <span className="flex items-center gap-2.5">
+                                    <svg
+                                        className="w-4 h-4 text-noir-text-muted group-hover:text-emerald-400 transition"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={1.8}
+                                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                        />
+                                    </svg>
+                                    <span>Vídeo chamada</span>
+                                </span>
+                                {callDisabled && (
+                                    <span className="text-[10px] text-noir-text-muted">
+                                        Indisponível
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+                        <div className="my-1.5 border-t border-noir-border/60 sm:hidden" />
+                    </>
+                )}
+
                 {/* Grupo 1: Conteúdo & Busca */}
                 <div className="space-y-0.5">
                     <button
@@ -182,6 +253,57 @@ export default function ChatHeaderActions({
                                 {pinnedCount}
                             </span>
                         )}
+                    </button>
+                </div>
+
+                {/* Divisor */}
+                <div className="my-1.5 border-t border-noir-border/60" />
+
+                {/* Grupo: Assistente de IA */}
+                <div className="space-y-0.5">
+                    <button
+                        onClick={onSummarizeConversation}
+                        className={`${menuItemClass} text-noir-text-bright hover:bg-emerald-600/15 hover:text-emerald-300`}
+                        role="menuitem"
+                    >
+                        <span className="flex items-center gap-2.5">
+                            <svg
+                                className="w-4 h-4 text-noir-text-muted group-hover:text-emerald-400 transition"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.8}
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-5 4h5"
+                                />
+                            </svg>
+                            <span>Resumir conversa</span>
+                        </span>
+                    </button>
+                    <button
+                        onClick={onSuggestReplies}
+                        className={`${menuItemClass} text-noir-text-bright hover:bg-emerald-600/15 hover:text-emerald-300`}
+                        role="menuitem"
+                    >
+                        <span className="flex items-center gap-2.5">
+                            <svg
+                                className="w-4 h-4 text-noir-text-muted group-hover:text-emerald-400 transition"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.8}
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-4 4v-4H9z"
+                                />
+                            </svg>
+                            <span>Sugerir respostas</span>
+                        </span>
                     </button>
                 </div>
 

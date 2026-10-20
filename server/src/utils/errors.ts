@@ -13,6 +13,10 @@ export type ErrorCode =
     | "INVALID_URL"
     | "BLOCKED_HOST"
     | "PREVIEW_UNAVAILABLE"
+    | "AI_DISABLED"
+    | "AI_UNAVAILABLE"
+    | "AI_BAD_OUTPUT"
+    | "AI_RATE_LIMITED"
     | "INTERNAL_SERVER_ERROR";
 
 export interface ApiErrorBody {
@@ -79,6 +83,32 @@ export class ForbiddenError extends AppError {
 export class ConflictError extends AppError {
     constructor(message = "Conflito com o estado atual do recurso.") {
         super(409, "CONFLICT", message);
+    }
+}
+
+export class AiDisabledError extends AppError {
+    constructor(message = "O assistente de IA está desativado.") {
+        super(503, "AI_DISABLED", message);
+    }
+}
+
+export class AiUnavailableError extends AppError {
+    constructor(message = "O assistente de IA está indisponível no momento.") {
+        super(503, "AI_UNAVAILABLE", message);
+    }
+}
+
+export class AiBadOutputError extends AppError {
+    constructor(message = "O assistente retornou uma resposta inválida.") {
+        super(502, "AI_BAD_OUTPUT", message);
+    }
+}
+
+export class AiRateLimitedError extends AppError {
+    constructor(
+        message = "O assistente está sobrecarregado. Tente novamente em instantes.",
+    ) {
+        super(429, "AI_RATE_LIMITED", message);
     }
 }
 

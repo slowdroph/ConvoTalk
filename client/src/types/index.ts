@@ -13,6 +13,10 @@ import type {
     MentionNotificationPayload as MentionNotificationPayloadShared,
     SessionPayload as SessionPayloadShared,
     ReadDetailPayload as ReadDetailPayloadShared,
+    AiSummaryPayload as AiSummaryPayloadShared,
+    AiSuggestRepliesPayload as AiSuggestRepliesPayloadShared,
+    AiReplySuggestion as AiReplySuggestionShared,
+    AiTone as AiToneShared,
 } from "@shared/types";
 
 export type User = UserPayload;
@@ -29,6 +33,10 @@ export type LinkPreview = LinkPreviewPayload;
 export type MentionNotificationPayload = MentionNotificationPayloadShared;
 export type Session = SessionPayloadShared;
 export type ReadDetail = ReadDetailPayloadShared;
+export type AiSummary = AiSummaryPayloadShared;
+export type AiSuggestReplies = AiSuggestRepliesPayloadShared;
+export type AiReplySuggestion = AiReplySuggestionShared;
+export type AiTone = AiToneShared;
 
 export interface PreviewMessage {
     id: string;

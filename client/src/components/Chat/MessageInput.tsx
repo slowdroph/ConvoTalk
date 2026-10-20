@@ -1,4 +1,11 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import {
+    useState,
+    useRef,
+    useEffect,
+    useCallback,
+    forwardRef,
+    useImperativeHandle,
+} from "react";
 import { useSocket } from "../../hooks/useSocket";
 import { useAuth } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../utils/errors";
@@ -26,6 +33,10 @@ interface MessageInputProps {
     participants?: PublicUser[];
 }
 
+export interface MessageInputHandle {
+    insertText: (text: string) => void;
+}
+
 const ALLOWED_DROP_TYPES = [
     "image/",
     "audio/",
@@ -40,15 +51,19 @@ function isAllowedFile(file: File): boolean {
     );
 }
 
-export default function MessageInput({
-    roomId,
-    replyingTo,
-    onCancelReply,
-    isBlocked = false,
-    onOptimisticMessage,
-    onOptimisticFailed,
-    participants = [],
-}: MessageInputProps) {
+const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
+    function MessageInput(
+        {
+            roomId,
+            replyingTo,
+            onCancelReply,
+            isBlocked = false,
+            onOptimisticMessage,
+            onOptimisticFailed,
+            participants = [],
+        }: MessageInputProps,
+        ref,
+    ) {
     const [message, setMessage] = useState("");
     const { socket, connected } = useSocket();
     const { user } = useAuth();
@@ -82,6 +97,21 @@ export default function MessageInput({
     useEffect(() => {
         resizeTextarea();
     }, [message, resizeTextarea]);
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            insertText: (text: string) => {
+                setMessage((prev) =>
+                    prev.trim() ? `${prev.trimEnd()} ${text}` : text,
+                );
+                requestAnimationFrame(() => {
+                    textareaRef.current?.focus();
+                });
+            },
+        }),
+        [],
+    );
 
     const handleTyping = useCallback(() => {
         if (!socket) return;
@@ -792,5 +822,8 @@ export default function MessageInput({
                 />
             )}
         </form>
-    );
-}
+        );
+    },
+);
+
+export default MessageInput;

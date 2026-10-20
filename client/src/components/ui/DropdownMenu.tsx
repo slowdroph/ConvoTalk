@@ -66,7 +66,7 @@ export default function DropdownMenu({
             })}
             {open && (
                 <div
-                    className={`absolute top-full mt-2 z-50 w-64 rounded-2xl bg-noir-surface-alt/95 backdrop-blur-md border border-noir-border shadow-2xl p-1.5 ${
+                    className={`absolute top-full mt-2 z-50 w-64 max-w-[calc(100vw-1.5rem)] max-h-[70vh] overflow-y-auto custom-scrollbar rounded-2xl bg-noir-surface-alt/95 backdrop-blur-md border border-noir-border shadow-2xl p-1.5 ${
                         align === "right" ? "right-0" : "left-0"
                     } ${className}`}
                     onClick={closeMenu}
