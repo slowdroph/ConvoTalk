@@ -33,7 +33,9 @@ describe("useAssistant", () => {
 
         expect(result.current.summary?.summary).toBe("Resumo da conversa");
         expect(result.current.loading).toBeNull();
-        expect(summarizeMock).toHaveBeenCalledWith("room-1");
+        expect(summarizeMock).toHaveBeenCalledWith("room-1", {
+            regenerate: false,
+        });
     });
 
     it("carrega sugestões de resposta", async () => {
@@ -53,6 +55,24 @@ describe("useAssistant", () => {
         expect(result.current.suggestions[0].text).toBe("Combinado!");
     });
 
+    it("encaminha regenerate ao pedir novas sugestões", async () => {
+        suggestMock.mockResolvedValue({
+            suggestions: [{ tone: "short", text: "Outra resposta" }],
+            model: "test-model",
+            generatedAt: new Date().toISOString(),
+        });
+
+        const { result } = renderHook(() => useAssistant("room-4"));
+
+        await act(async () => {
+            await result.current.suggest({ regenerate: true });
+        });
+
+        expect(suggestMock).toHaveBeenCalledWith("room-4", {
+            regenerate: true,
+        });
+    });
+
     it("expõe erro amigável quando a API falha", async () => {
         summarizeMock.mockRejectedValue("boom");
 
@@ -63,10 +83,11 @@ describe("useAssistant", () => {
         });
 
         await waitFor(() => {
-            expect(result.current.error).toBe(
+            expect(result.current.error?.message).toBe(
                 "Não foi possível gerar o resumo.",
             );
         });
+        expect(result.current.error?.action).toBe("summarize");
         expect(result.current.summary).toBeNull();
     });
 });

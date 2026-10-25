@@ -1,6 +1,7 @@
 import api from "../../../services/api";
 import type {
     AiSuggestRepliesPayload,
+    AiSuggestRepliesRequest,
     AiSummaryPayload,
     AiSummarizeRequest,
 } from "@shared/types";
@@ -18,7 +19,7 @@ export async function summarizeRoom(
 
 export async function suggestReplies(
     roomId: string,
-    options: { messageId?: string } = {},
+    options: AiSuggestRepliesRequest = {},
 ): Promise<AiSuggestRepliesPayload> {
     const { data } = await api.post<AiSuggestRepliesPayload>(
         `/ai/rooms/${roomId}/suggest-replies`,

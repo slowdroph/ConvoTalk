@@ -9,6 +9,10 @@ interface CacheEntry {
 const store = new Map<string, CacheEntry>();
 const inFlight = new Map<string, Promise<unknown>>();
 
+export interface CacheOptions {
+    bypass?: boolean;
+}
+
 function evict(): void {
     if (store.size <= MAX_ENTRIES) return;
     const now = Date.now();
@@ -25,15 +29,19 @@ function evict(): void {
 export async function withCache<T>(
     key: string,
     factory: () => Promise<T>,
+    options: CacheOptions = {},
 ): Promise<T> {
-    const cached = store.get(key);
-    if (cached && cached.expiresAt > Date.now()) {
-        return cached.value as T;
+    if (!options.bypass) {
+        const cached = store.get(key);
+        if (cached && cached.expiresAt > Date.now()) {
+            return cached.value as T;
+        }
+
+        const existing = inFlight.get(key);
+        if (existing) return existing as Promise<T>;
     }
 
-    const existing = inFlight.get(key);
-    if (existing) return existing as Promise<T>;
-
+    const trackInFlight = !options.bypass;
     const promise = factory()
         .then((value) => {
             store.set(key, { value, expiresAt: Date.now() + TTL_MS });
@@ -41,9 +49,9 @@ export async function withCache<T>(
             return value;
         })
         .finally(() => {
-            inFlight.delete(key);
+            if (trackInFlight) inFlight.delete(key);
         });
 
-    inFlight.set(key, promise);
+    if (trackInFlight) inFlight.set(key, promise);
     return promise;
 }

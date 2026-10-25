@@ -6,6 +6,7 @@ import {
     forwardRef,
     useImperativeHandle,
 } from "react";
+import type { ReactNode } from "react";
 import { useSocket } from "../../hooks/useSocket";
 import { useAuth } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../utils/errors";
@@ -31,6 +32,7 @@ interface MessageInputProps {
     onOptimisticMessage?: (msg: Message) => void;
     onOptimisticFailed?: (clientMessageId: string) => void;
     participants?: PublicUser[];
+    toolbarStart?: ReactNode;
 }
 
 export interface MessageInputHandle {
@@ -61,6 +63,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
             onOptimisticMessage,
             onOptimisticFailed,
             participants = [],
+            toolbarStart,
         }: MessageInputProps,
         ref,
     ) {
@@ -651,6 +654,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
             {!isRecording && (
                 <div className="flex items-center gap-2 mb-3">
                     <div className="flex items-center bg-slate-100 border border-slate-200 rounded-2xl p-1 dark:bg-noir-surface-alt dark:border-noir-border">
+                        {toolbarStart}
                         <div className="relative shrink-0">
                             <button
                                 type="button"

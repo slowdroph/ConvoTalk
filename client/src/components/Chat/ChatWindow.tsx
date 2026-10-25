@@ -15,7 +15,11 @@ import PinnedMessagesDialog from "./PinnedMessagesDialog";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import UserProfileModal from "../ui/UserProfileModal";
 import ChatHeader from "./ChatHeader";
-import { AssistantPanel, useAssistant } from "../../features/ai";
+import {
+    AiComposerMenu,
+    AssistantPanel,
+    useAssistant,
+} from "../../features/ai";
 import api from "../../services/api";
 import type { Message, PublicUser, Room } from "../../types";
 import { getErrorMessage } from "../../utils/errors";
@@ -85,6 +89,7 @@ export default function ChatWindow({
         error: assistantError,
         summarize: summarizeConversation,
         suggest: suggestReplies,
+        clearError: clearAssistantError,
     } = useAssistant(roomId);
     const [messagesLoading, setMessagesLoading] = useState(true);
     const [messagesError, setMessagesError] = useState<string | null>(null);
@@ -385,15 +390,20 @@ export default function ChatWindow({
         setReplyingTo(null);
     }, []);
 
-    const handleSummarizeConversation = useCallback(() => {
-        setAssistantOpen(true);
-        void summarizeConversation();
-    }, [summarizeConversation]);
+    const handleSummarizeConversation = useCallback(
+        (regenerate = false) => {
+            setAssistantOpen(true);
+            void summarizeConversation(regenerate);
+        },
+        [summarizeConversation],
+    );
 
-    const handleSuggestReplies = useCallback(() => {
-        setAssistantOpen(true);
-        void suggestReplies();
-    }, [suggestReplies]);
+    const handleSuggestReplies = useCallback(
+        (regenerate = false) => {
+            void suggestReplies({ regenerate });
+        },
+        [suggestReplies],
+    );
 
     const handleTogglePin = useCallback(
         (message: Message) => {
@@ -550,8 +560,6 @@ export default function ChatWindow({
                 onOpenGroupInfo={() => setGroupInfoOpen(true)}
                 onOpenUserInfo={() => setUserInfoOpen(true)}
                 onClearConversation={() => setClearConfirmOpen(true)}
-                onSummarizeConversation={handleSummarizeConversation}
-                onSuggestReplies={handleSuggestReplies}
                 pinnedCount={pinnedMessageIds.length}
             />
 
@@ -720,18 +728,15 @@ export default function ChatWindow({
                         {assistantOpen && (
                             <AssistantPanel
                                 summary={assistantSummary}
-                                suggestions={assistantSuggestions}
                                 loading={assistantLoading}
-                                error={assistantError}
-                                onSummarize={() => {
-                                    void summarizeConversation();
-                                }}
-                                onSuggest={() => {
-                                    void suggestReplies();
-                                }}
-                                onUseReply={(text) =>
-                                    messageInputRef.current?.insertText(text)
+                                error={
+                                    assistantError?.action === "summarize"
+                                        ? assistantError.message
+                                        : null
                                 }
+                                onRefresh={() => {
+                                    void summarizeConversation(true);
+                                }}
                                 onClose={() => setAssistantOpen(false)}
                             />
                         )}
@@ -747,6 +752,24 @@ export default function ChatWindow({
                 onOptimisticMessage={addOptimisticMessage}
                 onOptimisticFailed={markOptimisticFailed}
                 participants={participants}
+                toolbarStart={
+                    <AiComposerMenu
+                        loading={assistantLoading}
+                        error={
+                            assistantError?.action === "suggest"
+                                ? assistantError.message
+                                : null
+                        }
+                        suggestions={assistantSuggestions}
+                        disabled={isBlocked}
+                        onSuggest={handleSuggestReplies}
+                        onSummarize={handleSummarizeConversation}
+                        onUseSuggestion={(text) =>
+                            messageInputRef.current?.insertText(text)
+                        }
+                        onClearError={clearAssistantError}
+                    />
+                }
             />
 
             <ConfirmDialog

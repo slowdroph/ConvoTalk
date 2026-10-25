@@ -121,6 +121,47 @@ describe("assistente de IA: resumo", () => {
         expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
+    it("ignora o cache ao regenerar o resumo", async () => {
+        const { user, room } = await seedConversation();
+        let call = 0;
+        const fetchMock = vi.fn().mockImplementation(async () => {
+            call += 1;
+            return {
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    model: "test-model",
+                    choices: [
+                        {
+                            message: {
+                                content: JSON.stringify({
+                                    summary:
+                                        call === 1 ? "Primeiro" : "Segundo",
+                                    keyPoints: [],
+                                }),
+                            },
+                        },
+                    ],
+                }),
+            };
+        });
+        vi.stubGlobal("fetch", fetchMock);
+
+        const first = await summarizeRoom(
+            room._id.toString(),
+            user._id.toString(),
+        );
+        const regenerated = await summarizeRoom(
+            room._id.toString(),
+            user._id.toString(),
+            { regenerate: true },
+        );
+
+        expect(first.summary).toBe("Primeiro");
+        expect(regenerated.summary).toBe("Segundo");
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
     it("bloqueia usuário que não participa da sala", async () => {
         const { room } = await seedConversation();
         mockCompletion({ summary: "x", keyPoints: [] });
@@ -267,5 +308,61 @@ describe("assistente de IA: sugestões", () => {
 
         expect(result.suggestions).toHaveLength(3);
         expect(result.suggestions[2].tone).toBe("friendly");
+    });
+
+    it("reutiliza o cache por padrão e o ignora ao regenerar", async () => {
+        const { user, room } = await seedConversation();
+        let call = 0;
+        const fetchMock = vi.fn().mockImplementation(async () => {
+            call += 1;
+            return {
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    model: "test-model",
+                    choices: [
+                        {
+                            message: {
+                                content: JSON.stringify({
+                                    suggestions: [
+                                        {
+                                            tone: "short",
+                                            text:
+                                                call === 1
+                                                    ? "Primeira"
+                                                    : "Segunda",
+                                        },
+                                    ],
+                                }),
+                            },
+                        },
+                    ],
+                }),
+            };
+        });
+        vi.stubGlobal("fetch", fetchMock);
+
+        const first = await suggestReplies(
+            room._id.toString(),
+            user._id.toString(),
+        );
+        const cached = await suggestReplies(
+            room._id.toString(),
+            user._id.toString(),
+        );
+        const regenerated = await suggestReplies(
+            room._id.toString(),
+            user._id.toString(),
+            { regenerate: true },
+        );
+
+        expect(first.suggestions[0].text).toBe("Primeira");
+        expect(cached.suggestions[0].text).toBe("Primeira");
+        expect(regenerated.suggestions[0].text).toBe("Segunda");
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+
+        const init = fetchMock.mock.calls[1][1] as { body: string };
+        const body = JSON.parse(init.body) as { temperature?: number };
+        expect(body.temperature).toBe(0.8);
     });
 });

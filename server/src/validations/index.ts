@@ -405,6 +405,7 @@ export const aiSummarizeSchema = z.object({
                 .max(200, "Limite deve ser no máximo 200.")
                 .optional(),
             sinceMessageId: objectId.optional(),
+            regenerate: z.boolean().optional(),
         })
         .default({}),
 });
@@ -416,6 +417,7 @@ export const aiSuggestRepliesSchema = z.object({
     body: z
         .object({
             messageId: objectId.optional(),
+            regenerate: z.boolean().optional(),
         })
         .default({}),
 });

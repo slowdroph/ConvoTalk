@@ -9,14 +9,16 @@ export async function summarizeRoom(
 ): Promise<void> {
     try {
         const roomId = req.params.roomId as string;
-        const { limit, sinceMessageId } = req.body as {
+        const { limit, sinceMessageId, regenerate } = req.body as {
             limit?: number;
             sinceMessageId?: string;
+            regenerate?: boolean;
         };
 
         const result = await assistant.summarizeRoom(roomId, req.user!._id, {
             limit,
             sinceMessageId,
+            regenerate,
         });
         res.json(result);
     } catch (error) {
@@ -30,12 +32,15 @@ export async function suggestReplies(
 ): Promise<void> {
     try {
         const roomId = req.params.roomId as string;
-        const { messageId } = req.body as { messageId?: string };
+        const { messageId, regenerate } = req.body as {
+            messageId?: string;
+            regenerate?: boolean;
+        };
 
         const result = await assistant.suggestReplies(
             roomId,
             req.user!._id,
-            { messageId },
+            { messageId, regenerate },
         );
         res.json(result);
     } catch (error) {

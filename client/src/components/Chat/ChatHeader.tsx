@@ -29,8 +29,6 @@ interface ChatHeaderProps {
     onOpenGroupInfo: () => void;
     onOpenUserInfo: () => void;
     onClearConversation: () => void;
-    onSummarizeConversation: () => void;
-    onSuggestReplies: () => void;
     pinnedCount?: number;
 }
 
@@ -59,8 +57,6 @@ export default function ChatHeader({
     onOpenGroupInfo,
     onOpenUserInfo,
     onClearConversation,
-    onSummarizeConversation,
-    onSuggestReplies,
     pinnedCount,
 }: ChatHeaderProps) {
     return (
@@ -215,8 +211,6 @@ export default function ChatHeader({
                 onOpenPinned={onOpenPinned}
                 onOpenGroupSettings={onOpenGroupSettings}
                 onClearConversation={onClearConversation}
-                onSummarizeConversation={onSummarizeConversation}
-                onSuggestReplies={onSuggestReplies}
                 pinnedCount={pinnedCount}
                 />
             </div>

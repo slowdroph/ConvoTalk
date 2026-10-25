@@ -34,10 +34,12 @@ const TONES: readonly AiTone[] = ["short", "friendly", "formal"];
 export interface SummarizeOptions {
     limit?: number;
     sinceMessageId?: string;
+    regenerate?: boolean;
 }
 
 export interface SuggestRepliesOptions {
     messageId?: string;
+    regenerate?: boolean;
 }
 
 function getEnabledConfig(): ReturnType<typeof getAiConfig> {
@@ -65,6 +67,7 @@ async function completeJson<T>(
     schema: AiJsonSchema,
     maxTokens: number,
     validate: (value: unknown) => T | null,
+    temperature = 0.3,
 ): Promise<{ data: T; model: string }> {
     let content: string;
     let model: string;
@@ -72,7 +75,7 @@ async function completeJson<T>(
         const result = await createChatCompletion({
             messages,
             jsonSchema: schema,
-            temperature: 0.3,
+            temperature,
             maxTokens,
         });
         content = result.content;
@@ -141,29 +144,33 @@ export async function summarizeRoom(
         options.sinceMessageId ?? "all"
     }:${options.limit ?? "def"}`;
 
-    return withCache(cacheKey, async () => {
-        if (context.messages.length < MIN_MESSAGES) {
-            throw new ValidationError(
-                "Não há mensagens suficientes para resumir.",
+    return withCache(
+        cacheKey,
+        async () => {
+            if (context.messages.length < MIN_MESSAGES) {
+                throw new ValidationError(
+                    "Não há mensagens suficientes para resumir.",
+                );
+            }
+
+            const transcript = buildTranscript(context.messages);
+            const { data, model } = await completeJson(
+                summaryMessages(transcript),
+                summaryJsonSchema,
+                config.summaryMaxTokens,
+                isSummary,
             );
-        }
 
-        const transcript = buildTranscript(context.messages);
-        const { data, model } = await completeJson(
-            summaryMessages(transcript),
-            summaryJsonSchema,
-            config.summaryMaxTokens,
-            isSummary,
-        );
-
-        return {
-            summary: data.summary,
-            keyPoints: data.keyPoints,
-            messageCount: context.messages.length,
-            model,
-            generatedAt: new Date().toISOString(),
-        };
-    });
+            return {
+                summary: data.summary,
+                keyPoints: data.keyPoints,
+                messageCount: context.messages.length,
+                model,
+                generatedAt: new Date().toISOString(),
+            };
+        },
+        { bypass: options.regenerate === true },
+    );
 }
 
 export async function suggestReplies(
@@ -183,25 +190,30 @@ export async function suggestReplies(
         cacheKey = `suggest:${roomId}:${context.lastMessageId ?? "empty"}`;
     }
 
-    return withCache(cacheKey, async () => {
-        if (context.messages.length < 1) {
-            throw new ValidationError(
-                "Não há mensagens suficientes para sugerir respostas.",
+    return withCache(
+        cacheKey,
+        async () => {
+            if (context.messages.length < 1) {
+                throw new ValidationError(
+                    "Não há mensagens suficientes para sugerir respostas.",
+                );
+            }
+
+            const transcript = buildTranscript(context.messages);
+            const { data, model } = await completeJson(
+                suggestionsMessages(transcript),
+                suggestionsJsonSchema,
+                config.suggestionsMaxTokens,
+                isSuggestions,
+                options.regenerate ? 0.8 : 0.3,
             );
-        }
 
-        const transcript = buildTranscript(context.messages);
-        const { data, model } = await completeJson(
-            suggestionsMessages(transcript),
-            suggestionsJsonSchema,
-            config.suggestionsMaxTokens,
-            isSuggestions,
-        );
-
-        return {
-            suggestions: data.suggestions,
-            model,
-            generatedAt: new Date().toISOString(),
-        };
-    });
+            return {
+                suggestions: data.suggestions,
+                model,
+                generatedAt: new Date().toISOString(),
+            };
+        },
+        { bypass: options.regenerate === true },
+    );
 }

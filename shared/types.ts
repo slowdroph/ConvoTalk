@@ -257,6 +257,7 @@ export type AiTone = "short" | "friendly" | "formal";
 export interface AiSummarizeRequest {
     limit?: number;
     sinceMessageId?: string;
+    regenerate?: boolean;
 }
 
 export interface AiSummaryPayload {
@@ -269,6 +270,7 @@ export interface AiSummaryPayload {
 
 export interface AiSuggestRepliesRequest {
     messageId?: string;
+    regenerate?: boolean;
 }
 
 export interface AiReplySuggestion {
