@@ -4,6 +4,7 @@ import { useSocket } from "../../hooks/useSocket";
 import type { Room } from "../../types";
 import Avatar from "../ui/Avatar";
 import ConfirmDialog from "../ui/ConfirmDialog";
+import Tooltip from "../ui/Tooltip";
 import { formatSidebarTime } from "../../utils/format";
 
 interface RoomListProps {
@@ -169,30 +170,31 @@ export default function RoomList({
 
                                 {/* Botão deletar (DMs) */}
                                 {room.type === "direct" && (
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setDeleteTarget(room);
-                                        }}
-                                        className="text-slate-400 hover:text-red-600 transition-colors p-1.5 opacity-0 group-hover:opacity-100 shrink-0 dark:text-noir-text-muted dark:hover:text-red-400 max-sm:opacity-60"
-                                        title="Excluir conversa"
-                                        aria-label={`Excluir conversa com ${displayName}`}
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="h-4 w-4"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
+                                    <Tooltip content="Excluir conversa">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setDeleteTarget(room);
+                                            }}
+                                            className="text-slate-400 hover:text-red-600 transition-colors p-1.5 opacity-0 group-hover:opacity-100 shrink-0 dark:text-noir-text-muted dark:hover:text-red-400 max-sm:opacity-60"
+                                            aria-label={`Excluir conversa com ${displayName}`}
                                         >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                            />
-                                        </svg>
-                                    </button>
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                />
+                                            </svg>
+                                        </button>
+                                    </Tooltip>
                                 )}
                             </div>
                         </li>

@@ -6,6 +6,7 @@ import {
     ThreadIcon,
     TrashIcon,
 } from "./MessageIcons";
+import Tooltip from "../ui/Tooltip";
 
 interface TouchActionsProps {
     isOwn: boolean;
@@ -46,56 +47,66 @@ export default function TouchActions({
             }}
             className="flex flex-wrap justify-center gap-1 max-w-[calc(100vw-1rem)] bg-white border border-slate-200 rounded-lg p-1.5 shadow-lg dark:bg-noir-card dark:border-noir-border pointer-events-auto"
         >
-            <button
-                onClick={onTogglePicker}
-                className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
-                title="Reagir"
-            >
-                <SmileIcon />
-            </button>
-            {onReply && (
+            <Tooltip content="Reagir">
                 <button
-                    onClick={onReply}
+                    onClick={onTogglePicker}
                     className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
-                    title="Responder"
                 >
-                    <ReplyIcon />
+                    <SmileIcon />
                 </button>
+            </Tooltip>
+            {onReply && (
+                <Tooltip content="Responder">
+                    <button
+                        onClick={onReply}
+                        className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
+                    >
+                        <ReplyIcon />
+                    </button>
+                </Tooltip>
             )}
             {onOpenThread && (
-                <button
-                    onClick={onOpenThread}
-                    className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
-                    title="Ver respostas"
-                >
-                    <ThreadIcon />
-                </button>
+                <Tooltip content="Ver respostas">
+                    <button
+                        onClick={onOpenThread}
+                        className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
+                    >
+                        <ThreadIcon />
+                    </button>
+                </Tooltip>
             )}
             {onTogglePin && (
-                <button
-                    onClick={onTogglePin}
-                    className={`p-2 rounded-md hover:bg-slate-100 dark:hover:bg-noir-surface-alt transition-colors ${isPinned ? "text-emerald-600 dark:text-emerald-400" : "text-slate-600 dark:text-noir-text-muted"}`}
-                    title={isPinned ? "Desafixar mensagem" : "Fixar mensagem"}
+                <Tooltip
+                    content={
+                        isPinned ? "Desafixar mensagem" : "Fixar mensagem"
+                    }
                 >
-                    <PinIcon filled={isPinned} />
-                </button>
+                    <button
+                        onClick={onTogglePin}
+                        className={`p-2 rounded-md hover:bg-slate-100 dark:hover:bg-noir-surface-alt transition-colors ${isPinned ? "text-emerald-600 dark:text-emerald-400" : "text-slate-600 dark:text-noir-text-muted"}`}
+                    >
+                        <PinIcon filled={isPinned} />
+                    </button>
+                </Tooltip>
             )}
             {isOwn && (
                 <>
-                    <button
-                        onClick={onEdit}
-                        className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
-                        title="Editar mensagem"
-                    >
-                        <EditIcon />
-                    </button>
-                    <button
-                        onClick={onDelete}
-                        className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
-                        title="Excluir mensagem"
-                    >
-                        <TrashIcon />
-                    </button>
+                    <Tooltip content="Editar mensagem">
+                        <button
+                            onClick={onEdit}
+                            className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
+                        >
+                            <EditIcon />
+                        </button>
+                    </Tooltip>
+                    <Tooltip content="Excluir mensagem">
+                        <button
+                            onClick={onDelete}
+                            className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
+                        >
+                            <TrashIcon />
+                        </button>
+                    </Tooltip>
                 </>
             )}
         </div>

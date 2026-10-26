@@ -6,6 +6,7 @@ import {
     ThreadIcon,
     TrashIcon,
 } from "./MessageIcons";
+import Tooltip from "../ui/Tooltip";
 
 const EMOJI_OPTIONS = ["👍", "❤️", "😂", "😮", "😢", "👎"];
 
@@ -43,13 +44,14 @@ export default function MessageActions({
         >
             {/* Emoji picker button */}
             <div className="relative flex items-center">
-                <button
-                    onClick={onTogglePicker}
-                    className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
-                    title="Reagir"
-                >
-                    <SmileIcon />
-                </button>
+                <Tooltip content="Reagir">
+                    <button
+                        onClick={onTogglePicker}
+                        className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
+                    >
+                        <SmileIcon />
+                    </button>
+                </Tooltip>
                 {showPicker && (
                     <div
                         ref={pickerRef}
@@ -76,51 +78,60 @@ export default function MessageActions({
             </div>
             {/* Reply button */}
             {onReply && (
-                <button
-                    onClick={onReply}
-                    className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
-                    title="Responder"
-                >
-                    <ReplyIcon />
-                </button>
+                <Tooltip content="Responder">
+                    <button
+                        onClick={onReply}
+                        className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
+                    >
+                        <ReplyIcon />
+                    </button>
+                </Tooltip>
             )}
             {/* Thread button */}
             {onOpenThread && (
-                <button
-                    onClick={onOpenThread}
-                    className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
-                    title="Ver respostas"
-                >
-                    <ThreadIcon />
-                </button>
+                <Tooltip content="Ver respostas">
+                    <button
+                        onClick={onOpenThread}
+                        className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
+                    >
+                        <ThreadIcon />
+                    </button>
+                </Tooltip>
             )}
             {/* Pin button */}
             {onTogglePin && (
-                <button
-                    onClick={onTogglePin}
-                    className={`transition-colors ${isPinned ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400"}`}
-                    title={isPinned ? "Desafixar mensagem" : "Fixar mensagem"}
+                <Tooltip
+                    content={
+                        isPinned ? "Desafixar mensagem" : "Fixar mensagem"
+                    }
                 >
-                    <PinIcon filled={isPinned} />
-                </button>
+                    <button
+                        onClick={onTogglePin}
+                        className={`transition-colors ${isPinned ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400"}`}
+                    >
+                        <PinIcon filled={isPinned} />
+                    </button>
+                </Tooltip>
             )}
             {/* Edit and delete buttons (only for own messages) */}
             {isOwn && (
                 <>
-                    <button
-                        onClick={onEdit}
-                        className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
-                        title="Editar mensagem"
-                    >
-                        <EditIcon />
-                    </button>
-                    <button
-                        onClick={onDelete}
-                        className="text-slate-500 hover:text-red-600 dark:text-noir-text-muted dark:hover:text-red-400 transition-colors"
-                        title="Excluir mensagem"
-                    >
-                        <TrashIcon />
-                    </button>
+                    <Tooltip content="Editar mensagem">
+                        <button
+                            onClick={onEdit}
+                            className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
+                        >
+                            <EditIcon />
+                        </button>
+                    </Tooltip>
+                    <Tooltip content="Excluir mensagem">
+                        <button
+                            onClick={onDelete}
+                            className="text-slate-500 hover:text-red-600 dark:text-noir-text-muted dark:hover:text-red-400 transition-colors"
+                        >
+                            <TrashIcon />
+                        </button>
+                    </Tooltip>
                 </>
             )}
         </div>

@@ -1,5 +1,6 @@
 import Avatar from "../ui/Avatar";
 import CountryFlag from "../ui/CountryFlag";
+import Tooltip from "../ui/Tooltip";
 import { getCountryName } from "../../utils/countries";
 import { formatLastSeen } from "../../utils/formatLastSeen";
 import ChatHeaderActions from "./ChatHeaderActions";
@@ -63,27 +64,28 @@ export default function ChatHeader({
         <div className="min-h-16 px-2 sm:px-6 py-1.5 border-b border-noir-border bg-noir-surface/90 flex items-center justify-between gap-2">
             <h2 className="text-slate-900 font-semibold flex items-center gap-2 min-w-0 flex-1 dark:text-noir-text-bright">
                 {onOpenSidebar && (
-                    <button
-                        onClick={onOpenSidebar}
-                        className="p-2 rounded-lg transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt md:hidden shrink-0"
-                        title="Abrir lista de conversas"
-                        aria-label="Abrir lista de conversas"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                    <Tooltip content="Abrir lista de conversas">
+                        <button
+                            onClick={onOpenSidebar}
+                            className="p-2 rounded-lg transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt md:hidden shrink-0"
+                            aria-label="Abrir lista de conversas"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 6h16M4 12h16M4 18h16"
-                            />
-                        </svg>
-                    </button>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 6h16M4 12h16M4 18h16"
+                                />
+                            </svg>
+                        </button>
+                    </Tooltip>
                 )}
                 <button
                     type="button"
