@@ -92,7 +92,7 @@ export default function ChatHeader({
                             ? onOpenUserInfo
                             : onOpenGroupInfo
                     }
-                    className="flex items-center gap-2 min-w-0 flex-1 text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
+                    className="flex items-center gap-2 min-w-0 flex-1 text-left rounded-lg px-1.5 py-1 transition-colors hover:bg-slate-100 dark:hover:bg-noir-surface-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
                     title={
                         roomType === "direct"
                             ? "Ver informações do usuário"
@@ -152,52 +152,6 @@ export default function ChatHeader({
                 </button>
             </h2>
             <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-                {roomType === "group" && (
-                    <button
-                        onClick={onOpenGroupInfo}
-                        title="Ver informações do grupo"
-                        aria-label="Ver informações do grupo"
-                        className="hidden sm:flex p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.8}
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
-                    </button>
-                )}
-                {roomType === "direct" && (
-                    <button
-                        onClick={onOpenUserInfo}
-                        title="Ver informações do usuário"
-                        aria-label="Ver informações do usuário"
-                        className="hidden sm:flex p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.8}
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
-                    </button>
-                )}
                 <ChatHeaderActions
                 roomType={roomType}
                 canManageGroup={canManageGroup}
