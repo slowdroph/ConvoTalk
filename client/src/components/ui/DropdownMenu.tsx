@@ -58,7 +58,7 @@ export default function DropdownMenu({
     };
 
     return (
-        <div ref={wrapRef} className="relative">
+        <div ref={wrapRef} className="relative flex items-center">
             {trigger({
                 onClick: () => setOpen((prev) => !prev),
                 "aria-haspopup": "menu",

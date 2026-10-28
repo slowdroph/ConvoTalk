@@ -24,7 +24,7 @@ const menuItemClass =
     "w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-xl transition group";
 
 const moreButtonClass =
-    "p-2 sm:p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt";
+    "inline-flex items-center justify-center p-2 sm:p-2.5 rounded-xl transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt";
 
 export default function ChatHeaderActions({
     roomType,
@@ -117,7 +117,7 @@ export default function ChatHeaderActions({
                             {...ariaProps}
                             className={`${moreButtonClass} ${
                                 ariaProps["aria-expanded"]
-                                    ? "text-emerald-400 bg-emerald-600/15 border border-emerald-600/30"
+                                    ? "text-emerald-400 bg-emerald-600/15 ring-1 ring-inset ring-emerald-600/30"
                                     : ""
                             }`}
                         >
