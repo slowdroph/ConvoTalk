@@ -422,3 +422,139 @@ export const aiSuggestRepliesSchema = z.object({
         .default({}),
 });
 
+const postPaginationQuerySchema = z
+    .object({
+        limit: z.coerce
+            .number()
+            .int()
+            .min(1, "Limite deve ser no mínimo 1.")
+            .max(30, "Limite deve ser no máximo 30.")
+            .default(20),
+        before: z.string().datetime("Data inválida.").optional(),
+        beforeId: objectId.optional(),
+    })
+    .refine((data) => !data.before || !!data.beforeId, {
+        message: "beforeId é obrigatório quando before é informado.",
+        path: ["beforeId"],
+    })
+    .refine((data) => !data.beforeId || !!data.before, {
+        message: "before é obrigatório quando beforeId é informado.",
+        path: ["before"],
+    });
+
+export const postFeedQuerySchema = z
+    .object({
+        limit: z.coerce
+            .number()
+            .int()
+            .min(1, "Limite deve ser no mínimo 1.")
+            .max(30, "Limite deve ser no máximo 30.")
+            .default(20),
+        filter: z.enum(["all", "media", "mine"]).default("all"),
+        sort: z.enum(["recent", "popular"]).default("recent"),
+        before: z.string().datetime("Data inválida.").optional(),
+        beforeLikes: z.coerce
+            .number()
+            .int()
+            .min(0, "Curtidas inválidas.")
+            .optional(),
+        beforeId: objectId.optional(),
+    })
+    .superRefine((data, ctx) => {
+        if (data.sort === "popular") {
+            if (data.before) {
+                ctx.addIssue({
+                    code: "custom",
+                    message:
+                        "before não é permitido na ordenação por populares.",
+                    path: ["before"],
+                });
+            }
+            if (data.beforeLikes === undefined && data.beforeId !== undefined) {
+                ctx.addIssue({
+                    code: "custom",
+                    message:
+                        "beforeLikes é obrigatório quando beforeId é informado.",
+                    path: ["beforeLikes"],
+                });
+            }
+            if (data.beforeLikes !== undefined && data.beforeId === undefined) {
+                ctx.addIssue({
+                    code: "custom",
+                    message:
+                        "beforeId é obrigatório quando beforeLikes é informado.",
+                    path: ["beforeId"],
+                });
+            }
+            return;
+        }
+
+        if (data.beforeLikes !== undefined) {
+            ctx.addIssue({
+                code: "custom",
+                message:
+                    "beforeLikes só é permitido na ordenação por populares.",
+                path: ["beforeLikes"],
+            });
+        }
+        if (data.before && !data.beforeId) {
+            ctx.addIssue({
+                code: "custom",
+                message: "beforeId é obrigatório quando before é informado.",
+                path: ["beforeId"],
+            });
+        }
+        if (data.beforeId && !data.before) {
+            ctx.addIssue({
+                code: "custom",
+                message: "before é obrigatório quando beforeId é informado.",
+                path: ["before"],
+            });
+        }
+    });
+
+export const trendingTopicsQuerySchema = z.object({
+    query: z.object({
+        limit: z.coerce
+            .number()
+            .int()
+            .min(1, "Limite deve ser no mínimo 1.")
+            .max(10, "Limite deve ser no máximo 10.")
+            .default(5),
+    }),
+});
+
+export const createPostSchema = z.object({
+    body: z.object({
+        content: z
+            .string()
+            .trim()
+            .max(2000, "Post deve ter no máximo 2000 caracteres.")
+            .optional()
+            .default(""),
+        clientPostId: z
+            .string()
+            .trim()
+            .min(1, "ID do post inválido.")
+            .max(64, "ID do post inválido.")
+            .optional(),
+    }),
+});
+
+export const postsQuerySchema = z.object({
+    query: postFeedQuerySchema,
+});
+
+export const postsByUserQuerySchema = z.object({
+    params: z.object({
+        userId: objectId,
+    }),
+    query: postPaginationQuerySchema,
+});
+
+export const postParamsSchema = z.object({
+    params: z.object({
+        id: objectId,
+    }),
+});
+

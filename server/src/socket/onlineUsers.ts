@@ -34,6 +34,10 @@ export function getUserSocketIds(userId: string): Set<string> | undefined {
     return onlineUsers.get(userId);
 }
 
+export function getOnlineUserIds(): string[] {
+    return Array.from(onlineUsers.keys());
+}
+
 export function broadcastOnlineUsers(io: SocketIOServer): void {
     const users: OnlineUserPayload[] = Array.from(onlineUsers.keys()).map(
         (userId) => {

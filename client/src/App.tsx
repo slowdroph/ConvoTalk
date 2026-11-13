@@ -15,6 +15,7 @@ const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const HomePage = lazy(() => import("./pages/HomePage"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
+const FeedPage = lazy(() => import("./pages/FeedPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
@@ -127,6 +128,16 @@ export default function App() {
                             <PrivateRoute>
                                 <Suspense fallback={<ChatSkeleton />}>
                                     <ChatPage />
+                                </Suspense>
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/feed"
+                        element={
+                            <PrivateRoute>
+                                <Suspense fallback={<LoadingScreen />}>
+                                    <FeedPage />
                                 </Suspense>
                             </PrivateRoute>
                         }

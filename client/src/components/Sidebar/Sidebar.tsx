@@ -2,6 +2,7 @@ import UserStatus from "./UserStatus";
 import RoomList from "./RoomList";
 import UserSearchModal from "./UserSearchModal";
 import CreateGroupModal from "./CreateGroupModal";
+import AppNavTabs from "../Navigation/AppNavTabs";
 import Avatar from "../ui/Avatar";
 import api from "../../services/api";
 import { APP_VERSION } from "../../utils/version";
@@ -115,6 +116,9 @@ export default function Sidebar({
                 aria-label="Lista de conversas"
             >
                 <UserStatus />
+                <div className="px-3.5 pt-3">
+                    <AppNavTabs onNavigate={onClose} />
+                </div>
                 <div className="p-3.5 space-y-3 border-b border-noir-border">
                     {/* Busca de mensagens */}
                     <div className="relative">

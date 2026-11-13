@@ -12,6 +12,7 @@ import connectDB from "./config/db";
 import { validateEnv, getAllowedOrigins } from "./config/env";
 import authRoutes from "./routes/auth";
 import messageRoutes from "./routes/messages";
+import postRoutes from "./routes/posts";
 import roomRoutes from "./routes/rooms";
 import userRoutes from "./routes/user";
 import usersSearchRoutes from "./routes/users";
@@ -39,6 +40,7 @@ import {
     pushLimiter,
 } from "./middleware/rateLimiter";
 import { configureWebPush } from "./services/pushNotification";
+import { backfillPostLikeCounts } from "./services/post";
 
 validateEnv();
 configureWebPush();
@@ -142,6 +144,7 @@ app.use((req, res, next) => {
 app.use("/api/auth/refresh", refreshLimiter);
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/posts", postRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/users", searchLimiter, usersSearchRoutes);
@@ -197,6 +200,7 @@ const PORT = process.env.PORT || 3001;
 
 const start = async () => {
     await connectDB();
+    await backfillPostLikeCounts();
 
     httpServer.listen(PORT, () => {
         logger.info({ port: PORT }, "Servidor iniciado");

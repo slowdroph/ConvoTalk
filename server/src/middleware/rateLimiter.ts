@@ -129,3 +129,32 @@ export const aiLimiter = rateLimit({
         message: "Muitas solicitações ao assistente. Aguarde um pouco.",
     },
 });
+
+export const postWriteLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: searchUserKeyGenerator,
+    message: {
+        message: "Você está publicando rápido demais. Aguarde alguns minutos.",
+    },
+});
+
+export const postReadLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: searchUserKeyGenerator,
+    message: { message: "Muitas requisições ao feed. Aguarde um minuto." },
+});
+
+export const postInteractionLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: searchUserKeyGenerator,
+    message: { message: "Muitas interações. Aguarde um minuto." },
+});

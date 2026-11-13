@@ -20,6 +20,7 @@ export interface SenderPayload {
     publicId?: string;
     avatar?: string;
     status?: string;
+    country?: string;
 }
 
 export interface PublicProfilePayload extends PublicUserPayload {
@@ -85,6 +86,43 @@ export interface MessagePayload {
     status?: "pending" | "sent" | "failed";
     createdAt: string;
     updatedAt?: string;
+}
+
+export interface PostPayload {
+    _id: string;
+    author: SenderPayload | null;
+    content: string;
+    image?: AttachmentPayload | null;
+    likeCount: number;
+    likedByMe: boolean;
+    edited: boolean;
+    createdAt: string;
+    updatedAt?: string;
+}
+
+export interface PostLikedEvent {
+    postId: string;
+    likeCount: number;
+    userId: string;
+    liked: boolean;
+}
+
+export interface PostDeletedEvent {
+    postId: string;
+}
+
+export type PostCursorPayload =
+    | { before: string; beforeId: string }
+    | { beforeLikes: number; beforeId: string };
+
+export interface PostStatsPayload {
+    postCount: number;
+    totalLikes: number;
+}
+
+export interface TrendingTopicPayload {
+    tag: string;
+    count: number;
 }
 
 export interface ApiErrorShape {

@@ -63,6 +63,19 @@ export interface IMessage extends Document {
     updatedAt: Date;
 }
 
+export interface IPost extends Document {
+    author: IUser["_id"];
+    content: string;
+    image: IAttachment | null;
+    likes: IUser["_id"][];
+    likeCount: number;
+    edited: boolean;
+    deleted: boolean;
+    clientPostId: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 export interface IAttachment {
     url: string;
     filename: string;

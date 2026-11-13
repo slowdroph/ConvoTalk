@@ -17,6 +17,9 @@ import type {
     AiSuggestRepliesPayload as AiSuggestRepliesPayloadShared,
     AiReplySuggestion as AiReplySuggestionShared,
     AiTone as AiToneShared,
+    PostPayload as PostPayloadShared,
+    PostLikedEvent as PostLikedEventShared,
+    PostDeletedEvent as PostDeletedEventShared,
 } from "@shared/types";
 
 export type User = UserPayload;
@@ -37,6 +40,9 @@ export type AiSummary = AiSummaryPayloadShared;
 export type AiSuggestReplies = AiSuggestRepliesPayloadShared;
 export type AiReplySuggestion = AiReplySuggestionShared;
 export type AiTone = AiToneShared;
+export type Post = PostPayloadShared;
+export type PostLikedEvent = PostLikedEventShared;
+export type PostDeletedEvent = PostDeletedEventShared;
 
 export interface PreviewMessage {
     id: string;
