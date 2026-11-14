@@ -69,9 +69,26 @@ export interface IPost extends Document {
     image: IAttachment | null;
     likes: IUser["_id"][];
     likeCount: number;
+    commentCount: number;
     edited: boolean;
     deleted: boolean;
     clientPostId: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface IComment extends Document {
+    post: IPost["_id"];
+    author: IUser["_id"];
+    content: string;
+    clientCommentId: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface ISavedPost extends Document {
+    user: IUser["_id"];
+    post: IPost["_id"];
     createdAt: Date;
     updatedAt: Date;
 }

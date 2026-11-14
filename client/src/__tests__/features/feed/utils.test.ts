@@ -3,8 +3,10 @@ import type { Post } from "../../../types";
 import {
     applyFeedEvent,
     applyLikeEvent,
+    applySavedEvent,
     mergeFeedPosts,
     removeFeedPost,
+    setFeedPostSaved,
     upsertFeedPost,
 } from "../../../features/feed/utils";
 
@@ -21,6 +23,7 @@ function makePost(overrides: Partial<Post> = {}): Post {
         content: "Olá",
         image: null,
         likeCount: 0,
+        commentCount: 0,
         likedByMe: false,
         edited: false,
         createdAt: "2026-01-01T10:00:00.000Z",
@@ -159,5 +162,41 @@ describe("feed utils", () => {
         );
 
         expect(result.map((post) => post._id)).toEqual(["b"]);
+    });
+
+    it("marca e desmarca o post como salvo para o próprio usuário", () => {
+        const current = [makePost({ _id: "a" })];
+
+        const saved = applySavedEvent(
+            current,
+            { postId: "a", userId: "me", saved: true },
+            "me",
+        );
+        expect(saved[0].savedByMe).toBe(true);
+
+        const unsaved = applySavedEvent(
+            saved,
+            { postId: "a", userId: "me", saved: false },
+            "me",
+        );
+        expect(unsaved[0].savedByMe).toBe(false);
+    });
+
+    it("ignora evento de salvamento de outro usuário", () => {
+        const current = [makePost({ _id: "a" })];
+        const result = applySavedEvent(
+            current,
+            { postId: "a", userId: "other", saved: true },
+            "me",
+        );
+
+        expect(result).toBe(current);
+    });
+
+    it("remove o post da lista de salvos ao desmarcar", () => {
+        const current = [makePost({ _id: "a", savedByMe: true })];
+        const result = setFeedPostSaved(current, "a", false, "saved");
+
+        expect(result).toHaveLength(0);
     });
 });

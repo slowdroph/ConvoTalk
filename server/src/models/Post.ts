@@ -40,6 +40,11 @@ const postSchema = new Schema<IPost>(
             default: 0,
             min: 0,
         },
+        commentCount: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
         edited: {
             type: Boolean,
             default: false,

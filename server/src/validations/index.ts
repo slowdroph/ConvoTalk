@@ -552,9 +552,72 @@ export const postsByUserQuerySchema = z.object({
     query: postPaginationQuerySchema,
 });
 
+export const savedPostsQuerySchema = z.object({
+    query: postPaginationQuerySchema,
+});
+
 export const postParamsSchema = z.object({
     params: z.object({
         id: objectId,
+    }),
+});
+
+export const commentsQuerySchema = z.object({
+    params: z.object({
+        id: objectId,
+    }),
+    query: z
+        .object({
+            limit: z.coerce
+                .number()
+                .int()
+                .min(1, "Limite deve ser no mínimo 1.")
+                .max(30, "Limite deve ser no máximo 30.")
+                .default(20),
+            before: z.string().datetime("Data inválida.").optional(),
+            beforeId: objectId.optional(),
+        })
+        .superRefine((data, ctx) => {
+            if (data.before && !data.beforeId) {
+                ctx.addIssue({
+                    code: "custom",
+                    message: "beforeId é obrigatório quando before é informado.",
+                    path: ["beforeId"],
+                });
+            }
+            if (data.beforeId && !data.before) {
+                ctx.addIssue({
+                    code: "custom",
+                    message: "before é obrigatório quando beforeId é informado.",
+                    path: ["before"],
+                });
+            }
+        }),
+});
+
+export const createCommentSchema = z.object({
+    params: z.object({
+        id: objectId,
+    }),
+    body: z.object({
+        content: z
+            .string()
+            .trim()
+            .min(1, "Escreva um comentário.")
+            .max(500, "Comentário deve ter no máximo 500 caracteres."),
+        clientCommentId: z
+            .string()
+            .trim()
+            .min(1, "ID do comentário inválido.")
+            .max(64, "ID do comentário inválido.")
+            .optional(),
+    }),
+});
+
+export const commentParamsSchema = z.object({
+    params: z.object({
+        id: objectId,
+        commentId: objectId,
     }),
 });
 

@@ -1,10 +1,12 @@
 import mongoose, { type QueryFilter } from "mongoose";
 import Post from "../models/Post";
+import SavedPost from "../models/SavedPost";
 import User from "../models/User";
 import type { IAttachment, IPost } from "../types";
 import type {
     PostCursorPayload,
     PostPayload,
+    PostSavedEvent,
     PostStatsPayload,
     TrendingTopicPayload,
 } from "../../../shared/types";
@@ -34,13 +36,14 @@ interface PopulatedAuthor {
     country?: string;
 }
 
-interface PostLean {
+export interface PostLean {
     _id: mongoose.Types.ObjectId;
     author?: PopulatedAuthor | null;
     content?: string | null;
     image?: IAttachment | null;
     likes?: (mongoose.Types.ObjectId | string)[];
     likeCount?: number;
+    commentCount?: number;
     edited?: boolean;
     deleted?: boolean;
     createdAt: Date;
@@ -62,7 +65,11 @@ interface FeedOptions extends PaginationOptions {
     beforeLikes?: number;
 }
 
-function toPostPayload(post: PostLean, viewerId: string): PostPayload {
+export function toPostPayload(
+    post: PostLean,
+    viewerId: string,
+    savedPostIds?: Set<string>,
+): PostPayload {
     const author = post.author;
     const likes = post.likes ?? [];
     const likeCount =
@@ -85,6 +92,9 @@ function toPostPayload(post: PostLean, viewerId: string): PostPayload {
         image: post.image ?? null,
         likeCount,
         likedByMe: likes.some((id) => id.toString() === viewerId),
+        savedByMe: Boolean(savedPostIds?.has(String(post._id))),
+        commentCount:
+            typeof post.commentCount === "number" ? post.commentCount : 0,
         edited: Boolean(post.edited),
         createdAt: post.createdAt.toISOString(),
         ...(post.updatedAt
@@ -149,7 +159,9 @@ function buildNextCursor(
     };
 }
 
-async function getExcludedAuthorIds(userIds: string[]): Promise<string[]> {
+export async function getExcludedAuthorIds(
+    userIds: string[],
+): Promise<string[]> {
     const uniqueUserIds = [...new Set(userIds)];
 
     const users = await User.find({
@@ -179,8 +191,13 @@ async function getExcludedAuthorIds(userIds: string[]): Promise<string[]> {
     return [...excluded];
 }
 
-async function emitPostEvent(
-    event: "post:new" | "post:liked" | "post:deleted",
+export async function emitPostEvent(
+    event:
+        | "post:new"
+        | "post:liked"
+        | "post:deleted"
+        | "comment:created"
+        | "comment:deleted",
     payload: unknown,
     userIds: string[],
 ): Promise<void> {
@@ -203,6 +220,40 @@ async function emitPostEvent(
     }
 }
 
+export async function emitSavedPostEvent(
+    event: "post:saved" | "post:unsaved",
+    payload: PostSavedEvent,
+): Promise<void> {
+    const io = getSocketIO();
+    if (!io) return;
+
+    try {
+        const socketIds = getUserSocketIds(payload.userId);
+        if (!socketIds) return;
+        for (const socketId of socketIds) {
+            io.to(socketId).emit(event, payload);
+        }
+    } catch (error) {
+        logger.warn({ error, event }, "falha ao emitir evento de salvo");
+    }
+}
+
+export async function getSavedPostIds(
+    viewerId: string,
+    postIds: string[],
+): Promise<Set<string>> {
+    if (postIds.length === 0) return new Set();
+
+    const savedPosts = await SavedPost.find({
+        user: new mongoose.Types.ObjectId(viewerId),
+        post: { $in: postIds.map((id) => new mongoose.Types.ObjectId(id)) },
+    })
+        .select("post")
+        .lean();
+
+    return new Set(savedPosts.map((saved) => saved.post.toString()));
+}
+
 async function populatePost(
     postId: string,
     viewerId: string,
@@ -215,7 +266,8 @@ async function populatePost(
         throw new NotFoundError("Post não encontrado.");
     }
 
-    return toPostPayload(post, viewerId);
+    const savedPostIds = await getSavedPostIds(viewerId, [String(post._id)]);
+    return toPostPayload(post, viewerId, savedPostIds);
 }
 
 export async function getFeed(
@@ -259,9 +311,13 @@ export async function getFeed(
     const hasMore = found.length > safeLimit;
     const page = hasMore ? found.slice(0, safeLimit) : found;
     const last = page[page.length - 1];
+    const savedPostIds = await getSavedPostIds(
+        viewerId,
+        page.map((post) => String(post._id)),
+    );
 
     return {
-        posts: page.map((post) => toPostPayload(post, viewerId)),
+        posts: page.map((post) => toPostPayload(post, viewerId, savedPostIds)),
         nextCursor: hasMore ? buildNextCursor(last, sort) : null,
     };
 }
@@ -296,9 +352,13 @@ export async function getUserPosts(
     const hasMore = found.length > safeLimit;
     const page = hasMore ? found.slice(0, safeLimit) : found;
     const last = page[page.length - 1];
+    const savedPostIds = await getSavedPostIds(
+        viewerId,
+        page.map((post) => String(post._id)),
+    );
 
     return {
-        posts: page.map((post) => toPostPayload(post, viewerId)),
+        posts: page.map((post) => toPostPayload(post, viewerId, savedPostIds)),
         nextCursor:
             hasMore && last
                 ? {
@@ -333,7 +393,8 @@ export async function getPost(
         throw new ForbiddenError("Acesso negado.");
     }
 
-    return toPostPayload(post, viewerId);
+    const savedPostIds = await getSavedPostIds(viewerId, [String(post._id)]);
+    return toPostPayload(post, viewerId, savedPostIds);
 }
 
 async function uploadPostImage(file: Express.Multer.File): Promise<IAttachment> {
@@ -408,7 +469,10 @@ export async function createPost(
                 .lean()) as unknown as PostLean | null;
 
             if (existing) {
-                return toPostPayload(existing, userId);
+                const savedPostIds = await getSavedPostIds(userId, [
+                    String(existing._id),
+                ]);
+                return toPostPayload(existing, userId, savedPostIds);
             }
         }
         throw error;
@@ -442,6 +506,7 @@ export async function deletePost(
         { _id: postId, author: userId },
         { $set: { deleted: true, image: null } },
     );
+    await SavedPost.deleteMany({ post: postId });
     await removePostImage(post.image ?? null);
 
     await emitPostEvent("post:deleted", { postId }, [userId]);
@@ -495,7 +560,7 @@ export async function setPostLike(
                 },
             },
         ],
-        { returnDocument: "after" },
+        { returnDocument: "after", updatePipeline: true },
     )
         .select("likes likeCount")
         .lean();
@@ -576,7 +641,7 @@ export async function getTrendingTopics(
                 tags: {
                     $regexFindAll: {
                         input: { $ifNull: ["$content", ""] },
-                        regex: "#[0-9A-Za-z_\\u00C0-\\u017F]+",
+                        regex: "#[0-9A-Za-z_\u00C0-\u017F]+",
                     },
                 },
             },

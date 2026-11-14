@@ -1,7 +1,34 @@
 import { useEffect, useRef } from "react";
 import type { Post } from "../../../types";
+import type { FeedFilter } from "../services/feedApi";
 import PostCard from "./PostCard";
 import PostSkeleton from "./PostSkeleton";
+
+const EMPTY_STATE: Record<
+    FeedFilter,
+    { title: string; description: string }
+> = {
+    all: {
+        title: "Nenhum post ainda",
+        description: "Seja a primeira pessoa a compartilhar algo no feed.",
+    },
+    popular: {
+        title: "Nenhum post popular ainda",
+        description: "Curta e interaja para destacar as publicações.",
+    },
+    media: {
+        title: "Nenhuma mídia publicada ainda",
+        description: "Posts com fotos e imagens aparecerão aqui.",
+    },
+    mine: {
+        title: "Você ainda não publicou nada",
+        description: "Compartilhe sua primeira ideia com a comunidade.",
+    },
+    saved: {
+        title: "Nenhum post salvo",
+        description: "Salve posts para encontrá-los rapidamente aqui.",
+    },
+};
 
 interface FeedListProps {
     posts: Post[];
@@ -10,11 +37,14 @@ interface FeedListProps {
     hasMore: boolean;
     error: string | null;
     currentUserId?: string;
+    filter?: FeedFilter;
     onLoadMore: () => void;
     onRetry: () => void;
     onRetryMore: () => void;
     onLike: (post: Post) => Promise<void>;
+    onSave: (post: Post) => Promise<void>;
     onDelete: (postId: string) => Promise<void>;
+    onCommentCountChange?: (postId: string, commentCount: number) => void;
     onOpenAuthor: (author: NonNullable<Post["author"]>) => void;
 }
 
@@ -25,11 +55,14 @@ export default function FeedList({
     hasMore,
     error,
     currentUserId,
+    filter = "all",
     onLoadMore,
     onRetry,
     onRetryMore,
     onLike,
+    onSave,
     onDelete,
+    onCommentCountChange,
     onOpenAuthor,
 }: FeedListProps) {
     const sentinelRef = useRef<HTMLDivElement>(null);
@@ -61,7 +94,7 @@ export default function FeedList({
 
     if (!loading && error && posts.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-noir-border dark:bg-noir-card">
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-noir-border dark:bg-noir-surface">
                 <p className="text-sm text-red-600 dark:text-red-400">
                     {error}
                 </p>
@@ -77,13 +110,14 @@ export default function FeedList({
     }
 
     if (!loading && posts.length === 0) {
+        const empty = EMPTY_STATE[filter];
         return (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center dark:border-noir-border dark:bg-noir-card">
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center dark:border-noir-border dark:bg-noir-surface">
                 <p className="text-sm font-medium text-slate-700 dark:text-noir-text-bright">
-                    Nenhum post ainda
+                    {empty.title}
                 </p>
                 <p className="mt-1 text-xs text-slate-500 dark:text-noir-text-muted">
-                    Seja a primeira pessoa a compartilhar algo no feed.
+                    {empty.description}
                 </p>
             </div>
         );
@@ -97,7 +131,9 @@ export default function FeedList({
                     post={post}
                     currentUserId={currentUserId}
                     onLike={onLike}
+                    onSave={onSave}
                     onDelete={onDelete}
+                    onCommentCountChange={onCommentCountChange}
                     onOpenAuthor={onOpenAuthor}
                 />
             ))}

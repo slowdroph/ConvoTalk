@@ -7,7 +7,10 @@ import {
     createPost,
     getFeed,
     getPost,
+    getPostStats,
+    getTrendingTopics,
     getUserPosts,
+    backfillPostLikeCounts,
     deletePost,
     setPostLike,
 } from "../services/post";
@@ -16,6 +19,7 @@ import {
     postsQuerySchema,
     postsByUserQuerySchema,
     postParamsSchema,
+    trendingTopicsQuerySchema,
 } from "../validations";
 import { ForbiddenError, NotFoundError, ValidationError } from "../utils/errors";
 
@@ -157,10 +161,15 @@ describe("posts: feed e paginação", () => {
         expect(firstPage.posts).toHaveLength(2);
         expect(firstPage.nextCursor).not.toBeNull();
 
+        const cursor = firstPage.nextCursor!;
+        if (!("before" in cursor)) {
+            throw new Error("cursor recente esperado");
+        }
+
         const secondPage = await getFeed(alice._id.toString(), {
             limit: 2,
-            before: firstPage.nextCursor!.before,
-            beforeId: firstPage.nextCursor!.beforeId,
+            before: cursor.before,
+            beforeId: cursor.beforeId,
         });
 
         expect(secondPage.posts).toHaveLength(1);
@@ -375,6 +384,209 @@ describe("posts: exclusão e curtidas", () => {
     });
 });
 
+describe("posts: filtros, estatísticas e tendências", () => {
+    it("filtra posts com imagem", async () => {
+        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+
+        const withImage = await Post.create({
+            author: alice._id,
+            content: "Com imagem",
+            image: {
+                url: "https://example.com/image.png",
+                filename: "image.png",
+                mimetype: "image/png",
+                size: 100,
+            },
+        });
+        await Post.create({ author: bob._id, content: "Sem imagem" });
+
+        const feed = await getFeed(alice._id.toString(), {
+            limit: 20,
+            filter: "media",
+        });
+
+        expect(feed.posts.map((post) => post._id)).toEqual([
+            withImage._id.toString(),
+        ]);
+        expect(feed.posts[0].image).not.toBeNull();
+    });
+
+    it("filtra apenas os posts do usuário autenticado", async () => {
+        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+
+        const alicePost = await createPost(alice._id.toString(), {
+            content: "Post da Alice",
+        });
+        await createPost(bob._id.toString(), { content: "Post do Bob" });
+
+        const feed = await getFeed(alice._id.toString(), {
+            limit: 20,
+            filter: "mine",
+        });
+
+        expect(feed.posts.map((post) => post._id)).toEqual([alicePost._id]);
+    });
+
+    it("ordena por curtidas com paginação por beforeLikes", async () => {
+        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+        const carol = await createUser("Carol", "carol@test.com");
+        const dave = await createUser("Dave", "dave@test.com");
+
+        const first = await createPost(alice._id.toString(), {
+            content: "Sem curtidas",
+        });
+        const second = await createPost(alice._id.toString(), {
+            content: "Duas curtidas",
+        });
+        const third = await createPost(alice._id.toString(), {
+            content: "Uma curtida",
+        });
+
+        await setPostLike(bob._id.toString(), second._id, true);
+        await setPostLike(carol._id.toString(), second._id, true);
+        await setPostLike(dave._id.toString(), third._id, true);
+
+        const firstPage = await getFeed(alice._id.toString(), {
+            limit: 2,
+            sort: "popular",
+        });
+
+        expect(firstPage.posts.map((post) => post._id)).toEqual([
+            second._id,
+            third._id,
+        ]);
+        expect(firstPage.nextCursor).not.toBeNull();
+
+        const cursor = firstPage.nextCursor!;
+        if (!("beforeLikes" in cursor)) {
+            throw new Error("cursor popular esperado");
+        }
+        expect(cursor.beforeLikes).toBe(1);
+
+        const secondPage = await getFeed(alice._id.toString(), {
+            limit: 2,
+            sort: "popular",
+            beforeLikes: cursor.beforeLikes,
+            beforeId: cursor.beforeId,
+        });
+
+        expect(secondPage.posts.map((post) => post._id)).toEqual([first._id]);
+        expect(secondPage.nextCursor).toBeNull();
+    });
+
+    it("calcula estatísticas de posts e curtidas recebidas", async () => {
+        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+
+        const first = await createPost(alice._id.toString(), {
+            content: "Primeiro",
+        });
+        const second = await createPost(alice._id.toString(), {
+            content: "Segundo",
+        });
+        const deleted = await createPost(alice._id.toString(), {
+            content: "Excluído",
+        });
+
+        await setPostLike(bob._id.toString(), first._id, true);
+        await setPostLike(alice._id.toString(), second._id, true);
+        await setPostLike(bob._id.toString(), deleted._id, true);
+        await deletePost(alice._id.toString(), deleted._id);
+
+        await expect(
+            getPostStats(alice._id.toString()),
+        ).resolves.toEqual({ postCount: 2, totalLikes: 2 });
+    });
+
+    it("retorna tópicos em alta ignorando bloqueios e posts excluídos", async () => {
+        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+        const carol = await createUser("Carol", "carol@test.com");
+
+        await Post.create({
+            author: alice._id,
+            content: "Dica de #WebRTC para chamadas",
+        });
+        await Post.create({
+            author: bob._id,
+            content: "Mais #WebRTC e #Dica",
+        });
+        await Post.create({
+            author: carol._id,
+            content: "Post sem hashtag",
+        });
+
+        await User.updateOne(
+            { _id: alice._id },
+            { $addToSet: { blockedUsers: carol._id } },
+        );
+        await Post.create({
+            author: carol._id,
+            content: "#Bloqueado #WebRTC",
+            deleted: false,
+        });
+        await Post.create({
+            author: alice._id,
+            content: "#Excluido",
+            deleted: true,
+        });
+
+        const topics = await getTrendingTopics(alice._id.toString(), 5);
+
+        expect(topics).toEqual([
+            { tag: "#webrtc", count: 2 },
+            { tag: "#dica", count: 1 },
+        ]);
+    });
+
+    it("sincroniza likeCount ao curtir e descurtir", async () => {
+        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+        const carol = await createUser("Carol", "carol@test.com");
+
+        const post = await createPost(alice._id.toString(), {
+            content: "Post curtível",
+        });
+
+        await setPostLike(bob._id.toString(), post._id, true);
+        await setPostLike(bob._id.toString(), post._id, true);
+        await setPostLike(carol._id.toString(), post._id, true);
+
+        let stored = await Post.findById(post._id).lean();
+        expect(stored?.likeCount).toBe(2);
+        expect(stored?.likes).toHaveLength(2);
+
+        await setPostLike(bob._id.toString(), post._id, false);
+
+        stored = await Post.findById(post._id).lean();
+        expect(stored?.likeCount).toBe(1);
+        expect(stored?.likes).toHaveLength(1);
+    });
+
+    it("preenche likeCount de posts antigos", async () => {
+        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+
+        const post = await Post.create({
+            author: alice._id,
+            content: "Post legado",
+        });
+
+        await Post.collection.updateOne(
+            { _id: post._id },
+            { $set: { likes: [bob._id] }, $unset: { likeCount: 1 } },
+        );
+
+        await backfillPostLikeCounts();
+
+        const stored = await Post.findById(post._id).lean();
+        expect(stored?.likeCount).toBe(1);
+    });
+});
+
 describe("posts: validações", () => {
     it("aceita conteúdo e clientPostId válidos", () => {
         const result = createPostSchema.safeParse({
@@ -412,6 +624,54 @@ describe("posts: validações", () => {
             },
         });
         expect(result.success).toBe(true);
+    });
+
+    it("aceita cursor popular completo", () => {
+        const result = postsQuerySchema.safeParse({
+            query: {
+                sort: "popular",
+                beforeLikes: 3,
+                beforeId: "507f1f77bcf86cd799439011",
+            },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("rejeita cursor popular incompleto", () => {
+        expect(
+            postsQuerySchema.safeParse({
+                query: { sort: "popular", beforeLikes: 3 },
+            }).success,
+        ).toBe(false);
+        expect(
+            postsQuerySchema.safeParse({
+                query: {
+                    sort: "popular",
+                    beforeId: "507f1f77bcf86cd799439011",
+                },
+            }).success,
+        ).toBe(false);
+    });
+
+    it("rejeita beforeLikes na ordenação recente", () => {
+        const result = postsQuerySchema.safeParse({
+            query: {
+                beforeLikes: 1,
+                beforeId: "507f1f77bcf86cd799439011",
+            },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("valida o limite dos tópicos em alta", () => {
+        expect(
+            trendingTopicsQuerySchema.safeParse({ query: { limit: 5 } })
+                .success,
+        ).toBe(true);
+        expect(
+            trendingTopicsQuerySchema.safeParse({ query: { limit: 11 } })
+                .success,
+        ).toBe(false);
     });
 
     it("valida parâmetros de usuário e de post", () => {

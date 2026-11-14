@@ -95,9 +95,40 @@ export interface PostPayload {
     image?: AttachmentPayload | null;
     likeCount: number;
     likedByMe: boolean;
+    savedByMe?: boolean;
+    commentCount: number;
     edited: boolean;
     createdAt: string;
     updatedAt?: string;
+}
+
+export interface CommentPayload {
+    _id: string;
+    post: string;
+    author: SenderPayload | null;
+    content: string;
+    clientCommentId?: string | null;
+    createdAt: string;
+    updatedAt?: string;
+}
+
+export type CommentCursorPayload = { before: string; beforeId: string };
+
+export interface CommentPagePayload {
+    comments: CommentPayload[];
+    nextCursor: CommentCursorPayload | null;
+}
+
+export interface CommentCreatedEvent {
+    postId: string;
+    comment: CommentPayload;
+    commentCount: number;
+}
+
+export interface CommentDeletedEvent {
+    postId: string;
+    commentId: string;
+    commentCount: number;
 }
 
 export interface PostLikedEvent {
@@ -109,6 +140,12 @@ export interface PostLikedEvent {
 
 export interface PostDeletedEvent {
     postId: string;
+}
+
+export interface PostSavedEvent {
+    postId: string;
+    userId: string;
+    saved: boolean;
 }
 
 export type PostCursorPayload =

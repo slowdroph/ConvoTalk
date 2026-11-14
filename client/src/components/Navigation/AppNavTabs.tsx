@@ -16,18 +16,25 @@ const TABS = [
 interface AppNavTabsProps {
     className?: string;
     onNavigate?: () => void;
+    variant?: "default" | "pill";
 }
 
 export default function AppNavTabs({
     className = "",
     onNavigate,
+    variant = "default",
 }: AppNavTabsProps) {
     const { pathname } = useLocation();
+    const isPill = variant === "pill";
 
     return (
         <nav
             aria-label="Navegação principal"
-            className={`grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-noir-border dark:bg-noir-surface-alt ${className}`}
+            className={
+                isPill
+                    ? `flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 p-1 shadow-inner dark:border-noir-border dark:bg-noir-surface-alt/90 ${className}`
+                    : `grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-noir-border dark:bg-noir-surface-alt ${className}`
+            }
         >
             {TABS.map((tab) => {
                 const active = pathname.startsWith(tab.to);
@@ -37,11 +44,19 @@ export default function AppNavTabs({
                         to={tab.to}
                         onClick={onNavigate}
                         aria-current={active ? "page" : undefined}
-                        className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                            active
-                                ? "bg-emerald-600 text-white shadow-sm dark:bg-emerald-600/20 dark:text-emerald-300 dark:border dark:border-emerald-500/40"
-                                : "text-slate-600 hover:bg-white hover:text-slate-900 dark:text-noir-text-muted dark:hover:bg-noir-border/60 dark:hover:text-noir-text-bright"
-                        }`}
+                        className={
+                            isPill
+                                ? `flex items-center justify-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
+                                      active
+                                          ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+                                          : "text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-noir-text-muted dark:hover:bg-white/5 dark:hover:text-noir-text-bright"
+                                  }`
+                                : `flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                                      active
+                                          ? "bg-emerald-600 text-white shadow-sm dark:border dark:border-emerald-500/40 dark:bg-emerald-600/20 dark:text-emerald-300"
+                                          : "text-slate-600 hover:bg-white hover:text-slate-900 dark:text-noir-text-muted dark:hover:bg-noir-border/60 dark:hover:text-noir-text-bright"
+                                  }`
+                        }
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

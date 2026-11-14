@@ -20,6 +20,13 @@ import type {
     PostPayload as PostPayloadShared,
     PostLikedEvent as PostLikedEventShared,
     PostDeletedEvent as PostDeletedEventShared,
+    PostSavedEvent as PostSavedEventShared,
+    PostCursorPayload as PostCursorPayloadShared,
+    PostStatsPayload as PostStatsPayloadShared,
+    TrendingTopicPayload as TrendingTopicPayloadShared,
+    CommentPayload as CommentPayloadShared,
+    CommentCreatedEvent as CommentCreatedEventShared,
+    CommentDeletedEvent as CommentDeletedEventShared,
 } from "@shared/types";
 
 export type User = UserPayload;
@@ -43,6 +50,13 @@ export type AiTone = AiToneShared;
 export type Post = PostPayloadShared;
 export type PostLikedEvent = PostLikedEventShared;
 export type PostDeletedEvent = PostDeletedEventShared;
+export type PostSavedEvent = PostSavedEventShared;
+export type PostCursor = PostCursorPayloadShared;
+export type PostStats = PostStatsPayloadShared;
+export type TrendingTopic = TrendingTopicPayloadShared;
+export type Comment = CommentPayloadShared;
+export type CommentCreatedEvent = CommentCreatedEventShared;
+export type CommentDeletedEvent = CommentDeletedEventShared;
 
 export interface PreviewMessage {
     id: string;

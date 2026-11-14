@@ -1,5 +1,7 @@
 import { Response } from "express";
 import * as postService from "../services/post";
+import * as commentService from "../services/comment";
+import * as savedPostService from "../services/savedPost";
 import { AuthRequest } from "../middleware/auth";
 import { handleError } from "../utils/errors";
 
@@ -85,6 +87,51 @@ export async function listUserPosts(
     }
 }
 
+export async function listSavedPosts(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { limit, before, beforeId } =
+            req.query as unknown as PostPaginationQuery;
+
+        const result = await savedPostService.listSavedPosts(req.user!._id, {
+            limit,
+            before,
+            beforeId,
+        });
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao carregar os posts salvos.");
+    }
+}
+
+export async function savePost(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { id } = req.params as { id: string };
+        const result = await savedPostService.savePost(req.user!._id, id);
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao salvar o post.");
+    }
+}
+
+export async function unsavePost(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { id } = req.params as { id: string };
+        const result = await savedPostService.unsavePost(req.user!._id, id);
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao remover o post dos salvos.");
+    }
+}
+
 export async function getPost(
     req: AuthRequest,
     res: Response,
@@ -155,5 +202,74 @@ export async function unlikePost(
         res.json(result);
     } catch (error) {
         handleError(error, res, "Erro ao descurtir o post.");
+    }
+}
+
+type CommentQuery = {
+    limit: number;
+    before?: string;
+    beforeId?: string;
+};
+
+export async function listComments(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { id } = req.params as { id: string };
+        const { limit, before, beforeId } =
+            req.query as unknown as CommentQuery;
+
+        const result = await commentService.listComments(req.user!._id, id, {
+            limit,
+            before,
+            beforeId,
+        });
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao carregar os comentários.");
+    }
+}
+
+export async function createComment(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { id } = req.params as { id: string };
+        const { content, clientCommentId } = req.body as {
+            content: string;
+            clientCommentId?: string;
+        };
+
+        const result = await commentService.createComment(
+            req.user!._id,
+            id,
+            { content, clientCommentId },
+        );
+        res.status(201).json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao comentar no post.");
+    }
+}
+
+export async function deleteComment(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { id, commentId } = req.params as {
+            id: string;
+            commentId: string;
+        };
+
+        const result = await commentService.deleteComment(
+            req.user!._id,
+            id,
+            commentId,
+        );
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao excluir o comentário.");
     }
 }
