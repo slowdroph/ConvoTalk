@@ -189,11 +189,15 @@ describe("posts salvos", () => {
         });
         expect(firstPage.posts.map((post) => post._id)).toEqual([second._id]);
         expect(firstPage.nextCursor).not.toBeNull();
+        const cursor = firstPage.nextCursor as {
+            before: string;
+            beforeId: string;
+        };
 
         const secondPage = await listSavedPosts(alice._id.toString(), {
             limit: 1,
-            before: firstPage.nextCursor!.before,
-            beforeId: firstPage.nextCursor!.beforeId,
+            before: cursor.before,
+            beforeId: cursor.beforeId,
         });
         expect(secondPage.posts.map((post) => post._id)).toEqual([first._id]);
         expect(secondPage.nextCursor).toBeNull();

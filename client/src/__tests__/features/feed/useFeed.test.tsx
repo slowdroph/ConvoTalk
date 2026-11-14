@@ -11,7 +11,6 @@ import {
     type FeedFilter,
     type FeedPageResult,
     type LikeResult,
-    type SavedResult,
 } from "../../../features/feed/services/feedApi";
 import type { Post, PostLikedEvent } from "../../../types";
 
@@ -87,6 +86,7 @@ function makePost(overrides: Partial<Post> = {}): Post {
         likeCount: 0,
         commentCount: 0,
         likedByMe: false,
+        savedByMe: false,
         edited: false,
         createdAt: "2026-01-01T10:00:00.000Z",
         ...overrides,
