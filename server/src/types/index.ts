@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import mongoose, { Document } from "mongoose";
 
 export interface IUser extends Document {
     name: string;
@@ -67,6 +67,7 @@ export interface IPost extends Document {
     author: IUser["_id"];
     content: string;
     image: IAttachment | null;
+    poll: IPoll | null;
     likes: IUser["_id"][];
     likeCount: number;
     commentCount: number;
@@ -75,6 +76,16 @@ export interface IPost extends Document {
     clientPostId: string | null;
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface IPollOption {
+    _id?: mongoose.Types.ObjectId;
+    text: string;
+    votes: IUser["_id"][];
+}
+
+export interface IPoll {
+    options: IPollOption[];
 }
 
 export interface IComment extends Document {

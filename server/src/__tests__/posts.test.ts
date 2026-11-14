@@ -275,6 +275,8 @@ describe("posts: exclusão e curtidas", () => {
 
         await deletePost(alice._id.toString(), post._id);
 
+        expect(await Post.findById(post._id).lean()).toBeNull();
+
         await expect(
             getPost(alice._id.toString(), post._id),
         ).rejects.toBeInstanceOf(NotFoundError);

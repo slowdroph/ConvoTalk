@@ -9,6 +9,8 @@ import type {
     PostCursor,
     PostDeletedEvent,
     PostLikedEvent,
+    PostPollEvent,
+    PostPollPayload,
     PostSavedEvent,
 } from "../../../types";
 import {
@@ -18,14 +20,18 @@ import {
     likePost,
     resolveFeedQuery,
     savePost as savePostRequest,
+    searchPosts as searchPostsRequest,
     unlikePost,
     unsavePost as unsavePostRequest,
+    unvotePoll as unvotePollRequest,
+    votePoll as votePollRequest,
     type FeedFilter,
     type FeedQuery,
 } from "../services/feedApi";
 import {
     appendFeedPosts,
     applyFeedEvent,
+    applyOwnPollVote,
     type FeedEvent,
     mergeFeedPosts,
     removeFeedPost,
@@ -41,11 +47,16 @@ interface LikeEventRecord {
     liked: boolean;
 }
 
-export function useFeed(filter: FeedFilter = "all") {
+export function useFeed(
+    filter: FeedFilter = "all",
+    options: { query?: string } = {},
+) {
     const { user } = useAuth();
     const { socket, connected } = useSocket();
     const { filter: apiFilter, sort } = resolveFeedQuery(filter);
-    const isSavedFeed = filter === "saved";
+    const searchQuery = options.query?.trim() ?? "";
+    const isSearch = searchQuery.length >= 2 && filter !== "saved";
+    const isSavedFeed = filter === "saved" && !isSearch;
     const [posts, setPosts] = useState<Post[]>([]);
     const [nextCursor, setNextCursor] = useState<PostCursor | null>(null);
     const [loading, setLoading] = useState(true);
@@ -69,10 +80,15 @@ export function useFeed(filter: FeedFilter = "all") {
     const applyEvent = useCallback(
         (event: FeedEvent) => {
             setPosts((prev) =>
-                applyFeedEvent(prev, event, { viewerId, filter, sort }),
+                applyFeedEvent(prev, event, {
+                    viewerId,
+                    filter,
+                    sort,
+                    query: isSearch ? searchQuery : undefined,
+                }),
             );
         },
-        [viewerId, filter, sort],
+        [viewerId, filter, sort, isSearch, searchQuery],
     );
 
     const enqueueEvent = useCallback(
@@ -96,13 +112,20 @@ export function useFeed(filter: FeedFilter = "all") {
         setError(null);
 
         try {
-            const data = isSavedFeed
-                ? await getSavedPosts({ limit: PAGE_SIZE })
-                : await getFeed({
+            const data = isSearch
+                ? await searchPostsRequest({
+                      q: searchQuery,
                       limit: PAGE_SIZE,
                       filter: apiFilter,
                       sort,
-                  });
+                  })
+                : isSavedFeed
+                  ? await getSavedPosts({ limit: PAGE_SIZE })
+                  : await getFeed({
+                        limit: PAGE_SIZE,
+                        filter: apiFilter,
+                        sort,
+                    });
 
             if (requestId !== requestIdRef.current) return;
 
@@ -112,6 +135,7 @@ export function useFeed(filter: FeedFilter = "all") {
                     viewerId,
                     filter,
                     sort,
+                    query: isSearch ? searchQuery : undefined,
                 });
             }
 
@@ -129,7 +153,15 @@ export function useFeed(filter: FeedFilter = "all") {
                 setLoading(false);
             }
         }
-    }, [apiFilter, filter, isSavedFeed, sort, viewerId]);
+    }, [
+        apiFilter,
+        filter,
+        isSavedFeed,
+        isSearch,
+        searchQuery,
+        sort,
+        viewerId,
+    ]);
 
     const loadMore = useCallback(async () => {
         if (loadingMoreRef.current || !nextCursor) return;
@@ -152,15 +184,17 @@ export function useFeed(filter: FeedFilter = "all") {
         }
 
         try {
-            const data = isSavedFeed
-                ? await getSavedPosts({
-                      limit: PAGE_SIZE,
-                      beforeId: nextCursor.beforeId,
-                      ...("before" in nextCursor
-                          ? { before: nextCursor.before }
-                          : {}),
-                  })
-                : await getFeed(query);
+            const data = isSearch
+                ? await searchPostsRequest({ ...query, q: searchQuery })
+                : isSavedFeed
+                  ? await getSavedPosts({
+                        limit: PAGE_SIZE,
+                        beforeId: nextCursor.beforeId,
+                        ...("before" in nextCursor
+                            ? { before: nextCursor.before }
+                            : {}),
+                    })
+                  : await getFeed(query);
 
             if (requestId !== requestIdRef.current) return;
 
@@ -180,7 +214,14 @@ export function useFeed(filter: FeedFilter = "all") {
                 setLoadingMore(false);
             }
         }
-    }, [apiFilter, isSavedFeed, nextCursor, sort]);
+    }, [
+        apiFilter,
+        isSavedFeed,
+        isSearch,
+        nextCursor,
+        searchQuery,
+        sort,
+    ]);
 
     const retryLoadMore = useCallback(() => {
         void loadMore();
@@ -233,6 +274,10 @@ export function useFeed(filter: FeedFilter = "all") {
             enqueueEvent({ type: "saved", event });
         };
 
+        const handlePoll = (event: PostPollEvent) => {
+            enqueueEvent({ type: "poll", event });
+        };
+
         const handleCommentCount = (
             event: CommentCreatedEvent | CommentDeletedEvent,
         ) => {
@@ -248,6 +293,7 @@ export function useFeed(filter: FeedFilter = "all") {
         socket.on("post:deleted", handleDeleted);
         socket.on("post:saved", handleSaved);
         socket.on("post:unsaved", handleSaved);
+        socket.on("post:poll", handlePoll);
         socket.on("comment:created", handleCommentCount);
         socket.on("comment:deleted", handleCommentCount);
 
@@ -257,6 +303,7 @@ export function useFeed(filter: FeedFilter = "all") {
             socket.off("post:deleted", handleDeleted);
             socket.off("post:saved", handleSaved);
             socket.off("post:unsaved", handleSaved);
+            socket.off("post:poll", handlePoll);
             socket.off("comment:created", handleCommentCount);
             socket.off("comment:deleted", handleCommentCount);
         };
@@ -379,6 +426,33 @@ export function useFeed(filter: FeedFilter = "all") {
         [filter],
     );
 
+    const votePoll = useCallback(
+        async (post: Post, optionId: string | null) => {
+            const previousPoll = post.poll;
+            if (!previousPoll) return;
+
+            const apply = (poll: PostPollPayload | null) =>
+                setPosts((prev) =>
+                    prev.map((item) =>
+                        item._id === post._id ? { ...item, poll } : item,
+                    ),
+                );
+
+            apply(applyOwnPollVote(previousPoll, optionId));
+
+            try {
+                const result = optionId
+                    ? await votePollRequest(post._id, optionId)
+                    : await unvotePollRequest(post._id);
+                apply(result.poll);
+            } catch (err) {
+                apply(previousPoll);
+                throw err;
+            }
+        },
+        [],
+    );
+
     return {
         posts,
         loading,
@@ -392,6 +466,7 @@ export function useFeed(filter: FeedFilter = "all") {
         deletePostById,
         toggleLike,
         toggleSave,
+        votePoll,
         setCommentCount,
     };
 }

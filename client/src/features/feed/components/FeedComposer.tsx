@@ -8,6 +8,8 @@ import { createPost } from "../services/feedApi";
 
 const MAX_CONTENT = 2000;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MIN_POLL_OPTIONS = 2;
+const MAX_POLL_OPTIONS = 4;
 const ALLOWED_IMAGE_TYPES = new Set([
     "image/jpeg",
     "image/png",
@@ -30,6 +32,8 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
     const [content, setContent] = useState("");
     const [image, setImage] = useState<SelectedImage | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const [pollOptions, setPollOptions] = useState<string[] | null>(null);
+    const [pollError, setPollError] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const imageRef = useRef<SelectedImage | null>(null);
     const clientPostIdRef = useRef<string | null>(null);
@@ -67,7 +71,8 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
         if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
             showToast({
                 type: "error",
-                message: "Formato de imagem não suportado. Use JPEG, PNG, WebP ou GIF.",
+                message:
+                    "Formato de imagem não suportado. Use JPEG, PNG, WebP ou GIF.",
             });
             event.target.value = "";
             return;
@@ -90,11 +95,64 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
     const canSubmit =
         (content.trim().length > 0 || Boolean(image)) && !submitting;
 
+    const togglePoll = () => {
+        setPollError(null);
+        setPollOptions((current) => (current ? null : ["", ""]));
+    };
+
+    const updatePollOption = (index: number, value: string) => {
+        setPollError(null);
+        setPollOptions((current) =>
+            current
+                ? current.map((option, position) =>
+                      position === index ? value.slice(0, 100) : option,
+                  )
+                : current,
+        );
+    };
+
+    const addPollOption = () => {
+        setPollOptions((current) =>
+            current && current.length < MAX_POLL_OPTIONS
+                ? [...current, ""]
+                : current,
+        );
+    };
+
+    const removePollOption = (index: number) => {
+        setPollOptions((current) =>
+            current && current.length > MIN_POLL_OPTIONS
+                ? current.filter((_, position) => position !== index)
+                : current,
+        );
+    };
+
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         if (!canSubmit) return;
 
         const trimmed = content.trim();
+        const trimmedOptions =
+            pollOptions?.map((option) => option.trim()) ?? [];
+
+        if (pollOptions) {
+            if (!trimmed) {
+                setPollError("Escreva a pergunta da enquete.");
+                return;
+            }
+            if (trimmedOptions.some((option) => !option)) {
+                setPollError("Preencha todas as opções da enquete.");
+                return;
+            }
+            if (
+                new Set(trimmedOptions.map((option) => option.toLowerCase()))
+                    .size !== trimmedOptions.length
+            ) {
+                setPollError("As opções da enquete não podem se repetir.");
+                return;
+            }
+        }
+
         setSubmitting(true);
 
         try {
@@ -106,11 +164,14 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
                 content: trimmed,
                 image: image?.file,
                 clientPostId: clientPostIdRef.current,
+                poll: pollOptions ? { options: trimmedOptions } : undefined,
             });
 
             clientPostIdRef.current = null;
             onCreated(post);
             setContent("");
+            setPollOptions(null);
+            setPollError(null);
             clearImage();
             showToast({ type: "success", message: "Post publicado!" });
         } catch (err) {
@@ -179,6 +240,90 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
                 </div>
             </div>
 
+            {pollOptions && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-noir-border dark:bg-noir-surface-alt/40">
+                    <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-semibold text-slate-700 dark:text-noir-text-bright">
+                            Enquete
+                        </p>
+                        <span className="text-[11px] text-slate-500 dark:text-noir-text-muted">
+                            2 a 4 opções
+                        </span>
+                    </div>
+
+                    <div className="mt-2 space-y-2">
+                        {pollOptions.map((option, index) => (
+                            <div
+                                key={index}
+                                className="flex items-center gap-2"
+                            >
+                                <input
+                                    value={option}
+                                    onChange={(event) =>
+                                        updatePollOption(
+                                            index,
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder={`Opção ${index + 1}`}
+                                    aria-label={`Opção ${index + 1}`}
+                                    maxLength={100}
+                                    disabled={submitting}
+                                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright dark:placeholder:text-noir-text-muted"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => removePollOption(index)}
+                                    disabled={
+                                        pollOptions.length <=
+                                            MIN_POLL_OPTIONS || submitting
+                                    }
+                                    aria-label={`Remover opção ${index + 1}`}
+                                    title="Remover opção"
+                                    className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-red-950/20 dark:hover:text-red-400"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    {pollOptions.length < MAX_POLL_OPTIONS && (
+                        <button
+                            type="button"
+                            onClick={addPollOption}
+                            disabled={submitting}
+                            className="mt-2 text-xs font-medium text-emerald-700 hover:underline disabled:opacity-50 dark:text-emerald-400"
+                        >
+                            Adicionar opção
+                        </button>
+                    )}
+
+                    {pollError && (
+                        <p
+                            role="alert"
+                            className="mt-2 text-xs text-red-600 dark:text-red-400"
+                        >
+                            {pollError}
+                        </p>
+                    )}
+                </div>
+            )}
+
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 dark:border-noir-border/70">
                 <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                     <input
@@ -218,10 +363,24 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
 
                     <button
                         type="button"
-                        disabled
-                        title="Em breve"
-                        aria-label="Enquete (em breve)"
-                        className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-400 opacity-60 dark:border-noir-border dark:text-noir-text-muted"
+                        onClick={togglePoll}
+                        disabled={submitting}
+                        title={
+                            pollOptions
+                                ? "Remover enquete"
+                                : "Adicionar enquete"
+                        }
+                        aria-label={
+                            pollOptions
+                                ? "Remover enquete"
+                                : "Adicionar enquete"
+                        }
+                        aria-pressed={pollOptions !== null}
+                        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                            pollOptions
+                                ? "border-emerald-700/30 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                                : "border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-noir-border dark:text-noir-text-muted dark:hover:bg-noir-surface-alt"
+                        }`}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -238,9 +397,6 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
                             />
                         </svg>
                         Enquete
-                        <span className="rounded-full border border-slate-300 px-1.5 text-[9px] uppercase dark:border-noir-border-light">
-                            Em breve
-                        </span>
                     </button>
 
                     {content.length > MAX_CONTENT - 200 && (
@@ -265,19 +421,13 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
                         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     ) : (
                         <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.8}
-                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                            />
-                        </svg>
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4 sm:h-5 sm:w-5"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                            >
+                                <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                            </svg>
                     )}
                     Publicar
                 </button>

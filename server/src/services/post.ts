@@ -1,11 +1,14 @@
 import mongoose, { type QueryFilter } from "mongoose";
 import Post from "../models/Post";
+import Comment from "../models/Comment";
 import SavedPost from "../models/SavedPost";
 import User from "../models/User";
-import type { IAttachment, IPost } from "../types";
+import type { IAttachment, IPoll, IPost } from "../types";
 import type {
     PostCursorPayload,
     PostPayload,
+    PostPollEvent,
+    PostPollPayload,
     PostSavedEvent,
     PostStatsPayload,
     TrendingTopicPayload,
@@ -41,6 +44,7 @@ export interface PostLean {
     author?: PopulatedAuthor | null;
     content?: string | null;
     image?: IAttachment | null;
+    poll?: IPoll | null;
     likes?: (mongoose.Types.ObjectId | string)[];
     likeCount?: number;
     commentCount?: number;
@@ -63,6 +67,31 @@ interface FeedOptions extends PaginationOptions {
     filter?: PostFeedFilter;
     sort?: PostFeedSort;
     beforeLikes?: number;
+}
+
+function toPollPayload(
+    poll: IPoll | null | undefined,
+    viewerId: string,
+): PostPollPayload | null {
+    if (!poll || !poll.options || poll.options.length === 0) return null;
+
+    const options = poll.options.map((option) => ({
+        _id: String(option._id),
+        text: option.text,
+        voteCount: (option.votes ?? []).length,
+    }));
+    const myVote = poll.options.find((option) =>
+        (option.votes ?? []).some((vote) => String(vote) === viewerId),
+    );
+
+    return {
+        options,
+        totalVotes: options.reduce(
+            (total, option) => total + option.voteCount,
+            0,
+        ),
+        myVoteOptionId: myVote ? String(myVote._id) : null,
+    };
 }
 
 export function toPostPayload(
@@ -95,6 +124,7 @@ export function toPostPayload(
         savedByMe: Boolean(savedPostIds?.has(String(post._id))),
         commentCount:
             typeof post.commentCount === "number" ? post.commentCount : 0,
+        poll: toPollPayload(post.poll, viewerId),
         edited: Boolean(post.edited),
         createdAt: post.createdAt.toISOString(),
         ...(post.updatedAt
@@ -195,6 +225,7 @@ export async function emitPostEvent(
     event:
         | "post:new"
         | "post:liked"
+        | "post:poll"
         | "post:deleted"
         | "comment:created"
         | "comment:deleted",
@@ -270,9 +301,14 @@ async function populatePost(
     return toPostPayload(post, viewerId, savedPostIds);
 }
 
-export async function getFeed(
+function escapeSearchTerm(term: string): string {
+    return term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+async function listPosts(
     viewerId: string,
     opts: FeedOptions,
+    contentTerm?: string,
 ): Promise<{ posts: PostPayload[]; nextCursor: PostCursorPayload | null }> {
     const filter = opts.filter ?? "all";
     const sort = opts.sort ?? "recent";
@@ -289,6 +325,12 @@ export async function getFeed(
     }
     if (filter === "media") {
         query.image = { $ne: null };
+    }
+    if (contentTerm) {
+        query.content = {
+            $regex: escapeSearchTerm(contentTerm),
+            $options: "i",
+        };
     }
 
     if (sort === "popular") {
@@ -320,6 +362,27 @@ export async function getFeed(
         posts: page.map((post) => toPostPayload(post, viewerId, savedPostIds)),
         nextCursor: hasMore ? buildNextCursor(last, sort) : null,
     };
+}
+
+export async function getFeed(
+    viewerId: string,
+    opts: FeedOptions,
+): Promise<{ posts: PostPayload[]; nextCursor: PostCursorPayload | null }> {
+    return listPosts(viewerId, opts);
+}
+
+export async function searchPosts(
+    viewerId: string,
+    opts: FeedOptions & { q: string },
+): Promise<{ posts: PostPayload[]; nextCursor: PostCursorPayload | null }> {
+    const term = opts.q?.trim() ?? "";
+    if (term.length < 2) {
+        throw new ValidationError(
+            "Informe pelo menos 2 caracteres para buscar.",
+        );
+    }
+
+    return listPosts(viewerId, opts, term);
 }
 
 export async function getUserPosts(
@@ -434,7 +497,11 @@ function isDuplicateClientPostId(error: unknown): boolean {
 
 export async function createPost(
     userId: string,
-    input: { content: string; clientPostId?: string },
+    input: {
+        content: string;
+        clientPostId?: string;
+        poll?: { options: string[] };
+    },
     file?: Express.Multer.File,
 ): Promise<PostPayload> {
     const content = input.content?.trim() ?? "";
@@ -444,11 +511,26 @@ export async function createPost(
         );
     }
 
+    if (input.poll && !content) {
+        throw new ValidationError(
+            "Escreva a pergunta da enquete antes de publicar.",
+        );
+    }
+
     let image: IAttachment | null = null;
     if (file) {
         assertSupportedImage(file);
         image = await uploadPostImage(file);
     }
+
+    const poll = input.poll
+        ? {
+              options: input.poll.options.map((text) => ({
+                  text,
+                  votes: [],
+              })),
+          }
+        : null;
 
     let created;
     try {
@@ -456,6 +538,7 @@ export async function createPost(
             author: userId,
             content,
             image,
+            poll,
             clientPostId: input.clientPostId || null,
         });
     } catch (error) {
@@ -502,14 +585,117 @@ export async function deletePost(
         throw new ForbiddenError("Você só pode excluir seus próprios posts.");
     }
 
-    await Post.updateOne(
-        { _id: postId, author: userId },
-        { $set: { deleted: true, image: null } },
-    );
+    await Post.deleteOne({ _id: postId, author: userId });
+    await Comment.deleteMany({ post: postId });
     await SavedPost.deleteMany({ post: postId });
     await removePostImage(post.image ?? null);
 
     await emitPostEvent("post:deleted", { postId }, [userId]);
+}
+
+export async function setPollVote(
+    userId: string,
+    postId: string,
+    optionId: string | null,
+): Promise<{ postId: string; poll: PostPollPayload }> {
+    const post = (await Post.findOne({
+        _id: postId,
+        deleted: { $ne: true },
+    })
+        .select("author poll")
+        .lean()) as unknown as PostLean | null;
+
+    if (!post) {
+        throw new NotFoundError("Post não encontrado.");
+    }
+
+    if (!post.poll || post.poll.options.length === 0) {
+        throw new ValidationError("Este post não possui enquete.");
+    }
+
+    const authorId = post.author?._id?.toString() ?? "";
+    if (
+        authorId &&
+        authorId !== userId &&
+        (await areUsersBlocked(userId, authorId))
+    ) {
+        throw new ForbiddenError("Acesso negado.");
+    }
+
+    const targetOption = optionId
+        ? post.poll.options.find((option) => String(option._id) === optionId)
+        : null;
+    if (optionId && !targetOption) {
+        throw new ValidationError("Opção de enquete inválida.");
+    }
+
+    const voter = new mongoose.Types.ObjectId(userId);
+    const previousOption = post.poll.options.find((option) =>
+        (option.votes ?? []).some((vote) => String(vote) === userId),
+    );
+
+    if (previousOption && String(previousOption._id) !== optionId) {
+        await Post.updateOne(
+            { _id: postId, "poll.options._id": previousOption._id },
+            { $pull: { "poll.options.$.votes": voter } },
+        );
+    }
+
+    if (optionId && String(previousOption?._id) !== optionId) {
+        await Post.updateOne(
+            { _id: postId, "poll.options._id": optionId },
+            { $addToSet: { "poll.options.$.votes": voter } },
+        );
+    }
+
+    const updated = (await Post.findById(postId)
+        .select("poll")
+        .lean()) as unknown as PostLean | null;
+    const poll = toPollPayload(updated?.poll ?? null, userId);
+
+    if (!poll) {
+        throw new NotFoundError("Post não encontrado.");
+    }
+
+    const event: PostPollEvent = {
+        postId,
+        userId,
+        optionId,
+        options: poll.options,
+        totalVotes: poll.totalVotes,
+    };
+    await emitPostEvent(
+        "post:poll",
+        event,
+        [authorId, userId].filter(Boolean),
+    );
+
+    return { postId, poll };
+}
+
+export async function purgeSoftDeletedPosts(): Promise<{
+    posts: number;
+    comments: number;
+    savedPosts: number;
+}> {
+    const posts = await Post.find({ deleted: true }).select("_id").lean();
+    const ids = posts.map((post) => post._id);
+
+    if (ids.length === 0) {
+        return { posts: 0, comments: 0, savedPosts: 0 };
+    }
+
+    const [comments, saved] = await Promise.all([
+        Comment.deleteMany({ post: { $in: ids } }),
+        SavedPost.deleteMany({ post: { $in: ids } }),
+    ]);
+    const postsResult = await Post.deleteMany({ _id: { $in: ids } });
+
+    return {
+        posts: postsResult.deletedCount,
+        comments: comments.deletedCount,
+        savedPosts: saved.deletedCount,
+    };
 }
 
 export async function setPostLike(

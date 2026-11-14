@@ -150,6 +150,15 @@ export const postReadLimiter = rateLimit({
     message: { message: "Muitas requisições ao feed. Aguarde um minuto." },
 });
 
+export const postSearchLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: searchUserKeyGenerator,
+    message: { message: "Muitas buscas no feed. Aguarde um minuto." },
+});
+
 export const postInteractionLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 120,

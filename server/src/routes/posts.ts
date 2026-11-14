@@ -5,6 +5,7 @@ import postUpload from "../middleware/postUpload";
 import {
     postWriteLimiter,
     postReadLimiter,
+    postSearchLimiter,
     postInteractionLimiter,
 } from "../middleware/rateLimiter";
 import {
@@ -12,7 +13,9 @@ import {
     postsQuerySchema,
     postsByUserQuerySchema,
     savedPostsQuerySchema,
+    postSearchRequestSchema,
     postParamsSchema,
+    votePollSchema,
     trendingTopicsQuerySchema,
     commentsQuerySchema,
     createCommentSchema,
@@ -20,6 +23,7 @@ import {
 } from "../validations";
 import {
     listFeed,
+    searchPosts,
     listUserPosts,
     listSavedPosts,
     getPost,
@@ -31,6 +35,8 @@ import {
     unlikePost,
     savePost,
     unsavePost,
+    votePoll,
+    unvotePoll,
     listComments,
     createComment,
     deleteComment,
@@ -47,6 +53,13 @@ router.get(
     listTrendingTopics,
 );
 router.get("/stats/me", auth, postReadLimiter, getPostStats);
+router.get(
+    "/search",
+    auth,
+    postSearchLimiter,
+    validate(postSearchRequestSchema),
+    searchPosts,
+);
 router.get(
     "/saved",
     auth,
@@ -131,6 +144,20 @@ router.delete(
     postInteractionLimiter,
     validate(postParamsSchema),
     unsavePost,
+);
+router.post(
+    "/:id/vote",
+    auth,
+    postInteractionLimiter,
+    validate(votePollSchema),
+    votePoll,
+);
+router.delete(
+    "/:id/vote",
+    auth,
+    postInteractionLimiter,
+    validate(postParamsSchema),
+    unvotePoll,
 );
 
 export default router;

@@ -442,76 +442,104 @@ const postPaginationQuerySchema = z
         path: ["before"],
     });
 
-export const postFeedQuerySchema = z
-    .object({
-        limit: z.coerce
-            .number()
-            .int()
-            .min(1, "Limite deve ser no mínimo 1.")
-            .max(30, "Limite deve ser no máximo 30.")
-            .default(20),
-        filter: z.enum(["all", "media", "mine"]).default("all"),
-        sort: z.enum(["recent", "popular"]).default("recent"),
-        before: z.string().datetime("Data inválida.").optional(),
-        beforeLikes: z.coerce
-            .number()
-            .int()
-            .min(0, "Curtidas inválidas.")
-            .optional(),
-        beforeId: objectId.optional(),
-    })
-    .superRefine((data, ctx) => {
-        if (data.sort === "popular") {
-            if (data.before) {
-                ctx.addIssue({
-                    code: "custom",
-                    message:
-                        "before não é permitido na ordenação por populares.",
-                    path: ["before"],
-                });
-            }
-            if (data.beforeLikes === undefined && data.beforeId !== undefined) {
-                ctx.addIssue({
-                    code: "custom",
-                    message:
-                        "beforeLikes é obrigatório quando beforeId é informado.",
-                    path: ["beforeLikes"],
-                });
-            }
-            if (data.beforeLikes !== undefined && data.beforeId === undefined) {
-                ctx.addIssue({
-                    code: "custom",
-                    message:
-                        "beforeId é obrigatório quando beforeLikes é informado.",
-                    path: ["beforeId"],
-                });
-            }
-            return;
-        }
+const postFeedQueryShape = {
+    limit: z.coerce
+        .number()
+        .int()
+        .min(1, "Limite deve ser no mínimo 1.")
+        .max(30, "Limite deve ser no máximo 30.")
+        .default(20),
+    filter: z.enum(["all", "media", "mine"]).default("all"),
+    sort: z.enum(["recent", "popular"]).default("recent"),
+    before: z.string().datetime("Data inválida.").optional(),
+    beforeLikes: z.coerce
+        .number()
+        .int()
+        .min(0, "Curtidas inválidas.")
+        .optional(),
+    beforeId: objectId.optional(),
+};
 
-        if (data.beforeLikes !== undefined) {
+type PostFeedCursorInput = {
+    sort: "recent" | "popular";
+    before?: string;
+    beforeLikes?: number;
+    beforeId?: string;
+};
+
+function refinePostFeedCursor(
+    data: PostFeedCursorInput,
+    ctx: z.RefinementCtx,
+): void {
+    if (data.sort === "popular") {
+        if (data.before) {
             ctx.addIssue({
                 code: "custom",
                 message:
-                    "beforeLikes só é permitido na ordenação por populares.",
-                path: ["beforeLikes"],
-            });
-        }
-        if (data.before && !data.beforeId) {
-            ctx.addIssue({
-                code: "custom",
-                message: "beforeId é obrigatório quando before é informado.",
-                path: ["beforeId"],
-            });
-        }
-        if (data.beforeId && !data.before) {
-            ctx.addIssue({
-                code: "custom",
-                message: "before é obrigatório quando beforeId é informado.",
+                    "before não é permitido na ordenação por populares.",
                 path: ["before"],
             });
         }
-    });
+        if (data.beforeLikes === undefined && data.beforeId !== undefined) {
+            ctx.addIssue({
+                code: "custom",
+                message:
+                    "beforeLikes é obrigatório quando beforeId é informado.",
+                path: ["beforeLikes"],
+            });
+        }
+        if (data.beforeLikes !== undefined && data.beforeId === undefined) {
+            ctx.addIssue({
+                code: "custom",
+                message:
+                    "beforeId é obrigatório quando beforeLikes é informado.",
+                path: ["beforeId"],
+            });
+        }
+        return;
+    }
+
+    if (data.beforeLikes !== undefined) {
+        ctx.addIssue({
+            code: "custom",
+            message:
+                "beforeLikes só é permitido na ordenação por populares.",
+            path: ["beforeLikes"],
+        });
+    }
+    if (data.before && !data.beforeId) {
+        ctx.addIssue({
+            code: "custom",
+            message: "beforeId é obrigatório quando before é informado.",
+            path: ["beforeId"],
+        });
+    }
+    if (data.beforeId && !data.before) {
+        ctx.addIssue({
+            code: "custom",
+            message: "before é obrigatório quando beforeId é informado.",
+            path: ["before"],
+        });
+    }
+}
+
+export const postFeedQuerySchema =
+    z.object(postFeedQueryShape).superRefine(refinePostFeedCursor);
+
+export const postSearchQuerySchema = z
+    .object({
+        ...postFeedQueryShape,
+        q: z
+            .string()
+            .trim()
+            .min(2, "Busque por pelo menos 2 caracteres.")
+            .max(100, "Busca deve ter no máximo 100 caracteres."),
+    })
+    .superRefine(refinePostFeedCursor);
+
+export const postSearchRequestSchema = z.object({
+    query: postSearchQuerySchema,
+});
 
 export const trendingTopicsQuerySchema = z.object({
     query: z.object({
@@ -523,6 +551,58 @@ export const trendingTopicsQuerySchema = z.object({
             .default(5),
     }),
 });
+
+const pollOptionsSchema = z
+    .array(
+        z
+            .string()
+            .trim()
+            .min(1, "Preencha todas as opções da enquete.")
+            .max(100, "Opção deve ter no máximo 100 caracteres."),
+    )
+    .min(2, "Informe pelo menos 2 opções.")
+    .max(4, "Informe no máximo 4 opções.")
+    .refine(
+        (options) =>
+            new Set(options.map((option) => option.toLowerCase())).size ===
+            options.length,
+        { message: "As opções da enquete não podem se repetir." },
+    );
+
+const pollInputSchema = z.object({ options: pollOptionsSchema });
+
+const pollBodySchema = z
+    .string()
+    .trim()
+    .optional()
+    .transform((value, ctx) => {
+        if (!value) return undefined;
+
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(value);
+        } catch {
+            ctx.addIssue({
+                code: "custom",
+                message: "Enquete inválida.",
+            });
+            return z.NEVER;
+        }
+
+        const result = pollInputSchema.safeParse(parsed);
+        if (!result.success) {
+            for (const issue of result.error.issues) {
+                ctx.addIssue({
+                    code: "custom",
+                    message: issue.message,
+                    path: ["options", ...issue.path],
+                });
+            }
+            return z.NEVER;
+        }
+
+        return result.data;
+    });
 
 export const createPostSchema = z.object({
     body: z.object({
@@ -538,6 +618,7 @@ export const createPostSchema = z.object({
             .min(1, "ID do post inválido.")
             .max(64, "ID do post inválido.")
             .optional(),
+        poll: pollBodySchema,
     }),
 });
 
@@ -559,6 +640,15 @@ export const savedPostsQuerySchema = z.object({
 export const postParamsSchema = z.object({
     params: z.object({
         id: objectId,
+    }),
+});
+
+export const votePollSchema = z.object({
+    params: z.object({
+        id: objectId,
+    }),
+    body: z.object({
+        optionId: objectId,
     }),
 });
 

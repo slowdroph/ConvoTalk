@@ -88,6 +88,18 @@ export interface MessagePayload {
     updatedAt?: string;
 }
 
+export interface PostPollOptionPayload {
+    _id: string;
+    text: string;
+    voteCount: number;
+}
+
+export interface PostPollPayload {
+    options: PostPollOptionPayload[];
+    totalVotes: number;
+    myVoteOptionId: string | null;
+}
+
 export interface PostPayload {
     _id: string;
     author: SenderPayload | null;
@@ -97,6 +109,7 @@ export interface PostPayload {
     likedByMe: boolean;
     savedByMe?: boolean;
     commentCount: number;
+    poll?: PostPollPayload | null;
     edited: boolean;
     createdAt: string;
     updatedAt?: string;
@@ -146,6 +159,14 @@ export interface PostSavedEvent {
     postId: string;
     userId: string;
     saved: boolean;
+}
+
+export interface PostPollEvent {
+    postId: string;
+    userId: string;
+    optionId: string | null;
+    options: PostPollOptionPayload[];
+    totalVotes: number;
 }
 
 export type PostCursorPayload =

@@ -6,6 +6,7 @@ import type {
     CommentCreatedEvent,
     CommentDeletedEvent,
     Post,
+    PostPollEvent,
     PostSavedEvent,
 } from "../../../types";
 import PostCard from "./PostCard";
@@ -15,6 +16,8 @@ import {
     savePost,
     unlikePost,
     unsavePost,
+    unvotePoll,
+    votePoll,
 } from "../services/feedApi";
 
 interface SharedPostDialogProps {
@@ -112,16 +115,38 @@ export default function SharedPostDialog({
             );
         };
 
+        const handlePoll = (event: PostPollEvent) => {
+            if (event.postId !== postId) return;
+            setPost((prev) => {
+                if (!prev || prev._id !== event.postId || !prev.poll) {
+                    return prev;
+                }
+                return {
+                    ...prev,
+                    poll: {
+                        options: event.options,
+                        totalVotes: event.totalVotes,
+                        myVoteOptionId:
+                            event.userId === currentUserId
+                                ? event.optionId
+                                : prev.poll.myVoteOptionId,
+                    },
+                };
+            });
+        };
+
         socket.on("comment:created", handleCommentCount);
         socket.on("comment:deleted", handleCommentCount);
         socket.on("post:saved", handleSaved);
         socket.on("post:unsaved", handleSaved);
+        socket.on("post:poll", handlePoll);
 
         return () => {
             socket.off("comment:created", handleCommentCount);
             socket.off("comment:deleted", handleCommentCount);
             socket.off("post:saved", handleSaved);
             socket.off("post:unsaved", handleSaved);
+            socket.off("post:poll", handlePoll);
         };
     }, [socket, connected, postId, currentUserId, onCommentCountChange]);
 
@@ -151,6 +176,18 @@ export default function SharedPostDialog({
         setPost((prev) =>
             prev && prev._id === target._id
                 ? { ...prev, savedByMe: result.saved }
+                : prev,
+        );
+    };
+
+    const handleVote = async (target: Post, optionId: string | null) => {
+        const result = optionId
+            ? await votePoll(target._id, optionId)
+            : await unvotePoll(target._id);
+
+        setPost((prev) =>
+            prev && prev._id === target._id
+                ? { ...prev, poll: result.poll }
                 : prev,
         );
     };
@@ -222,6 +259,7 @@ export default function SharedPostDialog({
                         currentUserId={currentUserId}
                         onLike={handleLike}
                         onSave={handleSave}
+                        onVote={handleVote}
                         onCommentCountChange={onCommentCountChange}
                         onOpenAuthor={onOpenAuthor}
                     />

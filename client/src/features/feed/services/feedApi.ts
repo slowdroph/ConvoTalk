@@ -2,6 +2,7 @@ import api from "../../../services/api";
 import type {
     Post,
     PostCursor,
+    PostPollPayload,
     PostStats,
     TrendingTopic,
 } from "../../../types";
@@ -22,6 +23,7 @@ export interface FeedQuery {
     before?: string;
     beforeLikes?: number;
     beforeId?: string;
+    q?: string;
 }
 
 export function resolveFeedQuery(filter: FeedFilter): {
@@ -46,6 +48,15 @@ export async function getFeed(
     params: FeedQuery = {},
 ): Promise<FeedPageResult> {
     const { data } = await api.get<FeedPageResult>("/posts", { params });
+    return data;
+}
+
+export async function searchPosts(
+    params: FeedQuery & { q: string },
+): Promise<FeedPageResult> {
+    const { data } = await api.get<FeedPageResult>("/posts/search", {
+        params,
+    });
     return data;
 }
 
@@ -79,6 +90,7 @@ export interface CreatePostInput {
     content: string;
     image?: File | null;
     clientPostId?: string;
+    poll?: { options: string[] };
 }
 
 export async function createPost(input: CreatePostInput): Promise<Post> {
@@ -86,6 +98,9 @@ export async function createPost(input: CreatePostInput): Promise<Post> {
     form.append("content", input.content);
     if (input.clientPostId) {
         form.append("clientPostId", input.clientPostId);
+    }
+    if (input.poll) {
+        form.append("poll", JSON.stringify(input.poll));
     }
     if (input.image) {
         form.append("image", input.image);
@@ -126,5 +141,27 @@ export async function savePost(postId: string): Promise<SavedResult> {
 
 export async function unsavePost(postId: string): Promise<SavedResult> {
     const { data } = await api.delete<SavedResult>(`/posts/${postId}/save`);
+    return data;
+}
+
+export interface PollVoteResult {
+    postId: string;
+    poll: PostPollPayload;
+}
+
+export async function votePoll(
+    postId: string,
+    optionId: string,
+): Promise<PollVoteResult> {
+    const { data } = await api.post<PollVoteResult>(`/posts/${postId}/vote`, {
+        optionId,
+    });
+    return data;
+}
+
+export async function unvotePoll(postId: string): Promise<PollVoteResult> {
+    const { data } = await api.delete<PollVoteResult>(
+        `/posts/${postId}/vote`,
+    );
     return data;
 }

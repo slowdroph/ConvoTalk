@@ -3,7 +3,10 @@ import type { Post } from "../../../types";
 import {
     applyFeedEvent,
     applyLikeEvent,
+    applyOwnPollVote,
+    applyPollEvent,
     applySavedEvent,
+    matchesFeedFilter,
     mergeFeedPosts,
     removeFeedPost,
     setFeedPostSaved,
@@ -198,5 +201,125 @@ describe("feed utils", () => {
         const result = setFeedPostSaved(current, "a", false, "saved");
 
         expect(result).toHaveLength(0);
+    });
+
+    it("ignora novos posts que não casam com a busca", () => {
+        const current = [makePost({ _id: "a", content: "React hooks" })];
+        const result = applyFeedEvent(
+            current,
+            {
+                type: "new",
+                post: makePost({ _id: "b", content: "Vue 3" }),
+            },
+            { viewerId: "me", query: "react" },
+        );
+
+        expect(result.map((post) => post._id)).toEqual(["a"]);
+    });
+
+    it("combina a busca com o filtro de mídia", () => {
+        const media = makePost({
+            _id: "b",
+            content: "Vue 3",
+            image: {
+                url: "https://example.com/a.png",
+                filename: "a.png",
+                mimetype: "image/png",
+                size: 100,
+            },
+        });
+
+        expect(matchesFeedFilter(media, "media", "me", "react")).toBe(false);
+        expect(matchesFeedFilter(media, "media", "me", "vue")).toBe(true);
+    });
+
+    it("calcula o voto otimista ao trocar de opção", () => {
+        const poll = {
+            options: [
+                { _id: "opt-1", text: "Sim", voteCount: 1 },
+                { _id: "opt-2", text: "Não", voteCount: 2 },
+            ],
+            totalVotes: 3,
+            myVoteOptionId: "opt-1",
+        };
+
+        const result = applyOwnPollVote(poll, "opt-2");
+
+        expect(result.options).toEqual([
+            { _id: "opt-1", text: "Sim", voteCount: 0 },
+            { _id: "opt-2", text: "Não", voteCount: 3 },
+        ]);
+        expect(result.totalVotes).toBe(3);
+        expect(result.myVoteOptionId).toBe("opt-2");
+    });
+
+    it("aplica evento de enquete do próprio usuário", () => {
+        const current = [
+            makePost({
+                _id: "a",
+                poll: {
+                    options: [
+                        { _id: "opt-1", text: "Sim", voteCount: 0 },
+                        { _id: "opt-2", text: "Não", voteCount: 0 },
+                    ],
+                    totalVotes: 0,
+                    myVoteOptionId: null,
+                },
+            }),
+        ];
+        const result = applyPollEvent(
+            current,
+            {
+                postId: "a",
+                userId: "me",
+                optionId: "opt-1",
+                options: [
+                    { _id: "opt-1", text: "Sim", voteCount: 1 },
+                    { _id: "opt-2", text: "Não", voteCount: 0 },
+                ],
+                totalVotes: 1,
+            },
+            "me",
+        );
+
+        expect(result[0].poll).toMatchObject({
+            totalVotes: 1,
+            myVoteOptionId: "opt-1",
+        });
+    });
+
+    it("mantém o voto próprio em eventos de outros usuários", () => {
+        const current = [
+            makePost({
+                _id: "a",
+                poll: {
+                    options: [
+                        { _id: "opt-1", text: "Sim", voteCount: 1 },
+                        { _id: "opt-2", text: "Não", voteCount: 0 },
+                    ],
+                    totalVotes: 1,
+                    myVoteOptionId: "opt-1",
+                },
+            }),
+        ];
+        const result = applyPollEvent(
+            current,
+            {
+                postId: "a",
+                userId: "other",
+                optionId: "opt-2",
+                options: [
+                    { _id: "opt-1", text: "Sim", voteCount: 1 },
+                    { _id: "opt-2", text: "Não", voteCount: 1 },
+                ],
+                totalVotes: 2,
+            },
+            "me",
+        );
+
+        expect(result[0].poll).toMatchObject({
+            totalVotes: 2,
+            myVoteOptionId: "opt-1",
+        });
     });
 });

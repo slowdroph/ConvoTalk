@@ -17,6 +17,10 @@ type PostFeedQuery = PostPaginationQuery & {
     beforeLikes?: number;
 };
 
+type PostSearchQuery = PostFeedQuery & {
+    q: string;
+};
+
 export async function listFeed(
     req: AuthRequest,
     res: Response,
@@ -36,6 +40,29 @@ export async function listFeed(
         res.json(result);
     } catch (error) {
         handleError(error, res, "Erro ao carregar o feed.");
+    }
+}
+
+export async function searchPosts(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { q, limit, filter, sort, before, beforeLikes, beforeId } =
+            req.query as unknown as PostSearchQuery;
+
+        const result = await postService.searchPosts(req.user!._id, {
+            q,
+            limit,
+            filter,
+            sort,
+            before,
+            beforeLikes,
+            beforeId,
+        });
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao buscar posts.");
     }
 }
 
@@ -109,8 +136,7 @@ export async function listSavedPosts(
 export async function savePost(
     req: AuthRequest,
     res: Response,
-): Promise<void> {
-    try {
+): Promise<void> {    try {
         const { id } = req.params as { id: string };
         const result = await savedPostService.savePost(req.user!._id, id);
         res.json(result);
@@ -150,14 +176,15 @@ export async function createPost(
     res: Response,
 ): Promise<void> {
     try {
-        const { content, clientPostId } = req.body as {
+        const { content, clientPostId, poll } = req.body as {
             content: string;
             clientPostId?: string;
+            poll?: { options: string[] };
         };
 
         const post = await postService.createPost(
             req.user!._id,
-            { content, clientPostId },
+            { content, clientPostId, poll },
             req.file,
         );
         res.status(201).json(post);
@@ -202,6 +229,37 @@ export async function unlikePost(
         res.json(result);
     } catch (error) {
         handleError(error, res, "Erro ao descurtir o post.");
+    }
+}
+
+export async function votePoll(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { id } = req.params as { id: string };
+        const { optionId } = req.body as { optionId: string };
+        const result = await postService.setPollVote(
+            req.user!._id,
+            id,
+            optionId,
+        );
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao registrar o voto.");
+    }
+}
+
+export async function unvotePoll(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { id } = req.params as { id: string };
+        const result = await postService.setPollVote(req.user!._id, id, null);
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao remover o voto.");
     }
 }
 

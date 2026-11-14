@@ -4,7 +4,7 @@ import Post from "../models/Post";
 import Comment from "../models/Comment";
 import { startTestDb, stopTestDb, clearTestDb } from "./db";
 import { generatePublicId } from "../utils/publicId";
-import { createPost } from "../services/post";
+import { createPost, deletePost } from "../services/post";
 import {
     createComment,
     deleteComment,
@@ -292,7 +292,7 @@ describe("comments: exclusão", () => {
         expect(stored?.commentCount).toBe(0);
     });
 
-    it("mantém o contador consistente ao excluir um post com comentários", async () => {
+    it("remove comentários ao excluir o post", async () => {
         const alice = await createUser("Alice", "alice@test.com");
         const post = await createPost(alice._id.toString(), {
             content: "Post",
@@ -305,14 +305,14 @@ describe("comments: exclusão", () => {
             content: "Dois",
         });
 
-        await Post.updateOne({ _id: post._id }, { $set: { deleted: true } });
+        await deletePost(alice._id.toString(), post._id);
+
+        expect(await Comment.countDocuments({ post: post._id })).toBe(0);
+        expect(await Post.findById(post._id).lean()).toBeNull();
 
         await expect(
             createComment(alice._id.toString(), post._id, { content: "Três" }),
         ).rejects.toBeInstanceOf(NotFoundError);
-
-        const stored = await Post.findById(post._id).lean();
-        expect(stored?.commentCount).toBe(2);
     });
 });
 

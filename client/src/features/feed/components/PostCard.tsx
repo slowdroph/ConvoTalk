@@ -9,6 +9,7 @@ import ConfirmDialog from "../../../components/ui/ConfirmDialog";
 import CountryFlag from "../../../components/ui/CountryFlag";
 import PostImage from "./PostImage";
 import PostComments from "./PostComments";
+import PostPoll from "./PostPoll";
 import { sharePost } from "../sharePost";
 
 interface PostCardProps {
@@ -16,6 +17,7 @@ interface PostCardProps {
     currentUserId?: string;
     onLike: (post: Post) => Promise<void>;
     onSave: (post: Post) => Promise<void>;
+    onVote: (post: Post, optionId: string | null) => Promise<void>;
     onDelete?: (postId: string) => Promise<void>;
     onCommentCountChange?: (postId: string, commentCount: number) => void;
     onOpenAuthor: (author: NonNullable<Post["author"]>) => void;
@@ -26,6 +28,7 @@ export default function PostCard({
     currentUserId,
     onLike,
     onSave,
+    onVote,
     onDelete,
     onCommentCountChange,
     onOpenAuthor,
@@ -34,6 +37,7 @@ export default function PostCard({
     const { onlineUsers } = useSocket();
     const [liking, setLiking] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [votingPoll, setVotingPoll] = useState(false);
     const [sharing, setSharing] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
@@ -72,6 +76,21 @@ export default function PostCard({
             });
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleVote = async (optionId: string | null) => {
+        if (votingPoll) return;
+        setVotingPoll(true);
+        try {
+            await onVote(post, optionId);
+        } catch {
+            showToast({
+                type: "error",
+                message: "Não foi possível registrar o voto.",
+            });
+        } finally {
+            setVotingPoll(false);
         }
     };
 
@@ -220,6 +239,14 @@ export default function PostCard({
                 )}
 
                 {post.image && <PostImage image={post.image} />}
+
+                {post.poll && (
+                    <PostPoll
+                        poll={post.poll}
+                        voting={votingPoll}
+                        onVote={(optionId) => void handleVote(optionId)}
+                    />
+                )}
             </div>
 
             <footer className="flex items-center justify-between gap-2 border-t border-slate-100 px-4 py-3 text-xs text-slate-500 dark:border-noir-border/70 dark:text-noir-text-muted sm:px-5">

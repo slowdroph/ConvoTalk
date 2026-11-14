@@ -38,11 +38,13 @@ interface FeedListProps {
     error: string | null;
     currentUserId?: string;
     filter?: FeedFilter;
+    query?: string;
     onLoadMore: () => void;
     onRetry: () => void;
     onRetryMore: () => void;
     onLike: (post: Post) => Promise<void>;
     onSave: (post: Post) => Promise<void>;
+    onVote: (post: Post, optionId: string | null) => Promise<void>;
     onDelete: (postId: string) => Promise<void>;
     onCommentCountChange?: (postId: string, commentCount: number) => void;
     onOpenAuthor: (author: NonNullable<Post["author"]>) => void;
@@ -56,11 +58,13 @@ export default function FeedList({
     error,
     currentUserId,
     filter = "all",
+    query = "",
     onLoadMore,
     onRetry,
     onRetryMore,
     onLike,
     onSave,
+    onVote,
     onDelete,
     onCommentCountChange,
     onOpenAuthor,
@@ -110,7 +114,13 @@ export default function FeedList({
     }
 
     if (!loading && posts.length === 0) {
-        const empty = EMPTY_STATE[filter];
+        const trimmedQuery = query.trim();
+        const empty = trimmedQuery
+            ? {
+                  title: "Nenhum post encontrado",
+                  description: `Nada corresponde a "${trimmedQuery}".`,
+              }
+            : EMPTY_STATE[filter];
         return (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center dark:border-noir-border dark:bg-noir-surface">
                 <p className="text-sm font-medium text-slate-700 dark:text-noir-text-bright">
@@ -132,6 +142,7 @@ export default function FeedList({
                     currentUserId={currentUserId}
                     onLike={onLike}
                     onSave={onSave}
+                    onVote={onVote}
                     onDelete={onDelete}
                     onCommentCountChange={onCommentCountChange}
                     onOpenAuthor={onOpenAuthor}

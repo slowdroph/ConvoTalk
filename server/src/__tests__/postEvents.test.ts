@@ -186,7 +186,7 @@ describe("posts: emissão de eventos", () => {
         );
 
         const stored = await Post.findById(post._id).lean();
-        expect(stored?.deleted).toBe(true);
+        expect(stored).toBeNull();
     });
 
     it("emite comment:created após persistir e respeitando bloqueios", async () => {

@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { IAttachment, IPost } from "../types";
+import { IAttachment, IPoll, IPollOption, IPost } from "../types";
 
 const postImageSchema = new Schema<IAttachment>(
     {
@@ -8,6 +8,18 @@ const postImageSchema = new Schema<IAttachment>(
         mimetype: { type: String, required: true },
         size: { type: Number, required: true },
         publicId: { type: String },
+    },
+    { _id: false },
+);
+
+const pollOptionSchema = new Schema<IPollOption>({
+    text: { type: String, required: true, trim: true, maxlength: 100 },
+    votes: [{ type: Schema.Types.ObjectId, ref: "User" }],
+});
+
+const pollSchema = new Schema<IPoll>(
+    {
+        options: { type: [pollOptionSchema], required: true },
     },
     { _id: false },
 );
@@ -27,6 +39,10 @@ const postSchema = new Schema<IPost>(
         },
         image: {
             type: postImageSchema,
+            default: null,
+        },
+        poll: {
+            type: pollSchema,
             default: null,
         },
         likes: [

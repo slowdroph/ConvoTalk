@@ -6,8 +6,11 @@ import {
     getSavedPosts,
     likePost,
     savePost,
+    searchPosts,
     unlikePost,
     unsavePost,
+    unvotePoll,
+    votePoll,
     type FeedFilter,
     type FeedPageResult,
     type LikeResult,
@@ -55,21 +58,27 @@ vi.mock("../../../features/feed/services/feedApi", async (importOriginal) => {
         ...actual,
         getFeed: vi.fn(),
         getSavedPosts: vi.fn(),
+        searchPosts: vi.fn(),
         createPost: vi.fn(),
         deletePost: vi.fn(),
         likePost: vi.fn(),
         unlikePost: vi.fn(),
         savePost: vi.fn(),
         unsavePost: vi.fn(),
+        votePoll: vi.fn(),
+        unvotePoll: vi.fn(),
     };
 });
 
 const getFeedMock = vi.mocked(getFeed);
 const getSavedPostsMock = vi.mocked(getSavedPosts);
+const searchPostsMock = vi.mocked(searchPosts);
 const likePostMock = vi.mocked(likePost);
 const unlikePostMock = vi.mocked(unlikePost);
 const savePostMock = vi.mocked(savePost);
 const unsavePostMock = vi.mocked(unsavePost);
+const votePollMock = vi.mocked(votePoll);
+const unvotePollMock = vi.mocked(unvotePoll);
 
 function makePost(overrides: Partial<Post> = {}): Post {
     return {
@@ -112,6 +121,7 @@ describe("useFeed", () => {
         socketState.connected = false;
         getFeedMock.mockResolvedValue({ posts: [], nextCursor: null });
         getSavedPostsMock.mockResolvedValue({ posts: [], nextCursor: null });
+        searchPostsMock.mockResolvedValue({ posts: [], nextCursor: null });
     });
 
     it("carrega a primeira página do feed", async () => {
@@ -136,6 +146,7 @@ describe("useFeed", () => {
         expect(handlerCount("post:new")).toBe(1);
         expect(handlerCount("post:liked")).toBe(1);
         expect(handlerCount("post:deleted")).toBe(1);
+        expect(handlerCount("post:poll")).toBe(1);
     });
 
     it("insere novos posts recebidos pelo socket", async () => {
@@ -734,5 +745,364 @@ describe("useFeed", () => {
         });
 
         expect(result.current.posts[0].savedByMe).toBe(false);
+    });
+
+    it("busca posts quando a query tem pelo menos 2 caracteres", async () => {
+        searchPostsMock.mockResolvedValue({
+            posts: [makePost({ _id: "busca-1", content: "React hooks" })],
+            nextCursor: null,
+        });
+
+        const { result } = renderHook(() =>
+            useFeed("all", { query: "react" }),
+        );
+        await waitFor(() => expect(result.current.posts).toHaveLength(1));
+
+        expect(searchPostsMock).toHaveBeenCalledWith({
+            q: "react",
+            limit: 20,
+            filter: "all",
+            sort: "recent",
+        });
+        expect(getFeedMock).not.toHaveBeenCalled();
+    });
+
+    it("mantém o feed normal quando a query é curta", async () => {
+        renderHook(() => useFeed("all", { query: "a" }));
+
+        await waitFor(() => expect(getFeedMock).toHaveBeenCalledTimes(1));
+        expect(searchPostsMock).not.toHaveBeenCalled();
+    });
+
+    it("refaz a busca quando a query muda", async () => {
+        searchPostsMock
+            .mockResolvedValueOnce({
+                posts: [makePost({ _id: "react-1", content: "React" })],
+                nextCursor: null,
+            })
+            .mockResolvedValueOnce({
+                posts: [makePost({ _id: "vue-1", content: "Vue" })],
+                nextCursor: null,
+            });
+
+        const { result, rerender } = renderHook(
+            ({ query }: { query: string }) => useFeed("all", { query }),
+            { initialProps: { query: "react" } },
+        );
+        await waitFor(() =>
+            expect(result.current.posts.map((post) => post._id)).toEqual([
+                "react-1",
+            ]),
+        );
+
+        rerender({ query: "vue" });
+
+        await waitFor(() =>
+            expect(searchPostsMock).toHaveBeenLastCalledWith({
+                q: "vue",
+                limit: 20,
+                filter: "all",
+                sort: "recent",
+            }),
+        );
+        await waitFor(() =>
+            expect(result.current.posts.map((post) => post._id)).toEqual([
+                "vue-1",
+            ]),
+        );
+    });
+
+    it("pagina a busca com o cursor", async () => {
+        searchPostsMock
+            .mockResolvedValueOnce({
+                posts: [makePost({ _id: "busca-2", content: "React" })],
+                nextCursor: {
+                    before: "2026-01-01T10:00:00.000Z",
+                    beforeId: "busca-2",
+                },
+            })
+            .mockResolvedValueOnce({
+                posts: [
+                    makePost({
+                        _id: "busca-1",
+                        content: "React",
+                        createdAt: "2026-01-01T09:00:00.000Z",
+                    }),
+                ],
+                nextCursor: null,
+            });
+
+        const { result } = renderHook(() =>
+            useFeed("all", { query: "react" }),
+        );
+        await waitFor(() => expect(result.current.posts).toHaveLength(1));
+
+        await act(async () => {
+            await result.current.loadMore();
+        });
+
+        expect(searchPostsMock).toHaveBeenLastCalledWith({
+            q: "react",
+            limit: 20,
+            filter: "all",
+            sort: "recent",
+            before: "2026-01-01T10:00:00.000Z",
+            beforeId: "busca-2",
+        });
+        expect(result.current.posts.map((post) => post._id)).toEqual([
+            "busca-2",
+            "busca-1",
+        ]);
+    });
+
+    it("ignora posts do socket que não casam com a busca", async () => {
+        searchPostsMock.mockResolvedValue({
+            posts: [
+                makePost({ _id: "match-1", content: "React hooks" }),
+            ],
+            nextCursor: null,
+        });
+
+        const { result } = renderHook(() =>
+            useFeed("all", { query: "react" }),
+        );
+        await waitFor(() => expect(result.current.posts).toHaveLength(1));
+
+        emit("post:new", makePost({ _id: "outro", content: "Vue 3" }));
+        expect(result.current.posts.map((post) => post._id)).toEqual([
+            "match-1",
+        ]);
+
+        emit("post:new", makePost({ _id: "match-2", content: "React 19" }));
+        expect(result.current.posts.map((post) => post._id)).toEqual([
+            "match-2",
+            "match-1",
+        ]);
+    });
+
+    it("descarta resposta de uma busca anterior já obsoleta", async () => {
+        let resolveFirst!: (value: FeedPageResult) => void;
+        let resolveSecond!: (value: FeedPageResult) => void;
+
+        searchPostsMock
+            .mockImplementationOnce(
+                () =>
+                    new Promise<FeedPageResult>((resolve) => {
+                        resolveFirst = resolve;
+                    }),
+            )
+            .mockImplementationOnce(
+                () =>
+                    new Promise<FeedPageResult>((resolve) => {
+                        resolveSecond = resolve;
+                    }),
+            );
+
+        const { result, rerender } = renderHook(
+            ({ query }: { query: string }) => useFeed("all", { query }),
+            { initialProps: { query: "react" } },
+        );
+        await waitFor(() =>
+            expect(searchPostsMock).toHaveBeenCalledTimes(1),
+        );
+
+        rerender({ query: "vue" });
+        await waitFor(() =>
+            expect(searchPostsMock).toHaveBeenCalledTimes(2),
+        );
+
+        await act(async () => {
+            resolveSecond({
+                posts: [makePost({ _id: "vue-1", content: "Vue" })],
+                nextCursor: null,
+            });
+        });
+        await waitFor(() =>
+            expect(result.current.posts.map((post) => post._id)).toEqual([
+                "vue-1",
+            ]),
+        );
+
+        await act(async () => {
+            resolveFirst({
+                posts: [makePost({ _id: "react-antigo", content: "React" })],
+                nextCursor: null,
+            });
+        });
+
+        expect(result.current.posts.map((post) => post._id)).toEqual([
+            "vue-1",
+        ]);
+    });
+
+    it("registra o voto na enquete de forma otimista", async () => {
+        getFeedMock.mockResolvedValue({
+            posts: [
+                makePost({
+                    poll: {
+                        options: [
+                            { _id: "opt-1", text: "Sim", voteCount: 0 },
+                            { _id: "opt-2", text: "Não", voteCount: 0 },
+                        ],
+                        totalVotes: 0,
+                        myVoteOptionId: null,
+                    },
+                }),
+            ],
+            nextCursor: null,
+        });
+        votePollMock.mockResolvedValue({
+            postId: "post-1",
+            poll: {
+                options: [
+                    { _id: "opt-1", text: "Sim", voteCount: 1 },
+                    { _id: "opt-2", text: "Não", voteCount: 0 },
+                ],
+                totalVotes: 1,
+                myVoteOptionId: "opt-1",
+            },
+        });
+
+        const { result } = renderHook(() => useFeed());
+        await waitFor(() => expect(result.current.posts).toHaveLength(1));
+
+        await act(async () => {
+            await result.current.votePoll(result.current.posts[0], "opt-1");
+        });
+
+        expect(votePollMock).toHaveBeenCalledWith("post-1", "opt-1");
+        expect(result.current.posts[0].poll).toMatchObject({
+            totalVotes: 1,
+            myVoteOptionId: "opt-1",
+        });
+        expect(result.current.posts[0].poll?.options[0].voteCount).toBe(1);
+    });
+
+    it("remove o voto quando a opção é nula", async () => {
+        getFeedMock.mockResolvedValue({
+            posts: [
+                makePost({
+                    poll: {
+                        options: [
+                            { _id: "opt-1", text: "Sim", voteCount: 1 },
+                            { _id: "opt-2", text: "Não", voteCount: 0 },
+                        ],
+                        totalVotes: 1,
+                        myVoteOptionId: "opt-1",
+                    },
+                }),
+            ],
+            nextCursor: null,
+        });
+        unvotePollMock.mockResolvedValue({
+            postId: "post-1",
+            poll: {
+                options: [
+                    { _id: "opt-1", text: "Sim", voteCount: 0 },
+                    { _id: "opt-2", text: "Não", voteCount: 0 },
+                ],
+                totalVotes: 0,
+                myVoteOptionId: null,
+            },
+        });
+
+        const { result } = renderHook(() => useFeed());
+        await waitFor(() => expect(result.current.posts).toHaveLength(1));
+
+        await act(async () => {
+            await result.current.votePoll(result.current.posts[0], null);
+        });
+
+        expect(unvotePollMock).toHaveBeenCalledWith("post-1");
+        expect(result.current.posts[0].poll).toMatchObject({
+            totalVotes: 0,
+            myVoteOptionId: null,
+        });
+    });
+
+    it("reverte o voto quando a API falha", async () => {
+        getFeedMock.mockResolvedValue({
+            posts: [
+                makePost({
+                    poll: {
+                        options: [
+                            { _id: "opt-1", text: "Sim", voteCount: 0 },
+                            { _id: "opt-2", text: "Não", voteCount: 0 },
+                        ],
+                        totalVotes: 0,
+                        myVoteOptionId: null,
+                    },
+                }),
+            ],
+            nextCursor: null,
+        });
+        votePollMock.mockRejectedValue(new Error("fail"));
+
+        const { result } = renderHook(() => useFeed());
+        await waitFor(() => expect(result.current.posts).toHaveLength(1));
+
+        await act(async () => {
+            await expect(
+                result.current.votePoll(result.current.posts[0], "opt-1"),
+            ).rejects.toThrow("fail");
+        });
+
+        expect(result.current.posts[0].poll).toMatchObject({
+            totalVotes: 0,
+            myVoteOptionId: null,
+        });
+    });
+
+    it("aplica eventos de enquete recebidos pelo socket", async () => {
+        getFeedMock.mockResolvedValue({
+            posts: [
+                makePost({
+                    poll: {
+                        options: [
+                            { _id: "opt-1", text: "Sim", voteCount: 0 },
+                            { _id: "opt-2", text: "Não", voteCount: 0 },
+                        ],
+                        totalVotes: 0,
+                        myVoteOptionId: null,
+                    },
+                }),
+            ],
+            nextCursor: null,
+        });
+
+        const { result } = renderHook(() => useFeed());
+        await waitFor(() => expect(result.current.posts).toHaveLength(1));
+
+        emit("post:poll", {
+            postId: "post-1",
+            userId: "me",
+            optionId: "opt-1",
+            options: [
+                { _id: "opt-1", text: "Sim", voteCount: 1 },
+                { _id: "opt-2", text: "Não", voteCount: 0 },
+            ],
+            totalVotes: 1,
+        });
+
+        expect(result.current.posts[0].poll).toMatchObject({
+            totalVotes: 1,
+            myVoteOptionId: "opt-1",
+        });
+
+        emit("post:poll", {
+            postId: "post-1",
+            userId: "other",
+            optionId: "opt-2",
+            options: [
+                { _id: "opt-1", text: "Sim", voteCount: 1 },
+                { _id: "opt-2", text: "Não", voteCount: 1 },
+            ],
+            totalVotes: 2,
+        });
+
+        expect(result.current.posts[0].poll).toMatchObject({
+            totalVotes: 2,
+            myVoteOptionId: "opt-1",
+        });
     });
 });

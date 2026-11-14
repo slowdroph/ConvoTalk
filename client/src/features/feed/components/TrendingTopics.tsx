@@ -5,6 +5,7 @@ interface TrendingTopicsProps {
     loading?: boolean;
     error?: string | null;
     onRetry?: () => void;
+    onSelectTopic?: (tag: string) => void;
 }
 
 export default function TrendingTopics({
@@ -12,6 +13,7 @@ export default function TrendingTopics({
     loading = false,
     error = null,
     onRetry,
+    onSelectTopic,
 }: TrendingTopicsProps) {
     return (
         <section
@@ -78,9 +80,12 @@ export default function TrendingTopics({
                 )}
 
                 {topics.map((topic) => (
-                    <div
+                    <button
                         key={topic.tag}
-                        className="rounded-xl border border-slate-100 bg-slate-50 p-2 dark:border-noir-border/50 dark:bg-noir-surface-alt/40"
+                        type="button"
+                        onClick={() => onSelectTopic?.(topic.tag)}
+                        aria-label={`Buscar posts sobre ${topic.tag}`}
+                        className="w-full rounded-xl border border-slate-100 bg-slate-50 p-2 text-left transition-colors hover:border-emerald-500/30 hover:bg-emerald-50 dark:border-noir-border/50 dark:bg-noir-surface-alt/40 dark:hover:border-emerald-800/40 dark:hover:bg-emerald-950/20"
                     >
                         <p className="truncate text-xs font-semibold text-slate-900 dark:text-noir-text-bright">
                             {topic.tag}
@@ -89,7 +94,7 @@ export default function TrendingTopics({
                             {topic.count}{" "}
                             {topic.count === 1 ? "publicação" : "publicações"}
                         </p>
-                    </div>
+                    </button>
                 ))}
             </div>
         </section>

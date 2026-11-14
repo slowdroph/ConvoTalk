@@ -116,6 +116,57 @@ describe("FeedComposer", () => {
         });
     });
 
+    it("publica enquete com as opções informadas", async () => {
+        createPostMock.mockResolvedValue(createdPost);
+        const onCreated = vi.fn();
+
+        render(<FeedComposer onCreated={onCreated} />);
+
+        fireEvent.change(screen.getByLabelText("Escreva seu post"), {
+            target: { value: "Qual a melhor opção?" },
+        });
+        fireEvent.click(
+            screen.getByRole("button", { name: "Adicionar enquete" }),
+        );
+        fireEvent.change(screen.getByLabelText("Opção 1"), {
+            target: { value: "A" },
+        });
+        fireEvent.change(screen.getByLabelText("Opção 2"), {
+            target: { value: "B" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Publicar" }));
+
+        await waitFor(() => expect(onCreated).toHaveBeenCalledWith(createdPost));
+        expect(createPostMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                content: "Qual a melhor opção?",
+                poll: { options: ["A", "B"] },
+            }),
+        );
+    });
+
+    it("impede enquete com opção em branco", async () => {
+        const onCreated = vi.fn();
+
+        render(<FeedComposer onCreated={onCreated} />);
+
+        fireEvent.change(screen.getByLabelText("Escreva seu post"), {
+            target: { value: "Qual a melhor opção?" },
+        });
+        fireEvent.click(
+            screen.getByRole("button", { name: "Adicionar enquete" }),
+        );
+        fireEvent.change(screen.getByLabelText("Opção 1"), {
+            target: { value: "A" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Publicar" }));
+
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+            "Preencha todas as opções da enquete.",
+        );
+        expect(createPostMock).not.toHaveBeenCalled();
+    });
+
     it("reutiliza o clientPostId quando a publicação falha e é tentada novamente", async () => {
         createPostMock
             .mockRejectedValueOnce(new Error("fail"))

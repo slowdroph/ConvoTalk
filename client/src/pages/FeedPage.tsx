@@ -3,13 +3,12 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useSocket } from "../hooks/useSocket";
 import AppNavTabs from "../components/Navigation/AppNavTabs";
-import Avatar from "../components/ui/Avatar";
 import UserProfileModal from "../components/ui/UserProfileModal";
 import FeedComposer from "../features/feed/components/FeedComposer";
 import FeedFilters from "../features/feed/components/FeedFilters";
 import FeedList from "../features/feed/components/FeedList";
 import FeedProfileCard from "../features/feed/components/FeedProfileCard";
-import FeedStatusPill from "../features/feed/components/FeedStatusPill";
+import FeedSearchBar from "../features/feed/components/FeedSearchBar";
 import FeedSuggestedMembers from "../features/feed/components/FeedSuggestedMembers";
 import SharedPostDialog from "../features/feed/components/SharedPostDialog";
 import TrendingTopics from "../features/feed/components/TrendingTopics";
@@ -27,6 +26,8 @@ export default function FeedPage() {
     const [profileUserId, setProfileUserId] = useState<string | null>(null);
     const [searchParams, setSearchParams] = useSearchParams();
     const sharedPostId = searchParams.get("post");
+    const query = searchParams.get("q") ?? "";
+    const activeQuery = query.trim().length >= 2 ? query : "";
 
     const {
         posts,
@@ -41,8 +42,9 @@ export default function FeedPage() {
         deletePostById,
         toggleLike,
         toggleSave,
+        votePoll,
         setCommentCount,
-    } = useFeed(filter);
+    } = useFeed(filter, { query });
 
     const {
         stats,
@@ -76,37 +78,48 @@ export default function FeedPage() {
         setSearchParams(next, { replace: true });
     }, [searchParams, setSearchParams]);
 
+    const updateQuery = useCallback(
+        (value: string) => {
+            const trimmed = value.trim();
+            const next = new URLSearchParams(searchParams);
+            if (trimmed) {
+                next.set("q", trimmed);
+            } else {
+                next.delete("q");
+            }
+            setSearchParams(next, { replace: true });
+        },
+        [searchParams, setSearchParams],
+    );
+
+    const handleFilterChange = (next: FeedFilter) => {
+        setFilter(next);
+        if (next === "saved" && query) {
+            updateQuery("");
+        }
+    };
+
+    const handleSelectTopic = (tag: string) => {
+        if (filter === "saved") {
+            setFilter("all");
+        }
+        updateQuery(tag);
+    };
+
     return (
         <div className="h-dvh-fallback flex flex-col bg-noir-base pt-[env(safe-area-inset-top)]">
             <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 px-4 py-2.5 backdrop-blur-md transition-all dark:border-noir-border/80 dark:bg-noir-surface/90 lg:px-8">
                 <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-                    <Link
-                        to="/feed"
-                        aria-label="ConvoTalk Feed"
-                        className="flex items-center gap-2.5 rounded-lg p-1 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    >
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-700 to-emerald-500 text-white shadow-lg shadow-emerald-600/20">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                                aria-hidden="true"
-                            >
-                                <path
-                                    d="M4.5 3.75A2.25 2.25 0 002.25 6v9a2.25 2.25 0 002.25 2.25h1.5v3.18a.75.75 0 001.28.53l3.71-3.71h6.01a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H4.5z"
-                                    opacity="0.4"
-                                />
-                                <path d="M8.25 7.5A2.25 2.25 0 0110.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-1.5v3.18a.75.75 0 01-1.28.53L13.01 18.75H10.5A2.25 2.25 0 018.25 16.5V7.5z" />
-                            </svg>
-                        </span>
-                        <span className="hidden items-center gap-1.5 text-lg font-bold tracking-tight text-slate-900 dark:text-noir-text-bright sm:flex">
+                    <div className="flex select-none items-center gap-2.5 p-1">
+                        <img
+                            src="/convo_talk_logo.png"
+                            alt="ConvoTalk"
+                            className="h-8 w-auto object-contain"
+                        />
+                        <span className="hidden text-lg font-bold tracking-tight text-slate-900 dark:text-noir-text-bright sm:inline">
                             ConvoTalk
-                            <span className="rounded-full border border-emerald-500/30 bg-emerald-600/20 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase text-emerald-700 dark:text-emerald-400">
-                                v2.0
-                            </span>
                         </span>
-                    </Link>
+                    </div>
 
                     <AppNavTabs variant="pill" />
 
@@ -139,19 +152,6 @@ export default function FeedPage() {
                                 />
                             </svg>
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => navigate("/settings")}
-                            aria-label="Abrir meu perfil"
-                            title={user?.name ?? "Meu perfil"}
-                            className="rounded-full transition-opacity hover:opacity-90"
-                        >
-                            <Avatar
-                                src={user?.avatar}
-                                name={user?.name ?? "?"}
-                                size="sm"
-                            />
-                        </button>
                     </div>
                 </div>
             </header>
@@ -169,7 +169,7 @@ export default function FeedPage() {
                         )}
                         <FeedFilters
                             value={filter}
-                            onChange={setFilter}
+                            onChange={handleFilterChange}
                         />
                     </aside>
 
@@ -190,12 +190,14 @@ export default function FeedPage() {
                         <div className="lg:hidden">
                             <FeedFilters
                                 value={filter}
-                                onChange={setFilter}
+                                onChange={handleFilterChange}
                                 variant="chips"
                             />
                         </div>
 
                         <FeedComposer onCreated={handleCreated} />
+
+                        <FeedSearchBar value={query} onSearch={updateQuery} />
 
                         <FeedList
                             posts={posts}
@@ -205,11 +207,13 @@ export default function FeedPage() {
                             error={error}
                             currentUserId={user?._id}
                             filter={filter}
+                            query={activeQuery}
                             onLoadMore={() => void loadMore()}
                             onRetry={() => void load()}
                             onRetryMore={retryLoadMore}
                             onLike={toggleLike}
                             onSave={toggleSave}
+                            onVote={votePoll}
                             onDelete={handleDelete}
                             onCommentCountChange={(postId, commentCount) =>
                                 setCommentCount(postId, commentCount)
@@ -235,6 +239,7 @@ export default function FeedPage() {
                             loading={topicsLoading}
                             error={topicsError}
                             onRetry={() => void refreshTopics()}
+                            onSelectTopic={handleSelectTopic}
                         />
 
                         <footer className="space-y-1.5 px-2 text-xs text-slate-500 dark:text-noir-text-muted">
@@ -260,8 +265,6 @@ export default function FeedPage() {
                     </aside>
                 </div>
             </main>
-
-            <FeedStatusPill connected={connected} />
 
             <SharedPostDialog
                 postId={sharedPostId}

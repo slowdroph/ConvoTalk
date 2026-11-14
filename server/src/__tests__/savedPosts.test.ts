@@ -9,6 +9,7 @@ import {
 } from "vitest";
 import type { Server as SocketIOServer } from "socket.io";
 import User from "../models/User";
+import Post from "../models/Post";
 import SavedPost from "../models/SavedPost";
 import { startTestDb, stopTestDb, clearTestDb } from "./db";
 import { generatePublicId } from "../utils/publicId";
@@ -214,6 +215,7 @@ describe("posts salvos", () => {
         await deletePost(alice._id.toString(), post._id);
 
         expect(await SavedPost.countDocuments({ post: post._id })).toBe(0);
+        expect(await Post.findById(post._id).lean()).toBeNull();
         const result = await listSavedPosts(bob._id.toString(), {
             limit: 10,
         });

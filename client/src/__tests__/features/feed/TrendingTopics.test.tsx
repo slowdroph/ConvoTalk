@@ -42,4 +42,20 @@ describe("TrendingTopics", () => {
         );
         expect(onRetry).toHaveBeenCalled();
     });
+
+    it("seleciona o tópico para buscar posts", () => {
+        const onSelectTopic = vi.fn();
+        render(
+            <TrendingTopics
+                topics={[{ tag: "#webrtc", count: 2 }]}
+                onSelectTopic={onSelectTopic}
+            />,
+        );
+
+        fireEvent.click(
+            screen.getByRole("button", { name: "Buscar posts sobre #webrtc" }),
+        );
+
+        expect(onSelectTopic).toHaveBeenCalledWith("#webrtc");
+    });
 });

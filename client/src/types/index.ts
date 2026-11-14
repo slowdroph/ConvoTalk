@@ -21,6 +21,9 @@ import type {
     PostLikedEvent as PostLikedEventShared,
     PostDeletedEvent as PostDeletedEventShared,
     PostSavedEvent as PostSavedEventShared,
+    PostPollPayload as PostPollPayloadShared,
+    PostPollOptionPayload as PostPollOptionPayloadShared,
+    PostPollEvent as PostPollEventShared,
     PostCursorPayload as PostCursorPayloadShared,
     PostStatsPayload as PostStatsPayloadShared,
     TrendingTopicPayload as TrendingTopicPayloadShared,
@@ -51,6 +54,9 @@ export type Post = PostPayloadShared;
 export type PostLikedEvent = PostLikedEventShared;
 export type PostDeletedEvent = PostDeletedEventShared;
 export type PostSavedEvent = PostSavedEventShared;
+export type PostPollPayload = PostPollPayloadShared;
+export type PostPollOption = PostPollOptionPayloadShared;
+export type PostPollEvent = PostPollEventShared;
 export type PostCursor = PostCursorPayloadShared;
 export type PostStats = PostStatsPayloadShared;
 export type TrendingTopic = TrendingTopicPayloadShared;

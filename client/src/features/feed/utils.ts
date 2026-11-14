@@ -1,4 +1,10 @@
-import type { Post, PostLikedEvent, PostSavedEvent } from "../../types";
+import type {
+    Post,
+    PostLikedEvent,
+    PostPollEvent,
+    PostPollPayload,
+    PostSavedEvent,
+} from "../../types";
 import type { FeedFilter, FeedSort } from "./services/feedApi";
 
 function timeOf(post: Post): number {
@@ -29,12 +35,24 @@ export function matchesFeedFilter(
     post: Post,
     filter: FeedFilter,
     viewerId: string,
+    query?: string,
 ): boolean {
-    if (filter === "media") return Boolean(post.image);
-    if (filter === "mine") {
-        return Boolean(viewerId) && post.author?._id === viewerId;
+    if (filter === "media" && !post.image) return false;
+    if (
+        filter === "mine" &&
+        (!viewerId || post.author?._id !== viewerId)
+    ) {
+        return false;
     }
-    if (filter === "saved") return Boolean(post.savedByMe);
+    if (filter === "saved" && !post.savedByMe) return false;
+
+    if (query) {
+        const term = query.trim().toLowerCase();
+        if (term.length >= 2 && !post.content.toLowerCase().includes(term)) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -63,6 +81,7 @@ export type FeedEvent =
     | { type: "new"; post: Post }
     | { type: "liked"; event: PostLikedEvent }
     | { type: "saved"; event: PostSavedEvent }
+    | { type: "poll"; event: PostPollEvent }
     | { type: "deleted"; postId: string }
     | { type: "commentCount"; postId: string; commentCount: number };
 
@@ -70,6 +89,7 @@ export interface FeedEventContext {
     viewerId: string;
     filter?: FeedFilter;
     sort?: FeedSort;
+    query?: string;
 }
 
 export function applyFeedEvent(
@@ -77,12 +97,16 @@ export function applyFeedEvent(
     event: FeedEvent,
     context: FeedEventContext | string,
 ): Post[] {
-    const { viewerId, filter = "all", sort = "recent" } =
-        typeof context === "string" ? { viewerId: context } : context;
+    const {
+        viewerId,
+        filter = "all",
+        sort = "recent",
+        query,
+    } = typeof context === "string" ? { viewerId: context } : context;
 
     switch (event.type) {
         case "new":
-            if (!matchesFeedFilter(event.post, filter, viewerId)) {
+            if (!matchesFeedFilter(event.post, filter, viewerId, query)) {
                 return current;
             }
             return mergeFeedPosts(current, [event.post], sort);
@@ -92,6 +116,8 @@ export function applyFeedEvent(
         }
         case "saved":
             return applySavedEvent(current, event.event, viewerId, filter);
+        case "poll":
+            return applyPollEvent(current, event.event, viewerId);
         case "deleted":
             return removeFeedPost(current, event.postId);
         case "commentCount":
@@ -156,4 +182,49 @@ export function applySavedEvent(
 ): Post[] {
     if (event.userId !== viewerId) return current;
     return setFeedPostSaved(current, event.postId, event.saved, filter);
+}
+
+export function applyOwnPollVote(
+    poll: PostPollPayload,
+    optionId: string | null,
+): PostPollPayload {
+    const previous = poll.myVoteOptionId;
+    if (previous === optionId) return poll;
+
+    const options = poll.options.map((option) => {
+        let voteCount = option.voteCount;
+        if (option._id === previous) voteCount = Math.max(0, voteCount - 1);
+        if (option._id === optionId) voteCount += 1;
+        return voteCount === option.voteCount
+            ? option
+            : { ...option, voteCount };
+    });
+
+    let totalVotes = poll.totalVotes;
+    if (!previous && optionId) totalVotes += 1;
+    if (previous && !optionId) totalVotes = Math.max(0, totalVotes - 1);
+
+    return { ...poll, options, totalVotes, myVoteOptionId: optionId };
+}
+
+export function applyPollEvent(
+    current: Post[],
+    event: PostPollEvent,
+    viewerId: string,
+): Post[] {
+    return current.map((post) => {
+        if (post._id !== event.postId || !post.poll) return post;
+
+        return {
+            ...post,
+            poll: {
+                options: event.options,
+                totalVotes: event.totalVotes,
+                myVoteOptionId:
+                    event.userId === viewerId
+                        ? event.optionId
+                        : post.poll.myVoteOptionId,
+            },
+        };
+    });
 }

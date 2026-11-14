@@ -65,6 +65,7 @@ type PostCardTestProps = {
     currentUserId?: string;
     onLike: (post: Post) => Promise<void>;
     onSave: (post: Post) => Promise<void>;
+    onVote: (post: Post, optionId: string | null) => Promise<void>;
     onDelete: (postId: string) => Promise<void>;
     onOpenAuthor: (author: NonNullable<Post["author"]>) => void;
 };
@@ -78,6 +79,7 @@ function setup(
         currentUserId: "viewer",
         onLike: vi.fn().mockResolvedValue(undefined),
         onSave: vi.fn().mockResolvedValue(undefined),
+        onVote: vi.fn().mockResolvedValue(undefined),
         onDelete: vi.fn().mockResolvedValue(undefined),
         onOpenAuthor: vi.fn(),
         ...overrides,
@@ -170,6 +172,29 @@ describe("PostCard", () => {
         expect(
             screen.getByRole("button", { name: "Remover dos salvos" }),
         ).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("vota na enquete ao clicar em uma opção", async () => {
+        const props = setup(
+            makePost({
+                poll: {
+                    options: [
+                        { _id: "opt-1", text: "Sim", voteCount: 1 },
+                        { _id: "opt-2", text: "Não", voteCount: 1 },
+                    ],
+                    totalVotes: 2,
+                    myVoteOptionId: null,
+                },
+            }),
+        );
+
+        fireEvent.click(
+            screen.getByRole("button", { name: "Votar em Sim" }),
+        );
+
+        await waitFor(() =>
+            expect(props.onVote).toHaveBeenCalledWith(props.post, "opt-1"),
+        );
     });
 
     it("exibe botão de excluir apenas para o autor", () => {
