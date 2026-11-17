@@ -8,13 +8,16 @@ import type {
     CommentPayload,
 } from "../../../shared/types";
 import { POST_AUTHOR_SELECT } from "../constants";
-import { areUsersBlocked } from "../utils/blocked";
 import {
     ForbiddenError,
     NotFoundError,
     ValidationError,
 } from "../utils/errors";
-import { emitPostEvent, getExcludedAuthorIds } from "./post";
+import {
+    assertPostVisible,
+    emitPostEvent,
+    getExcludedAuthorIds,
+} from "./post";
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 30;
@@ -74,12 +77,12 @@ function toCommentPayload(comment: CommentLean): CommentPayload {
 async function findVisiblePost(
     viewerId: string,
     postId: string,
-): Promise<{ authorId: string }> {
+): Promise<{ authorId: string; profileId: string | null }> {
     const post = await Post.findOne({
         _id: postId,
         deleted: { $ne: true },
     })
-        .select("author")
+        .select("author profile")
         .lean();
 
     if (!post) {
@@ -87,11 +90,10 @@ async function findVisiblePost(
     }
 
     const authorId = post.author.toString();
-    if (authorId !== viewerId && (await areUsersBlocked(viewerId, authorId))) {
-        throw new ForbiddenError("Acesso negado.");
-    }
+    const profileId = post.profile ? post.profile.toString() : null;
+    await assertPostVisible(viewerId, authorId, profileId);
 
-    return { authorId };
+    return { authorId, profileId };
 }
 
 function applyCursor(
@@ -201,7 +203,7 @@ export async function createComment(
         );
     }
 
-    const { authorId } = await findVisiblePost(userId, postId);
+    const { authorId, profileId } = await findVisiblePost(userId, postId);
 
     let created;
     try {
@@ -259,7 +261,7 @@ export async function createComment(
     await emitPostEvent(
         "comment:created",
         { postId, comment, commentCount },
-        [authorId, userId],
+        [authorId, profileId ?? "", userId].filter(Boolean),
     );
 
     return { comment, commentCount };
@@ -274,7 +276,7 @@ export async function deleteComment(
         _id: postId,
         deleted: { $ne: true },
     })
-        .select("author")
+        .select("author profile")
         .lean();
 
     if (!post) {
@@ -290,9 +292,14 @@ export async function deleteComment(
     }
 
     const postAuthorId = post.author.toString();
+    const profileId = post.profile ? post.profile.toString() : null;
     const commentAuthorId = comment.author.toString();
 
-    if (userId !== commentAuthorId && userId !== postAuthorId) {
+    if (
+        userId !== commentAuthorId &&
+        userId !== postAuthorId &&
+        userId !== profileId
+    ) {
         throw new ForbiddenError("Você não pode excluir este comentário.");
     }
 
@@ -337,7 +344,7 @@ export async function deleteComment(
     await emitPostEvent(
         "comment:deleted",
         { postId, commentId, commentCount },
-        [postAuthorId, commentAuthorId],
+        [postAuthorId, commentAuthorId, profileId ?? ""].filter(Boolean),
     );
 
     return { commentId, commentCount };

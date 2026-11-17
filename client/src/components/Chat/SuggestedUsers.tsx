@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useSocket } from "../../hooks/useSocket";
 import api from "../../services/api";
@@ -7,7 +8,6 @@ import { getErrorMessage } from "../../utils/errors";
 import { getCountryName } from "../../utils/countries";
 import Avatar from "../ui/Avatar";
 import CountryFlag from "../ui/CountryFlag";
-import UserProfileModal from "../ui/UserProfileModal";
 import type { PublicUser } from "../../types";
 
 const SUGGESTIONS_LIMIT = 8;
@@ -137,7 +137,7 @@ export default function SuggestedUsers({
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [creatingId, setCreatingId] = useState<string | null>(null);
-    const [profileUserId, setProfileUserId] = useState<string | null>(null);
+    const navigate = useNavigate();
     const { onlineUsers } = useSocket();
 
     const fetchSuggestions = useCallback(
@@ -253,21 +253,10 @@ export default function SuggestedUsers({
                         online={isOnline(user._id)}
                         busy={creatingId === user._id}
                         onStart={() => handleStartConversation(user._id)}
-                        onViewProfile={() => setProfileUserId(user._id)}
+                        onViewProfile={() => navigate(`/profile/${user._id}`)}
                     />
                 ))}
             </ul>
-
-            <UserProfileModal
-                isOpen={profileUserId !== null}
-                userId={profileUserId}
-                onClose={() => setProfileUserId(null)}
-                onConversationCreated={(roomId) => {
-                    setProfileUserId(null);
-                    onConversationCreated(roomId);
-                }}
-                initialUser={users.find((u) => u._id === profileUserId)}
-            />
         </div>
     );
 }

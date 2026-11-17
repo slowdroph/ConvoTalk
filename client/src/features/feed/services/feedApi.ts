@@ -90,6 +90,7 @@ export interface CreatePostInput {
     content: string;
     image?: File | null;
     clientPostId?: string;
+    profileId?: string;
     poll?: { options: string[] };
 }
 
@@ -98,6 +99,9 @@ export async function createPost(input: CreatePostInput): Promise<Post> {
     form.append("content", input.content);
     if (input.clientPostId) {
         form.append("clientPostId", input.clientPostId);
+    }
+    if (input.profileId) {
+        form.append("profileId", input.profileId);
     }
     if (input.poll) {
         form.append("poll", JSON.stringify(input.poll));

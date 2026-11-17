@@ -369,7 +369,6 @@ function ChatPageInner() {
                             onRoomUpdated={handleGroupUpdated}
                             onRoomDeleted={handleDeleteRoom}
                             onRoomLeft={handleLeaveRoom}
-                            onConversationCreated={handleConversationCreated}
                             onOpenSidebar={() => setSidebarOpen(true)}
                             highlightMessageId={highlightMessageId}
                             initialPinnedMessageIds={(

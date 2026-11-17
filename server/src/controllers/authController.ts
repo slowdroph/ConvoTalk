@@ -15,10 +15,30 @@ import { getHttpClientIp } from "../utils/clientIp";
 
 export async function register(req: Request, res: Response): Promise<void> {
     try {
-        const { name, email, password } = req.body;
+        const {
+            name,
+            email,
+            password,
+            gender,
+            birthdate,
+            country,
+            city,
+            languages,
+            languageLevels,
+        } = req.body;
         const clientIp = getHttpClientIp(req);
         const result = await authService.registerUser(
-            { name, email, password },
+            {
+                name,
+                email,
+                password,
+                gender,
+                birthdate,
+                country,
+                city,
+                languages,
+                languageLevels,
+            },
             clientIp,
         );
 

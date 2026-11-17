@@ -1,4 +1,83 @@
 import { z } from "zod";
+import { MAX_INTERESTS, isInterestId } from "../../../shared/interests";
+import {
+    MAX_AGE,
+    MAX_LANGUAGES,
+    MIN_AGE,
+    calculateAge,
+    isGenderId,
+    isLanguageId,
+    isLanguageLevelId,
+} from "../../../shared/profile";
+
+const genderSchema = z
+    .string()
+    .trim()
+    .refine(isGenderId, "Gênero inválido.");
+
+const birthdateSchema = z
+    .string()
+    .trim()
+    .refine((value) => !Number.isNaN(new Date(value).getTime()), {
+        message: "Data de nascimento inválida.",
+    })
+    .refine(
+        (value) => {
+            const age = calculateAge(value);
+            return age !== null && age >= MIN_AGE;
+        },
+        { message: `É necessário ter pelo menos ${MIN_AGE} anos.` },
+    )
+    .refine(
+        (value) => {
+            const age = calculateAge(value);
+            return age !== null && age <= MAX_AGE;
+        },
+        { message: "Data de nascimento inválida." },
+    );
+
+const languagesSchema = z
+    .array(z.string().refine(isLanguageId, "Idioma inválido."))
+    .min(1, "Selecione pelo menos um idioma.")
+    .max(MAX_LANGUAGES, `Escolha no máximo ${MAX_LANGUAGES} idiomas.`)
+    .refine(
+        (values) => new Set(values).size === values.length,
+        "Idiomas não podem se repetir.",
+    );
+
+const languageLevelsSchema = z
+    .record(
+        z.string(),
+        z.string().refine(isLanguageLevelId, "Nível inválido."),
+    )
+    .refine(
+        (levels) => Object.keys(levels).every(isLanguageId),
+        "Idioma inválido.",
+    )
+    .refine(
+        (levels) => Object.keys(levels).length <= MAX_LANGUAGES,
+        `Escolha no máximo ${MAX_LANGUAGES} idiomas.`,
+    );
+
+export function languageLevelsMatchLanguages(
+    languages: string[] | undefined,
+    levels: Record<string, string> | undefined,
+): boolean {
+    if (!levels) return true;
+    const allowed = new Set(languages ?? []);
+    return Object.keys(levels).every((code) => allowed.has(code));
+}
+
+const countrySchema = z
+    .string()
+    .trim()
+    .regex(/^[A-Z]{2}$/, "País inválido.");
+
+const citySchema = z
+    .string()
+    .trim()
+    .min(1, "Informe sua cidade.")
+    .max(80, "Cidade deve ter no máximo 80 caracteres.");
 
 export const objectId = z
     .string()
@@ -6,26 +85,44 @@ export const objectId = z
         message: "ID inválido.",
     });
 
-export const registerSchema = z.object({
-    body: z.object({
-        name: z
-            .string()
-            .min(2, "Nome deve ter pelo menos 2 caracteres.")
-            .max(50, "Nome deve ter no máximo 50 caracteres."),
-        email: z
-            .string()
-            .email("Email inválido.")
-            .max(100, "Email deve ter no máximo 100 caracteres."),
-        password: z
-            .string()
-            .min(8, "Senha deve ter pelo menos 8 caracteres.")
-            .max(128, "Senha deve ter no máximo 128 caracteres."),
-        acceptedTerms: z.literal(true, {
-            message:
-                "Você precisa aceitar os Termos de Uso e a Política de Privacidade.",
+export const registerSchema = z
+    .object({
+        body: z.object({
+            name: z
+                .string()
+                .min(2, "Nome deve ter pelo menos 2 caracteres.")
+                .max(50, "Nome deve ter no máximo 50 caracteres."),
+            email: z
+                .string()
+                .email("Email inválido.")
+                .max(100, "Email deve ter no máximo 100 caracteres."),
+            password: z
+                .string()
+                .min(8, "Senha deve ter pelo menos 8 caracteres.")
+                .max(128, "Senha deve ter no máximo 128 caracteres."),
+            acceptedTerms: z.literal(true, {
+                message:
+                    "Você precisa aceitar os Termos de Uso e a Política de Privacidade.",
+            }),
+            gender: genderSchema,
+            birthdate: birthdateSchema,
+            country: countrySchema,
+            city: citySchema,
+            languages: languagesSchema,
+            languageLevels: languageLevelsSchema.default({}),
         }),
-    }),
-});
+    })
+    .refine(
+        (data) =>
+            languageLevelsMatchLanguages(
+                data.body.languages,
+                data.body.languageLevels,
+            ),
+        {
+            message: "Nível informado para um idioma não selecionado.",
+            path: ["body", "languageLevels"],
+        },
+    );
 
 export const loginSchema = z.object({
     body: z.object({
@@ -349,6 +446,54 @@ export const statusSchema = z.object({
     }),
 });
 
+export const aboutSchema = z
+    .object({
+        body: z.object({
+            bio: z
+                .string()
+                .trim()
+                .max(1000, "Bio deve ter no máximo 1000 caracteres.")
+                .default(""),
+            interests: z
+                .array(
+                    z
+                        .string()
+                        .refine(isInterestId, "Interesse inválido."),
+                )
+                .max(
+                    MAX_INTERESTS,
+                    `Escolha no máximo ${MAX_INTERESTS} interesses.`,
+                )
+                .refine(
+                    (values) => new Set(values).size === values.length,
+                    "Interesses não podem se repetir.",
+                )
+                .default([]),
+            gender: genderSchema.optional(),
+            birthdate: birthdateSchema.nullable().optional(),
+            country: countrySchema.nullable().optional(),
+            city: citySchema.nullable().optional(),
+            languages: languagesSchema.optional(),
+            languageLevels: languageLevelsSchema.optional(),
+            status: z
+                .string()
+                .trim()
+                .max(100, "Status deve ter no máximo 100 caracteres.")
+                .optional(),
+        }),
+    })
+    .refine(
+        (data) =>
+            languageLevelsMatchLanguages(
+                data.body.languages,
+                data.body.languageLevels,
+            ),
+        {
+            message: "Nível informado para um idioma não selecionado.",
+            path: ["body", "languageLevels"],
+        },
+    );
+
 export const linkPreviewSchema = z.object({
     body: z.object({
         url: z
@@ -432,6 +577,10 @@ const postPaginationQuerySchema = z
             .default(20),
         before: z.string().datetime("Data inválida.").optional(),
         beforeId: objectId.optional(),
+        media: z
+            .enum(["true", "false"])
+            .transform((value) => value === "true")
+            .optional(),
     })
     .refine((data) => !data.before || !!data.beforeId, {
         message: "beforeId é obrigatório quando before é informado.",
@@ -618,6 +767,7 @@ export const createPostSchema = z.object({
             .min(1, "ID do post inválido.")
             .max(64, "ID do post inválido.")
             .optional(),
+        profileId: objectId.optional(),
         poll: pollBodySchema,
     }),
 });
@@ -630,11 +780,22 @@ export const postsByUserQuerySchema = z.object({
     params: z.object({
         userId: objectId,
     }),
-    query: postPaginationQuerySchema,
+    query: postPaginationQuerySchema.extend({
+        authored: z
+            .enum(["true", "false"])
+            .transform((value) => value === "true")
+            .optional(),
+    }),
 });
 
 export const savedPostsQuerySchema = z.object({
     query: postPaginationQuerySchema,
+});
+
+export const profileStatsQuerySchema = z.object({
+    params: z.object({
+        userId: objectId,
+    }),
 });
 
 export const postParamsSchema = z.object({

@@ -694,6 +694,90 @@ describe("integração: alteração de email", () => {
         expect(updated?.city).toBe("");
     });
 
+    it("salva bio e interesses via updateAbout", async () => {
+        const { updateAbout } = await import("../services/user");
+        const user = await createHashedUser("Zé", "ze-about@test.com");
+
+        const result = await updateAbout(String(user._id), {
+            bio: "Sou dev.",
+            interests: ["programming", "coffee"],
+        });
+
+        expect(result.bio).toBe("Sou dev.");
+        expect(result.interests).toEqual(["programming", "coffee"]);
+
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.bio).toBe("Sou dev.");
+        expect(updated?.interests).toEqual(["programming", "coffee"]);
+    });
+
+    it("salva dados pessoais e idiomas via updateAbout", async () => {
+        const { updateAbout } = await import("../services/user");
+        const user = await createHashedUser("Zé", "ze-personal@test.com");
+
+        await updateAbout(String(user._id), {
+            bio: "",
+            interests: [],
+            gender: "man",
+            birthdate: "1992-08-20",
+            country: "br",
+            city: "Curitiba",
+            status: "  Disponível  ",
+            languages: ["pt", "en", "es"],
+            languageLevels: {
+                pt: "fluent",
+                en: "advanced",
+                es: "basic",
+            },
+        });
+
+        const updated = await User.findById(user._id).lean();
+        expect(updated?.gender).toBe("man");
+        expect(updated?.birthdate?.toISOString().slice(0, 10)).toBe(
+            "1992-08-20",
+        );
+        expect(updated?.country).toBe("BR");
+        expect(updated?.city).toBe("Curitiba");
+        expect(updated?.status).toBe("Disponível");
+        expect(updated?.languages).toEqual(["pt", "en", "es"]);
+        expect(updated?.languageLevels).toEqual({
+            pt: "fluent",
+            en: "advanced",
+            es: "basic",
+        });
+    });
+
+    it("registra usuário com gênero, nascimento, local e idiomas", async () => {
+        const { registerUser } = await import("../services/auth");
+
+        await registerUser({
+            name: "Nova",
+            email: "nova-register@test.com",
+            password: "12345678",
+            gender: "woman",
+            birthdate: "1998-02-14",
+            country: "BR",
+            city: "Porto Alegre",
+            languages: ["pt", "en"],
+            languageLevels: { pt: "fluent", en: "intermediate" },
+        });
+
+        const created = await User.findOne({
+            email: "nova-register@test.com",
+        }).lean();
+        expect(created?.gender).toBe("woman");
+        expect(created?.birthdate?.toISOString().slice(0, 10)).toBe(
+            "1998-02-14",
+        );
+        expect(created?.country).toBe("BR");
+        expect(created?.city).toBe("Porto Alegre");
+        expect(created?.languages).toEqual(["pt", "en"]);
+        expect(created?.languageLevels).toEqual({
+            pt: "fluent",
+            en: "intermediate",
+        });
+    });
+
     it("updateProfile não altera country/city mesmo se presentes no input", async () => {
         const user = await createHashedUser("Zé", "ze@test.com");
         user.country = "BR";
@@ -767,11 +851,29 @@ describe("integração: cadastro sem oráculo", () => {
         );
 
         await registerUser(
-            { name: "Ana", email: "ana@test.com", password: "12345678" },
+            {
+                name: "Ana",
+                email: "ana@test.com",
+                password: "12345678",
+                gender: "woman",
+                birthdate: "1995-05-10",
+                country: "BR",
+                city: "São Paulo",
+                languages: ["pt"],
+            },
             "127.0.0.1",
         );
         const second = await registerUser(
-            { name: "Outra", email: "ana@test.com", password: "12345678" },
+            {
+                name: "Outra",
+                email: "ana@test.com",
+                password: "12345678",
+                gender: "woman",
+                birthdate: "1995-05-10",
+                country: "BR",
+                city: "São Paulo",
+                languages: ["pt"],
+            },
             "127.0.0.1",
         );
 
@@ -909,6 +1011,10 @@ describe("integração: perfil público", () => {
         const ana = await createUser("Ana", "ana-profile@test.com");
         ana.country = "BR";
         ana.city = "São Paulo";
+        ana.gender = "woman";
+        ana.birthdate = new Date("1990-06-15T00:00:00.000Z");
+        ana.languages = ["pt", "en"];
+        ana.languageLevels = { pt: "fluent" };
         await ana.save();
 
         const profile = await getPublicProfile(
@@ -921,14 +1027,43 @@ describe("integração: perfil público", () => {
         expect(profile).toHaveProperty("publicId");
         expect(profile.country).toBe("BR");
         expect(profile.city).toBe("São Paulo");
+        expect(profile.gender).toBe("woman");
+        expect(profile.languages).toEqual(["pt", "en"]);
+        expect(profile.languageLevels).toEqual({
+            pt: "fluent",
+            en: "intermediate",
+        });
+        expect(typeof profile.age).toBe("number");
+        expect(profile).not.toHaveProperty("birthdate");
         expect(profile).toHaveProperty("createdAt");
+        expect(profile).toHaveProperty("bio");
+        expect(profile).toHaveProperty("interests");
         expect(profile).not.toHaveProperty("email");
         expect(profile).not.toHaveProperty("password");
         expect(profile).not.toHaveProperty("lastIp");
         expect(profile).not.toHaveProperty("verificationToken");
     });
 
-    it("getPublicProfile retorna 404 quando há bloqueio mútuo", async () => {
+    it("getPublicProfile expõe a data de nascimento apenas ao próprio dono", async () => {
+        const { getPublicProfile } = await import("../services/user");
+
+        const ana = await createUser("Ana Owner", "ana-owner@test.com");
+        ana.birthdate = new Date("1990-06-15T00:00:00.000Z");
+        await ana.save();
+
+        const own = await getPublicProfile(
+            ana._id.toString(),
+            ana._id.toString(),
+        );
+
+        expect(own).toHaveProperty(
+            "birthdate",
+            "1990-06-15T00:00:00.000Z",
+        );
+        expect(own.age).toBeTypeOf("number");
+    });
+
+    it("getPublicProfile permite ao bloqueador ver o perfil e esconde do bloqueado", async () => {
         const { getPublicProfile, blockUserService } = await import(
             "../services/user"
         );
@@ -937,8 +1072,14 @@ describe("integração: perfil público", () => {
         const b = await createUser("Bruno Block", "b-block@test.com");
         await blockUserService(a._id.toString(), b._id.toString());
 
+        const blockerView = await getPublicProfile(
+            b._id.toString(),
+            a._id.toString(),
+        );
+        expect(blockerView.blockedByMe).toBe(true);
+
         await expect(
-            getPublicProfile(b._id.toString(), a._id.toString()),
+            getPublicProfile(a._id.toString(), b._id.toString()),
         ).rejects.toMatchObject({ statusCode: 404 });
     });
 

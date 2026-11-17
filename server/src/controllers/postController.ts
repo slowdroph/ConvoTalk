@@ -9,6 +9,8 @@ type PostPaginationQuery = {
     limit: number;
     before?: string;
     beforeId?: string;
+    media?: boolean;
+    authored?: boolean;
 };
 
 type PostFeedQuery = PostPaginationQuery & {
@@ -100,17 +102,33 @@ export async function listUserPosts(
 ): Promise<void> {
     try {
         const { userId } = req.params as { userId: string };
-        const { limit, before, beforeId } =
+        const { limit, before, beforeId, media, authored } =
             req.query as unknown as PostPaginationQuery;
 
-        const result = await postService.getUserPosts(
+        const result = await postService.getProfilePosts(
             req.user!._id,
             userId,
-            { limit, before, beforeId },
+            { limit, before, beforeId, media, authored },
         );
         res.json(result);
     } catch (error) {
         handleError(error, res, "Erro ao carregar os posts do usuário.");
+    }
+}
+
+export async function getProfileStats(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { userId } = req.params as { userId: string };
+        const result = await postService.getProfileStats(
+            req.user!._id,
+            userId,
+        );
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao carregar as estatísticas do perfil.");
     }
 }
 
@@ -176,15 +194,16 @@ export async function createPost(
     res: Response,
 ): Promise<void> {
     try {
-        const { content, clientPostId, poll } = req.body as {
+        const { content, clientPostId, profileId, poll } = req.body as {
             content: string;
             clientPostId?: string;
+            profileId?: string;
             poll?: { options: string[] };
         };
 
         const post = await postService.createPost(
             req.user!._id,
-            { content, clientPostId, poll },
+            { content, clientPostId, profileId, poll },
             req.file,
         );
         res.status(201).json(post);

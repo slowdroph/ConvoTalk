@@ -12,6 +12,12 @@ export interface UserPayload extends PublicUserPayload {
     emailPending?: boolean;
     pendingEmail?: string;
     city?: string;
+    bio?: string;
+    interests?: string[];
+    gender?: string;
+    birthdate?: string | null;
+    languages?: string[];
+    languageLevels?: Record<string, string>;
 }
 
 export interface SenderPayload {
@@ -21,10 +27,19 @@ export interface SenderPayload {
     avatar?: string;
     status?: string;
     country?: string;
+    city?: string;
 }
 
 export interface PublicProfilePayload extends PublicUserPayload {
     city?: string;
+    bio?: string;
+    interests?: string[];
+    gender?: string;
+    age?: number | null;
+    languages?: string[];
+    languageLevels?: Record<string, string>;
+    blockedByMe?: boolean;
+    birthdate?: string | null;
     lastSeen?: string | null;
     createdAt?: string;
 }
@@ -103,6 +118,7 @@ export interface PostPollPayload {
 export interface PostPayload {
     _id: string;
     author: SenderPayload | null;
+    profileId?: string | null;
     content: string;
     image?: AttachmentPayload | null;
     likeCount: number;
@@ -176,6 +192,13 @@ export type PostCursorPayload =
 export interface PostStatsPayload {
     postCount: number;
     totalLikes: number;
+}
+
+export interface ProfileStatsPayload {
+    postCount: number;
+    totalLikes: number;
+    photoCount: number;
+    authoredCount: number;
 }
 
 export interface TrendingTopicPayload {

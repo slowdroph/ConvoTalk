@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useSocket } from "../hooks/useSocket";
-import AppNavTabs from "../components/Navigation/AppNavTabs";
-import UserProfileModal from "../components/ui/UserProfileModal";
+import AppFooter from "../components/Navigation/AppFooter";
+import AppHeader from "../components/Navigation/AppHeader";
 import FeedComposer from "../features/feed/components/FeedComposer";
 import FeedFilters from "../features/feed/components/FeedFilters";
 import FeedList from "../features/feed/components/FeedList";
@@ -23,7 +23,6 @@ export default function FeedPage() {
     const { user } = useAuth();
     const { connected } = useSocket();
     const [filter, setFilter] = useState<FeedFilter>("all");
-    const [profileUserId, setProfileUserId] = useState<string | null>(null);
     const [searchParams, setSearchParams] = useSearchParams();
     const sharedPostId = searchParams.get("post");
     const query = searchParams.get("q") ?? "";
@@ -108,53 +107,7 @@ export default function FeedPage() {
 
     return (
         <div className="h-dvh-fallback flex flex-col bg-noir-base pt-[env(safe-area-inset-top)]">
-            <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 px-4 py-2.5 backdrop-blur-md transition-all dark:border-noir-border/80 dark:bg-noir-surface/90 lg:px-8">
-                <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-                    <div className="flex select-none items-center gap-2.5 p-1">
-                        <img
-                            src="/convo_talk_logo.png"
-                            alt="ConvoTalk"
-                            className="h-8 w-auto object-contain"
-                        />
-                        <span className="hidden text-lg font-bold tracking-tight text-slate-900 dark:text-noir-text-bright sm:inline">
-                            ConvoTalk
-                        </span>
-                    </div>
-
-                    <AppNavTabs variant="pill" />
-
-                    <div className="flex items-center gap-1.5">
-                        <button
-                            type="button"
-                            onClick={() => navigate("/settings")}
-                            aria-label="Abrir configurações"
-                            title="Configurações"
-                            className="rounded-xl border border-transparent p-2 text-slate-500 transition-colors hover:border-slate-200 hover:bg-slate-100 hover:text-slate-900 dark:text-noir-text-muted dark:hover:border-noir-border dark:hover:bg-noir-surface-alt dark:hover:text-noir-text-bright"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={1.8}
-                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                                />
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={1.8}
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </header>
+            <AppHeader />
 
             <main className="flex-1 overflow-y-auto custom-scrollbar">
                 <div className="mx-auto grid w-full max-w-7xl grid-cols-12 items-start gap-6 px-4 py-6 pb-20 sm:px-6">
@@ -219,7 +172,11 @@ export default function FeedPage() {
                                 setCommentCount(postId, commentCount)
                             }
                             onOpenAuthor={(author) =>
-                                setProfileUserId(author._id)
+                                navigate(
+                                    author._id === user?._id
+                                        ? "/profile"
+                                        : `/profile/${author._id}`,
+                                )
                             }
                         />
                     </section>
@@ -227,7 +184,7 @@ export default function FeedPage() {
                     <aside className="sticky top-20 hidden flex-col gap-5 self-start lg:col-span-3 lg:flex">
                         <FeedSuggestedMembers
                             onOpenProfile={(member) =>
-                                setProfileUserId(member._id)
+                                navigate(`/profile/${member._id}`)
                             }
                             onConversationCreated={(roomId) =>
                                 navigate(`/chat/${roomId}`)
@@ -242,26 +199,7 @@ export default function FeedPage() {
                             onSelectTopic={handleSelectTopic}
                         />
 
-                        <footer className="space-y-1.5 px-2 text-xs text-slate-500 dark:text-noir-text-muted">
-                            <div className="flex flex-wrap gap-x-3 gap-y-1">
-                                <Link
-                                    to="/privacy"
-                                    className="transition-colors hover:text-slate-700 dark:hover:text-slate-300"
-                                >
-                                    Privacidade
-                                </Link>
-                                <Link
-                                    to="/terms"
-                                    className="transition-colors hover:text-slate-700 dark:hover:text-slate-300"
-                                >
-                                    Termos
-                                </Link>
-                            </div>
-                            <p className="font-mono text-[11px] text-slate-400 dark:text-noir-text-muted/70">
-                                © {new Date().getFullYear()} ConvoTalk Inc.
-                                Todos os direitos reservados.
-                            </p>
-                        </footer>
+                        <AppFooter />
                     </aside>
                 </div>
             </main>
@@ -272,17 +210,11 @@ export default function FeedPage() {
                 onClose={closeSharedPost}
                 onOpenAuthor={(author) => {
                     closeSharedPost();
-                    setProfileUserId(author._id);
-                }}
-            />
-
-            <UserProfileModal
-                isOpen={Boolean(profileUserId)}
-                userId={profileUserId}
-                onClose={() => setProfileUserId(null)}
-                onConversationCreated={(roomId) => {
-                    setProfileUserId(null);
-                    navigate(`/chat/${roomId}`);
+                    navigate(
+                        author._id === user?._id
+                            ? "/profile"
+                            : `/profile/${author._id}`,
+                    );
                 }}
             />
         </div>

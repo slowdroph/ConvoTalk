@@ -1,5 +1,12 @@
 import mongoose, { Schema } from "mongoose";
 import { IUser } from "../types";
+import { MAX_INTERESTS, isInterestId } from "../../../shared/interests";
+import {
+    MAX_LANGUAGES,
+    isGenderId,
+    isLanguageId,
+    isLanguageLevelId,
+} from "../../../shared/profile";
 
 const userSchema = new Schema<IUser>({
     name: {
@@ -98,6 +105,75 @@ const userSchema = new Schema<IUser>({
         trim: true,
         maxlength: 80,
         default: "",
+    },
+    bio: {
+        type: String,
+        trim: true,
+        maxlength: 1000,
+        default: "",
+    },
+    interests: {
+        type: [String],
+        default: [],
+        validate: {
+            validator: (values: string[]) =>
+                values.length <= MAX_INTERESTS &&
+                new Set(values).size === values.length &&
+                values.every(isInterestId),
+            message: "Interesses inválidos.",
+        },
+    },
+    gender: {
+        type: String,
+        trim: true,
+        default: "",
+        validate: {
+            validator: (value: string) => !value || isGenderId(value),
+            message: "Gênero inválido.",
+        },
+    },
+    birthdate: {
+        type: Date,
+        default: null,
+    },
+    languages: {
+        type: [String],
+        default: [],
+        validate: {
+            validator: (values: string[]) =>
+                values.length <= MAX_LANGUAGES &&
+                new Set(values).size === values.length &&
+                values.every(isLanguageId),
+            message: "Idiomas inválidos.",
+        },
+    },
+    languageLevels: {
+        type: Schema.Types.Mixed,
+        default: () => ({}),
+        validate: {
+            validator: (value: unknown) => {
+                if (
+                    !value ||
+                    typeof value !== "object" ||
+                    Array.isArray(value)
+                ) {
+                    return false;
+                }
+                const entries = Object.entries(
+                    value as Record<string, unknown>,
+                );
+                return (
+                    entries.length <= MAX_LANGUAGES &&
+                    entries.every(
+                        ([code, level]) =>
+                            isLanguageId(code) &&
+                            typeof level === "string" &&
+                            isLanguageLevelId(level),
+                    )
+                );
+            },
+            message: "Níveis de idioma inválidos.",
+        },
     },
     blockedUsers: [
         {

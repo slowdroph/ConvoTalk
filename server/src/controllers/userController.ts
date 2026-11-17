@@ -109,6 +109,39 @@ export async function updateStatus(
     }
 }
 
+export async function updateAbout(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const {
+            bio,
+            interests,
+            gender,
+            birthdate,
+            country,
+            city,
+            languages,
+            languageLevels,
+            status,
+        } = req.body;
+        const result = await userService.updateAbout(req.user!._id, {
+            bio,
+            interests,
+            gender,
+            birthdate,
+            country,
+            city,
+            languages,
+            languageLevels,
+            status,
+        });
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao atualizar o perfil.");
+    }
+}
+
 export async function updateLocation(
     req: AuthRequest,
     res: Response,

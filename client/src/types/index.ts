@@ -26,6 +26,7 @@ import type {
     PostPollEvent as PostPollEventShared,
     PostCursorPayload as PostCursorPayloadShared,
     PostStatsPayload as PostStatsPayloadShared,
+    ProfileStatsPayload as ProfileStatsPayloadShared,
     TrendingTopicPayload as TrendingTopicPayloadShared,
     CommentPayload as CommentPayloadShared,
     CommentCreatedEvent as CommentCreatedEventShared,
@@ -59,6 +60,7 @@ export type PostPollOption = PostPollOptionPayloadShared;
 export type PostPollEvent = PostPollEventShared;
 export type PostCursor = PostCursorPayloadShared;
 export type PostStats = PostStatsPayloadShared;
+export type ProfileStats = ProfileStatsPayloadShared;
 export type TrendingTopic = TrendingTopicPayloadShared;
 export type Comment = CommentPayloadShared;
 export type CommentCreatedEvent = CommentCreatedEventShared;

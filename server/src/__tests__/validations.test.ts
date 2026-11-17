@@ -3,6 +3,7 @@ import {
     registerSchema,
     loginSchema,
     profileSchema,
+    aboutSchema,
     locationSchema,
     messagesQuerySchema,
     messageSearchQuerySchema,
@@ -15,24 +16,27 @@ import {
 } from "../validations";
 
 describe("auth validations", () => {
+    const validRegisterBody = {
+        name: "Ana",
+        email: "ana@test.com",
+        password: "12345678",
+        acceptedTerms: true,
+        gender: "woman",
+        birthdate: "1995-05-10",
+        country: "BR",
+        city: "São Paulo",
+        languages: ["pt", "en"],
+    };
+
     it("aceita dados de registro válidos", () => {
-        const result = registerSchema.safeParse({
-            body: {
-                name: "Ana",
-                email: "ana@test.com",
-                password: "12345678",
-                acceptedTerms: true,
-            },
-        });
+        const result = registerSchema.safeParse({ body: validRegisterBody });
         expect(result.success).toBe(true);
     });
 
     it("rejeita registro sem aceitar os termos", () => {
         const result = registerSchema.safeParse({
             body: {
-                name: "Ana",
-                email: "ana@test.com",
-                password: "12345678",
+                ...validRegisterBody,
                 acceptedTerms: false,
             },
         });
@@ -41,7 +45,102 @@ describe("auth validations", () => {
 
     it("rejeita senha curta no registro", () => {
         const result = registerSchema.safeParse({
-            body: { name: "Ana", email: "ana@test.com", password: "123" },
+            body: {
+                ...validRegisterBody,
+                password: "123",
+            },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita registro de menor de 18 anos", () => {
+        const year = new Date().getUTCFullYear() - 10;
+        const result = registerSchema.safeParse({
+            body: {
+                ...validRegisterBody,
+                birthdate: `${year}-01-01`,
+            },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita gênero inválido no registro", () => {
+        const result = registerSchema.safeParse({
+            body: { ...validRegisterBody, gender: "invalido" },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("exige pelo menos um idioma no registro", () => {
+        const result = registerSchema.safeParse({
+            body: { ...validRegisterBody, languages: [] },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("aceita níveis de idioma válidos no registro", () => {
+        const result = registerSchema.safeParse({
+            body: {
+                ...validRegisterBody,
+                languageLevels: { pt: "fluent", en: "intermediate" },
+            },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("rejeita nível de idioma inválido", () => {
+        const result = registerSchema.safeParse({
+            body: {
+                ...validRegisterBody,
+                languageLevels: { pt: "expert" },
+            },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita nível para idioma não selecionado", () => {
+        const result = registerSchema.safeParse({
+            body: {
+                ...validRegisterBody,
+                languageLevels: { fr: "fluent" },
+            },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("aceita níveis válidos na atualização do perfil", () => {
+        const result = aboutSchema.safeParse({
+            body: {
+                bio: "",
+                interests: [],
+                languages: ["pt"],
+                languageLevels: { pt: "advanced" },
+            },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("rejeita nível sem os idiomas correspondentes na atualização", () => {
+        const result = aboutSchema.safeParse({
+            body: {
+                bio: "",
+                interests: [],
+                languageLevels: { pt: "advanced" },
+            },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita idiomas repetidos no registro", () => {
+        const result = registerSchema.safeParse({
+            body: { ...validRegisterBody, languages: ["pt", "pt"] },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita cidade vazia no registro", () => {
+        const result = registerSchema.safeParse({
+            body: { ...validRegisterBody, city: "   " },
         });
         expect(result.success).toBe(false);
     });
@@ -79,6 +178,90 @@ describe("profile validations", () => {
     it("rejeita perfil com email inválido", () => {
         const result = profileSchema.safeParse({
             body: { ...baseBody, email: "nao-e-email" },
+        });
+        expect(result.success).toBe(false);
+    });
+});
+
+describe("about validations", () => {
+    it("aceita bio e interesses válidos", () => {
+        const result = aboutSchema.safeParse({
+            body: {
+                bio: "Oi, sou dev.",
+                interests: ["programming", "coffee"],
+            },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("rejeita interesse desconhecido", () => {
+        const result = aboutSchema.safeParse({
+            body: { bio: "", interests: ["nao-existe"] },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita interesses repetidos", () => {
+        const result = aboutSchema.safeParse({
+            body: { bio: "", interests: ["coffee", "coffee"] },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita bio acima de 1000 caracteres", () => {
+        const result = aboutSchema.safeParse({
+            body: { bio: "a".repeat(1001), interests: [] },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("aceita dados pessoais e idiomas no about", () => {
+        const result = aboutSchema.safeParse({
+            body: {
+                bio: "",
+                interests: [],
+                gender: "nonbinary",
+                birthdate: "1990-03-15",
+                country: "BR",
+                city: "Recife",
+                languages: ["pt", "es"],
+            },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("rejeita data de nascimento de menor no about", () => {
+        const year = new Date().getUTCFullYear() - 10;
+        const result = aboutSchema.safeParse({
+            body: {
+                bio: "",
+                interests: [],
+                birthdate: `${year}-01-01`,
+            },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita idioma desconhecido no about", () => {
+        const result = aboutSchema.safeParse({
+            body: { bio: "", interests: [], languages: ["klingon"] },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("aceita status no about", () => {
+        const result = aboutSchema.safeParse({
+            body: { bio: "", interests: [], status: "Disponível" },
+        });
+        expect(result.success).toBe(true);
+        if (result.success) {
+            expect(result.data.body.status).toBe("Disponível");
+        }
+    });
+
+    it("rejeita status com mais de 100 caracteres no about", () => {
+        const result = aboutSchema.safeParse({
+            body: { bio: "", interests: [], status: "a".repeat(101) },
         });
         expect(result.success).toBe(false);
     });

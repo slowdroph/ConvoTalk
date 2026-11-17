@@ -1,10 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import Avatar from "../ui/Avatar";
 import ConfirmDialog from "../ui/ConfirmDialog";
-import UserProfileModal from "../ui/UserProfileModal";
 import type { Room, PublicUser } from "../../types";
 
 interface GroupInfoModalProps {
@@ -13,7 +13,6 @@ interface GroupInfoModalProps {
     currentUserId: string | null;
     onClose: () => void;
     onLeft: (roomId: string) => void;
-    onConversationCreated?: (roomId: string) => void;
 }
 
 export default function GroupInfoModal({
@@ -22,12 +21,11 @@ export default function GroupInfoModal({
     currentUserId,
     onClose,
     onLeft,
-    onConversationCreated,
 }: GroupInfoModalProps) {
+    const navigate = useNavigate();
     const [leaving, setLeaving] = useState(false);
     const [confirmLeave, setConfirmLeave] = useState(false);
     const [error, setError] = useState("");
-    const [profileUserId, setProfileUserId] = useState<string | null>(null);
 
     if (!isOpen) return null;
 
@@ -223,7 +221,9 @@ export default function GroupInfoModal({
                                     {p._id !== currentUserId && (
                                         <button
                                             type="button"
-                                            onClick={() => setProfileUserId(p._id)}
+                                            onClick={() =>
+                                                navigate(`/profile/${p._id}`)
+                                            }
                                             title="Ver perfil"
                                             aria-label={`Ver perfil de ${p.name}`}
                                             className="flex-shrink-0 p-1.5 rounded-lg text-noir-text-muted hover:text-emerald-400 hover:bg-white/5 transition"
@@ -303,18 +303,7 @@ export default function GroupInfoModal({
             />
         </div>,
         document.body,
-            )}
-            <UserProfileModal
-                isOpen={profileUserId !== null}
-                userId={profileUserId}
-                onClose={() => setProfileUserId(null)}
-                onConversationCreated={(roomId) => {
-                    setProfileUserId(null);
-                    onClose();
-                    onConversationCreated?.(roomId);
-                }}
-                initialUser={participants.find((p) => p._id === profileUserId)}
-            />
+    )}
         </>
     );
 }

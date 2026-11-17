@@ -11,6 +11,11 @@ const TABS = [
         label: "Feed",
         icon: "M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2zM7 8h10M7 12h10M7 16h6",
     },
+    {
+        to: "/profile",
+        label: "Perfil",
+        icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+    },
 ] as const;
 
 interface AppNavTabsProps {
@@ -33,7 +38,7 @@ export default function AppNavTabs({
             className={
                 isPill
                     ? `flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 p-1 shadow-inner dark:border-noir-border dark:bg-noir-surface-alt/90 ${className}`
-                    : `grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-noir-border dark:bg-noir-surface-alt ${className}`
+                    : `grid grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-noir-border dark:bg-noir-surface-alt ${className}`
             }
         >
             {TABS.map((tab) => {

@@ -31,6 +31,11 @@ const postSchema = new Schema<IPost>(
             ref: "User",
             required: true,
         },
+        profile: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+        },
         content: {
             type: String,
             trim: true,
@@ -79,6 +84,7 @@ const postSchema = new Schema<IPost>(
 
 postSchema.index({ createdAt: -1, _id: -1 });
 postSchema.index({ author: 1, createdAt: -1 });
+postSchema.index({ profile: 1, createdAt: -1, _id: -1 });
 postSchema.index({ likeCount: -1, _id: -1 });
 postSchema.index(
     { author: 1, clientPostId: 1 },

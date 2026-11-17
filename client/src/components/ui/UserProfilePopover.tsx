@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import Avatar from "./Avatar";
 import CountryFlag from "./CountryFlag";
 import { getCountryName } from "../../utils/countries";
@@ -170,6 +171,14 @@ export default function UserProfilePopover({
                                 </p>
                             )}
                         </div>
+
+                        <Link
+                            to={`/profile/${userId}`}
+                            onClick={() => setOpen(false)}
+                            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-zinc-600 px-2.5 py-1.5 text-xs font-medium text-emerald-300 transition-colors hover:bg-zinc-700/60 hover:text-emerald-200"
+                        >
+                            Ver perfil completo
+                        </Link>
                     </div>
                 </div>
             )}

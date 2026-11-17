@@ -4,9 +4,9 @@ import Post from "../models/Post";
 import type { ISavedPost } from "../types";
 import type { PostCursorPayload, PostPayload } from "../../../shared/types";
 import { POST_AUTHOR_SELECT } from "../constants";
-import { ForbiddenError, NotFoundError } from "../utils/errors";
-import { areUsersBlocked } from "../utils/blocked";
+import { NotFoundError } from "../utils/errors";
 import {
+    assertPostVisible,
     emitSavedPostEvent,
     toPostPayload,
     type PostLean,
@@ -64,17 +64,18 @@ export async function savePost(
         _id: postId,
         deleted: { $ne: true },
     })
-        .select("author")
+        .select("author profile")
         .lean();
 
     if (!post) {
         throw new NotFoundError("Post não encontrado.");
     }
 
-    const authorId = post.author.toString();
-    if (authorId !== userId && (await areUsersBlocked(userId, authorId))) {
-        throw new ForbiddenError("Acesso negado.");
-    }
+    await assertPostVisible(
+        userId,
+        post.author.toString(),
+        post.profile ? post.profile.toString() : null,
+    );
 
     try {
         await SavedPost.updateOne(

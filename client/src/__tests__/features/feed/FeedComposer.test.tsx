@@ -145,6 +145,26 @@ describe("FeedComposer", () => {
         );
     });
 
+    it("insere emoji no modo compacto", () => {
+        render(
+            <FeedComposer
+                onCreated={vi.fn()}
+                variant="compact"
+                placeholder="Mural"
+            />,
+        );
+
+        const textarea = screen.getByLabelText("Escreva seu post");
+        fireEvent.change(textarea, { target: { value: "Oi " } });
+
+        fireEvent.click(
+            screen.getByRole("button", { name: "Adicionar emoji" }),
+        );
+        fireEvent.click(screen.getByRole("button", { name: "Inserir 🎉" }));
+
+        expect(textarea).toHaveValue("Oi 🎉");
+    });
+
     it("impede enquete com opção em branco", async () => {
         const onCreated = vi.fn();
 
@@ -192,6 +212,37 @@ describe("FeedComposer", () => {
         const [first, second] = createPostMock.mock.calls;
         expect(first[0].clientPostId).toBe("client-post-id");
         expect(second[0].clientPostId).toBe("client-post-id");
+    });
+
+    it("publica no mural do perfil informado", async () => {
+        createPostMock.mockResolvedValue(createdPost);
+        const onCreated = vi.fn();
+
+        render(
+            <FeedComposer
+                onCreated={onCreated}
+                profileId="owner-1"
+                placeholder="Escrever algo no mural de Ana..."
+            />,
+        );
+
+        expect(
+            screen.getByPlaceholderText("Escrever algo no mural de Ana..."),
+        ).toBeInTheDocument();
+
+        fireEvent.change(screen.getByLabelText("Escreva seu post"), {
+            target: { value: "No mural" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Publicar" }));
+
+        await waitFor(() => expect(onCreated).toHaveBeenCalledWith(createdPost));
+        expect(createPostMock).toHaveBeenCalledWith(
+            expect.objectContaining({ profileId: "owner-1" }),
+        );
+        expect(showToastMock).toHaveBeenCalledWith({
+            type: "success",
+            message: "Publicado no mural!",
+        });
     });
 
     it("gera um novo clientPostId depois de publicar", async () => {

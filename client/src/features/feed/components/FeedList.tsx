@@ -37,8 +37,11 @@ interface FeedListProps {
     hasMore: boolean;
     error: string | null;
     currentUserId?: string;
+    wallOwnerId?: string | null;
     filter?: FeedFilter;
     query?: string;
+    emptyState?: { title: string; description: string };
+    endLabel?: string;
     onLoadMore: () => void;
     onRetry: () => void;
     onRetryMore: () => void;
@@ -57,8 +60,11 @@ export default function FeedList({
     hasMore,
     error,
     currentUserId,
+    wallOwnerId,
     filter = "all",
     query = "",
+    emptyState,
+    endLabel = "Você chegou ao fim do feed.",
     onLoadMore,
     onRetry,
     onRetryMore,
@@ -120,7 +126,7 @@ export default function FeedList({
                   title: "Nenhum post encontrado",
                   description: `Nada corresponde a "${trimmedQuery}".`,
               }
-            : EMPTY_STATE[filter];
+            : (emptyState ?? EMPTY_STATE[filter]);
         return (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center dark:border-noir-border dark:bg-noir-surface">
                 <p className="text-sm font-medium text-slate-700 dark:text-noir-text-bright">
@@ -140,6 +146,7 @@ export default function FeedList({
                     key={post._id}
                     post={post}
                     currentUserId={currentUserId}
+                    wallOwnerId={wallOwnerId}
                     onLike={onLike}
                     onSave={onSave}
                     onVote={onVote}
@@ -174,7 +181,7 @@ export default function FeedList({
 
             {!hasMore && !loadingMore && posts.length > 0 && (
                 <p className="py-4 text-center text-xs text-slate-400 dark:text-noir-text-muted">
-                    Você chegou ao fim do feed.
+                    {endLabel}
                 </p>
             )}
         </div>

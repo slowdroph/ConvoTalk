@@ -24,6 +24,7 @@ import { logger } from "../config/logger";
 import { getSocketIO } from "../config/io";
 import { emitForceLogout } from "../utils/socket";
 import { generatePublicId } from "../utils/publicId";
+import { normalizeLanguageLevels } from "../../../shared/profile";
 
 function publicUser(user: {
     _id: unknown;
@@ -86,10 +87,30 @@ const MAX_SESSIONS_PER_USER = 10;
 const REFRESH_REUSE_GRACE_MS = 60 * 1000;
 
 export async function registerUser(
-    input: { name: string; email: string; password: string },
+    input: {
+        name: string;
+        email: string;
+        password: string;
+        gender: string;
+        birthdate: string;
+        country: string;
+        city: string;
+        languages: string[];
+        languageLevels?: Record<string, string>;
+    },
     ip?: string,
 ) {
-    const { name, email, password } = input;
+    const {
+        name,
+        email,
+        password,
+        gender,
+        birthdate,
+        country,
+        city,
+        languages,
+        languageLevels,
+    } = input;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -112,6 +133,15 @@ export async function registerUser(
                 email,
                 publicId,
                 password: hashedPassword,
+                gender,
+                birthdate: new Date(birthdate),
+                country: country.toUpperCase(),
+                city,
+                languages,
+                languageLevels: normalizeLanguageLevels(
+                    languages,
+                    languageLevels,
+                ),
                 verificationToken: hashSecretToken(verificationToken),
                 verificationTokenExpiry: new Date(
                     Date.now() + VERIFICATION_TOKEN_EXPIRES_MIN * 60 * 1000,

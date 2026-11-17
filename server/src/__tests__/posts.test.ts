@@ -8,8 +8,9 @@ import {
     getFeed,
     getPost,
     getPostStats,
+    getProfilePosts,
+    getProfileStats,
     getTrendingTopics,
-    getUserPosts,
     backfillPostLikeCounts,
     deletePost,
     setPostLike,
@@ -215,7 +216,7 @@ describe("posts: feed e paginação", () => {
         });
         await createPost(bob._id.toString(), { content: "Só do Bob" });
 
-        const posts = await getUserPosts(
+        const posts = await getProfilePosts(
             alice._id.toString(),
             alice._id.toString(),
             { limit: 20 },
@@ -235,7 +236,7 @@ describe("posts: feed e paginação", () => {
         );
 
         await expect(
-            getUserPosts(alice._id.toString(), bob._id.toString(), {
+            getProfilePosts(alice._id.toString(), bob._id.toString(), {
                 limit: 20,
             }),
         ).rejects.toBeInstanceOf(ForbiddenError);
@@ -589,6 +590,141 @@ describe("posts: filtros, estatísticas e tendências", () => {
     });
 });
 
+describe("posts: mural do perfil", () => {
+    it("separa posts de mural dos posts do feed", async () => {
+        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+
+        const alicePost = await createPost(alice._id.toString(), {
+            content: "Post do feed",
+        });
+        const wallPost = await createPost(bob._id.toString(), {
+            content: "No mural da Alice",
+            profileId: alice._id.toString(),
+        });
+
+        expect(wallPost.profileId).toBe(alice._id.toString());
+
+        const feed = await getFeed(bob._id.toString(), { limit: 20 });
+        expect(feed.posts.map((post) => post._id)).toEqual([alicePost._id]);
+
+        const profile = await getProfilePosts(
+            bob._id.toString(),
+            alice._id.toString(),
+            { limit: 20 },
+        );
+        expect(profile.posts.map((post) => post._id)).toEqual([
+            wallPost._id,
+            alicePost._id,
+        ]);
+
+        const authored = await getProfilePosts(
+            bob._id.toString(),
+            alice._id.toString(),
+            { limit: 20, authored: true },
+        );
+        expect(authored.posts.map((post) => post._id)).toEqual([
+            alicePost._id,
+        ]);
+
+        const bobProfile = await getProfilePosts(
+            bob._id.toString(),
+            bob._id.toString(),
+            { limit: 20 },
+        );
+        expect(bobProfile.posts).toHaveLength(0);
+    });
+
+    it("conta estatísticas do perfil incluindo posts de mural", async () => {
+        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+
+        const own = await createPost(alice._id.toString(), {
+            content: "Post próprio",
+        });
+        await createPost(bob._id.toString(), {
+            content: "Post no mural",
+            profileId: alice._id.toString(),
+        });
+
+        await setPostLike(bob._id.toString(), own._id, true);
+
+        await expect(
+            getProfileStats(bob._id.toString(), alice._id.toString()),
+        ).resolves.toEqual({
+            postCount: 2,
+            totalLikes: 1,
+            photoCount: 0,
+            authoredCount: 1,
+        });
+    });
+
+    it("permite que o dono do mural exclua posts de terceiros", async () => {
+        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+        const carol = await createUser("Carol", "carol@test.com");
+
+        const wallPost = await createPost(bob._id.toString(), {
+            content: "Post no mural da Alice",
+            profileId: alice._id.toString(),
+        });
+
+        await expect(
+            deletePost(carol._id.toString(), wallPost._id),
+        ).rejects.toBeInstanceOf(ForbiddenError);
+
+        await deletePost(alice._id.toString(), wallPost._id);
+        expect(await Post.findById(wallPost._id).lean()).toBeNull();
+    });
+
+    it("bloqueia o mural de usuário bloqueado", async () => {
+        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+
+        await User.updateOne(
+            { _id: bob._id },
+            { $addToSet: { blockedUsers: alice._id } },
+        );
+
+        await expect(
+            getProfilePosts(alice._id.toString(), bob._id.toString(), {
+                limit: 20,
+            }),
+        ).rejects.toBeInstanceOf(ForbiddenError);
+    });
+
+    it("filtra apenas posts com imagem no mural", async () => {        const alice = await createUser("Alice", "alice@test.com");
+        const bob = await createUser("Bob", "bob@test.com");
+
+        const withImage = await Post.create({
+            author: bob._id,
+            profile: alice._id,
+            content: "Com imagem",
+            image: {
+                url: "https://example.com/image.png",
+                filename: "image.png",
+                mimetype: "image/png",
+                size: 100,
+            },
+        });
+        await Post.create({
+            author: bob._id,
+            profile: alice._id,
+            content: "Sem imagem",
+        });
+
+        const media = await getProfilePosts(
+            bob._id.toString(),
+            alice._id.toString(),
+            { limit: 20, media: true },
+        );
+
+        expect(media.posts.map((post) => post._id)).toEqual([
+            withImage._id.toString(),
+        ]);
+    });
+});
+
 describe("posts: validações", () => {
     it("aceita conteúdo e clientPostId válidos", () => {
         const result = createPostSchema.safeParse({
@@ -683,6 +819,20 @@ describe("posts: validações", () => {
                 query: {},
             }).success,
         ).toBe(true);
+
+        const authored = postsByUserQuerySchema.safeParse({
+            params: { userId: "507f1f77bcf86cd799439011" },
+            query: { authored: "true" },
+        });
+        expect(authored.success && authored.data.query.authored).toBe(true);
+
+        expect(
+            postsByUserQuerySchema.safeParse({
+                params: { userId: "507f1f77bcf86cd799439011" },
+                query: { authored: "yes" },
+            }).success,
+        ).toBe(false);
+
         expect(
             postParamsSchema.safeParse({
                 params: { id: "inválido" },

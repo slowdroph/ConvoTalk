@@ -8,7 +8,7 @@ import api, {
     clearSessionFlag,
 } from "../services/api";
 import { unsubscribeFromPush } from "../services/push";
-import type { User } from "../contexts/AuthContext";
+import type { RegisterInput, User } from "../contexts/AuthContext";
 
 const SESSION_FLAG_KEY = "chat_has_session";
 
@@ -102,11 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const register = useCallback(
-        async (name: string, email: string, password: string) => {
+        async (input: RegisterInput) => {
             const { data } = await api.post("/auth/register", {
-                name,
-                email,
-                password,
+                ...input,
                 acceptedTerms: true,
             });
             if (data.token) {

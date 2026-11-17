@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../hooks/useSocket";
 import { useAuth } from "../../hooks/useAuth";
 import { useWebRTC } from "../../hooks/useWebRTC";
@@ -13,7 +14,6 @@ import GroupInfoModal from "./GroupInfoModal";
 import ThreadPanel from "./ThreadPanel";
 import PinnedMessagesDialog from "./PinnedMessagesDialog";
 import ConfirmDialog from "../ui/ConfirmDialog";
-import UserProfileModal from "../ui/UserProfileModal";
 import ChatHeader from "./ChatHeader";
 import {
     AiComposerMenu,
@@ -37,7 +37,6 @@ interface ChatWindowProps {
     onRoomUpdated?: (room: Room) => void;
     onRoomDeleted?: (roomId: string) => void;
     onRoomLeft?: (roomId: string) => void;
-    onConversationCreated?: (roomId: string) => void;
     onOpenSidebar?: () => void;
     highlightMessageId?: string | null;
     initialPinnedMessageIds?: string[];
@@ -57,7 +56,6 @@ export default function ChatWindow({
     onRoomUpdated,
     onRoomDeleted,
     onRoomLeft,
-    onConversationCreated,
     onOpenSidebar,
     highlightMessageId = null,
     initialPinnedMessageIds,
@@ -65,6 +63,7 @@ export default function ChatWindow({
 }: ChatWindowProps) {
     const { socket, onlineUsers, connected } = useSocket();
     const { user } = useAuth();
+    const navigate = useNavigate();
     const { showToast } = useToast();
     const {
         messages,
@@ -102,7 +101,6 @@ export default function ChatWindow({
     const [exportOpen, setExportOpen] = useState(false);
     const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
     const [groupInfoOpen, setGroupInfoOpen] = useState(false);
-    const [userInfoOpen, setUserInfoOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [threadParent, setThreadParent] = useState<Message | null>(null);
@@ -558,7 +556,11 @@ export default function ChatWindow({
                 onOpenPinned={() => setPinnedOpen(true)}
                 onOpenGroupSettings={() => setGroupSettingsOpen(true)}
                 onOpenGroupInfo={() => setGroupInfoOpen(true)}
-                onOpenUserInfo={() => setUserInfoOpen(true)}
+                onOpenUserInfo={() => {
+                    if (otherUserId) {
+                        navigate(`/profile/${otherUserId}`);
+                    }
+                }}
                 onClearConversation={() => setClearConfirmOpen(true)}
                 pinnedCount={pinnedMessageIds.length}
             />
@@ -601,23 +603,10 @@ export default function ChatWindow({
                 }}
                 currentUserId={user?._id ?? null}
                 onClose={() => setGroupInfoOpen(false)}
-                onConversationCreated={onConversationCreated}
                 onLeft={(id) => {
                     onRoomLeft?.(id);
                     setGroupInfoOpen(false);
                 }}
-            />
-
-            <UserProfileModal
-                isOpen={userInfoOpen}
-                userId={otherUserId ?? null}
-                onClose={() => setUserInfoOpen(false)}
-                onConversationCreated={(id) => {
-                    setUserInfoOpen(false);
-                    onConversationCreated?.(id);
-                }}
-                initialUser={otherUser}
-                hideStartConversation
             />
 
             <ExportDialog

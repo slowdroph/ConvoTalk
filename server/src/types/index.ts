@@ -20,6 +20,12 @@ export interface IUser extends Document {
     status: string;
     country: string;
     city: string;
+    bio: string;
+    interests: string[];
+    gender: string;
+    birthdate: Date | null;
+    languages: string[];
+    languageLevels: Record<string, string>;
     blockedUsers: IUser["_id"][];
     createdAt: Date;
 }
@@ -65,6 +71,7 @@ export interface IMessage extends Document {
 
 export interface IPost extends Document {
     author: IUser["_id"];
+    profile: IUser["_id"] | null;
     content: string;
     image: IAttachment | null;
     poll: IPoll | null;

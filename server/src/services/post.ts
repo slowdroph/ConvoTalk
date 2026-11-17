@@ -11,6 +11,7 @@ import type {
     PostPollPayload,
     PostSavedEvent,
     PostStatsPayload,
+    ProfileStatsPayload,
     TrendingTopicPayload,
 } from "../../../shared/types";
 import {
@@ -42,6 +43,7 @@ interface PopulatedAuthor {
 export interface PostLean {
     _id: mongoose.Types.ObjectId;
     author?: PopulatedAuthor | null;
+    profile?: mongoose.Types.ObjectId | string | null;
     content?: string | null;
     image?: IAttachment | null;
     poll?: IPoll | null;
@@ -117,6 +119,7 @@ export function toPostPayload(
                       country: author.country ?? "",
                   }
                 : null,
+        profileId: post.profile ? String(post.profile) : null,
         content: post.content ?? "",
         image: post.image ?? null,
         likeCount,
@@ -224,6 +227,7 @@ export async function getExcludedAuthorIds(
 export async function emitPostEvent(
     event:
         | "post:new"
+        | "wall:post:new"
         | "post:liked"
         | "post:poll"
         | "post:deleted"
@@ -266,6 +270,24 @@ export async function emitSavedPostEvent(
         }
     } catch (error) {
         logger.warn({ error, event }, "falha ao emitir evento de salvo");
+    }
+}
+
+export async function assertPostVisible(
+    viewerId: string,
+    authorId: string,
+    profileId?: string | null,
+): Promise<void> {
+    if (authorId !== viewerId && (await areUsersBlocked(viewerId, authorId))) {
+        throw new ForbiddenError("Acesso negado.");
+    }
+
+    if (
+        profileId &&
+        profileId !== viewerId &&
+        (await areUsersBlocked(viewerId, profileId))
+    ) {
+        throw new ForbiddenError("Acesso negado.");
     }
 }
 
@@ -315,7 +337,10 @@ async function listPosts(
     const excluded =
         filter === "mine" ? [] : await getExcludedAuthorIds([viewerId]);
 
-    const query: QueryFilter<IPost> = { deleted: { $ne: true } };
+    const query: QueryFilter<IPost> = {
+        deleted: { $ne: true },
+        profile: null,
+    };
     if (filter === "mine") {
         query.author = new mongoose.Types.ObjectId(viewerId);
     } else if (excluded.length > 0) {
@@ -385,24 +410,72 @@ export async function searchPosts(
     return listPosts(viewerId, opts, term);
 }
 
-export async function getUserPosts(
+interface ProfileFeedOptions extends PaginationOptions {
+    media?: boolean;
+    authored?: boolean;
+}
+
+async function profileVisibilityClauses(
     viewerId: string,
-    authorId: string,
-    opts: PaginationOptions,
-): Promise<{ posts: PostPayload[]; nextCursor: { before: string; beforeId: string } | null }> {
-    const author = await User.findById(authorId).select("_id").lean();
-    if (!author) {
+    profileUserId: string,
+): Promise<QueryFilter<IPost>[]> {
+    const owner = await User.findById(profileUserId).select("_id").lean();
+    if (!owner) {
         throw new NotFoundError("Usuário não encontrado.");
     }
 
-    if (authorId !== viewerId && (await areUsersBlocked(viewerId, authorId))) {
+    if (
+        profileUserId !== viewerId &&
+        (await areUsersBlocked(viewerId, profileUserId))
+    ) {
         throw new ForbiddenError("Acesso negado.");
     }
 
+    const excluded = await getExcludedAuthorIds([viewerId, profileUserId]);
+    const profileObjectId = new mongoose.Types.ObjectId(profileUserId);
+
+    const clauses: QueryFilter<IPost>[] = [
+        {
+            $or: [
+                { profile: profileObjectId },
+                { profile: null, author: profileObjectId },
+            ],
+        },
+    ];
+
+    if (excluded.length > 0) {
+        clauses.push({
+            author: {
+                $nin: excluded.map((id) => new mongoose.Types.ObjectId(id)),
+            },
+        });
+    }
+
+    return clauses;
+}
+
+export async function getProfilePosts(
+    viewerId: string,
+    profileUserId: string,
+    opts: ProfileFeedOptions,
+): Promise<{
+    posts: PostPayload[];
+    nextCursor: { before: string; beforeId: string } | null;
+}> {
     const query: QueryFilter<IPost> = {
-        author: new mongoose.Types.ObjectId(authorId),
         deleted: { $ne: true },
+        $and: await profileVisibilityClauses(viewerId, profileUserId),
     };
+
+    if (opts.media) {
+        query.image = { $ne: null };
+    }
+
+    if (opts.authored) {
+        query.author = new mongoose.Types.ObjectId(profileUserId);
+        query.profile = null;
+    }
+
     applyCursor(query, opts);
 
     const safeLimit = Math.min(Math.max(Number(opts.limit) || 20, 1), 30);
@@ -432,6 +505,85 @@ export async function getUserPosts(
     };
 }
 
+export async function getProfileStats(
+    viewerId: string,
+    profileUserId: string,
+): Promise<ProfileStatsPayload> {
+    const match: QueryFilter<IPost> = {
+        deleted: { $ne: true },
+        $and: await profileVisibilityClauses(viewerId, profileUserId),
+    };
+
+    const [result] = await Post.aggregate<ProfileStatsPayload>([
+        { $match: match },
+        {
+            $group: {
+                _id: null,
+                postCount: { $sum: 1 },
+                totalLikes: {
+                    $sum: {
+                        $ifNull: [
+                            "$likeCount",
+                            { $size: { $ifNull: ["$likes", []] } },
+                        ],
+                    },
+                },
+                photoCount: {
+                    $sum: {
+                        $cond: [
+                            { $ne: [{ $ifNull: ["$image", null] }, null] },
+                            1,
+                            0,
+                        ],
+                    },
+                },
+                authoredCount: {
+                    $sum: {
+                        $cond: [
+                            {
+                                $and: [
+                                    {
+                                        $eq: [
+                                            "$author",
+                                            new mongoose.Types.ObjectId(
+                                                profileUserId,
+                                            ),
+                                        ],
+                                    },
+                                    {
+                                        $eq: [
+                                            { $ifNull: ["$profile", null] },
+                                            null,
+                                        ],
+                                    },
+                                ],
+                            },
+                            1,
+                            0,
+                        ],
+                    },
+                },
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                postCount: 1,
+                totalLikes: 1,
+                photoCount: 1,
+                authoredCount: 1,
+            },
+        },
+    ]);
+
+    return {
+        postCount: result?.postCount ?? 0,
+        totalLikes: result?.totalLikes ?? 0,
+        photoCount: result?.photoCount ?? 0,
+        authoredCount: result?.authoredCount ?? 0,
+    };
+}
+
 export async function getPost(
     viewerId: string,
     postId: string,
@@ -448,12 +600,12 @@ export async function getPost(
     }
 
     const authorId = post.author?._id?.toString();
-    if (
-        authorId &&
-        authorId !== viewerId &&
-        (await areUsersBlocked(viewerId, authorId))
-    ) {
-        throw new ForbiddenError("Acesso negado.");
+    if (authorId) {
+        await assertPostVisible(
+            viewerId,
+            authorId,
+            post.profile ? String(post.profile) : null,
+        );
     }
 
     const savedPostIds = await getSavedPostIds(viewerId, [String(post._id)]);
@@ -500,6 +652,7 @@ export async function createPost(
     input: {
         content: string;
         clientPostId?: string;
+        profileId?: string;
         poll?: { options: string[] };
     },
     file?: Express.Multer.File,
@@ -515,6 +668,14 @@ export async function createPost(
         throw new ValidationError(
             "Escreva a pergunta da enquete antes de publicar.",
         );
+    }
+
+    if (input.profileId) {
+        const owner = await User.findById(input.profileId).select("_id").lean();
+        if (!owner) {
+            throw new NotFoundError("Usuário não encontrado.");
+        }
+        await assertPostVisible(userId, userId, input.profileId);
     }
 
     let image: IAttachment | null = null;
@@ -536,6 +697,7 @@ export async function createPost(
     try {
         created = await Post.create({
             author: userId,
+            profile: input.profileId || null,
             content,
             image,
             poll,
@@ -562,7 +724,14 @@ export async function createPost(
     }
 
     const payload = await populatePost(created._id.toString(), userId);
-    await emitPostEvent("post:new", payload, [userId]);
+    if (input.profileId) {
+        await emitPostEvent("wall:post:new", payload, [
+            input.profileId,
+            userId,
+        ]);
+    } else {
+        await emitPostEvent("post:new", payload, [userId]);
+    }
     return payload;
 }
 
@@ -574,23 +743,36 @@ export async function deletePost(
         _id: postId,
         deleted: { $ne: true },
     })
-        .select("author image")
+        .select("author profile image")
         .lean();
 
     if (!post) {
         throw new NotFoundError("Post não encontrado.");
     }
 
-    if (post.author.toString() !== userId) {
-        throw new ForbiddenError("Você só pode excluir seus próprios posts.");
+    const authorId = post.author.toString();
+    const profileId = post.profile ? post.profile.toString() : null;
+    if (authorId !== userId && profileId !== userId) {
+        throw new ForbiddenError(
+            profileId
+                ? "Você só pode excluir posts do seu mural ou de sua autoria."
+                : "Você só pode excluir seus próprios posts.",
+        );
     }
 
-    await Post.deleteOne({ _id: postId, author: userId });
+    await Post.deleteOne({
+        _id: postId,
+        $or: [{ author: userId }, { profile: userId }],
+    });
     await Comment.deleteMany({ post: postId });
     await SavedPost.deleteMany({ post: postId });
     await removePostImage(post.image ?? null);
 
-    await emitPostEvent("post:deleted", { postId }, [userId]);
+    await emitPostEvent(
+        "post:deleted",
+        { postId },
+        profileId ? [authorId, profileId] : [authorId],
+    );
 }
 
 export async function setPollVote(
@@ -602,7 +784,7 @@ export async function setPollVote(
         _id: postId,
         deleted: { $ne: true },
     })
-        .select("author poll")
+        .select("author profile poll")
         .lean()) as unknown as PostLean | null;
 
     if (!post) {
@@ -614,12 +796,12 @@ export async function setPollVote(
     }
 
     const authorId = post.author?._id?.toString() ?? "";
-    if (
-        authorId &&
-        authorId !== userId &&
-        (await areUsersBlocked(userId, authorId))
-    ) {
-        throw new ForbiddenError("Acesso negado.");
+    if (authorId) {
+        await assertPostVisible(
+            userId,
+            authorId,
+            post.profile ? String(post.profile) : null,
+        );
     }
 
     const targetOption = optionId
@@ -667,7 +849,9 @@ export async function setPollVote(
     await emitPostEvent(
         "post:poll",
         event,
-        [authorId, userId].filter(Boolean),
+        [authorId, userId, post.profile ? String(post.profile) : ""].filter(
+            Boolean,
+        ),
     );
 
     return { postId, poll };
@@ -707,19 +891,19 @@ export async function setPostLike(
         _id: postId,
         deleted: { $ne: true },
     })
-        .select("author")
+        .select("author profile")
         .lean();
 
     if (!post) {
         throw new NotFoundError("Post não encontrado.");
     }
 
-    if (
-        post.author.toString() !== userId &&
-        (await areUsersBlocked(userId, post.author.toString()))
-    ) {
-        throw new ForbiddenError("Acesso negado.");
-    }
+    const authorId = post.author.toString();
+    await assertPostVisible(
+        userId,
+        authorId,
+        post.profile ? String(post.profile) : null,
+    );
 
     const userObjectId = new mongoose.Types.ObjectId(userId);
     const likesExpression = liked
@@ -761,9 +945,10 @@ export async function setPostLike(
             : (updated.likes ?? []).length;
     const payload = { postId, likeCount, userId, liked };
     await emitPostEvent("post:liked", payload, [
-        post.author.toString(),
+        authorId,
         userId,
-    ]);
+        post.profile ? String(post.profile) : "",
+    ].filter(Boolean));
     return { likeCount, liked };
 }
 
@@ -774,6 +959,7 @@ export async function getPostStats(
         {
             $match: {
                 author: new mongoose.Types.ObjectId(userId),
+                profile: null,
                 deleted: { $ne: true },
             },
         },
@@ -810,6 +996,7 @@ export async function getTrendingTopics(
 
     const match: Record<string, unknown> = {
         deleted: { $ne: true },
+        profile: null,
         createdAt: { $gte: since },
     };
     if (excluded.length > 0) {

@@ -15,6 +15,7 @@ import {
     savedPostsQuerySchema,
     postSearchRequestSchema,
     postParamsSchema,
+    profileStatsQuerySchema,
     votePollSchema,
     trendingTopicsQuerySchema,
     commentsQuerySchema,
@@ -25,6 +26,7 @@ import {
     listFeed,
     searchPosts,
     listUserPosts,
+    getProfileStats,
     listSavedPosts,
     getPost,
     getPostStats,
@@ -73,6 +75,13 @@ router.get(
     postReadLimiter,
     validate(postsByUserQuerySchema),
     listUserPosts,
+);
+router.get(
+    "/profile/:userId/stats",
+    auth,
+    postReadLimiter,
+    validate(profileStatsQuerySchema),
+    getProfileStats,
 );
 router.get(
     "/:id/comments",

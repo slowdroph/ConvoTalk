@@ -11,7 +11,7 @@ import BlockedUsers from "../components/Settings/BlockedUsers";
 import SessionManager from "../components/Settings/SessionManager";
 
 type TabKey =
-    | "perfil"
+    | "conta"
     | "seguranca"
     | "sessoes"
     | "aparencia"
@@ -29,11 +29,11 @@ interface TabDefinition {
 
 const TABS: TabDefinition[] = [
     {
-        id: "perfil",
-        label: "Perfil & Informações",
+        id: "conta",
+        label: "Conta",
         category: "Conta & Perfil",
-        title: "Perfil & Informações",
-        description: "Gerencie suas informações cadastrais, foto de exibição e mensagem de status.",
+        title: "Conta",
+        description: "Gerencie seu nome e email de acesso. Foto, status e informações do perfil ficam na página de perfil.",
     },
     {
         id: "seguranca",
@@ -82,7 +82,7 @@ const TABS: TabDefinition[] = [
 export default function SettingsPage() {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<TabKey>("perfil");
+    const [activeTab, setActiveTab] = useState<TabKey>("conta");
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const currentTab = TABS.find((t) => t.id === activeTab) || TABS[0];
@@ -93,7 +93,7 @@ export default function SettingsPage() {
 
     const getTabIcon = (id: TabKey) => {
         switch (id) {
-            case "perfil":
+            case "conta":
                 return (
                     <path
                         strokeLinecap="round"
@@ -349,7 +349,7 @@ export default function SettingsPage() {
 
                     {/* Conteúdo Exclusivo da Aba Ativa */}
                     <div className="transition-all duration-150">
-                        {activeTab === "perfil" && (
+                        {activeTab === "conta" && (
                             <section className="bg-noir-card border border-noir-border rounded-2xl p-5 sm:p-6 shadow-xl">
                                 <ProfileForm />
                             </section>

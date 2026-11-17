@@ -16,9 +16,26 @@ const ALLOWED_IMAGE_TYPES = new Set([
     "image/webp",
     "image/gif",
 ]);
+const EMOJIS = [
+    "😀",
+    "😂",
+    "😍",
+    "😎",
+    "🤔",
+    "👍",
+    "👏",
+    "🙌",
+    "🔥",
+    "❤️",
+    "✨",
+    "🎉",
+];
 
 interface FeedComposerProps {
     onCreated: (post: Post) => void;
+    profileId?: string;
+    placeholder?: string;
+    variant?: "default" | "compact";
 }
 
 interface SelectedImage {
@@ -26,7 +43,13 @@ interface SelectedImage {
     url: string;
 }
 
-export default function FeedComposer({ onCreated }: FeedComposerProps) {
+export default function FeedComposer({
+    onCreated,
+    profileId,
+    placeholder = "O que você gostaria de compartilhar com a comunidade ConvoTalk?",
+    variant = "default",
+}: FeedComposerProps) {
+    const isCompact = variant === "compact";
     const { user } = useAuth();
     const { showToast } = useToast();
     const [content, setContent] = useState("");
@@ -34,7 +57,9 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
     const [submitting, setSubmitting] = useState(false);
     const [pollOptions, setPollOptions] = useState<string[] | null>(null);
     const [pollError, setPollError] = useState<string | null>(null);
+    const [emojiOpen, setEmojiOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const imageRef = useRef<SelectedImage | null>(null);
     const clientPostIdRef = useRef<string | null>(null);
 
@@ -62,6 +87,12 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
     ) => {
         clientPostIdRef.current = null;
         setContent(event.target.value.slice(0, MAX_CONTENT));
+    };
+
+    const addEmoji = (emoji: string) => {
+        setContent((current) => (current + emoji).slice(0, MAX_CONTENT));
+        setEmojiOpen(false);
+        textareaRef.current?.focus();
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,6 +195,7 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
                 content: trimmed,
                 image: image?.file,
                 clientPostId: clientPostIdRef.current,
+                profileId,
                 poll: pollOptions ? { options: trimmedOptions } : undefined,
             });
 
@@ -173,7 +205,10 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
             setPollOptions(null);
             setPollError(null);
             clearImage();
-            showToast({ type: "success", message: "Post publicado!" });
+            showToast({
+                type: "success",
+                message: profileId ? "Publicado no mural!" : "Post publicado!",
+            });
         } catch (err) {
             showToast({
                 type: "error",
@@ -187,7 +222,11 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
     return (
         <form
             onSubmit={handleSubmit}
-            className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-noir-border dark:bg-noir-surface sm:p-5"
+            className={
+                isCompact
+                    ? "flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-noir-border dark:bg-noir-surface sm:p-4"
+                    : "flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-noir-border dark:bg-noir-surface sm:p-5"
+            }
         >
             <div className="flex gap-3">
                 <Avatar
@@ -198,13 +237,18 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
                 />
                 <div className="min-w-0 flex-1">
                     <textarea
+                        ref={textareaRef}
                         value={content}
                         onChange={handleContentChange}
-                        placeholder="O que você gostaria de compartilhar com a comunidade ConvoTalk?"
+                        placeholder={placeholder}
                         aria-label="Escreva seu post"
-                        rows={2}
+                        rows={isCompact ? 1 : 2}
                         disabled={submitting}
-                        className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface-alt/60 dark:text-noir-text-bright dark:placeholder:text-noir-text-muted/70"
+                        className={
+                            isCompact
+                                ? "w-full resize-none rounded-xl border border-transparent bg-transparent px-1 py-1.5 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/30 disabled:opacity-60 dark:text-noir-text-bright dark:placeholder:text-noir-text-muted/70"
+                                : "w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface-alt/60 dark:text-noir-text-bright dark:placeholder:text-noir-text-muted/70"
+                        }
                     />
 
                     {image && (
@@ -324,7 +368,13 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
                 </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 dark:border-noir-border/70">
+            <div
+                className={
+                    isCompact
+                        ? "flex items-center justify-between gap-2 border-t border-slate-100 pt-2 dark:border-noir-border/70"
+                        : "flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 dark:border-noir-border/70"
+                }
+            >
                 <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                     <input
                         ref={inputRef}
@@ -342,7 +392,12 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
                                 ? "Remova a imagem para escolher outra"
                                 : "Adicionar imagem"
                         }
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-700/30 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                        aria-label="Adicionar imagem"
+                        className={
+                            isCompact
+                                ? "inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-noir-text-muted dark:hover:bg-noir-surface-alt dark:hover:text-emerald-400"
+                                : "inline-flex items-center gap-1.5 rounded-lg border border-emerald-700/30 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                        }
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -358,8 +413,57 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
                                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                         </svg>
-                        Imagem
+                        {!isCompact && "Imagem"}
                     </button>
+
+                    {isCompact && (
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setEmojiOpen((open) => !open)}
+                                disabled={submitting}
+                                title="Adicionar emoji"
+                                aria-label="Adicionar emoji"
+                                aria-expanded={emojiOpen}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-noir-text-muted dark:hover:bg-noir-surface-alt dark:hover:text-emerald-400"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={1.8}
+                                        d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+                            </button>
+                            {emojiOpen && (
+                                <div
+                                    role="group"
+                                    aria-label="Emojis"
+                                    className="absolute bottom-full left-0 z-20 mb-2 grid grid-cols-6 gap-1 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-noir-border dark:bg-noir-surface"
+                                >
+                                    {EMOJIS.map((emoji) => (
+                                        <button
+                                            key={emoji}
+                                            type="button"
+                                            onClick={() => addEmoji(emoji)}
+                                            aria-label={`Inserir ${emoji}`}
+                                            className="flex h-8 w-8 items-center justify-center rounded-lg text-lg transition-colors hover:bg-slate-100 dark:hover:bg-noir-surface-alt"
+                                        >
+                                            {emoji}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <button
                         type="button"
@@ -376,11 +480,19 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
                                 : "Adicionar enquete"
                         }
                         aria-pressed={pollOptions !== null}
-                        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                            pollOptions
-                                ? "border-emerald-700/30 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
-                                : "border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-noir-border dark:text-noir-text-muted dark:hover:bg-noir-surface-alt"
-                        }`}
+                        className={
+                            isCompact
+                                ? `inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                                      pollOptions
+                                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                          : "text-slate-500 hover:bg-slate-100 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:bg-noir-surface-alt dark:hover:text-emerald-400"
+                                  }`
+                                : `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                                      pollOptions
+                                          ? "border-emerald-700/30 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                                          : "border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-noir-border dark:text-noir-text-muted dark:hover:bg-noir-surface-alt"
+                                  }`
+                        }
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -396,7 +508,7 @@ export default function FeedComposer({ onCreated }: FeedComposerProps) {
                                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                             />
                         </svg>
-                        Enquete
+                        {!isCompact && "Enquete"}
                     </button>
 
                     {content.length > MAX_CONTENT - 200 && (

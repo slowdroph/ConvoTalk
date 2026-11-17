@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { useSocket } from "../../hooks/useSocket";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import Avatar from "../ui/Avatar";
-import UserProfileModal from "../ui/UserProfileModal";
 import type { Room } from "../../types";
 
 interface UserResult {
@@ -56,9 +56,9 @@ export default function UserSearchModal({
     const [publicGroups, setPublicGroups] = useState<PublicGroup[]>([]);
     const [publicLoading, setPublicLoading] = useState(false);
     const [joiningId, setJoiningId] = useState<string | null>(null);
-    const [profileUserId, setProfileUserId] = useState<string | null>(null);
     const [tab, setTab] = useState<Tab>("all");
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const navigate = useNavigate();
     const { onlineUsers } = useSocket();
     const inputRef = useRef<HTMLInputElement>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -80,7 +80,6 @@ export default function UserSearchModal({
             setCreatingId(null);
             setPublicGroups([]);
             setJoiningId(null);
-            setProfileUserId(null);
         }
     }
 
@@ -93,7 +92,6 @@ export default function UserSearchModal({
         setCreatingId(null);
         setPublicGroups([]);
         setJoiningId(null);
-        setProfileUserId(null);
         onClose();
     }, [onClose]);
 
@@ -525,7 +523,8 @@ export default function UserSearchModal({
                                         type="button"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setProfileUserId(user._id);
+                                            handleClose();
+                                            navigate(`/profile/${user._id}`);
                                         }}
                                         title="Ver perfil"
                                         aria-label={`Ver perfil de ${user.name}`}
@@ -702,18 +701,7 @@ export default function UserSearchModal({
             </div>
         </div>,
         document.body,
-            )}
-            <UserProfileModal
-                isOpen={profileUserId !== null}
-                userId={profileUserId}
-                onClose={() => setProfileUserId(null)}
-                onConversationCreated={(roomId) => {
-                    setProfileUserId(null);
-                    onConversationCreated(roomId);
-                    handleClose();
-                }}
-                initialUser={results.find((u) => u._id === profileUserId)}
-            />
+    )}
         </>
     );
 }

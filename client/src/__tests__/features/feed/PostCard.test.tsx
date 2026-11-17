@@ -63,6 +63,7 @@ function makePost(overrides: Partial<Post> = {}): Post {
 type PostCardTestProps = {
     post: Post;
     currentUserId?: string;
+    wallOwnerId?: string | null;
     onLike: (post: Post) => Promise<void>;
     onSave: (post: Post) => Promise<void>;
     onVote: (post: Post, optionId: string | null) => Promise<void>;
@@ -111,6 +112,24 @@ describe("PostCard", () => {
         expect(screen.getByText("Ana")).toBeInTheDocument();
         expect(screen.getByText("Conteúdo do post")).toBeInTheDocument();
         expect(screen.getByText("2 curtidas")).toBeInTheDocument();
+    });
+
+    it("mostra a cidade do autor quando disponível", () => {
+        setup(
+            makePost({
+                author: {
+                    _id: "author-1",
+                    name: "Ana",
+                    publicId: "ANA123",
+                    avatar: "",
+                    status: "",
+                    country: "BR",
+                    city: "São Paulo",
+                },
+            }),
+        );
+
+        expect(screen.getByText("São Paulo")).toBeInTheDocument();
     });
 
     it("curte o post ao clicar no botão", async () => {
@@ -211,6 +230,16 @@ describe("PostCard", () => {
         ).not.toBeInTheDocument();
     });
 
+    it("destaca o dono do mural com o selo Autor", () => {
+        setup(makePost(), { wallOwnerId: "author-1" });
+        expect(screen.getByText("Autor")).toBeInTheDocument();
+    });
+
+    it("não mostra o selo Autor para recados de visitantes", () => {
+        setup(makePost(), { wallOwnerId: "owner-2" });
+        expect(screen.queryByText("Autor")).not.toBeInTheDocument();
+    });
+
     it("confirma a exclusão do próprio post", async () => {
         const props = setup(makePost(), { currentUserId: "author-1" });
 
@@ -261,6 +290,44 @@ describe("PostCard", () => {
         setup(makePost());
         expect(
             screen.queryByPlaceholderText("Escrever um comentário..."),
+        ).not.toBeInTheDocument();
+    });
+
+    it("permite que o dono do mural exclua posts de terceiros", () => {
+        setup(
+            makePost({ profileId: "owner-1" }),
+            { currentUserId: "owner-1", wallOwnerId: "owner-1" },
+        );
+
+        expect(
+            screen.getByRole("button", { name: "Excluir post" }),
+        ).toBeInTheDocument();
+    });
+
+    it("não permite que um visitante exclua posts do mural alheio", () => {
+        setup(
+            makePost({ profileId: "owner-1" }),
+            { currentUserId: "visitor", wallOwnerId: "owner-1" },
+        );
+
+        expect(
+            screen.queryByRole("button", { name: "Excluir post" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("sinaliza quando o post foi escrito no mural", () => {
+        setup(
+            makePost({ profileId: "owner-1" }),
+            { currentUserId: "owner-1", wallOwnerId: "owner-1" },
+        );
+
+        expect(screen.getByText("escreveu no mural")).toBeInTheDocument();
+    });
+
+    it("não sinaliza mural em posts do feed", () => {
+        setup(makePost({ profileId: null }));
+        expect(
+            screen.queryByText("escreveu no mural"),
         ).not.toBeInTheDocument();
     });
 });

@@ -5,6 +5,10 @@ import Room from "../models/Room";
 import Session from "../models/Session";
 import PushSubscription from "../models/PushSubscription";
 import ReadLog from "../models/ReadLog";
+import Post from "../models/Post";
+import Comment from "../models/Comment";
+import SavedPost from "../models/SavedPost";
+import { calculateAge, normalizeLanguageLevels } from "../../../shared/profile";
 import cloudinary from "../config/cloudinary";
 import {
     BadRequestError,
@@ -28,7 +32,6 @@ import { logger } from "../config/logger";
 import { getSocketIO } from "../config/io";
 import { emitForceLogout } from "../utils/socket";
 import { escapeRegex } from "../utils/regex";
-import { areUsersBlocked } from "../utils/blocked";
 
 const SENSITIVE_SELECT =
     "-password -verificationToken -verificationTokenExpiry -resetToken -resetTokenExpiry -pendingEmailToken -pendingEmailTokenExpiry";
@@ -74,8 +77,18 @@ export async function getUserStatus(userId: string) {
 }
 
 export async function getPublicProfile(userId: string, requesterId: string) {
-    if (await areUsersBlocked(userId, requesterId)) {
-        throw new NotFoundError("Usuário não encontrado.");
+    const isSelf = requesterId === userId;
+    let blockedByMe = false;
+
+    if (!isSelf) {
+        const [blockedByMeDoc, blockedMeDoc] = await Promise.all([
+            User.exists({ _id: requesterId, blockedUsers: userId }),
+            User.exists({ _id: userId, blockedUsers: requesterId }),
+        ]);
+        if (blockedMeDoc) {
+            throw new NotFoundError("Usuário não encontrado.");
+        }
+        blockedByMe = Boolean(blockedByMeDoc);
     }
 
     const user = await User.findById(userId)
@@ -85,7 +98,24 @@ export async function getPublicProfile(userId: string, requesterId: string) {
         throw new NotFoundError("Usuário não encontrado.");
     }
 
-    return user;
+    const { birthdate, ...profile } = user;
+    const age = birthdate ? calculateAge(birthdate) : null;
+    const languageLevels = normalizeLanguageLevels(
+        profile.languages ?? [],
+        profile.languageLevels,
+    );
+
+    if (!isSelf) {
+        return { ...profile, age, languageLevels, blockedByMe };
+    }
+
+    return {
+        ...profile,
+        age,
+        languageLevels,
+        blockedByMe,
+        birthdate: birthdate ? birthdate.toISOString() : null,
+    };
 }
 
 export async function updateProfile(
@@ -220,6 +250,62 @@ export async function updateStatus(userId: string, status: string) {
     return status.trim();
 }
 
+export async function updateAbout(
+    userId: string,
+    input: {
+        bio: string;
+        interests: string[];
+        gender?: string;
+        birthdate?: string | null;
+        country?: string | null;
+        city?: string | null;
+        languages?: string[];
+        languageLevels?: Record<string, string>;
+        status?: string;
+    },
+) {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new NotFoundError("Usuário não encontrado.");
+    }
+
+    user.bio = input.bio;
+    user.interests = input.interests;
+    if (input.gender !== undefined) {
+        user.gender = input.gender;
+    }
+    if (input.birthdate !== undefined) {
+        user.birthdate = input.birthdate ? new Date(input.birthdate) : null;
+    }
+    if (input.country !== undefined) {
+        user.country = (input.country ?? "").toUpperCase();
+    }
+    if (input.city !== undefined) {
+        user.city = input.city ?? "";
+    }
+    if (input.status !== undefined) {
+        user.status = input.status.trim();
+    }
+    if (input.languages !== undefined) {
+        user.languages = input.languages;
+        user.languageLevels = normalizeLanguageLevels(
+            input.languages,
+            input.languageLevels ?? user.languageLevels,
+        );
+    } else if (input.languageLevels !== undefined) {
+        user.languageLevels = normalizeLanguageLevels(
+            user.languages,
+            input.languageLevels,
+        );
+    }
+    await user.save();
+
+    return {
+        ...toSafeUserObject(user.toObject()),
+        emailPending: Boolean(user.pendingEmail),
+    };
+}
+
 export async function updateLocation(
     userId: string,
     input: { country?: string | null; city?: string | null },
@@ -312,6 +398,24 @@ export async function deleteAccount(userId: string, password: string) {
     await PushSubscription.deleteMany({ user: myId });
     await ReadLog.deleteMany({ userId: myId });
 
+    const myPosts = await Post.find({
+        $or: [{ author: myId }, { profile: myId }],
+    })
+        .select("_id image")
+        .lean();
+    const myPostIds = myPosts.map((post) => post._id);
+
+    if (myPostIds.length > 0) {
+        await Comment.deleteMany({ post: { $in: myPostIds } });
+        await SavedPost.deleteMany({ post: { $in: myPostIds } });
+        await deleteCloudinaryAttachments(
+            myPosts.flatMap((post) => (post.image ? [post.image] : [])),
+        );
+        await Post.deleteMany({ _id: { $in: myPostIds } });
+    }
+
+    await SavedPost.deleteMany({ user: myId });
+
     await User.updateMany(
         { blockedUsers: myId },
         { $pull: { blockedUsers: myId } },
@@ -357,7 +461,7 @@ export async function updateAvatar(
 
     const result = await cloudinary.uploader.upload(dataURI, {
         folder: "chat_app_profilePhoto",
-        transformation: [{ width: 256, height: 256, crop: "fill" }],
+        transformation: [{ width: 1024, height: 1024, crop: "fill" }],
     });
 
     user.avatar = result.secure_url;

@@ -15,6 +15,7 @@ import { sharePost } from "../sharePost";
 interface PostCardProps {
     post: Post;
     currentUserId?: string;
+    wallOwnerId?: string | null;
     onLike: (post: Post) => Promise<void>;
     onSave: (post: Post) => Promise<void>;
     onVote: (post: Post, optionId: string | null) => Promise<void>;
@@ -26,6 +27,7 @@ interface PostCardProps {
 export default function PostCard({
     post,
     currentUserId,
+    wallOwnerId,
     onLike,
     onSave,
     onVote,
@@ -45,6 +47,14 @@ export default function PostCard({
 
     const authorId = post.author?._id;
     const isOwner = Boolean(currentUserId && authorId === currentUserId);
+    const isWallOwner = Boolean(
+        currentUserId && wallOwnerId === currentUserId,
+    );
+    const canDelete = Boolean(onDelete && (isOwner || isWallOwner));
+    const isWallAuthor = Boolean(wallOwnerId && authorId === wallOwnerId);
+    const isWallPost = Boolean(
+        post.profileId && post.profileId !== authorId,
+    );
     const isOnline = Boolean(
         authorId && onlineUsers.some((user) => user.userId === authorId),
     );
@@ -179,6 +189,11 @@ export default function PostCard({
                                     className="h-3 w-4"
                                 />
                             )}
+                            {isWallAuthor && (
+                                <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
+                                    Autor
+                                </span>
+                            )}
                         </div>
                         <div className="flex items-center gap-2 font-mono text-xs text-slate-500 dark:text-noir-text-muted">
                             {post.author?.publicId && (
@@ -195,17 +210,33 @@ export default function PostCard({
                             >
                                 {formatTimeAgo(post.createdAt)}
                             </time>
+                            {post.author?.city && (
+                                <>
+                                    <span aria-hidden="true">•</span>
+                                    <span className="truncate font-sans">
+                                        {post.author.city}
+                                    </span>
+                                </>
+                            )}
                             {post.edited && (
                                 <>
                                     <span aria-hidden="true">•</span>
                                     <span className="font-sans">editado</span>
                                 </>
                             )}
+                            {isWallPost && (
+                                <>
+                                    <span aria-hidden="true">•</span>
+                                    <span className="font-sans text-emerald-600 dark:text-emerald-400">
+                                        escreveu no mural
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {isOwner && onDelete && (
+                {canDelete && (
                     <button
                         type="button"
                         onClick={() => setConfirmOpen(true)}
@@ -399,7 +430,11 @@ export default function PostCard({
                 <ConfirmDialog
                     isOpen={confirmOpen}
                     title="Excluir post"
-                    message="Esta ação não pode ser desfeita. Deseja excluir este post?"
+                    message={
+                        isWallPost && !isOwner
+                            ? "Este post foi escrito no seu mural. Deseja excluí-lo?"
+                            : "Esta ação não pode ser desfeita. Deseja excluir este post?"
+                    }
                     confirmLabel={deleting ? "Excluindo..." : "Excluir"}
                     danger
                     onConfirm={handleDelete}

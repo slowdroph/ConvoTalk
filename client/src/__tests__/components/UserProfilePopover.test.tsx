@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import UserProfilePopover from "../../components/ui/UserProfilePopover";
 import api from "../../services/api";
 
@@ -19,16 +20,18 @@ afterEach(() => {
 
 function renderPopover() {
     return render(
-        <UserProfilePopover
-            userId="u1"
-            name="Ana"
-            avatar=""
-            publicId="ABCD1234"
-            status="em reunião"
-            isOnline={true}
-        >
-            <span>Ana</span>
-        </UserProfilePopover>,
+        <MemoryRouter>
+            <UserProfilePopover
+                userId="u1"
+                name="Ana"
+                avatar=""
+                publicId="ABCD1234"
+                status="em reunião"
+                isOnline={true}
+            >
+                <span>Ana</span>
+            </UserProfilePopover>
+        </MemoryRouter>,
     );
 }
 
@@ -53,11 +56,21 @@ describe("UserProfilePopover", () => {
         expect(screen.getByText("Online")).toBeInTheDocument();
     });
 
+    it("linka para a página completa do perfil", () => {
+        renderPopover();
+        hover(screen.getByText("Ana"));
+        expect(
+            screen.getByRole("link", { name: "Ver perfil completo" }),
+        ).toHaveAttribute("href", "/profile/u1");
+    });
+
     it("não abre popover quando falta userId ou name", () => {
         render(
-            <UserProfilePopover name="">
-                <span>filho</span>
-            </UserProfilePopover>,
+            <MemoryRouter>
+                <UserProfilePopover name="">
+                    <span>filho</span>
+                </UserProfilePopover>
+            </MemoryRouter>,
         );
         expect(screen.getByText("filho")).toBeInTheDocument();
         expect(screen.queryByText("Online")).not.toBeInTheDocument();
@@ -65,9 +78,11 @@ describe("UserProfilePopover", () => {
 
     it("mostra status offline quando não online", () => {
         render(
-            <UserProfilePopover userId="u2" name="Bruno" isOnline={false}>
-                <span>Bruno</span>
-            </UserProfilePopover>,
+            <MemoryRouter>
+                <UserProfilePopover userId="u2" name="Bruno" isOnline={false}>
+                    <span>Bruno</span>
+                </UserProfilePopover>
+            </MemoryRouter>,
         );
         hover(screen.getByText("Bruno"));
         expect(screen.getByText("Offline")).toBeInTheDocument();

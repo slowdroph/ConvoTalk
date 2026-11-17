@@ -101,6 +101,17 @@ export const profileEmailGuardLimiter = rateLimit({
     },
 });
 
+export const profileUpdateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 40,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator,
+    message: {
+        message: "Muitas atualizações de perfil. Aguarde 15 minutos.",
+    },
+});
+
 export const previewLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 20,

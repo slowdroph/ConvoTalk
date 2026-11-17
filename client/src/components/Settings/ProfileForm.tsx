@@ -1,110 +1,16 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
-import { COUNTRIES, getCountryName } from "../../utils/countries";
-import Avatar from "../ui/Avatar";
-import CityCombobox from "../ui/CityCombobox";
-import CountryFlag from "../ui/CountryFlag";
-
-const sortedCountries = [...COUNTRIES].sort((a, b) =>
-    a.name.localeCompare(b.name, "pt-BR"),
-);
 
 export default function ProfileForm() {
     const { user, updateUser } = useAuth();
     const [name, setName] = useState(user?.name || "");
     const [email, setEmail] = useState(user?.email || "");
-    const [status, setStatus] = useState(user?.status || "");
-    const [country, setCountry] = useState(user?.country || "");
-    const [city, setCity] = useState(user?.city || "");
     const [currentPassword, setCurrentPassword] = useState("");
     const [success, setSuccess] = useState("");
     const [error, setError] = useState("");
     const [profileLoading, setProfileLoading] = useState(false);
-    const [locationLoading, setLocationLoading] = useState(false);
-    const [locationSuccess, setLocationSuccess] = useState("");
-    const [locationError, setLocationError] = useState("");
-    const [statusLoading, setStatusLoading] = useState(false);
-    const [avatarLoading, setAvatarLoading] = useState(false);
-    const [preview, setPreview] = useState<string | null>(null);
-    const [copied, setCopied] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    useEffect(() => {
-        return () => {
-            if (preview) URL.revokeObjectURL(preview);
-        };
-    }, [preview]);
-
-    useEffect(() => {
-        return () => {
-            if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
-        };
-    }, []);
-
-    const handleAvatarChange = async (
-        e: React.ChangeEvent<HTMLInputElement>,
-    ) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        if (file.size > 5 * 1024 * 1024) {
-            setError("A imagem deve ter no máximo 5MB.");
-            return;
-        }
-
-        const prevPreview = preview;
-        setPreview(URL.createObjectURL(file));
-        if (prevPreview) URL.revokeObjectURL(prevPreview);
-        setError("");
-        setAvatarLoading(true);
-
-        try {
-            const formData = new FormData();
-            formData.append("avatar", file);
-            const { data } = await api.put("/user/avatar", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
-            updateUser(data);
-            setSuccess("Foto de perfil atualizada!");
-        } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao fazer upload da imagem"));
-            setPreview(null);
-        } finally {
-            setAvatarLoading(false);
-        }
-    };
-
-    const handleRemoveAvatar = async () => {
-        setError("");
-        setAvatarLoading(true);
-
-        try {
-            const { data } = await api.delete("/user/avatar");
-            updateUser(data);
-            setPreview(null);
-            setSuccess("Foto de perfil removida!");
-        } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao remover avatar"));
-        } finally {
-            setAvatarLoading(false);
-        }
-    };
-
-    const handleCopyId = async () => {
-        if (!user?.publicId) return;
-
-        try {
-            await navigator.clipboard?.writeText(`#${user.publicId}`);
-            setCopied(true);
-            if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
-            copyTimeoutRef.current = setTimeout(() => setCopied(false), 1500);
-        } catch {
-            setError("Não foi possível copiar o ID.");
-        }
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -129,55 +35,15 @@ export default function ProfileForm() {
                 setCurrentPassword("");
                 setEmail(user?.email || "");
             } else {
-                setSuccess("Perfil atualizado com sucesso!");
+                setSuccess("Conta atualizada com sucesso!");
             }
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao atualizar perfil"));
+            setError(getErrorMessage(err, "Erro ao atualizar a conta"));
         } finally {
             setProfileLoading(false);
         }
     };
 
-    const handleLocationSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLocationError("");
-        setLocationSuccess("");
-        setLocationLoading(true);
-
-        try {
-            const { data } = await api.put("/user/location", {
-                country: country || null,
-                city: city.trim() || null,
-            });
-            updateUser(data);
-            setLocationSuccess("Localização atualizada!");
-        } catch (err: unknown) {
-            setLocationError(
-                getErrorMessage(err, "Erro ao atualizar localização"),
-            );
-        } finally {
-            setLocationLoading(false);
-        }
-    };
-
-    const handleStatusSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setSuccess("");
-        setStatusLoading(true);
-
-        try {
-            const { data } = await api.put("/user/status", { status });
-            updateUser({ ...user!, status: data.status });
-            setSuccess("Status atualizado!");
-        } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao atualizar status"));
-        } finally {
-            setStatusLoading(false);
-        }
-    };
-
-    const avatarUrl = preview || user?.avatar;
     const emailChanged =
         email.toLowerCase() !== (user?.email || "").toLowerCase();
 
@@ -185,10 +51,11 @@ export default function ProfileForm() {
         <div className="space-y-6">
             <div className="border-b border-noir-border pb-4">
                 <h2 className="text-base font-semibold text-noir-text-bright">
-                    Perfil &amp; Informações
+                    Conta
                 </h2>
                 <p className="text-xs text-noir-text-muted mt-0.5">
-                    Atualize seus dados de exibição, foto de perfil e mensagem de status.
+                    Gerencie seu nome e email de acesso. Foto, status e demais
+                    informações ficam no seu perfil.
                 </p>
             </div>
 
@@ -222,100 +89,6 @@ export default function ProfileForm() {
                 </div>
             )}
 
-            {/* Cabeçalho do perfil */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4 min-w-0">
-                    <div className="relative shrink-0">
-                        <Avatar
-                            src={avatarUrl || undefined}
-                            name={user?.name || "?"}
-                            size="lg"
-                            className="w-16 h-16 rounded-full border-2 border-noir-border shadow-md ring-2 ring-emerald-500/20"
-                        />
-                        <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-noir-card" />
-                        {avatarLoading && (
-                            <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
-                                <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold text-noir-text-bright truncate">
-                                {user?.name}
-                            </h3>
-                            {user?.country && (
-                                <CountryFlag
-                                    country={user.country}
-                                    name={getCountryName(user.country)}
-                                    className="w-5 h-4"
-                                />
-                            )}
-                        </div>
-
-                        <div className="mt-1.5 inline-flex items-center gap-2 rounded-lg border border-noir-border bg-noir-surface-alt px-2.5 py-1">
-                            <span className="text-[11px] text-noir-text-muted">
-                                ID:
-                            </span>
-                            <span className="font-mono text-xs text-emerald-300">
-                                #{user?.publicId}
-                            </span>
-                            <button
-                                type="button"
-                                onClick={handleCopyId}
-                                aria-label="Copiar ID"
-                                title={`Copiar ID #${user?.publicId ?? ""}`}
-                                className="text-noir-text-muted hover:text-emerald-300 transition cursor-pointer"
-                            >
-                                {copied ? (
-                                    <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                ) : (
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    </svg>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2.5 sm:shrink-0">
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        name="avatar"
-                        id="avatar"
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                        className="hidden"
-                    />
-                    <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={avatarLoading}
-                        className="px-3.5 py-1.5 rounded-lg bg-noir-surface-alt hover:bg-noir-card text-xs font-medium text-noir-text-bright border border-noir-border-light transition disabled:opacity-50 cursor-pointer"
-                    >
-                        Alterar foto
-                    </button>
-                    {avatarUrl && (
-                        <button
-                            type="button"
-                            onClick={handleRemoveAvatar}
-                            disabled={avatarLoading}
-                            className="px-3.5 py-1.5 rounded-lg bg-noir-surface/60 hover:bg-red-950/40 text-xs font-medium text-noir-text-muted hover:text-red-400 border border-noir-border transition disabled:opacity-50 cursor-pointer"
-                        >
-                            Remover
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            <div className="border-b border-noir-border" />
-
-            {/* Formulário Principal */}
             <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
                 <div>
                     <label
@@ -398,131 +171,6 @@ export default function ProfileForm() {
                     </button>
                 </div>
             </form>
-
-            {/* Seção de Localização */}
-            <div className="pt-5 border-t border-noir-border max-w-2xl">
-                <div className="mb-3">
-                    <h3 className="text-sm font-semibold text-noir-text-bright">
-                        Localização
-                    </h3>
-                    <p className="text-xs text-noir-text-muted mt-0.5">
-                        O país aparece ao lado da sua foto de perfil. Sua cidade
-                        é visível apenas para você.
-                    </p>
-                </div>
-
-                {locationSuccess && (
-                    <div
-                        role="alert"
-                        className="mb-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-4 py-2.5 rounded-xl text-xs flex items-center gap-2"
-                    >
-                        <svg className="w-4 h-4 shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>{locationSuccess}</span>
-                    </div>
-                )}
-
-                {locationError && (
-                    <div
-                        role="alert"
-                        className="mb-3 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-2.5 rounded-xl text-xs flex items-center gap-2"
-                    >
-                        <svg className="w-4 h-4 shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>{locationError}</span>
-                    </div>
-                )}
-
-                <form onSubmit={handleLocationSubmit} className="space-y-4">
-                    <div>
-                        <label
-                            htmlFor="input-country"
-                            className="block text-xs font-medium text-noir-text-bright mb-1.5"
-                        >
-                            País
-                        </label>
-                        <select
-                            id="input-country"
-                            name="country"
-                            value={country}
-                            onChange={(e) => setCountry(e.target.value)}
-                            className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2.5 text-sm text-noir-text-bright focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition cursor-pointer"
-                        >
-                            <option value="">Não informar</option>
-                            {sortedCountries.map((c) => (
-                                <option key={c.code} value={c.code}>
-                                    {c.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label
-                            htmlFor="input-city"
-                            className="block text-xs font-medium text-noir-text-bright mb-1.5"
-                        >
-                            Cidade
-                        </label>
-                        <CityCombobox
-                            id="input-city"
-                            value={city}
-                            onChange={setCity}
-                            country={country}
-                            maxLength={80}
-                            placeholder="Ex: São Paulo"
-                            disabled={locationLoading}
-                        />
-                    </div>
-
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={locationLoading}
-                            className="px-4 py-2 rounded-xl bg-noir-surface-alt hover:bg-noir-card text-noir-text-bright font-medium text-xs border border-noir-border-light transition-all disabled:opacity-50 cursor-pointer"
-                        >
-                            {locationLoading
-                                ? "Salvando..."
-                                : "Salvar localização"}
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            {/* Seção de Status */}
-            <div className="pt-5 border-t border-noir-border max-w-2xl">
-                <form onSubmit={handleStatusSubmit} className="space-y-3">
-                    <label
-                        htmlFor="input-status"
-                        className="block text-xs font-medium text-noir-text-bright"
-                    >
-                        Status
-                    </label>
-                    <div className="relative">
-                        <input
-                            type="text"
-                            id="input-status"
-                            name="status"
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            maxLength={100}
-                            placeholder="Ex: Disponível, Em reunião, Não me perturbe..."
-                            className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2.5 pr-10 text-sm text-noir-text-bright placeholder-noir-text-muted focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition"
-                        />
-                    </div>
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={statusLoading}
-                            className="px-4 py-2 rounded-xl bg-noir-surface-alt hover:bg-noir-card text-noir-text-bright font-medium text-xs border border-noir-border-light transition-all disabled:opacity-50 cursor-pointer"
-                        >
-                            {statusLoading ? "Salvando..." : "Salvar status"}
-                        </button>
-                    </div>
-                </form>
-            </div>
         </div>
     );
 }
