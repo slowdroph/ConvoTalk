@@ -5,12 +5,17 @@ import ProfileSidebar from "../../../features/profile/components/ProfileSidebar"
 import type { ProfileSectionEditor } from "../../../features/profile/hooks/useProfileSectionEditor";
 import type { Post, PublicProfile } from "../../../types";
 
-const { showToastMock } = vi.hoisted(() => ({
+const { showToastMock, shareLinkMock } = vi.hoisted(() => ({
     showToastMock: vi.fn(),
+    shareLinkMock: vi.fn(),
 }));
 
 vi.mock("../../../contexts/ToastContext", () => ({
     useToast: () => ({ showToast: showToastMock }),
+}));
+
+vi.mock("../../../utils/share", () => ({
+    shareLink: shareLinkMock,
 }));
 
 const profile = {
@@ -99,6 +104,7 @@ function renderSidebar(
 describe("ProfileSidebar", () => {
     beforeEach(() => {
         showToastMock.mockReset();
+        shareLinkMock.mockReset();
     });
 
     it("mostra identidade, status e idiomas", () => {
@@ -125,6 +131,43 @@ describe("ProfileSidebar", () => {
         expect(
             screen.getByRole("menuitem", { name: "Copiar link do perfil" }),
         ).toBeInTheDocument();
+        expect(
+            screen.queryByRole("menuitem", { name: "Copiar ID" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("compartilha o perfil pelo sistema nativo", async () => {
+        shareLinkMock.mockResolvedValue("shared");
+        renderSidebar({ isSelf: true });
+
+        fireEvent.click(
+            screen.getByRole("button", { name: "Compartilhar perfil" }),
+        );
+
+        await waitFor(() =>
+            expect(shareLinkMock).toHaveBeenCalledWith({
+                title: "Perfil de Ana no ConvoTalk",
+                text: "Confira o perfil de Ana",
+                url: `${window.location.origin}/profile/ana`,
+            }),
+        );
+        expect(showToastMock).not.toHaveBeenCalled();
+    });
+
+    it("avisa quando o compartilhamento cai para cópia", async () => {
+        shareLinkMock.mockResolvedValue("copied");
+        renderSidebar({ isSelf: true });
+
+        fireEvent.click(
+            screen.getByRole("button", { name: "Compartilhar perfil" }),
+        );
+
+        await waitFor(() =>
+            expect(showToastMock).toHaveBeenCalledWith({
+                type: "success",
+                message: "Link do perfil copiado.",
+            }),
+        );
     });
 
     it("edita o status inline para o dono", () => {

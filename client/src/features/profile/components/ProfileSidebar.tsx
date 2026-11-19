@@ -8,6 +8,7 @@ import ImageLightbox from "../../../components/ui/ImageLightbox";
 import { getCountryName } from "../../../utils/countries";
 import { formatMemberSince } from "../../../utils/format";
 import { formatLastSeen } from "../../../utils/formatLastSeen";
+import { shareLink } from "../../../utils/share";
 import { useToast } from "../../../contexts/ToastContext";
 import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
 import ProfileDetailsEditor from "./ProfileDetailsEditor";
@@ -97,6 +98,26 @@ export default function ProfileSidebar({
 
     const handleCopyLink = () => {
         void copyText(profileUrl, "Link do perfil copiado.");
+    };
+
+    const handleShareProfile = async () => {
+        const result = await shareLink({
+            title: `Perfil de ${profile.name} no ConvoTalk`,
+            text: `Confira o perfil de ${profile.name}`,
+            url: profileUrl,
+        });
+
+        if (result === "copied") {
+            showToast({
+                type: "success",
+                message: "Link do perfil copiado.",
+            });
+        } else if (result === "failed") {
+            showToast({
+                type: "error",
+                message: "Não foi possível compartilhar o perfil.",
+            });
+        }
     };
 
     return (
@@ -396,7 +417,7 @@ export default function ProfileSidebar({
                     {isSelf && (
                         <button
                             type="button"
-                            onClick={handleCopyLink}
+                            onClick={() => void handleShareProfile()}
                             className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-noir-border dark:bg-noir-surface-alt dark:text-noir-text-bright dark:hover:bg-noir-border"
                         >
                             <svg
@@ -524,31 +545,6 @@ export default function ProfileSidebar({
                             </svg>
                             Copiar link do perfil
                         </button>
-                        {profile.publicId && (
-                            <button
-                                type="button"
-                                role="menuitem"
-                                onClick={() => void handleCopyId()}
-                                className={menuItemClass}
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    aria-hidden="true"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={1.8}
-                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                    />
-                                </svg>
-                                Copiar ID
-                            </button>
-                        )}
                         {!isSelf && (
                             <button
                                 type="button"
