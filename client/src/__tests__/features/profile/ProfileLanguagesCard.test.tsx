@@ -30,7 +30,7 @@ describe("ProfileLanguagesCard", () => {
 
         expect(screen.getByText("Português")).toBeInTheDocument();
         expect(screen.getByText("Inglês")).toBeInTheDocument();
-        expect(screen.getByText("2/8")).toBeInTheDocument();
+        expect(screen.getByText("2/10")).toBeInTheDocument();
     });
 
     it("mostra o nível de cada idioma", () => {
@@ -77,7 +77,7 @@ describe("ProfileLanguagesCard", () => {
         );
 
         expect(screen.getByText("Espanhol")).toBeInTheDocument();
-        expect(screen.getByText("1/8")).toBeInTheDocument();
+        expect(screen.getByText("1/10")).toBeInTheDocument();
     });
 
     it("inicia a edição para o dono", () => {
@@ -124,6 +124,31 @@ describe("ProfileLanguagesCard", () => {
             languages: ["pt", "es"],
             languageLevels: { pt: "fluent", es: "basic" },
         });
+    });
+
+    it("busca idiomas ignorando acentos", () => {
+        const editor = makeEditor({
+            active: "languages",
+            isEditing: (section) => section === "languages",
+        });
+        render(
+            <ProfileLanguagesCard
+                languages={[]}
+                isSelf
+                editor={editor}
+            />,
+        );
+
+        fireEvent.change(screen.getByLabelText("Buscar idiomas"), {
+            target: { value: "tailandes" },
+        });
+
+        expect(
+            screen.getByRole("button", { name: /Tailandês/ }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: /Português/ }),
+        ).not.toBeInTheDocument();
     });
 
     it("não oferece ação de edição para visitantes", () => {

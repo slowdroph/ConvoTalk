@@ -1,6 +1,13 @@
 import { useState } from "react";
-import { getInterestOption, MAX_INTERESTS, INTEREST_OPTIONS } from "@shared/interests";
+import {
+    getInterestOption,
+    INTEREST_CATEGORIES,
+    INTEREST_OPTIONS,
+    MAX_INTERESTS,
+} from "@shared/interests";
 import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
+import { filterOptions } from "../../../utils/options";
+import OptionSearch from "../../../components/ui/OptionSearch";
 import InlineEditActions from "./inline/InlineEditActions";
 import InlineEditButton from "./inline/InlineEditButton";
 
@@ -17,6 +24,34 @@ const chipClass = (selected: boolean) =>
             : "border-slate-200 bg-white text-slate-600 hover:border-emerald-500/40 hover:text-emerald-700 dark:border-noir-border dark:bg-noir-surface-alt dark:text-noir-text-muted dark:hover:text-emerald-400"
     }`;
 
+function InterestChip({
+    id,
+    selected,
+    disabled,
+    onToggle,
+}: {
+    id: string;
+    selected: boolean;
+    disabled: boolean;
+    onToggle: () => void;
+}) {
+    const option = getInterestOption(id);
+    if (!option) return null;
+
+    return (
+        <button
+            type="button"
+            onClick={onToggle}
+            disabled={disabled}
+            aria-pressed={selected}
+            className={chipClass(selected)}
+        >
+            <span aria-hidden="true">{option.emoji}</span>
+            {option.label}
+        </button>
+    );
+}
+
 function InterestsEditor({
     interests,
     editor,
@@ -25,6 +60,7 @@ function InterestsEditor({
     editor: ProfileSectionEditor;
 }) {
     const [draft, setDraft] = useState(interests);
+    const [query, setQuery] = useState("");
     const [localError, setLocalError] = useState<string | null>(null);
 
     const toggle = (id: string) => {
@@ -37,9 +73,7 @@ function InterestsEditor({
         }
 
         if (draft.length >= MAX_INTERESTS) {
-            setLocalError(
-                `Escolha no máximo ${MAX_INTERESTS} interesses.`,
-            );
+            setLocalError(`Escolha no máximo ${MAX_INTERESTS} interesses.`);
             return;
         }
 
@@ -52,28 +86,74 @@ function InterestsEditor({
         await editor.save({ interests: draft });
     };
 
+    const available = filterOptions(INTEREST_OPTIONS, query).filter(
+        (option) => !draft.includes(option.id),
+    );
+    const groups = INTEREST_CATEGORIES.map((category) => ({
+        category,
+        options: available.filter((option) => option.category === category),
+    })).filter((group) => group.options.length > 0);
+
     return (
         <form onSubmit={(event) => void handleSubmit(event)} className="mt-3">
-            <div className="mb-2 flex items-center justify-end">
-                <span className="text-[11px] text-slate-400 dark:text-noir-text-muted">
-                    {draft.length}/{MAX_INTERESTS} selecionados
+            <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                    <OptionSearch
+                        value={query}
+                        onChange={setQuery}
+                        placeholder="Buscar interesses..."
+                        label="Buscar interesses"
+                    />
+                </div>
+                <span className="shrink-0 text-[11px] text-slate-400 dark:text-noir-text-muted">
+                    {draft.length}/{MAX_INTERESTS}
                 </span>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-                {INTEREST_OPTIONS.map((option) => (
-                    <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => toggle(option.id)}
-                        disabled={editor.saving}
-                        aria-pressed={draft.includes(option.id)}
-                        className={chipClass(draft.includes(option.id))}
-                    >
-                        <span aria-hidden="true">{option.emoji}</span>
-                        {option.label}
-                    </button>
+            {draft.length > 0 && (
+                <div className="mt-3">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700/80 dark:text-emerald-400/80">
+                        Selecionados
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        {draft.map((id) => (
+                            <InterestChip
+                                key={id}
+                                id={id}
+                                selected
+                                disabled={editor.saving}
+                                onToggle={() => toggle(id)}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div className="mt-3 max-h-64 space-y-3 overflow-y-auto pr-1 custom-scrollbar">
+                {groups.map((group) => (
+                    <div key={group.category}>
+                        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-noir-text-muted">
+                            {group.category}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            {group.options.map((option) => (
+                                <InterestChip
+                                    key={option.id}
+                                    id={option.id}
+                                    selected={false}
+                                    disabled={editor.saving}
+                                    onToggle={() => toggle(option.id)}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 ))}
+
+                {groups.length === 0 && (
+                    <p className="rounded-lg border border-dashed border-slate-300 p-3 text-center text-xs text-slate-500 dark:border-noir-border dark:text-noir-text-muted">
+                        Nenhum interesse encontrado para “{query}”.
+                    </p>
+                )}
             </div>
 
             <InlineEditActions
@@ -159,7 +239,7 @@ export default function ProfileInterestsCard({
                 <div className="mt-3 rounded-xl border border-dashed border-slate-300 p-4 text-center dark:border-noir-border">
                     <p className="text-xs text-slate-500 dark:text-noir-text-muted">
                         {isSelf
-                            ? "Escolha até 12 interesses para mostrar no seu perfil."
+                            ? `Escolha até ${MAX_INTERESTS} interesses para mostrar no seu perfil.`
                             : "Nenhum interesse selecionado ainda."}
                     </p>
                     {isSelf && (

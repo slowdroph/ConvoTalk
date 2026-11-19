@@ -1,4 +1,9 @@
 import { describe, it, expect } from "vitest";
+import { INTEREST_OPTIONS, MAX_INTERESTS } from "../../../shared/interests";
+import {
+    LANGUAGE_OPTIONS,
+    MAX_LANGUAGES,
+} from "../../../shared/profile";
 import {
     registerSchema,
     loginSchema,
@@ -192,6 +197,37 @@ describe("about validations", () => {
             },
         });
         expect(result.success).toBe(true);
+    });
+
+    it("aceita interesses e idiomas do catálogo ampliado", () => {
+        const result = aboutSchema.safeParse({
+            body: {
+                bio: "",
+                interests: ["astronomy", "hiking"],
+                languages: ["th", "nl"],
+            },
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it("respeita o novo limite de interesses", () => {
+        const interests = INTEREST_OPTIONS.slice(0, MAX_INTERESTS + 1).map(
+            (option) => option.id,
+        );
+        const result = aboutSchema.safeParse({
+            body: { bio: "", interests },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("respeita o novo limite de idiomas", () => {
+        const languages = LANGUAGE_OPTIONS.slice(0, MAX_LANGUAGES + 1).map(
+            (option) => option.id,
+        );
+        const result = aboutSchema.safeParse({
+            body: { bio: "", interests: [], languages },
+        });
+        expect(result.success).toBe(false);
     });
 
     it("rejeita interesse desconhecido", () => {

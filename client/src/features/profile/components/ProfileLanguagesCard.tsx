@@ -3,12 +3,15 @@ import {
     DEFAULT_LANGUAGE_LEVEL,
     LANGUAGE_LEVEL_OPTIONS,
     LANGUAGE_OPTIONS,
+    LANGUAGE_REGIONS,
     MAX_LANGUAGES,
     getLanguageLevelOption,
     getLanguageOption,
     normalizeLanguageLevels,
 } from "@shared/profile";
 import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
+import { filterOptions } from "../../../utils/options";
+import OptionSearch from "../../../components/ui/OptionSearch";
 import InlineEditActions from "./inline/InlineEditActions";
 import InlineEditButton from "./inline/InlineEditButton";
 
@@ -40,6 +43,7 @@ function LanguagesEditor({
     const [levels, setLevels] = useState<Record<string, string>>(() =>
         normalizeLanguageLevels(languages, languageLevels),
     );
+    const [query, setQuery] = useState("");
     const [localError, setLocalError] = useState<string | null>(null);
 
     const toggle = (id: string) => {
@@ -76,37 +80,34 @@ function LanguagesEditor({
         await editor.save({ languages: draft, languageLevels: levels });
     };
 
+    const available = filterOptions(LANGUAGE_OPTIONS, query).filter(
+        (option) => !draft.includes(option.id),
+    );
+    const groups = LANGUAGE_REGIONS.map((region) => ({
+        region,
+        options: available.filter((option) => option.region === region),
+    })).filter((group) => group.options.length > 0);
+
     return (
         <form onSubmit={(event) => void handleSubmit(event)} className="mt-3">
-            <div className="mb-2 flex items-center justify-end">
-                <span className="text-[11px] text-slate-400 dark:text-noir-text-muted">
+            <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                    <OptionSearch
+                        value={query}
+                        onChange={setQuery}
+                        placeholder="Buscar idiomas..."
+                        label="Buscar idiomas"
+                    />
+                </div>
+                <span className="shrink-0 text-[11px] text-slate-400 dark:text-noir-text-muted">
                     {draft.length}/{MAX_LANGUAGES}
                 </span>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-                {LANGUAGE_OPTIONS.map((option) => {
-                    const selected = draft.includes(option.id);
-                    return (
-                        <button
-                            key={option.id}
-                            type="button"
-                            onClick={() => toggle(option.id)}
-                            disabled={editor.saving}
-                            aria-pressed={selected}
-                            className={chipClass(selected)}
-                        >
-                            <span aria-hidden="true">{option.emoji}</span>
-                            {option.label}
-                        </button>
-                    );
-                })}
-            </div>
-
             {draft.length > 0 && (
                 <div className="mt-3 space-y-1.5">
-                    <p className="text-[11px] text-slate-400 dark:text-noir-text-muted">
-                        Nível em cada idioma
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700/80 dark:text-emerald-400/80">
+                        Selecionados · nível
                     </p>
                     {draft.map((code) => {
                         const option = getLanguageOption(code);
@@ -116,35 +117,99 @@ function LanguagesEditor({
                                 key={code}
                                 className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 dark:border-noir-border dark:bg-noir-surface-alt/60"
                             >
-                                <span className="text-xs text-slate-700 dark:text-noir-text-bright">
+                                <span className="min-w-0 truncate text-xs text-slate-700 dark:text-noir-text-bright">
                                     <span aria-hidden="true">
                                         {option.emoji}
                                     </span>{" "}
                                     {option.label}
                                 </span>
-                                <select
-                                    aria-label={`Nível de ${option.label}`}
-                                    value={levels[code] ?? DEFAULT_LANGUAGE_LEVEL}
-                                    onChange={(event) =>
-                                        setLevels((current) => ({
-                                            ...current,
-                                            [code]: event.target.value,
-                                        }))
-                                    }
-                                    disabled={editor.saving}
-                                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 outline-none focus:border-emerald-500 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright"
-                                >
-                                    {LANGUAGE_LEVEL_OPTIONS.map((level) => (
-                                        <option key={level.id} value={level.id}>
-                                            {level.label}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="flex shrink-0 items-center gap-1">
+                                    <select
+                                        aria-label={`Nível de ${option.label}`}
+                                        value={
+                                            levels[code] ??
+                                            DEFAULT_LANGUAGE_LEVEL
+                                        }
+                                        onChange={(event) =>
+                                            setLevels((current) => ({
+                                                ...current,
+                                                [code]: event.target.value,
+                                            }))
+                                        }
+                                        disabled={editor.saving}
+                                        className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 outline-none focus:border-emerald-500 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright"
+                                    >
+                                        {LANGUAGE_LEVEL_OPTIONS.map((level) => (
+                                            <option
+                                                key={level.id}
+                                                value={level.id}
+                                            >
+                                                {level.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <button
+                                        type="button"
+                                        onClick={() => toggle(code)}
+                                        disabled={editor.saving}
+                                        aria-label={`Remover ${option.label}`}
+                                        className="rounded p-1 text-slate-400 transition-colors hover:text-red-600 disabled:opacity-50 dark:hover:text-red-400"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-3 w-3"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            aria-hidden="true"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2.5}
+                                                d="M6 18L18 6M6 6l12 12"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         );
                     })}
                 </div>
             )}
+
+            <div className="mt-3 max-h-64 space-y-3 overflow-y-auto pr-1 custom-scrollbar">
+                {groups.map((group) => (
+                    <div key={group.region}>
+                        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-noir-text-muted">
+                            {group.region}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            {group.options.map((option) => (
+                                <button
+                                    key={option.id}
+                                    type="button"
+                                    onClick={() => toggle(option.id)}
+                                    disabled={editor.saving}
+                                    aria-pressed={false}
+                                    className={chipClass(false)}
+                                >
+                                    <span aria-hidden="true">
+                                        {option.emoji}
+                                    </span>
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+
+                {groups.length === 0 && (
+                    <p className="rounded-lg border border-dashed border-slate-300 p-3 text-center text-xs text-slate-500 dark:border-noir-border dark:text-noir-text-muted">
+                        Nenhum idioma encontrado para “{query}”.
+                    </p>
+                )}
+            </div>
 
             <InlineEditActions
                 saving={editor.saving}

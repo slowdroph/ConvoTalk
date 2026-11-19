@@ -8,6 +8,7 @@ import {
     GENDER_OPTIONS,
     LANGUAGE_LEVEL_OPTIONS,
     LANGUAGE_OPTIONS,
+    LANGUAGE_REGIONS,
     MAX_AGE,
     MAX_LANGUAGES,
     MIN_AGE,
@@ -15,7 +16,9 @@ import {
     getLanguageOption,
 } from "@shared/profile";
 import api from "../../services/api";
+import { filterOptions } from "../../utils/options";
 import CityCombobox from "../ui/CityCombobox";
+import OptionSearch from "../ui/OptionSearch";
 import AuthSubmitButton from "./AuthSubmitButton";
 import RegisterProgress from "./RegisterProgress";
 
@@ -79,6 +82,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     const [languageLevels, setLanguageLevels] = useState<
         Record<string, string>
     >({});
+    const [languageQuery, setLanguageQuery] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
@@ -90,6 +94,14 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     const headingRef = useRef<HTMLHeadingElement>(null);
     const isFirstRender = useRef(true);
     const isLastStep = step === STEPS.length - 1;
+
+    const availableLanguages = filterOptions(LANGUAGE_OPTIONS, languageQuery);
+    const languageGroups = LANGUAGE_REGIONS.map((region) => ({
+        region,
+        options: availableLanguages.filter(
+            (option) => option.region === region,
+        ),
+    })).filter((group) => group.options.length > 0);
 
     useEffect(() => {
         if (isFirstRender.current) {
@@ -638,32 +650,62 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         {languages.length}/{MAX_LANGUAGES}
                                     </span>
                                 </div>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {LANGUAGE_OPTIONS.map((option) => {
-                                        const selected = languages.includes(
-                                            option.id,
-                                        );
-                                        return (
-                                            <button
-                                                key={option.id}
-                                                type="button"
-                                                onClick={() =>
-                                                    toggleLanguage(option.id)
-                                                }
-                                                aria-pressed={selected}
-                                                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
-                                                    selected
-                                                        ? "border-emerald-500/40 bg-emerald-600/20 text-emerald-300"
-                                                        : "border-white/10 bg-[#131c13]/60 text-zinc-400 hover:border-emerald-500/30 hover:text-emerald-300"
-                                                }`}
-                                            >
-                                                <span aria-hidden="true">
-                                                    {option.emoji}
-                                                </span>
-                                                {option.label}
-                                            </button>
-                                        );
-                                    })}
+
+                                <OptionSearch
+                                    value={languageQuery}
+                                    onChange={setLanguageQuery}
+                                    placeholder="Buscar idiomas..."
+                                    label="Buscar idiomas"
+                                    className="w-full rounded-lg border border-white/10 bg-[#131c13]/60 py-2 pl-8 pr-2.5 text-xs text-zinc-200 outline-none transition-colors placeholder:text-zinc-500 focus:border-emerald-500/50"
+                                />
+
+                                <div className="max-h-56 space-y-3 overflow-y-auto pr-1 custom-scrollbar">
+                                    {languageGroups.map((group) => (
+                                        <div key={group.region}>
+                                            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                                                {group.region}
+                                            </p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {group.options.map((option) => {
+                                                    const selected =
+                                                        languages.includes(
+                                                            option.id,
+                                                        );
+                                                    return (
+                                                        <button
+                                                            key={option.id}
+                                                            type="button"
+                                                            onClick={() =>
+                                                                toggleLanguage(
+                                                                    option.id,
+                                                                )
+                                                            }
+                                                            aria-pressed={
+                                                                selected
+                                                            }
+                                                            className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                                                                selected
+                                                                    ? "border-emerald-500/40 bg-emerald-600/20 text-emerald-300"
+                                                                    : "border-white/10 bg-[#131c13]/60 text-zinc-400 hover:border-emerald-500/30 hover:text-emerald-300"
+                                                            }`}
+                                                        >
+                                                            <span aria-hidden="true">
+                                                                {option.emoji}
+                                                            </span>
+                                                            {option.label}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {languageGroups.length === 0 && (
+                                        <p className="rounded-lg border border-dashed border-white/10 p-2.5 text-center text-[11px] text-zinc-500">
+                                            Nenhum idioma encontrado para “
+                                            {languageQuery}”.
+                                        </p>
+                                    )}
                                 </div>
 
                                 {languages.length > 0 && (

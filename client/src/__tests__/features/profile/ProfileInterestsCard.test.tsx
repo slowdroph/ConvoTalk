@@ -30,7 +30,7 @@ describe("ProfileInterestsCard", () => {
 
         expect(screen.getByText("Programação & Open Source")).toBeInTheDocument();
         expect(screen.getByText("Café Especial")).toBeInTheDocument();
-        expect(screen.getByText("2/12 selecionados")).toBeInTheDocument();
+        expect(screen.getByText("2/20 selecionados")).toBeInTheDocument();
     });
 
     it("ignora interesses desconhecidos", () => {
@@ -43,7 +43,7 @@ describe("ProfileInterestsCard", () => {
         );
 
         expect(screen.getByText("Games")).toBeInTheDocument();
-        expect(screen.getByText("1/12 selecionados")).toBeInTheDocument();
+        expect(screen.getByText("1/20 selecionados")).toBeInTheDocument();
     });
 
     it("inicia a edição para o dono", () => {
@@ -83,6 +83,31 @@ describe("ProfileInterestsCard", () => {
         expect(save).toHaveBeenCalledWith({
             interests: ["programming", "coffee"],
         });
+    });
+
+    it("busca interesses ignorando acentos", () => {
+        const editor = makeEditor({
+            active: "interests",
+            isEditing: (section) => section === "interests",
+        });
+        render(
+            <ProfileInterestsCard
+                interests={[]}
+                isSelf
+                editor={editor}
+            />,
+        );
+
+        fireEvent.change(screen.getByLabelText("Buscar interesses"), {
+            target: { value: "programacao" },
+        });
+
+        expect(
+            screen.getByRole("button", { name: /Programação & Open Source/ }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: /Café Especial/ }),
+        ).not.toBeInTheDocument();
     });
 
     it("não oferece ação de edição para visitantes", () => {
