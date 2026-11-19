@@ -1,4 +1,5 @@
 import type { PublicProfile } from "../../../types";
+import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
 import FeedComposer from "../../feed/components/FeedComposer";
 import FeedList from "../../feed/components/FeedList";
 import { useProfilePosts } from "../hooks/useProfilePosts";
@@ -10,7 +11,7 @@ interface ProfileAboutTabProps {
     profileUserId: string;
     isSelf: boolean;
     currentUserId?: string;
-    onEditAbout: () => void;
+    editor: ProfileSectionEditor;
     onOpenAuthor: (authorId: string) => void;
     onStatsChanged: () => void;
 }
@@ -20,7 +21,7 @@ export default function ProfileAboutTab({
     profileUserId,
     isSelf,
     currentUserId,
-    onEditAbout,
+    editor,
     onOpenAuthor,
     onStatsChanged,
 }: ProfileAboutTabProps) {
@@ -45,13 +46,13 @@ export default function ProfileAboutTab({
             <ProfileAboutCard
                 bio={profile.bio}
                 isSelf={isSelf}
-                onEdit={onEditAbout}
+                editor={editor}
             />
 
             <ProfileInterestsCard
                 interests={profile.interests}
                 isSelf={isSelf}
-                onEdit={onEditAbout}
+                editor={editor}
             />
 
             <div className="flex items-center gap-2 pt-2">

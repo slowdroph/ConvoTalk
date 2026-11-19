@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ComponentProps } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import ProfileSidebar from "../../../features/profile/components/ProfileSidebar";
+import type { ProfileSectionEditor } from "../../../features/profile/hooks/useProfileSectionEditor";
 import type { Post, PublicProfile } from "../../../types";
 
 const { showToastMock } = vi.hoisted(() => ({
@@ -55,6 +56,21 @@ function makePhoto(id: string): Post {
     };
 }
 
+function makeEditor(
+    overrides: Partial<ProfileSectionEditor> = {},
+): ProfileSectionEditor {
+    return {
+        active: null,
+        saving: false,
+        error: null,
+        start: vi.fn(),
+        cancel: vi.fn(),
+        save: vi.fn().mockResolvedValue(true),
+        isEditing: () => false,
+        ...overrides,
+    };
+}
+
 function renderSidebar(
     overrides: Partial<ComponentProps<typeof ProfileSidebar>> = {},
 ) {
@@ -67,8 +83,8 @@ function renderSidebar(
         photos: [],
         blocking: false,
         photoUploading: false,
+        editor: makeEditor(),
         onStartConversation: vi.fn(),
-        onEditAbout: vi.fn(),
         onOpenGallery: vi.fn(),
         onBlock: vi.fn(),
         onUnblock: vi.fn(),
@@ -111,8 +127,63 @@ describe("ProfileSidebar", () => {
         ).toBeInTheDocument();
     });
 
-    it("mostra a inicial como fallback quando não há foto", () => {
-        renderSidebar();
+    it("edita o status inline para o dono", () => {
+        const save = vi.fn().mockResolvedValue(true);
+        const editor = makeEditor({
+            active: "status",
+            isEditing: (section) => section === "status",
+            save,
+        });
+        renderSidebar({ isSelf: true, editor });
+
+        fireEvent.change(screen.getByLabelText("Status"), {
+            target: { value: "  Em reunião  " },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Salvar status" }));
+
+        expect(save).toHaveBeenCalledWith({ status: "Em reunião" });
+    });
+
+    it("abre e salva a edição de detalhes do perfil", () => {
+        const save = vi.fn().mockResolvedValue(true);
+        const editor = makeEditor({
+            active: "details",
+            isEditing: (section) => section === "details",
+            save,
+        });
+        renderSidebar({ isSelf: true, editor });
+
+        fireEvent.change(screen.getByLabelText("Nascimento"), {
+            target: { value: "1990-02-15" },
+        });
+        fireEvent.change(screen.getByLabelText("Cidade"), {
+            target: { value: "Recife" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+
+        expect(save).toHaveBeenCalledWith(
+            expect.objectContaining({
+                birthdate: "1990-02-15",
+                city: "Recife",
+            }),
+        );
+    });
+
+    it("oferece edição de detalhes apenas para o dono", () => {
+        const editor = makeEditor();
+        renderSidebar({ isSelf: true, editor });
+
+        fireEvent.click(
+            screen.getByRole("button", { name: "Editar detalhes do perfil" }),
+        );
+
+        expect(editor.start).toHaveBeenCalledWith("details");
+        expect(
+            screen.queryByRole("button", { name: "Editar perfil" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("mostra a inicial como fallback quando não há foto", () => {        renderSidebar();
 
         expect(
             screen.queryByAltText("Foto de perfil de Ana"),
@@ -214,16 +285,13 @@ describe("ProfileSidebar", () => {
             name: "Expandir foto de perfil",
         });
         expect(expand).toBeInTheDocument();
-
-        fireEvent.click(expand);
-        expect(
-            screen.getByRole("dialog", {
-                name: "Imagem Foto de perfil de Ana",
-            }),
-        ).toBeInTheDocument();
         expect(screen.getByText("Alterar foto")).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole("button", { name: "Remover foto" }));
+        expect(screen.getByText("Remover foto?")).toBeInTheDocument();
+        expect(onRemovePhoto).not.toHaveBeenCalled();
+
+        fireEvent.click(screen.getByRole("button", { name: "Remover" }));
         expect(onRemovePhoto).toHaveBeenCalled();
     });
 

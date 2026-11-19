@@ -1,0 +1,253 @@
+import { useState } from "react";
+import { GENDER_OPTIONS, MIN_AGE, calculateAge, getGenderOption } from "@shared/profile";
+import type { PublicProfile } from "../../../types";
+import { COUNTRIES, getCountryName } from "../../../utils/countries";
+import CityCombobox from "../../../components/ui/CityCombobox";
+import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
+import InlineEditButton from "./inline/InlineEditButton";
+
+const sortedCountries = [...COUNTRIES].sort((a, b) =>
+    a.name.localeCompare(b.name, "pt-BR"),
+);
+
+const fieldClass =
+    "w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface-alt/60 dark:text-noir-text-bright dark:placeholder:text-noir-text-muted/70";
+
+const labelClass =
+    "mb-1 block text-[11px] font-medium text-slate-600 dark:text-noir-text-muted";
+
+const maxBirthdate = (() => {
+    const date = new Date();
+    date.setUTCFullYear(date.getUTCFullYear() - MIN_AGE);
+    return date.toISOString().slice(0, 10);
+})();
+
+interface ProfileDetailsEditorProps {
+    profile: PublicProfile;
+    isSelf: boolean;
+    editor: ProfileSectionEditor;
+}
+
+function DetailsForm({
+    profile,
+    editor,
+}: {
+    profile: PublicProfile;
+    editor: ProfileSectionEditor;
+}) {
+    const [gender, setGender] = useState(profile.gender ?? "");
+    const [birthdate, setBirthdate] = useState(
+        (profile.birthdate ?? "").slice(0, 10),
+    );
+    const [country, setCountry] = useState(profile.country ?? "");
+    const [city, setCity] = useState(profile.city ?? "");
+    const [localError, setLocalError] = useState<string | null>(null);
+
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+
+        if (birthdate) {
+            const age = calculateAge(birthdate);
+            if (age === null || age < MIN_AGE) {
+                setLocalError(`É necessário ter pelo menos ${MIN_AGE} anos.`);
+                return;
+            }
+        }
+
+        setLocalError(null);
+        await editor.save({
+            gender: gender || undefined,
+            birthdate: birthdate || null,
+            country: country || null,
+            city: city.trim() || null,
+        });
+    };
+
+    return (
+        <form
+            onSubmit={(event) => void handleSubmit(event)}
+            className="mt-2 space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 dark:border-noir-border dark:bg-noir-surface-alt/40"
+        >
+            <div className="grid grid-cols-2 gap-2">
+                <div>
+                    <label htmlFor="details-gender" className={labelClass}>
+                        Gênero
+                    </label>
+                    <select
+                        id="details-gender"
+                        value={gender}
+                        onChange={(event) => setGender(event.target.value)}
+                        disabled={editor.saving}
+                        className={`${fieldClass} cursor-pointer`}
+                    >
+                        <option value="">Não informar</option>
+                        {GENDER_OPTIONS.map((option) => (
+                            <option key={option.id} value={option.id}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label htmlFor="details-birthdate" className={labelClass}>
+                        Nascimento
+                    </label>
+                    <input
+                        type="date"
+                        id="details-birthdate"
+                        value={birthdate}
+                        onChange={(event) => setBirthdate(event.target.value)}
+                        max={maxBirthdate}
+                        disabled={editor.saving}
+                        className={fieldClass}
+                    />
+                </div>
+            </div>
+
+            <div>
+                <label htmlFor="details-country" className={labelClass}>
+                    País
+                </label>
+                <select
+                    id="details-country"
+                    value={country}
+                    onChange={(event) => setCountry(event.target.value)}
+                    disabled={editor.saving}
+                    className={`${fieldClass} cursor-pointer`}
+                >
+                    <option value="">Não informar</option>
+                    {sortedCountries.map((option) => (
+                        <option key={option.code} value={option.code}>
+                            {option.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <div>
+                <label htmlFor="details-city" className={labelClass}>
+                    Cidade
+                </label>
+                <CityCombobox
+                    id="details-city"
+                    value={city}
+                    onChange={setCity}
+                    country={country || undefined}
+                    maxLength={80}
+                    placeholder="Ex: São Paulo"
+                    className={fieldClass}
+                    disabled={editor.saving}
+                />
+            </div>
+
+            {(localError ?? editor.error) && (
+                <p
+                    role="alert"
+                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-[11px] text-red-600 dark:text-red-400"
+                >
+                    {localError ?? editor.error}
+                </p>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-0.5">
+                <button
+                    type="button"
+                    onClick={editor.cancel}
+                    disabled={editor.saving}
+                    className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50 dark:border-noir-border dark:text-noir-text-muted dark:hover:bg-noir-surface-alt"
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="submit"
+                    disabled={editor.saving}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    {editor.saving && (
+                        <span className="h-2.5 w-2.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    )}
+                    Salvar
+                </button>
+            </div>
+        </form>
+    );
+}
+
+export default function ProfileDetailsEditor({
+    profile,
+    isSelf,
+    editor,
+}: ProfileDetailsEditorProps) {
+    const editing = editor.isEditing("details");
+    const location = [profile.city, getCountryName(profile.country)]
+        .filter(Boolean)
+        .join(", ");
+    const genderLabel = profile.gender
+        ? getGenderOption(profile.gender)?.label
+        : undefined;
+
+    if (editing) {
+        return <DetailsForm profile={profile} editor={editor} />;
+    }
+
+    if (!location && !genderLabel && !isSelf) return null;
+
+    return (
+        <div className="space-y-1">
+            {location && (
+                <p className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-noir-text-muted">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.8}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.8}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                    </svg>
+                    {location}
+                </p>
+            )}
+
+            {genderLabel && (
+                <p className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-noir-text-muted">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-noir-text-muted"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.8}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                    </svg>
+                    {genderLabel}
+                </p>
+            )}
+
+            {isSelf && (
+                <InlineEditButton
+                    label="Editar detalhes do perfil"
+                    onClick={() => editor.start("details")}
+                />
+            )}
+        </div>
+    );
+}

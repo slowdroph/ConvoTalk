@@ -1,16 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import ProfilePage from "../../../pages/ProfilePage";
 import type { Post, PublicProfile } from "../../../types";
 
-const { showToastMock, useProfileMock, useProfilePostsMock } = vi.hoisted(
-    () => ({
-        showToastMock: vi.fn(),
-        useProfileMock: vi.fn(),
-        useProfilePostsMock: vi.fn(),
-    }),
-);
+const {
+    showToastMock,
+    useProfileMock,
+    useProfilePostsMock,
+    updateUserMock,
+    updateAboutMock,
+} = vi.hoisted(() => ({
+    showToastMock: vi.fn(),
+    useProfileMock: vi.fn(),
+    useProfilePostsMock: vi.fn(),
+    updateUserMock: vi.fn(),
+    updateAboutMock: vi.fn(),
+}));
 
 vi.mock("../../../contexts/ToastContext", () => ({
     useToast: () => ({ showToast: showToastMock }),
@@ -19,8 +25,16 @@ vi.mock("../../../contexts/ToastContext", () => ({
 vi.mock("../../../hooks/useAuth", () => ({
     useAuth: () => ({
         user: { _id: "me", name: "Eu", publicId: "ME1", avatar: "" },
-        updateUser: vi.fn(),
+        updateUser: updateUserMock,
     }),
+}));
+
+vi.mock("../../../features/profile/services/profileApi", () => ({
+    updateAbout: updateAboutMock,
+    blockUser: vi.fn(),
+    unblockUser: vi.fn(),
+    updateAvatar: vi.fn(),
+    removeAvatar: vi.fn(),
 }));
 
 vi.mock("../../../hooks/useSocket", () => ({
@@ -145,6 +159,8 @@ describe("ProfilePage", () => {
         showToastMock.mockReset();
         useProfileMock.mockReset();
         useProfilePostsMock.mockReset();
+        updateUserMock.mockReset();
+        updateAboutMock.mockReset();
         mockPosts();
     });
 
@@ -188,9 +204,10 @@ describe("ProfilePage", () => {
         renderPage();
 
         expect(
-            screen.getByRole("button", {
-                name: "Editar perfil",
-            }),
+            screen.getByRole("button", { name: "Editar bio" }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Editar detalhes do perfil" }),
         ).toBeInTheDocument();
         expect(
             screen.queryByRole("button", { name: "Conversar" }),
@@ -200,21 +217,65 @@ describe("ProfilePage", () => {
         ).toBeInTheDocument();
     });
 
-    it("abre o diálogo de edição ao clicar em editar", () => {
+    it("abre a edição inline da bio", () => {
         mockProfile({
             profile: { ...anaProfile, _id: "me" } as unknown as PublicProfile,
         });
         renderPage();
 
-        fireEvent.click(
-            screen.getByRole("button", {
-                name: "Editar perfil",
-            }),
+        fireEvent.click(screen.getByRole("button", { name: "Editar bio" }));
+
+        expect(screen.getByLabelText("Bio")).toHaveValue(
+            "Gosto de café e código.",
         );
+        expect(
+            screen.getByRole("button", { name: "Salvar bio" }),
+        ).toBeInTheDocument();
+    });
+
+    it("salva a bio inline com o restante do perfil preservado", async () => {
+        mockProfile({
+            profile: { ...anaProfile, _id: "me" } as unknown as PublicProfile,
+        });
+        updateAboutMock.mockResolvedValue({ _id: "me", name: "Eu" });
+        renderPage();
+
+        fireEvent.click(screen.getByRole("button", { name: "Editar bio" }));
+        fireEvent.change(screen.getByLabelText("Bio"), {
+            target: { value: "  Nova bio  " },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Salvar bio" }));
+
+        await waitFor(() =>
+            expect(updateAboutMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    bio: "Nova bio",
+                    interests: ["coffee", "programming"],
+                    status: "Dev",
+                    gender: "woman",
+                    city: "São Paulo",
+                    country: "BR",
+                    languages: ["pt", "en"],
+                }),
+            ),
+        );
+        expect(updateUserMock).toHaveBeenCalled();
+        expect(showToastMock).toHaveBeenCalledWith({
+            type: "success",
+            message: "Perfil atualizado!",
+        });
+    });
+
+    it("não mostra editores inline para visitantes", () => {
+        mockProfile();
+        renderPage("ana");
 
         expect(
-            screen.getByRole("dialog", { name: "Editar sobre e interesses" }),
-        ).toBeInTheDocument();
+            screen.queryByRole("button", { name: "Editar bio" }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Editar detalhes do perfil" }),
+        ).not.toBeInTheDocument();
     });
 
     it("mostra estado de perfil não encontrado", () => {

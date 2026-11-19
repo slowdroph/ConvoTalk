@@ -1,6 +1,22 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import ProfileInterestsCard from "../../../features/profile/components/ProfileInterestsCard";
+import type { ProfileSectionEditor } from "../../../features/profile/hooks/useProfileSectionEditor";
+
+function makeEditor(
+    overrides: Partial<ProfileSectionEditor> = {},
+): ProfileSectionEditor {
+    return {
+        active: null,
+        saving: false,
+        error: null,
+        start: vi.fn(),
+        cancel: vi.fn(),
+        save: vi.fn().mockResolvedValue(true),
+        isEditing: () => false,
+        ...overrides,
+    };
+}
 
 describe("ProfileInterestsCard", () => {
     it("lista os interesses com emoji e rótulo", () => {
@@ -8,7 +24,7 @@ describe("ProfileInterestsCard", () => {
             <ProfileInterestsCard
                 interests={["programming", "coffee"]}
                 isSelf={false}
-                onEdit={vi.fn()}
+                editor={makeEditor()}
             />,
         );
 
@@ -22,7 +38,7 @@ describe("ProfileInterestsCard", () => {
             <ProfileInterestsCard
                 interests={["desconhecido", "gaming"]}
                 isSelf={false}
-                onEdit={vi.fn()}
+                editor={makeEditor()}
             />,
         );
 
@@ -30,25 +46,52 @@ describe("ProfileInterestsCard", () => {
         expect(screen.getByText("1/12 selecionados")).toBeInTheDocument();
     });
 
-    it("convida o dono a selecionar interesses quando vazio", () => {
-        const onEdit = vi.fn();
+    it("inicia a edição para o dono", () => {
+        const editor = makeEditor();
         render(
             <ProfileInterestsCard
                 interests={[]}
                 isSelf
-                onEdit={onEdit}
+                editor={editor}
             />,
         );
 
         fireEvent.click(
             screen.getByRole("button", { name: "Selecionar interesses" }),
         );
-        expect(onEdit).toHaveBeenCalled();
+        expect(editor.start).toHaveBeenCalledWith("interests");
+    });
+
+    it("permite editar e salvar os interesses", () => {
+        const save = vi.fn().mockResolvedValue(true);
+        const editor = makeEditor({
+            active: "interests",
+            isEditing: (section) => section === "interests",
+            save,
+        });
+        render(
+            <ProfileInterestsCard
+                interests={["programming"]}
+                isSelf
+                editor={editor}
+            />,
+        );
+
+        fireEvent.click(screen.getByRole("button", { name: /Café Especial/ }));
+        fireEvent.click(screen.getByRole("button", { name: "Salvar interesses" }));
+
+        expect(save).toHaveBeenCalledWith({
+            interests: ["programming", "coffee"],
+        });
     });
 
     it("não oferece ação de edição para visitantes", () => {
         render(
-            <ProfileInterestsCard interests={[]} isSelf={false} onEdit={vi.fn()} />,
+            <ProfileInterestsCard
+                interests={[]}
+                isSelf={false}
+                editor={makeEditor()}
+            />,
         );
 
         expect(
@@ -56,6 +99,9 @@ describe("ProfileInterestsCard", () => {
         ).toBeInTheDocument();
         expect(
             screen.queryByRole("button", { name: "Selecionar interesses" }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Editar interesses" }),
         ).not.toBeInTheDocument();
     });
 });

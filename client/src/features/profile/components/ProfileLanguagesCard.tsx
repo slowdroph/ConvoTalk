@@ -1,25 +1,169 @@
+import { useState } from "react";
 import {
+    DEFAULT_LANGUAGE_LEVEL,
+    LANGUAGE_LEVEL_OPTIONS,
+    LANGUAGE_OPTIONS,
     MAX_LANGUAGES,
     getLanguageLevelOption,
     getLanguageOption,
     normalizeLanguageLevels,
 } from "@shared/profile";
+import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
+import InlineEditActions from "./inline/InlineEditActions";
+import InlineEditButton from "./inline/InlineEditButton";
 
 interface ProfileLanguagesCardProps {
     languages?: string[];
     languageLevels?: Record<string, string>;
     isSelf: boolean;
-    onEdit: () => void;
+    editor: ProfileSectionEditor;
     className?: string;
+}
+
+const chipClass = (selected: boolean) =>
+    `inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-60 ${
+        selected
+            ? "border-emerald-600/40 bg-emerald-50 text-emerald-700 dark:border-emerald-500/50 dark:bg-emerald-950/40 dark:text-emerald-300"
+            : "border-slate-200 bg-white text-slate-600 hover:border-emerald-500/40 hover:text-emerald-700 dark:border-noir-border dark:bg-noir-surface-alt dark:text-noir-text-muted dark:hover:text-emerald-400"
+    }`;
+
+function LanguagesEditor({
+    languages,
+    languageLevels,
+    editor,
+}: {
+    languages: string[];
+    languageLevels?: Record<string, string>;
+    editor: ProfileSectionEditor;
+}) {
+    const [draft, setDraft] = useState(languages);
+    const [levels, setLevels] = useState<Record<string, string>>(() =>
+        normalizeLanguageLevels(languages, languageLevels),
+    );
+    const [localError, setLocalError] = useState<string | null>(null);
+
+    const toggle = (id: string) => {
+        if (draft.includes(id)) {
+            setLocalError(null);
+            setDraft((current) => current.filter((code) => code !== id));
+            setLevels((current) => {
+                const next = { ...current };
+                delete next[id];
+                return next;
+            });
+            return;
+        }
+
+        if (draft.length >= MAX_LANGUAGES) {
+            setLocalError(`Escolha no máximo ${MAX_LANGUAGES} idiomas.`);
+            return;
+        }
+
+        setLocalError(null);
+        setDraft((current) => [...current, id]);
+        setLevels((current) => ({
+            ...current,
+            [id]: current[id] ?? DEFAULT_LANGUAGE_LEVEL,
+        }));
+    };
+
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+        if (draft.length === 0) {
+            setLocalError("Selecione pelo menos um idioma.");
+            return;
+        }
+        await editor.save({ languages: draft, languageLevels: levels });
+    };
+
+    return (
+        <form onSubmit={(event) => void handleSubmit(event)} className="mt-3">
+            <div className="mb-2 flex items-center justify-end">
+                <span className="text-[11px] text-slate-400 dark:text-noir-text-muted">
+                    {draft.length}/{MAX_LANGUAGES}
+                </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+                {LANGUAGE_OPTIONS.map((option) => {
+                    const selected = draft.includes(option.id);
+                    return (
+                        <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => toggle(option.id)}
+                            disabled={editor.saving}
+                            aria-pressed={selected}
+                            className={chipClass(selected)}
+                        >
+                            <span aria-hidden="true">{option.emoji}</span>
+                            {option.label}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {draft.length > 0 && (
+                <div className="mt-3 space-y-1.5">
+                    <p className="text-[11px] text-slate-400 dark:text-noir-text-muted">
+                        Nível em cada idioma
+                    </p>
+                    {draft.map((code) => {
+                        const option = getLanguageOption(code);
+                        if (!option) return null;
+                        return (
+                            <div
+                                key={code}
+                                className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 dark:border-noir-border dark:bg-noir-surface-alt/60"
+                            >
+                                <span className="text-xs text-slate-700 dark:text-noir-text-bright">
+                                    <span aria-hidden="true">
+                                        {option.emoji}
+                                    </span>{" "}
+                                    {option.label}
+                                </span>
+                                <select
+                                    aria-label={`Nível de ${option.label}`}
+                                    value={levels[code] ?? DEFAULT_LANGUAGE_LEVEL}
+                                    onChange={(event) =>
+                                        setLevels((current) => ({
+                                            ...current,
+                                            [code]: event.target.value,
+                                        }))
+                                    }
+                                    disabled={editor.saving}
+                                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 outline-none focus:border-emerald-500 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright"
+                                >
+                                    {LANGUAGE_LEVEL_OPTIONS.map((level) => (
+                                        <option key={level.id} value={level.id}>
+                                            {level.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            <InlineEditActions
+                saving={editor.saving}
+                error={localError ?? editor.error}
+                onCancel={editor.cancel}
+                submitLabel="Salvar idiomas"
+            />
+        </form>
+    );
 }
 
 export default function ProfileLanguagesCard({
     languages = [],
     languageLevels,
     isSelf,
-    onEdit,
+    editor,
     className = "",
 }: ProfileLanguagesCardProps) {
+    const editing = editor.isEditing("languages");
     const levels = normalizeLanguageLevels(languages, languageLevels);
     const options = languages
         .map((id) => getLanguageOption(id))
@@ -53,12 +197,28 @@ export default function ProfileLanguagesCard({
                         Idiomas que falo
                     </h2>
                 </div>
-                <span className="text-[11px] text-slate-400 dark:text-noir-text-muted">
-                    {options.length}/{MAX_LANGUAGES}
-                </span>
+                <div className="flex items-center gap-2">
+                    {!editing && (
+                        <span className="text-[11px] text-slate-400 dark:text-noir-text-muted">
+                            {options.length}/{MAX_LANGUAGES}
+                        </span>
+                    )}
+                    {isSelf && !editing && (
+                        <InlineEditButton
+                            label="Editar idiomas"
+                            onClick={() => editor.start("languages")}
+                        />
+                    )}
+                </div>
             </div>
 
-            {options.length > 0 ? (
+            {editing ? (
+                <LanguagesEditor
+                    languages={languages}
+                    languageLevels={languageLevels}
+                    editor={editor}
+                />
+            ) : options.length > 0 ? (
                 <ul className="mt-3 space-y-3">
                     {options.map((option) => {
                         const level = getLanguageLevelOption(
@@ -116,7 +276,7 @@ export default function ProfileLanguagesCard({
                     {isSelf && (
                         <button
                             type="button"
-                            onClick={onEdit}
+                            onClick={() => editor.start("languages")}
                             className="mt-1.5 text-xs font-medium text-emerald-700 transition-colors hover:underline dark:text-emerald-400"
                         >
                             Informar idiomas

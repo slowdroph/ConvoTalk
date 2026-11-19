@@ -6,7 +6,6 @@ import { useToast } from "../contexts/ToastContext";
 import { getErrorMessage } from "../utils/errors";
 import { createDirectRoom } from "../services/rooms";
 import AppFooter from "../components/Navigation/AppFooter";
-import ProfileAboutDialog from "../features/profile/components/ProfileAboutDialog";
 import ProfileAboutTab from "../features/profile/components/ProfileAboutTab";
 import ProfileGallery from "../features/profile/components/ProfileGallery";
 import ProfilePublicationsTab from "../features/profile/components/ProfilePublicationsTab";
@@ -15,13 +14,13 @@ import ProfileTabs, {
     type ProfileTab,
 } from "../features/profile/components/ProfileTabs";
 import { useProfile, useProfileGallery } from "../features/profile/hooks/useProfile";
+import { useProfileSectionEditor } from "../features/profile/hooks/useProfileSectionEditor";
 import {
     blockUser as blockUserRequest,
     removeAvatar as removeAvatarRequest,
     unblockUser as unblockUserRequest,
     updateAvatar as updateAvatarRequest,
 } from "../features/profile/services/profileApi";
-import type { User } from "../types";
 
 export default function ProfilePage() {
     const { userId } = useParams();
@@ -58,11 +57,12 @@ export default function ProfilePage() {
     );
 
     const [tab, setTab] = useState<ProfileTab>("about");
-    const [aboutOpen, setAboutOpen] = useState(false);
     const [starting, setStarting] = useState(false);
     const [startError, setStartError] = useState<string | null>(null);
     const [blocking, setBlocking] = useState(false);
     const [photoUploading, setPhotoUploading] = useState(false);
+
+    const editor = useProfileSectionEditor(profile, reload);
 
     const isOnline = Boolean(
         profileUserId &&
@@ -87,11 +87,6 @@ export default function ProfilePage() {
         } finally {
             setStarting(false);
         }
-    };
-
-    const handleAboutSaved = (updated: User) => {
-        updateUser(updated);
-        reload();
     };
 
     const handleBlock = async () => {
@@ -257,10 +252,10 @@ export default function ProfilePage() {
                             photos={images}
                             blocking={blocking}
                             photoUploading={photoUploading}
+                            editor={editor}
                             onStartConversation={() =>
                                 void handleStartConversation()
                             }
-                            onEditAbout={() => setAboutOpen(true)}
                             onOpenGallery={() => setTab("gallery")}
                             onBlock={() => void handleBlock()}
                             onUnblock={() => void handleUnblock()}
@@ -320,9 +315,7 @@ export default function ProfilePage() {
                                             profileUserId={profileUserId}
                                             isSelf={isSelf}
                                             currentUserId={user?._id}
-                                            onEditAbout={() =>
-                                                setAboutOpen(true)
-                                            }
+                                            editor={editor}
                                             onOpenAuthor={goToProfile}
                                             onStatsChanged={() =>
                                                 void refreshStats()
@@ -358,21 +351,6 @@ export default function ProfilePage() {
                     </section>
                 </div>
             </main>
-
-            <ProfileAboutDialog
-                isOpen={aboutOpen}
-                bio={profile.bio ?? ""}
-                interests={profile.interests ?? []}
-                gender={profile.gender ?? ""}
-                birthdate={profile.birthdate ?? ""}
-                country={profile.country ?? ""}
-                city={profile.city ?? ""}
-                languages={profile.languages ?? []}
-                languageLevels={profile.languageLevels ?? {}}
-                status={profile.status ?? ""}
-                onClose={() => setAboutOpen(false)}
-                onSaved={handleAboutSaved}
-            />
         </div>
     );
 }

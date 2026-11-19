@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { Post, PublicProfile } from "../../../types";
-import { getGenderOption } from "@shared/profile";
 import Avatar from "../../../components/ui/Avatar";
 import ConfirmDialog from "../../../components/ui/ConfirmDialog";
 import CountryFlag from "../../../components/ui/CountryFlag";
@@ -10,7 +9,10 @@ import { getCountryName } from "../../../utils/countries";
 import { formatMemberSince } from "../../../utils/format";
 import { formatLastSeen } from "../../../utils/formatLastSeen";
 import { useToast } from "../../../contexts/ToastContext";
+import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
+import ProfileDetailsEditor from "./ProfileDetailsEditor";
 import ProfileLanguagesCard from "./ProfileLanguagesCard";
+import ProfileStatusEditor from "./ProfileStatusEditor";
 
 interface ProfileSidebarProps {
     profile: PublicProfile;
@@ -21,8 +23,8 @@ interface ProfileSidebarProps {
     photos: Post[];
     blocking: boolean;
     photoUploading: boolean;
+    editor: ProfileSectionEditor;
     onStartConversation: () => void;
-    onEditAbout: () => void;
     onOpenGallery: () => void;
     onBlock: () => void;
     onUnblock: () => void;
@@ -47,8 +49,8 @@ export default function ProfileSidebar({
     photos,
     blocking,
     photoUploading,
+    editor,
     onStartConversation,
-    onEditAbout,
     onOpenGallery,
     onBlock,
     onUnblock,
@@ -58,19 +60,12 @@ export default function ProfileSidebar({
     const { showToast } = useToast();
     const [copiedId, setCopiedId] = useState(false);
     const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
+    const [removePhotoConfirmOpen, setRemovePhotoConfirmOpen] = useState(false);
 
     const profilePhoto = profile.avatar || null;
     const thumbnails = photos.slice(0, MAX_THUMBNAILS);
     const remaining = Math.max(0, photos.length - MAX_THUMBNAILS);
     const blockedByMe = Boolean(profile.blockedByMe);
-
-    const location = [profile.city, getCountryName(profile.country)]
-        .filter(Boolean)
-        .join(", ");
-
-    const genderLabel = profile.gender
-        ? getGenderOption(profile.gender)?.label
-        : undefined;
 
     const profileUrl =
         typeof window !== "undefined"
@@ -223,7 +218,7 @@ export default function ProfileSidebar({
                         {profile.avatar && (
                             <button
                                 type="button"
-                                onClick={onRemovePhoto}
+                                onClick={() => setRemovePhotoConfirmOpen(true)}
                                 disabled={photoUploading}
                                 aria-label="Remover foto"
                                 title="Remover foto"
@@ -370,63 +365,19 @@ export default function ProfileSidebar({
                     </button>
                 )}
 
-                {location && (
-                    <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500 dark:text-noir-text-muted">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            aria-hidden="true"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.8}
-                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.8}
-                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                        </svg>
-                        {location}
-                    </p>
-                )}
+                <div className="mt-1 space-y-1">
+                    <ProfileStatusEditor
+                        status={profile.status}
+                        isSelf={isSelf}
+                        editor={editor}
+                    />
 
-                {profile.status && (
-                    <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500 dark:text-noir-text-muted">
-                        <span
-                            aria-hidden="true"
-                            className="h-1.5 w-1.5 rounded-full bg-emerald-500"
-                        />
-                        {profile.status}
-                    </p>
-                )}
-
-                {genderLabel && (
-                    <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500 dark:text-noir-text-muted">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-3.5 w-3.5 text-slate-400 dark:text-noir-text-muted"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            aria-hidden="true"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.8}
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                        </svg>
-                        {genderLabel}
-                    </p>
-                )}
+                    <ProfileDetailsEditor
+                        profile={profile}
+                        isSelf={isSelf}
+                        editor={editor}
+                    />
+                </div>
 
                 {blockedByMe && !isSelf && (
                     <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
@@ -441,12 +392,12 @@ export default function ProfileSidebar({
                     </p>
                 )}
 
-                <div className="mt-4 flex items-center gap-2">
-                    {isSelf ? (
+                <div className="mt-3 flex items-center gap-2">
+                    {isSelf && (
                         <button
                             type="button"
-                            onClick={onEditAbout}
-                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-700/30 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                            onClick={handleCopyLink}
+                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-noir-border dark:bg-noir-surface-alt dark:text-noir-text-bright dark:hover:bg-noir-border"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -460,12 +411,15 @@ export default function ProfileSidebar({
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth={1.8}
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6.632l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
                                 />
                             </svg>
-                            Editar perfil
+                            Compartilhar perfil
                         </button>
-                    ) : blockedByMe ? (
+                    )}
+
+                    {!isSelf &&
+                        (blockedByMe ? (
                         <button
                             type="button"
                             onClick={onUnblock}
@@ -521,7 +475,7 @@ export default function ProfileSidebar({
                             )}
                             Conversar
                         </button>
-                    )}
+                    ))}
 
                     <DropdownMenu
                         align="right"
@@ -654,7 +608,7 @@ export default function ProfileSidebar({
                     languages={profile.languages}
                     languageLevels={profile.languageLevels}
                     isSelf={isSelf}
-                    onEdit={onEditAbout}
+                    editor={editor}
                 />
             </div>
 
@@ -685,6 +639,19 @@ export default function ProfileSidebar({
                     </dd>
                 </div>
             </dl>
+
+            <ConfirmDialog
+                isOpen={removePhotoConfirmOpen}
+                title="Remover foto?"
+                message="Sua foto de perfil será removida. Você pode enviar outra depois."
+                confirmLabel="Remover"
+                danger
+                onConfirm={() => {
+                    setRemovePhotoConfirmOpen(false);
+                    onRemovePhoto();
+                }}
+                onCancel={() => setRemovePhotoConfirmOpen(false)}
+            />
 
             <ConfirmDialog
                 isOpen={blockConfirmOpen}

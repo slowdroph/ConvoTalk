@@ -1,14 +1,72 @@
+import { useState } from "react";
+import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
+import InlineEditActions from "./inline/InlineEditActions";
+import InlineEditButton from "./inline/InlineEditButton";
+
+const MAX_BIO = 1000;
+
 interface ProfileAboutCardProps {
     bio?: string;
     isSelf: boolean;
-    onEdit: () => void;
+    editor: ProfileSectionEditor;
+}
+
+function BioEditor({
+    bio,
+    editor,
+}: {
+    bio: string;
+    editor: ProfileSectionEditor;
+}) {
+    const [draft, setDraft] = useState(bio);
+
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+        await editor.save({ bio: draft.trim() });
+    };
+
+    return (
+        <form onSubmit={(event) => void handleSubmit(event)} className="mt-3">
+            <div className="mb-1.5 flex items-center justify-end">
+                <span
+                    className={`text-[11px] ${
+                        draft.length >= MAX_BIO
+                            ? "text-red-500"
+                            : "text-slate-400 dark:text-noir-text-muted"
+                    }`}
+                >
+                    {draft.length}/{MAX_BIO}
+                </span>
+            </div>
+            <textarea
+                aria-label="Bio"
+                value={draft}
+                onChange={(event) =>
+                    setDraft(event.target.value.slice(0, MAX_BIO))
+                }
+                rows={5}
+                maxLength={MAX_BIO}
+                disabled={editor.saving}
+                placeholder="Conte um pouco sobre você, seus projetos e o que gosta de fazer..."
+                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface-alt/60 dark:text-noir-text-bright dark:placeholder:text-noir-text-muted/70"
+            />
+            <InlineEditActions
+                saving={editor.saving}
+                error={editor.error}
+                onCancel={editor.cancel}
+                submitLabel="Salvar bio"
+            />
+        </form>
+    );
 }
 
 export default function ProfileAboutCard({
-    bio,
+    bio = "",
     isSelf,
-    onEdit,
+    editor,
 }: ProfileAboutCardProps) {
+    const editing = editor.isEditing("bio");
+
     return (
         <section
             aria-label="Sobre mim"
@@ -21,14 +79,11 @@ export default function ProfileAboutCard({
                         Bio pública
                     </span>
                 </div>
-                {isSelf ? (
-                    <button
-                        type="button"
-                        onClick={onEdit}
-                        className="text-xs font-medium text-emerald-700 transition-colors hover:underline dark:text-emerald-400"
-                    >
-                        Editar
-                    </button>
+                {isSelf && !editing ? (
+                    <InlineEditButton
+                        label="Editar bio"
+                        onClick={() => editor.start("bio")}
+                    />
                 ) : null}
             </div>
 
@@ -36,12 +91,16 @@ export default function ProfileAboutCard({
                 Sobre Mim
             </h2>
 
-            <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 dark:text-noir-text-bright/90">
-                {bio?.trim() ||
-                    (isSelf
-                        ? "Você ainda não escreveu sua bio. Conte um pouco sobre você!"
-                        : "Este usuário ainda não escreveu uma bio.")}
-            </p>
+            {editing ? (
+                <BioEditor bio={bio} editor={editor} />
+            ) : (
+                <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 dark:text-noir-text-bright/90">
+                    {bio.trim() ||
+                        (isSelf
+                            ? "Você ainda não escreveu sua bio. Conte um pouco sobre você!"
+                            : "Este usuário ainda não escreveu uma bio.")}
+                </p>
+            )}
         </section>
     );
 }
