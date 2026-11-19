@@ -1,6 +1,6 @@
 export default function ChatSkeleton() {
     return (
-        <div className="h-dvh-fallback flex bg-noir-base">
+        <div className="h-full flex flex-col bg-noir-base">
             <div className="w-80 bg-noir-surface border-r border-noir-border flex flex-col md:flex">
                 <div className="p-4 border-b border-noir-border">
                     <div className="w-24 h-4 bg-noir-surface-alt rounded animate-pulse" />

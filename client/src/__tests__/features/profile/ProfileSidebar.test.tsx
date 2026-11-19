@@ -118,7 +118,7 @@ describe("ProfileSidebar", () => {
             screen.queryByAltText("Foto de perfil de Ana"),
         ).not.toBeInTheDocument();
         expect(
-            screen.queryByRole("link", { name: "Expandir foto de perfil" }),
+            screen.queryByRole("button", { name: "Expandir foto de perfil" }),
         ).not.toBeInTheDocument();
         expect(screen.getByText("A")).toBeInTheDocument();
     });
@@ -210,9 +210,17 @@ describe("ProfileSidebar", () => {
             "src",
             "https://example.com/avatar.png",
         );
+        const expand = screen.getByRole("button", {
+            name: "Expandir foto de perfil",
+        });
+        expect(expand).toBeInTheDocument();
+
+        fireEvent.click(expand);
         expect(
-            screen.getByRole("link", { name: "Expandir foto de perfil" }),
-        ).toHaveAttribute("href", "https://example.com/avatar.png");
+            screen.getByRole("dialog", {
+                name: "Imagem Foto de perfil de Ana",
+            }),
+        ).toBeInTheDocument();
         expect(screen.getByText("Alterar foto")).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole("button", { name: "Remover foto" }));

@@ -6,7 +6,6 @@ import { useToast } from "../contexts/ToastContext";
 import { getErrorMessage } from "../utils/errors";
 import { createDirectRoom } from "../services/rooms";
 import AppFooter from "../components/Navigation/AppFooter";
-import AppHeader from "../components/Navigation/AppHeader";
 import ProfileAboutDialog from "../features/profile/components/ProfileAboutDialog";
 import ProfileAboutTab from "../features/profile/components/ProfileAboutTab";
 import ProfileGallery from "../features/profile/components/ProfileGallery";
@@ -187,8 +186,7 @@ export default function ProfilePage() {
 
     if (!profileUserId) {
         return (
-            <div className="flex h-dvh-fallback flex-col bg-noir-base">
-                <AppHeader />
+            <div className="flex h-full min-h-0 flex-col bg-noir-base">
                 <main className="flex flex-1 items-center justify-center p-6 text-sm text-slate-500 dark:text-noir-text-muted">
                     Carregando perfil...
                 </main>
@@ -198,10 +196,9 @@ export default function ProfilePage() {
 
     if (loading && !profile) {
         return (
-            <div className="flex h-dvh-fallback flex-col bg-noir-base">
-                <AppHeader />
-                <main className="flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="mx-auto grid w-full max-w-6xl grid-cols-12 items-start gap-6 px-4 py-6 pb-20 sm:px-6">
+            <div className="flex h-full min-h-0 flex-col bg-noir-base">
+                <main className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                    <div className="mx-auto grid w-full max-w-6xl grid-cols-12 items-start gap-6 px-4 py-6 pb-8 sm:px-6">
                         <aside className="col-span-12 lg:col-span-4">
                             <div className="h-80 animate-pulse rounded-2xl bg-slate-200 dark:bg-noir-surface" />
                         </aside>
@@ -217,8 +214,7 @@ export default function ProfilePage() {
 
     if (notFound || error || !profile) {
         return (
-            <div className="flex h-dvh-fallback flex-col bg-noir-base">
-                <AppHeader />
+            <div className="flex h-full min-h-0 flex-col bg-noir-base">
                 <main className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
                     <p className="text-sm font-medium text-slate-700 dark:text-noir-text-bright">
                         {notFound
@@ -248,12 +244,10 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="flex h-dvh-fallback flex-col bg-noir-base pt-[env(safe-area-inset-top)]">
-            <AppHeader />
-
-            <main className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex h-full min-h-0 flex-col bg-noir-base">
+            <main className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                 <div className="mx-auto grid w-full max-w-6xl grid-cols-12 items-start gap-6 px-4 py-6 pb-20 sm:px-6">
-                    <aside className="col-span-12 self-start lg:sticky lg:top-20 lg:col-span-4">
+                    <aside className="col-span-12 self-start lg:sticky lg:top-6 lg:col-span-4">
                         <ProfileSidebar
                             profile={profile}
                             online={isOnline}

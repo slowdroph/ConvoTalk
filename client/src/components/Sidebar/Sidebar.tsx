@@ -1,11 +1,8 @@
-import UserStatus from "./UserStatus";
 import RoomList from "./RoomList";
 import UserSearchModal from "./UserSearchModal";
 import CreateGroupModal from "./CreateGroupModal";
-import AppNavTabs from "../Navigation/AppNavTabs";
 import Avatar from "../ui/Avatar";
 import api from "../../services/api";
-import { APP_VERSION } from "../../utils/version";
 import { useEffect, useRef, useState } from "react";
 import type { Room } from "../../types";
 
@@ -104,20 +101,44 @@ export default function Sidebar({
         <>
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black/60 z-30 md:hidden"
+                    className="fixed inset-0 z-50 bg-black/60 md:hidden"
                     onClick={onClose}
                     aria-hidden="true"
                 />
             )}
             <aside
-                className={`fixed inset-y-0 left-0 z-40 w-[380px] max-w-[85vw] md:min-w-[340px] md:max-w-[420px] bg-noir-surface border-r border-noir-border flex flex-col h-full transition-transform duration-200 md:static md:translate-x-0 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] ${
+                className={`fixed inset-y-0 left-0 z-50 w-[380px] max-w-[85vw] md:min-w-[340px] md:max-w-[420px] bg-noir-surface border-r border-noir-border flex flex-col h-full transition-transform duration-200 md:static md:translate-x-0 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] ${
                     isOpen ? "translate-x-0" : "-translate-x-full"
                 }`}
                 aria-label="Lista de conversas"
             >
-                <UserStatus />
-                <div className="px-3.5 pt-3">
-                    <AppNavTabs onNavigate={onClose} />
+                <div className="flex items-center justify-between gap-2 px-4 pt-3 md:hidden">
+                    <span className="text-sm font-semibold text-slate-900 dark:text-noir-text-bright">
+                        Conversas
+                    </span>
+                    {onClose && (
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            aria-label="Fechar lista de conversas"
+                            className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-noir-text-muted dark:hover:bg-noir-surface-alt dark:hover:text-noir-text-bright"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+                    )}
                 </div>
                 <div className="p-3.5 space-y-3 border-b border-noir-border">
                     {/* Busca de mensagens */}
@@ -259,9 +280,6 @@ export default function Sidebar({
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                         <span className="text-[11px]">ConvoTalk</span>
                     </div>
-                    <span className="text-[10px] text-noir-text-muted/70 font-mono">
-                        v{APP_VERSION}
-                    </span>
                 </div>
 
                 <CreateGroupModal

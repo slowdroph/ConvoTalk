@@ -7,6 +7,7 @@ import { useMessageActionsPosition } from "../../hooks/useMessageActionsPosition
 import type { Message, ParentMessage, PublicUser } from "../../types";
 import Avatar from "../ui/Avatar";
 import ConfirmDialog from "../ui/ConfirmDialog";
+import ImageLightbox from "../ui/ImageLightbox";
 import UserProfilePopover from "../ui/UserProfilePopover";
 import LinkPreviewCard from "./LinkPreviewCard";
 import MessageActions from "./MessageActions";
@@ -83,20 +84,13 @@ function MessageAttachments({
                         />
                     </div>
                 ) : att.mimetype.startsWith("image/") ? (
-                    <a
+                    <ImageLightbox
                         key={i}
-                        href={att.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        src={att.url}
+                        alt={att.filename}
                         className="block mt-1 rounded-lg overflow-hidden"
-                    >
-                        <img
-                            src={att.url}
-                            alt={att.filename}
-                            className="max-w-64 max-h-64 object-cover rounded-lg"
-                            loading="lazy"
-                        />
-                    </a>
+                        imageClassName="max-w-64 max-h-64 object-cover rounded-lg"
+                    />
                 ) : (
                     <a
                         key={i}

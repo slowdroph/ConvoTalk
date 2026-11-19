@@ -10,7 +10,6 @@ import { useScrollSpy } from "../hooks/useScrollSpy";
 import SectionHeader from "../components/Home/SectionHeader";
 import IconBadge from "../components/Home/IconBadge";
 import FeatureCard from "../components/Home/FeatureCard";
-import { APP_VERSION } from "../utils/version";
 
 const FAQ_ITEMS = [
     {
@@ -96,10 +95,6 @@ export default function HomePage() {
                     <Reveal>
                         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/30 bg-surface-container-high/60 backdrop-blur text-xs font-medium text-on-surface mb-8 shadow-sm">
                             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                            <span className="text-primary font-semibold">
-                                Nova versão v{APP_VERSION}
-                            </span>
-                            <span className="text-outline-variant">•</span>
                             <span className="text-on-surface-variant">
                                 Chamadas WebRTC & PWA Ativados
                             </span>
@@ -726,7 +721,7 @@ export default function HomePage() {
                                     Anúncio Fixado:
                                 </span>
                                 <span className="text-on-surface-variant">
-                                    Atualização da stack ConvoTalk v2.4
+                                    Atualização da stack ConvoTalk
                                     realizada com sucesso às 10:00 UTC.
                                 </span>
                             </div>

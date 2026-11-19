@@ -1,12 +1,24 @@
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
-import type { Attachment } from "../../../types";
 
-interface PostImageProps {
-    image: Attachment;
+interface ImageLightboxProps {
+    src: string;
+    alt: string;
+    className?: string;
+    imageClassName?: string;
+    triggerLabel?: string;
+    children?: ReactNode;
 }
 
-export default function PostImage({ image }: PostImageProps) {
+export default function ImageLightbox({
+    src,
+    alt,
+    className,
+    imageClassName,
+    triggerLabel,
+    children,
+}: ImageLightboxProps) {
     const [open, setOpen] = useState(false);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const closeRef = useRef<HTMLButtonElement>(null);
@@ -15,7 +27,8 @@ export default function PostImage({ image }: PostImageProps) {
         if (!open) return;
 
         const previousFocus =
-            document.activeElement instanceof HTMLElement
+            document.activeElement instanceof HTMLElement &&
+            document.activeElement !== document.body
                 ? document.activeElement
                 : null;
         const trigger = triggerRef.current;
@@ -48,15 +61,17 @@ export default function PostImage({ image }: PostImageProps) {
                 ref={triggerRef}
                 type="button"
                 onClick={() => setOpen(true)}
-                aria-label={`Ampliar imagem ${image.filename}`}
-                className="mt-3 block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 transition-opacity hover:opacity-95 dark:border-noir-border dark:bg-noir-surface-alt"
+                aria-label={triggerLabel ?? `Ampliar imagem ${alt}`}
+                className={className}
             >
-                <img
-                    src={image.url}
-                    alt={image.filename}
-                    loading="lazy"
-                    className="max-h-[520px] w-full object-cover"
-                />
+                {children ?? (
+                    <img
+                        src={src}
+                        alt={alt}
+                        loading="lazy"
+                        className={imageClassName}
+                    />
+                )}
             </button>
 
             {open &&
@@ -66,7 +81,7 @@ export default function PostImage({ image }: PostImageProps) {
                         onClick={() => setOpen(false)}
                         role="dialog"
                         aria-modal="true"
-                        aria-label={`Imagem ${image.filename}`}
+                        aria-label={`Imagem ${alt}`}
                     >
                         <button
                             ref={closeRef}
@@ -91,8 +106,8 @@ export default function PostImage({ image }: PostImageProps) {
                             </svg>
                         </button>
                         <img
-                            src={image.url}
-                            alt={image.filename}
+                            src={src}
+                            alt={alt}
                             className="max-h-full max-w-full rounded-lg object-contain"
                             onClick={(event) => event.stopPropagation()}
                         />

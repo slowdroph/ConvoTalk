@@ -5,6 +5,7 @@ import Avatar from "../../../components/ui/Avatar";
 import ConfirmDialog from "../../../components/ui/ConfirmDialog";
 import CountryFlag from "../../../components/ui/CountryFlag";
 import DropdownMenu from "../../../components/ui/DropdownMenu";
+import ImageLightbox from "../../../components/ui/ImageLightbox";
 import { getCountryName } from "../../../utils/countries";
 import { formatMemberSince } from "../../../utils/format";
 import { formatLastSeen } from "../../../utils/formatLastSeen";
@@ -147,12 +148,10 @@ export default function ProfileSidebar({
                 </span>
 
                 {profilePhoto && (
-                    <a
-                        href={profilePhoto}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label="Expandir foto de perfil"
-                        title="Expandir foto de perfil"
+                    <ImageLightbox
+                        src={profilePhoto}
+                        alt={`Foto de perfil de ${profile.name}`}
+                        triggerLabel="Expandir foto de perfil"
                         className="absolute right-2 top-2 inline-flex items-center justify-center rounded-lg bg-black/50 p-2 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
                     >
                         <svg
@@ -170,7 +169,7 @@ export default function ProfileSidebar({
                                 d="M4 8V4h4m8 0h4v4m0 8v4h-4M8 20H4v-4"
                             />
                         </svg>
-                    </a>
+                    </ImageLightbox>
                 )}
 
                 {isSelf && (
@@ -254,24 +253,17 @@ export default function ProfileSidebar({
             {thumbnails.length > 0 && (
                 <div className="grid grid-cols-5 gap-1.5 border-b border-slate-200 bg-slate-50 p-2 dark:border-noir-border dark:bg-noir-surface-alt/50">
                     {thumbnails.map((post) => (
-                        <a
+                        <ImageLightbox
                             key={post._id}
-                            href={post.image?.url}
-                            target="_blank"
-                            rel="noreferrer"
+                            src={post.image?.url ?? ""}
+                            alt={
+                                post.content
+                                    ? post.content.slice(0, 60)
+                                    : "Miniatura da galeria"
+                            }
                             className="group relative block aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-noir-border dark:bg-noir-surface-alt"
-                        >
-                            <img
-                                src={post.image?.url}
-                                alt={
-                                    post.content
-                                        ? post.content.slice(0, 60)
-                                        : "Miniatura da galeria"
-                                }
-                                loading="lazy"
-                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                        </a>
+                            imageClassName="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
                     ))}
 
                     {remaining > 0 ? (

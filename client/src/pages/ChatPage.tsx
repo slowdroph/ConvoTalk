@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
 import ChatWindow from "../components/Chat/ChatWindow";
@@ -8,6 +8,7 @@ import SuggestedUsers from "../components/Chat/SuggestedUsers";
 import api from "../services/api";
 import { useSocket } from "../hooks/useSocket";
 import { useAuth } from "../hooks/useAuth";
+import { useRooms } from "../hooks/useRooms";
 import { useNotifications } from "../hooks/useNotifications";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { IncomingCallProvider, useIncomingCall } from "../contexts/IncomingCallContext";
@@ -17,7 +18,7 @@ import {
     getPendingMessages,
     removePendingMessage,
 } from "../lib/offlineStorage";
-import type { Room, Message } from "../types";
+import type { Room } from "../types";
 
 export default function ChatPage() {
     const { socket } = useSocket();
@@ -31,36 +32,27 @@ export default function ChatPage() {
 function ChatPageInner() {
     const { roomId } = useParams();
     const navigate = useNavigate();
-    const [rooms, setRooms] = useState<Room[]>([]);
-    const [activeRoom, setActiveRoom] = useState<string | null>(null);
-    const [lastUrlRoomId, setLastUrlRoomId] = useState<string | undefined>(
-        roomId,
-    );
-    const [roomsLoading, setRoomsLoading] = useState(true);
-    const [roomsError, setRoomsError] = useState<string | null>(null);
-    const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>(
-        {},
-    );
-    const [mentionUnreadCounts, setMentionUnreadCounts] = useState<
-        Record<string, number>
-    >({});
+    const {
+        rooms,
+        roomsLoading,
+        roomsError,
+        activeRoom,
+        setActiveRoom,
+        unreadCounts,
+        mentionUnreadCounts,
+        loadRooms,
+        markRoomRead,
+        removeRoom,
+        updateRoom,
+    } = useRooms();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [highlightMessageId, setHighlightMessageId] = useState<string | null>(
         null,
     );
     const [webrtcState, setWebrtcState] = useState<WebRTCState | null>(null);
-    const initialized = useRef(false);
     const { socket, connected } = useSocket();
     const { user } = useAuth();
     const { incomingCall, setIncomingCall, setPendingAcceptedCall } = useIncomingCall();
-
-    // Ajusta a sala ativa quando a URL muda (ex.: clique em notificação push)
-    if (roomId !== lastUrlRoomId) {
-        setLastUrlRoomId(roomId);
-        if (roomId && rooms.some((r) => r._id === roomId)) {
-            setActiveRoom(roomId);
-        }
-    }
 
     useNotifications(socket, user, activeRoom);
 
@@ -95,63 +87,31 @@ function ChatPageInner() {
         };
     }, [connected, socket]);
 
-    const loadRooms = useCallback(async () => {
-        setRoomsError(null);
-        setRoomsLoading(true);
-        try {
-            const { data } = await api.get("/rooms");
-            setRooms(data);
-            setUnreadCounts(
-                data.reduce((acc: Record<string, number>, r: Room) => {
-                    if (r.unreadCount) acc[r._id] = r.unreadCount;
-                    return acc;
-                }, {}),
-            );
-            setMentionUnreadCounts(
-                data.reduce((acc: Record<string, number>, r: Room) => {
-                    if (r.mentionUnreadCount) acc[r._id] = r.mentionUnreadCount;
-                    return acc;
-                }, {}),
-            );
-            return data;
-        } catch (error) {
-            console.error("Erro ao carregar salas:", error);
-            setRoomsError("Erro ao carregar salas. Verifique sua conexão.");
-            return [];
-        } finally {
-            setRoomsLoading(false);
+    useEffect(() => {
+        if (roomsLoading) return;
+        if (roomId) {
+            const match = rooms.find((room) => room._id === roomId);
+            if (match) {
+                setActiveRoom(match._id);
+                markRoomRead(match._id);
+                return;
+            }
         }
-    }, []);
+        if (!activeRoom && rooms.length > 0) {
+            setActiveRoom(rooms[0]._id);
+        }
+    }, [roomId, rooms, roomsLoading, activeRoom, setActiveRoom, markRoomRead]);
 
     useEffect(() => {
-        if (!initialized.current) {
-            initialized.current = true;
-            loadRooms().then((data) => {
-                if (data.length > 0) {
-                    const initialRoom = data.find((r: Room) => r._id === roomId);
-                    setActiveRoom(initialRoom ? initialRoom._id : data[0]._id);
-                }
-            });
-        }
-    }, [loadRooms, roomId]);
+        return () => setActiveRoom(null);
+    }, [setActiveRoom]);
 
     const handleSelectRoom = (roomId: string, messageId?: string) => {
         setActiveRoom(roomId);
+        markRoomRead(roomId);
         navigate(`/chat/${roomId}`, { replace: true });
         setHighlightMessageId(messageId ?? null);
         setSidebarOpen(false);
-        setUnreadCounts((prev) => {
-            if (!prev[roomId]) return prev;
-            const next = { ...prev };
-            delete next[roomId];
-            return next;
-        });
-        setMentionUnreadCounts((prev) => {
-            if (!prev[roomId]) return prev;
-            const next = { ...prev };
-            delete next[roomId];
-            return next;
-        });
     };
 
     const handleConversationCreated = (roomId: string) => {
@@ -169,98 +129,27 @@ function ChatPageInner() {
     };
 
     const handleGroupUpdated = (room: Room) => {
-        setRooms((prev) => prev.map((r) => (r._id === room._id ? room : r)));
+        updateRoom(room);
     };
 
     const handleDeleteRoom = async (roomId: string) => {
         try {
             await api.delete(`/rooms/${roomId}`);
-            setRooms((prev) => {
-                const remaining = prev.filter((r) => r._id !== roomId);
-                if (activeRoom === roomId) {
-                    setActiveRoom(
-                        remaining.length > 0 ? remaining[0]._id : null,
-                    );
-                }
-                return remaining;
-            });
+            removeRoom(roomId);
         } catch (error) {
             console.error("Erro ao excluir conversa:", error);
         }
     };
 
     const handleLeaveRoom = (roomId: string) => {
-        setRooms((prev) => {
-            const remaining = prev.filter((r) => r._id !== roomId);
-            if (activeRoom === roomId) {
-                const next = remaining.length > 0 ? remaining[0]._id : null;
-                setActiveRoom(next);
-                navigate(next ? `/chat/${next}` : "/chat", { replace: true });
-            }
-            return remaining;
-        });
+        const remaining = rooms.filter((room) => room._id !== roomId);
+        removeRoom(roomId);
+        if (activeRoom === roomId) {
+            const next = remaining.length > 0 ? remaining[0]._id : null;
+            setActiveRoom(next);
+            navigate(next ? `/chat/${next}` : "/chat", { replace: true });
+        }
     };
-
-    useEffect(() => {
-        if (!socket) return;
-        const handleRoomDeleted = (roomId: string) => {
-            setRooms((prev) => {
-                const remaining = prev.filter((r) => r._id !== roomId);
-                if (activeRoom === roomId) {
-                    setActiveRoom(
-                        remaining.length > 0 ? remaining[0]._id : null,
-                    );
-                }
-                return remaining;
-            });
-        };
-        const handleRoomUpdated = (updatedRoom: Room) => {
-            if (!updatedRoom?._id) return;
-            setRooms((prev) =>
-                prev.map((r) =>
-                    r._id === updatedRoom._id ? { ...r, ...updatedRoom } : r,
-                ),
-            );
-        };
-        socket.on("room_deleted", handleRoomDeleted);
-        socket.on("room_updated", handleRoomUpdated);
-        return () => {
-            socket.off("room_deleted", handleRoomDeleted);
-            socket.off("room_updated", handleRoomUpdated);
-        };
-    }, [socket, activeRoom]);
-
-    useEffect(() => {
-        if (!socket || !user) return;
-        const handleMessage = (msg: Message) => {
-            if (msg.type === "system") return;
-            if (msg.sender && msg.sender._id === user._id) return;
-            if (msg.room === activeRoom) return;
-            setUnreadCounts((prev) => ({
-                ...prev,
-                [msg.room]: (prev[msg.room] || 0) + 1,
-            }));
-        };
-        const handleMention = (payload: {
-            messageId: string;
-            roomId: string;
-            sender: { _id: string; name: string; avatar?: string; status?: string };
-            content: string;
-            createdAt: string;
-        }) => {
-            if (payload.roomId === activeRoom) return;
-            setMentionUnreadCounts((prev) => ({
-                ...prev,
-                [payload.roomId]: (prev[payload.roomId] || 0) + 1,
-            }));
-        };
-        socket.on("message", handleMessage);
-        socket.on("mention:new", handleMention);
-        return () => {
-            socket.off("message", handleMessage);
-            socket.off("mention:new", handleMention);
-        };
-    }, [socket, user, activeRoom]);
 
     useKeyboardShortcuts(
         Array.from({ length: Math.min(9, rooms.length) }, (_, i) => ({
@@ -322,7 +211,7 @@ function ChatPageInner() {
         : null;
 
     return (
-        <div className="h-dvh-fallback flex flex-col bg-noir-base pt-[env(safe-area-inset-top)]">
+        <div className="flex h-full min-h-0 flex-col bg-noir-base">
             <ConnectionBanner />
             <div className="flex flex-1 min-h-0 min-w-0">
                 <Sidebar

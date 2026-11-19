@@ -16,20 +16,6 @@ const ALLOWED_IMAGE_TYPES = new Set([
     "image/webp",
     "image/gif",
 ]);
-const EMOJIS = [
-    "😀",
-    "😂",
-    "😍",
-    "😎",
-    "🤔",
-    "👍",
-    "👏",
-    "🙌",
-    "🔥",
-    "❤️",
-    "✨",
-    "🎉",
-];
 
 interface FeedComposerProps {
     onCreated: (post: Post) => void;
@@ -57,7 +43,6 @@ export default function FeedComposer({
     const [submitting, setSubmitting] = useState(false);
     const [pollOptions, setPollOptions] = useState<string[] | null>(null);
     const [pollError, setPollError] = useState<string | null>(null);
-    const [emojiOpen, setEmojiOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const imageRef = useRef<SelectedImage | null>(null);
@@ -87,12 +72,6 @@ export default function FeedComposer({
     ) => {
         clientPostIdRef.current = null;
         setContent(event.target.value.slice(0, MAX_CONTENT));
-    };
-
-    const addEmoji = (emoji: string) => {
-        setContent((current) => (current + emoji).slice(0, MAX_CONTENT));
-        setEmojiOpen(false);
-        textareaRef.current?.focus();
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -415,55 +394,6 @@ export default function FeedComposer({
                         </svg>
                         {!isCompact && "Imagem"}
                     </button>
-
-                    {isCompact && (
-                        <div className="relative">
-                            <button
-                                type="button"
-                                onClick={() => setEmojiOpen((open) => !open)}
-                                disabled={submitting}
-                                title="Adicionar emoji"
-                                aria-label="Adicionar emoji"
-                                aria-expanded={emojiOpen}
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-noir-text-muted dark:hover:bg-noir-surface-alt dark:hover:text-emerald-400"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    aria-hidden="true"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={1.8}
-                                        d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                            </button>
-                            {emojiOpen && (
-                                <div
-                                    role="group"
-                                    aria-label="Emojis"
-                                    className="absolute bottom-full left-0 z-20 mb-2 grid grid-cols-6 gap-1 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-noir-border dark:bg-noir-surface"
-                                >
-                                    {EMOJIS.map((emoji) => (
-                                        <button
-                                            key={emoji}
-                                            type="button"
-                                            onClick={() => addEmoji(emoji)}
-                                            aria-label={`Inserir ${emoji}`}
-                                            className="flex h-8 w-8 items-center justify-center rounded-lg text-lg transition-colors hover:bg-slate-100 dark:hover:bg-noir-surface-alt"
-                                        >
-                                            {emoji}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
 
                     <button
                         type="button"

@@ -145,26 +145,6 @@ describe("FeedComposer", () => {
         );
     });
 
-    it("insere emoji no modo compacto", () => {
-        render(
-            <FeedComposer
-                onCreated={vi.fn()}
-                variant="compact"
-                placeholder="Mural"
-            />,
-        );
-
-        const textarea = screen.getByLabelText("Escreva seu post");
-        fireEvent.change(textarea, { target: { value: "Oi " } });
-
-        fireEvent.click(
-            screen.getByRole("button", { name: "Adicionar emoji" }),
-        );
-        fireEvent.click(screen.getByRole("button", { name: "Inserir 🎉" }));
-
-        expect(textarea).toHaveValue("Oi 🎉");
-    });
-
     it("impede enquete com opção em branco", async () => {
         const onCreated = vi.fn();
 

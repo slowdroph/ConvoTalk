@@ -7,7 +7,7 @@ import type { Post } from "../../../types";
 import Avatar from "../../../components/ui/Avatar";
 import ConfirmDialog from "../../../components/ui/ConfirmDialog";
 import CountryFlag from "../../../components/ui/CountryFlag";
-import PostImage from "./PostImage";
+import ImageLightbox from "../../../components/ui/ImageLightbox";
 import PostComments from "./PostComments";
 import PostPoll from "./PostPoll";
 import { sharePost } from "../sharePost";
@@ -269,7 +269,14 @@ export default function PostCard({
                     </p>
                 )}
 
-                {post.image && <PostImage image={post.image} />}
+                {post.image && (
+                    <ImageLightbox
+                        src={post.image.url}
+                        alt={post.image.filename}
+                        className="mt-3 block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 transition-opacity hover:opacity-95 dark:border-noir-border dark:bg-noir-surface-alt"
+                        imageClassName="max-h-[520px] w-full object-cover"
+                    />
+                )}
 
                 {post.poll && (
                     <PostPoll

@@ -1,4 +1,5 @@
 import type { Post } from "../../../types";
+import ImageLightbox from "../../../components/ui/ImageLightbox";
 
 interface ProfileGalleryProps {
     images: Post[];
@@ -63,23 +64,18 @@ export default function ProfileGallery({
                 <ul className="mt-3 grid grid-cols-3 gap-2">
                     {images.map((post) => (
                         <li key={post._id}>
-                            <a
-                                href={post.image?.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="group relative block aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-noir-border dark:bg-noir-surface-alt"
-                            >
-                                <img
-                                    src={post.image?.url}
+                            {post.image && (
+                                <ImageLightbox
+                                    src={post.image.url}
                                     alt={
                                         post.content
                                             ? post.content.slice(0, 80)
                                             : "Foto publicada no mural"
                                     }
-                                    loading="lazy"
-                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    className="group relative block aspect-square w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-noir-border dark:bg-noir-surface-alt"
+                                    imageClassName="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                 />
-                            </a>
+                            )}
                         </li>
                     ))}
                 </ul>

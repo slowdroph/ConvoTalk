@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useSocket } from "../hooks/useSocket";
 import AppFooter from "../components/Navigation/AppFooter";
-import AppHeader from "../components/Navigation/AppHeader";
 import FeedComposer from "../features/feed/components/FeedComposer";
 import FeedFilters from "../features/feed/components/FeedFilters";
 import FeedList from "../features/feed/components/FeedList";
@@ -106,12 +105,10 @@ export default function FeedPage() {
     };
 
     return (
-        <div className="h-dvh-fallback flex flex-col bg-noir-base pt-[env(safe-area-inset-top)]">
-            <AppHeader />
-
-            <main className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="mx-auto grid w-full max-w-7xl grid-cols-12 items-start gap-6 px-4 py-6 pb-20 sm:px-6">
-                    <aside className="sticky top-20 hidden flex-col gap-5 self-start lg:col-span-3 lg:flex">
+        <div className="flex h-full min-h-0 flex-col bg-noir-base">
+            <main className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                <div className="mx-auto grid w-full max-w-7xl grid-cols-12 items-start gap-6 px-4 py-6 pb-8 sm:px-6">
+                    <aside className="sticky top-6 hidden flex-col gap-5 self-start lg:col-span-3 lg:flex">
                         {user && (
                             <FeedProfileCard
                                 user={user}
@@ -181,7 +178,7 @@ export default function FeedPage() {
                         />
                     </section>
 
-                    <aside className="sticky top-20 hidden flex-col gap-5 self-start lg:col-span-3 lg:flex">
+                    <aside className="sticky top-6 hidden flex-col gap-5 self-start lg:col-span-3 lg:flex">
                         <FeedSuggestedMembers
                             onOpenProfile={(member) =>
                                 navigate(`/profile/${member._id}`)

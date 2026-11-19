@@ -1,6 +1,6 @@
 export default function SettingsSkeleton() {
     return (
-        <div className="min-h-dvh-fallback bg-slate-50 dark:bg-zinc-950">
+        <div className="h-full bg-slate-50 dark:bg-zinc-950">
             <div className="max-w-2xl mx-auto px-4 py-8">
                 <div className="flex items-center gap-4 mb-8">
                     <div className="w-6 h-6 bg-slate-200 rounded animate-pulse dark:bg-zinc-800" />

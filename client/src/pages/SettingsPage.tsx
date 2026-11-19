@@ -201,7 +201,7 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-noir-base text-noir-text-bright flex flex-col font-sans selection:bg-emerald-600 selection:text-white antialiased">
+        <div className="h-full min-h-0 bg-noir-base text-noir-text-bright flex flex-col font-sans selection:bg-emerald-600 selection:text-white antialiased">
             {/* Cabeçalho de Navegação */}
             <header className="h-16 border-b border-noir-border bg-noir-surface/90 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between">
                 {/* Lado esquerdo: Link Voltar, Marca e Breadcrumbs */}
@@ -229,7 +229,7 @@ export default function SettingsPage() {
 
                     <div className="h-4 w-px bg-noir-border shrink-0" />
 
-                    <div className="flex items-center gap-2.5 shrink-0">
+                    <div className="flex items-center gap-2.5 shrink-0 lg:hidden">
                         <img
                             src="/convo_talk_logo.png"
                             alt="ConvoTalk Logo"

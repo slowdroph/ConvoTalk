@@ -5,6 +5,7 @@ import { SocketProvider } from "./providers/SocketProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ChatSkeleton from "./components/Skeletons/ChatSkeleton";
 import SettingsSkeleton from "./components/Skeletons/SettingsSkeleton";
+import AppLayout from "./layouts/AppLayout";
 
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
@@ -124,55 +125,53 @@ export default function App() {
                         }
                     />
                     <Route
-                        path="/chat/:roomId?"
                         element={
                             <PrivateRoute>
+                                <AppLayout />
+                            </PrivateRoute>
+                        }
+                    >
+                        <Route
+                            path="/chat/:roomId?"
+                            element={
                                 <Suspense fallback={<ChatSkeleton />}>
                                     <ChatPage />
                                 </Suspense>
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/feed"
-                        element={
-                            <PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/feed"
+                            element={
                                 <Suspense fallback={<LoadingScreen />}>
                                     <FeedPage />
                                 </Suspense>
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/profile"
-                        element={
-                            <PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/profile"
+                            element={
                                 <Suspense fallback={<LoadingScreen />}>
                                     <ProfilePage />
                                 </Suspense>
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/profile/:userId"
-                        element={
-                            <PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/profile/:userId"
+                            element={
                                 <Suspense fallback={<LoadingScreen />}>
                                     <ProfilePage />
                                 </Suspense>
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/settings"
-                        element={
-                            <PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/settings"
+                            element={
                                 <Suspense fallback={<SettingsSkeleton />}>
                                     <SettingsPage />
                                 </Suspense>
-                            </PrivateRoute>
-                        }
-                    />
+                            }
+                        />
+                    </Route>
                     <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
             </ErrorBoundary>
