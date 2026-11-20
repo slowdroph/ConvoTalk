@@ -37,8 +37,18 @@ function fillPersonalStep() {
     fireEvent.change(screen.getByLabelText("Gênero"), {
         target: { value: "woman" },
     });
-    fireEvent.change(screen.getByLabelText("Data de nascimento"), {
-        target: { value: "1995-05-10" },
+    fillBirthdate();
+}
+
+function fillBirthdate(day = "10", month = "05", year = "1995") {
+    fireEvent.change(screen.getByLabelText("Dia"), {
+        target: { value: day },
+    });
+    fireEvent.change(screen.getByLabelText("Mês"), {
+        target: { value: month },
+    });
+    fireEvent.change(screen.getByLabelText("Ano"), {
+        target: { value: year },
     });
 }
 
@@ -148,9 +158,7 @@ describe("RegisterForm", () => {
         fireEvent.change(screen.getByLabelText("Gênero"), {
             target: { value: "woman" },
         });
-        fireEvent.change(screen.getByLabelText("Data de nascimento"), {
-            target: { value: `${year}-01-01` },
-        });
+        fillBirthdate("01", "01", String(year));
         fireEvent.click(continueButton());
 
         expect(

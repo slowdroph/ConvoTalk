@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { GENDER_OPTIONS, MIN_AGE, calculateAge, getGenderOption } from "@shared/profile";
+import { GENDER_OPTIONS, MIN_AGE, MAX_AGE, getGenderOption } from "@shared/profile";
 import type { PublicProfile } from "../../../types";
 import { COUNTRIES, getCountryName } from "../../../utils/countries";
+import { dateOfBirthError } from "../../../utils/date";
 import CityCombobox from "../../../components/ui/CityCombobox";
+import DateOfBirthInput from "../../../components/ui/DateOfBirthInput";
 import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
 import InlineEditButton from "./inline/InlineEditButton";
 
@@ -15,12 +17,6 @@ const fieldClass =
 
 const labelClass =
     "mb-1 block text-[11px] font-medium text-slate-600 dark:text-noir-text-muted";
-
-const maxBirthdate = (() => {
-    const date = new Date();
-    date.setUTCFullYear(date.getUTCFullYear() - MIN_AGE);
-    return date.toISOString().slice(0, 10);
-})();
 
 interface ProfileDetailsEditorProps {
     profile: PublicProfile;
@@ -47,9 +43,12 @@ function DetailsForm({
         event.preventDefault();
 
         if (birthdate) {
-            const age = calculateAge(birthdate);
-            if (age === null || age < MIN_AGE) {
-                setLocalError(`É necessário ter pelo menos ${MIN_AGE} anos.`);
+            const error = dateOfBirthError(birthdate, {
+                minAge: MIN_AGE,
+                maxAge: MAX_AGE,
+            });
+            if (error) {
+                setLocalError(error);
                 return;
             }
         }
@@ -89,16 +88,21 @@ function DetailsForm({
                     </select>
                 </div>
                 <div>
-                    <label htmlFor="details-birthdate" className={labelClass}>
+                    <label
+                        htmlFor="details-birthdate-day"
+                        className={labelClass}
+                    >
                         Nascimento
                     </label>
-                    <input
-                        type="date"
+                    <DateOfBirthInput
                         id="details-birthdate"
                         value={birthdate}
-                        onChange={(event) => setBirthdate(event.target.value)}
-                        max={maxBirthdate}
+                        onChange={(value) => {
+                            setBirthdate(value);
+                            setLocalError(null);
+                        }}
                         disabled={editor.saving}
+                        error={localError}
                         className={fieldClass}
                     />
                 </div>
@@ -140,12 +144,12 @@ function DetailsForm({
                 />
             </div>
 
-            {(localError ?? editor.error) && (
+            {editor.error && (
                 <p
                     role="alert"
                     className="rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-[11px] text-red-600 dark:text-red-400"
                 >
-                    {localError ?? editor.error}
+                    {editor.error}
                 </p>
             )}
 

@@ -12,12 +12,13 @@ import {
     MAX_AGE,
     MAX_LANGUAGES,
     MIN_AGE,
-    calculateAge,
     getLanguageOption,
 } from "@shared/profile";
 import api from "../../services/api";
+import { dateOfBirthError } from "../../utils/date";
 import { filterOptions } from "../../utils/options";
 import CityCombobox from "../ui/CityCombobox";
+import DateOfBirthInput from "../ui/DateOfBirthInput";
 import OptionSearch from "../ui/OptionSearch";
 import AuthSubmitButton from "./AuthSubmitButton";
 import RegisterProgress from "./RegisterProgress";
@@ -42,12 +43,6 @@ const iconInputClass =
     "w-full rounded-xl bg-[#131c13]/90 border border-white/10 pl-10 pr-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition duration-150";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const maxBirthdate = (() => {
-    const date = new Date();
-    date.setUTCFullYear(date.getUTCFullYear() - MIN_AGE);
-    return date.toISOString().slice(0, 10);
-})();
 
 const STEPS = [
     {
@@ -147,12 +142,11 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                 return null;
             case 1: {
                 if (!gender) return "Selecione seu gênero.";
-                if (!birthdate) return "Informe sua data de nascimento.";
-                const age = calculateAge(birthdate);
-                if (age === null || age < MIN_AGE) {
-                    return `É necessário ter pelo menos ${MIN_AGE} anos.`;
-                }
-                if (age > MAX_AGE) return "Data de nascimento inválida.";
+                const birthdateError = dateOfBirthError(birthdate, {
+                    minAge: MIN_AGE,
+                    maxAge: MAX_AGE,
+                });
+                if (birthdateError) return birthdateError;
                 return null;
             }
             case 2:
@@ -549,21 +543,19 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
                                 <div className="space-y-1.5">
                                     <label
-                                        htmlFor="register-birthdate"
+                                        htmlFor="register-birthdate-day"
                                         className={labelClass}
                                     >
                                         Data de nascimento
                                     </label>
-                                    <input
-                                        type="date"
+                                    <DateOfBirthInput
                                         id="register-birthdate"
-                                        name="birthdate"
                                         value={birthdate}
-                                        onChange={(e) => {
-                                            setBirthdate(e.target.value);
+                                        onChange={(value) => {
+                                            setBirthdate(value);
                                             clearError();
                                         }}
-                                        max={maxBirthdate}
+                                        disabled={loading}
                                         required
                                         className={inputClass}
                                     />

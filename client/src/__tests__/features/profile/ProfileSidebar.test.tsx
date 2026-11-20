@@ -196,8 +196,14 @@ describe("ProfileSidebar", () => {
         });
         renderSidebar({ isSelf: true, editor });
 
-        fireEvent.change(screen.getByLabelText("Nascimento"), {
-            target: { value: "1990-02-15" },
+        fireEvent.change(screen.getByLabelText("Dia"), {
+            target: { value: "15" },
+        });
+        fireEvent.change(screen.getByLabelText("Mês"), {
+            target: { value: "02" },
+        });
+        fireEvent.change(screen.getByLabelText("Ano"), {
+            target: { value: "1990" },
         });
         fireEvent.change(screen.getByLabelText("Cidade"), {
             target: { value: "Recife" },
