@@ -1,0 +1,21 @@
+{
+    "VALIDATION_ERROR": "Revisa los datos introducidos e inténtalo de nuevo.",
+    "INVALID_ID": "Identificador no válido.",
+    "NOT_FOUND": "No encontrado.",
+    "UNAUTHORIZED": "Tu sesión ha expirado. Inicia sesión de nuevo.",
+    "FORBIDDEN": "No tienes permiso para realizar esta acción.",
+    "CONFLICT": "No se pudo completar: ya existe un registro con estos datos.",
+    "BAD_REQUEST": "Solicitud no válida.",
+    "EMAIL_NOT_VERIFIED": "Verifica tu correo antes de continuar.",
+    "INVALID_URL": "Enlace no válido.",
+    "BLOCKED_HOST": "Este enlace no está permitido.",
+    "PREVIEW_UNAVAILABLE": "No se pudo cargar la vista previa de este enlace.",
+    "AI_DISABLED": "El asistente de IA está desactivado.",
+    "AI_UNAVAILABLE": "El asistente de IA no está disponible en este momento.",
+    "AI_BAD_OUTPUT": "El asistente no pudo generar una respuesta.",
+    "AI_RATE_LIMITED": "Demasiadas solicitudes de IA. Espera un momento.",
+    "INTERNAL_SERVER_ERROR": "Error interno del servidor.",
+    "NETWORK_ERROR": "No se pudo conectar con el servidor. Comprueba tu conexión.",
+    "UNKNOWN": "Algo salió mal. Inténtalo de nuevo.",
+    "serverMessage": "El servidor devolvió un error inesperado."
+}

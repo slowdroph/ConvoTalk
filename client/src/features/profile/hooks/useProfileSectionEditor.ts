@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../hooks/useAuth";
 import { useToast } from "../../../contexts/ToastContext";
 import { getErrorMessage } from "../../../utils/errors";
@@ -46,6 +47,7 @@ export function useProfileSectionEditor(
     profile: PublicProfile | null,
     onSaved?: () => void | Promise<void>,
 ): ProfileSectionEditor {
+    const { t } = useTranslation("profile");
     const { updateUser } = useAuth();
     const { showToast } = useToast();
     const [active, setActive] = useState<ProfileSection | null>(null);
@@ -70,15 +72,12 @@ export function useProfileSectionEditor(
         try {
             const updated = await updateAbout(toAboutInput(profile, patch));
             updateUser(updated);
-            showToast({ type: "success", message: "Perfil atualizado!" });
+            showToast({ type: "success", message: t("editor.saved") });
             setActive(null);
             await onSaved?.();
             return true;
         } catch (err) {
-            const message = getErrorMessage(
-                err,
-                "Erro ao atualizar o perfil.",
-            );
+            const message = getErrorMessage(err, t("editor.error"));
             setError(message);
             showToast({ type: "error", message });
             return false;

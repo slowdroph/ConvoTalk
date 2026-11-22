@@ -1,12 +1,15 @@
 import { useState, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import LoginForm from "../components/Auth/LoginForm";
 import RegisterForm from "../components/Auth/RegisterForm";
 import AuthTabs from "../components/Auth/AuthTabs";
 import ChatMockup from "../components/ui/ChatMockup";
+import LanguageSelector from "../components/ui/LanguageSelector";
 import SEO from "../components/SEO";
 
 export default function LoginPage() {
+    const { t } = useTranslation(["auth", "common"]);
     const [searchParams] = useSearchParams();
     const [isLogin, setIsLogin] = useState(() => {
         return searchParams.get("mode") !== "register";
@@ -17,8 +20,8 @@ export default function LoginPage() {
     return (
         <div className="login-dark min-h-dvh-fallback text-zinc-100 flex flex-col justify-between relative overflow-x-hidden selection:bg-emerald-500 selection:text-white">
             <SEO
-                title="Login"
-                description="Entre na sua conta ConvoTalk ou crie uma nova conta gratuita. Converse em tempo real com quem importa."
+                title={t("auth:login.seoTitle")}
+                description={t("auth:login.seoDescription")}
                 canonical="/login"
             />
             <div className="fixed inset-0 pointer-events-none z-0">
@@ -45,29 +48,32 @@ export default function LoginPage() {
                             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         </div>
                     </Link>
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#131c13]/80 border border-emerald-500/20 text-xs font-medium text-emerald-300 backdrop-blur-md">
-                        <span className="relative flex w-2 h-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-                        </span>
-                        <span>Rede Operacional Conectada</span>
+                    <div className="flex items-center gap-2">
+                        <LanguageSelector tone="dark" />
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#131c13]/80 border border-emerald-500/20 text-xs font-medium text-emerald-300 backdrop-blur-md">
+                            <span className="relative flex w-2 h-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                            </span>
+                            <span>{t("auth:login.networkStatus")}</span>
+                        </div>
                     </div>
                 </div>
             </header>
 
             <main className="relative z-10 grow flex items-center justify-center px-4 py-8 lg:px-12">
                 <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-                    <section aria-label="Apresentação do Produto" className="sr-only lg:not-sr-only lg:col-span-7 flex flex-col justify-center space-y-8">
+                    <section aria-label={t("auth:login.productAria")} className="sr-only lg:not-sr-only lg:col-span-7 flex flex-col justify-center space-y-8">
                         <div className="space-y-4 max-w-xl">
                             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                                Converse em tempo real,
+                                {t("auth:login.heroTitleLine1")}
                                 <br />
                                 <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-emerald-300">
-                                    de qualquer lugar.
+                                    {t("auth:login.heroTitleLine2")}
                                 </span>
                             </h1>
                             <p className="text-base sm:text-lg text-zinc-400 leading-relaxed font-normal">
-                                Uma plataforma segura, rápida e intuitiva para você conectar suas equipes e clientes em tempo real.
+                                {t("auth:login.heroSubtitle")}
                             </p>
                         </div>
                         <div className="animate-fadeInUp animation-delay-300">
@@ -75,18 +81,20 @@ export default function LoginPage() {
                         </div>
                     </section>
 
-                    <section aria-label="Formulário de Acesso" className="lg:col-span-5 flex justify-center w-full">
+                    <section aria-label={t("auth:login.formAria")} className="lg:col-span-5 flex justify-center w-full">
                         <div className="w-full max-w-md bg-[#0e150e]/95 border border-emerald-500/20 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/90 backdrop-blur-xl transition-all duration-300 hover:border-emerald-500/30">
                             <AuthTabs isLogin={isLogin} onChange={setIsLogin} />
 
                             <div className="mb-6 space-y-1.5">
                                 <h2 className="text-2xl font-bold text-white tracking-tight">
-                                    {isLogin ? "Bem-vindo de volta" : "Crie sua conta"}
+                                    {isLogin
+                                        ? t("auth:login.heading")
+                                        : t("auth:register.heading")}
                                 </h2>
                                 <p className="text-xs sm:text-sm text-zinc-400">
                                     {isLogin
-                                        ? "Insira suas credenciais para acessar sua conta"
-                                        : "Comece gratuitamente em segundos"}
+                                        ? t("auth:login.subheading")
+                                        : t("auth:register.subheading")}
                                 </p>
                             </div>
 
@@ -102,22 +110,22 @@ export default function LoginPage() {
                                 <p className="text-xs text-zinc-400">
                                     {isLogin ? (
                                         <>
-                                            Não tem uma conta?{" "}
+                                            {t("auth:login.noAccount")}{" "}
                                             <button
                                                 onClick={() => setIsLogin(false)}
                                                 className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
                                             >
-                                                Cadastre-se gratuitamente
+                                                {t("auth:login.registerLink")}
                                             </button>
                                         </>
                                     ) : (
                                         <>
-                                            Já tem uma conta?{" "}
+                                            {t("auth:register.haveAccount")}{" "}
                                             <button
                                                 onClick={() => setIsLogin(true)}
                                                 className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
                                             >
-                                                Entrar
+                                                {t("auth:register.loginLink")}
                                             </button>
                                         </>
                                     )}
@@ -130,13 +138,13 @@ export default function LoginPage() {
 
             <footer className="relative z-10 w-full px-6 py-6 border-t border-white/5">
                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
-                    <p>© 2026 ConvoTalk — Feito com segurança e privacidade.</p>
+                    <p>{t("common:footer.rights", { year: 2026 })}</p>
                     <div className="flex items-center gap-6">
                         <Link className="hover:text-zinc-300 transition-colors" to="/privacy">
-                            Privacidade
+                            {t("common:footer.privacy")}
                         </Link>
                         <Link className="hover:text-zinc-300 transition-colors" to="/terms">
-                            Termos de Uso
+                            {t("common:footer.terms")}
                         </Link>
                     </div>
                 </div>

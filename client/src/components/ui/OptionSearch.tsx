@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 interface OptionSearchProps {
     value: string;
     onChange: (value: string) => void;
@@ -13,11 +15,13 @@ const DEFAULT_CLASS =
 export default function OptionSearch({
     value,
     onChange,
-    placeholder = "Buscar opções...",
-    label = "Buscar opções",
+    placeholder,
+    label,
     className = DEFAULT_CLASS,
     id,
 }: OptionSearchProps) {
+    const { t } = useTranslation("common");
+
     return (
         <div className="relative">
             <svg
@@ -40,8 +44,8 @@ export default function OptionSearch({
                 type="search"
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
-                placeholder={placeholder}
-                aria-label={label}
+                placeholder={placeholder ?? t("optionSearch.placeholder")}
+                aria-label={label ?? t("optionSearch.label")}
                 className={className}
             />
         </div>

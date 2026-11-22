@@ -9,6 +9,7 @@ import Post from "../models/Post";
 import Comment from "../models/Comment";
 import SavedPost from "../models/SavedPost";
 import { calculateAge, normalizeLanguageLevels } from "../../../shared/profile";
+import { type LanguageCode } from "../../../shared/i18n";
 import cloudinary from "../config/cloudinary";
 import {
     BadRequestError,
@@ -56,6 +57,25 @@ export async function getMe(userId: string) {
         throw new NotFoundError("Usuário não encontrado.");
     }
     return { ...user, emailPending: Boolean(user.pendingEmail) };
+}
+
+export async function updatePreferences(
+    userId: string,
+    language: LanguageCode,
+) {
+    const user = await User.findByIdAndUpdate(
+        userId,
+        { $set: { "preferences.language": language } },
+        { returnDocument: "after", runValidators: true },
+    )
+        .select("preferences")
+        .lean();
+
+    if (!user) {
+        throw new NotFoundError("Usuário não encontrado.");
+    }
+
+    return { language: user.preferences?.language ?? language };
 }
 
 export async function getUserStatus(userId: string) {

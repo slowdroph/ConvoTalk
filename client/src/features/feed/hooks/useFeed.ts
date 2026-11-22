@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../hooks/useAuth";
 import { useSocket } from "../../../hooks/useSocket";
 import { getErrorMessage } from "../../../utils/errors";
@@ -51,6 +52,7 @@ export function useFeed(
     filter: FeedFilter = "all",
     options: { query?: string } = {},
 ) {
+    const { t } = useTranslation("feed");
     const { user } = useAuth();
     const { socket, connected } = useSocket();
     const { filter: apiFilter, sort } = resolveFeedQuery(filter);
@@ -145,7 +147,7 @@ export function useFeed(
             hasLoadedRef.current = true;
         } catch (err) {
             if (requestId !== requestIdRef.current) return;
-            setError(getErrorMessage(err, "Erro ao carregar o feed."));
+            setError(getErrorMessage(err, t("hooks.feedLoadError")));
         } finally {
             if (requestId === requestIdRef.current) {
                 pendingEventsRef.current = [];
@@ -160,6 +162,7 @@ export function useFeed(
         isSearch,
         searchQuery,
         sort,
+        t,
         viewerId,
     ]);
 
@@ -207,7 +210,7 @@ export function useFeed(
             setHasMore(Boolean(data.nextCursor));
         } catch (err) {
             if (requestId !== requestIdRef.current) return;
-            setError(getErrorMessage(err, "Erro ao carregar mais posts."));
+            setError(getErrorMessage(err, t("hooks.feedLoadMoreError")));
         } finally {
             if (requestId === requestIdRef.current) {
                 loadingMoreRef.current = false;
@@ -221,6 +224,7 @@ export function useFeed(
         nextCursor,
         searchQuery,
         sort,
+        t,
     ]);
 
     const retryLoadMore = useCallback(() => {

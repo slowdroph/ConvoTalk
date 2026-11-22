@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useTranslation } from "react-i18next";
 import MessageBubble from "./MessageBubble";
 import Avatar from "../ui/Avatar";
 import type { Message, PublicUser } from "../../types";
@@ -34,13 +35,6 @@ interface MessageListProps {
 const SCROLL_THRESHOLD = 150;
 const TOP_THRESHOLD = 200;
 
-function formatTypingMessage(users: TypingUser[]): string {
-    if (users.length === 1) return `${users[0].name} está digitando...`;
-    if (users.length === 2)
-        return `${users[0].name} e ${users[1].name} estão digitando...`;
-    return `${users[0].name} e ${users.length - 1} outras pessoas estão digitando...`;
-}
-
 function isNearBottom(el: HTMLElement): boolean {
     return el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_THRESHOLD;
 }
@@ -65,6 +59,7 @@ export default memo(function MessageList({
     onTogglePin,
     participants,
 }: MessageListProps) {
+    const { t } = useTranslation("chat");
     const containerRef = useRef<HTMLDivElement>(null);
     const nearBottomRef = useRef(true);
     const prevRowsCountRef = useRef(0);
@@ -180,7 +175,7 @@ export default memo(function MessageList({
                 ref={containerRef}
                 role="log"
                 aria-live="polite"
-                aria-label="Mensagens da conversa"
+                aria-label={t("list.ariaLabel")}
                 className="absolute inset-0 overflow-y-auto overscroll-contain custom-scrollbar chat-bg-pattern px-4 sm:px-6 py-2 pt-10"
             >
                 {loading ? (
@@ -189,7 +184,7 @@ export default memo(function MessageList({
                     </div>
                 ) : messages.length === 0 ? (
                     <div className="flex items-center justify-center h-full text-slate-500 dark:text-noir-text-muted">
-                        <p>Nenhuma mensagem ainda. Comece a conversar!</p>
+                        <p>{t("list.empty")}</p>
                     </div>
                 ) : (
                     <div
@@ -221,10 +216,10 @@ export default memo(function MessageList({
                                                 {loadingMore ? (
                                                     <span className="flex items-center gap-2">
                                                         <div className="w-4 h-4 border-2 dark:border-noir-text-muted border-t-transparent rounded-full animate-spin" />
-                                                        Carregando...
+                                                        {t("list.loading")}
                                                     </span>
                                                 ) : (
-                                                    "Carregar mensagens anteriores"
+                                                    t("list.loadOlder")
                                                 )}
                                             </button>
                                         </div>
@@ -270,9 +265,25 @@ export default memo(function MessageList({
                                                 />
                                             </div>
                                             <span className="text-xs text-slate-500 dark:text-noir-text-muted">
-                                                {formatTypingMessage(
-                                                    typingUsers,
-                                                )}
+                                                {typingUsers.length === 1
+                                                    ? t("list.typingOne", {
+                                                          name: typingUsers[0]
+                                                              .name,
+                                                      })
+                                                    : typingUsers.length === 2
+                                                      ? t("list.typingTwo", {
+                                                            first: typingUsers[0]
+                                                                .name,
+                                                            second: typingUsers[1]
+                                                                .name,
+                                                        })
+                                                      : t("list.typingMany", {
+                                                            first: typingUsers[0]
+                                                                .name,
+                                                            count:
+                                                                typingUsers.length -
+                                                                1,
+                                                        })}
                                             </span>
                                         </div>
                                     ) : (
@@ -344,7 +355,7 @@ export default memo(function MessageList({
                     onClick={scrollToBottom}
                     className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg dark:shadow-glow-emerald transition-colors z-10"
                 >
-                    ↓ Novas mensagens
+                    {t("list.newMessages")}
                 </button>
             )}
         </div>

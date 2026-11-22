@@ -1,5 +1,15 @@
-export function formatLastSeen(lastSeen: string | null): string {
-    if (!lastSeen) return "Visto por último: desconhecido";
+import i18n from "../i18n";
+import { formatFullDate } from "../i18n/formatters";
+
+interface FormatLastSeenOptions {
+    short?: boolean;
+}
+
+export function formatLastSeen(
+    lastSeen: string | null,
+    { short = false }: FormatLastSeenOptions = {},
+): string {
+    if (!lastSeen) return i18n.t("profile:lastSeen.unknown");
 
     const diffMs = Date.now() - new Date(lastSeen).getTime();
     const diffSec = Math.floor(diffMs / 1000);
@@ -7,14 +17,22 @@ export function formatLastSeen(lastSeen: string | null): string {
     const diffHour = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHour / 24);
 
-    if (diffSec < 60) return "Visto agora";
-    if (diffMin < 60) return `Visto há ${diffMin} min`;
-    if (diffHour < 24) return `Visto há ${diffHour} h`;
-    if (diffDay === 1) return "Visto ontem";
+    if (short) {
+        if (diffSec < 60) return i18n.t("profile:lastSeenShort.now");
+        if (diffMin < 60)
+            return i18n.t("profile:lastSeenShort.minutes", { count: diffMin });
+        if (diffHour < 24)
+            return i18n.t("profile:lastSeenShort.hours", { count: diffHour });
+        if (diffDay === 1) return i18n.t("profile:lastSeenShort.yesterday");
+        return formatFullDate(lastSeen);
+    }
 
-    return new Date(lastSeen).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-    });
+    if (diffSec < 60) return i18n.t("profile:lastSeen.now");
+    if (diffMin < 60)
+        return i18n.t("profile:lastSeen.minutes", { count: diffMin });
+    if (diffHour < 24)
+        return i18n.t("profile:lastSeen.hours", { count: diffHour });
+    if (diffDay === 1) return i18n.t("profile:lastSeen.yesterday");
+
+    return formatFullDate(lastSeen);
 }

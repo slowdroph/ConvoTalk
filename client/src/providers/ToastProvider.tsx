@@ -1,10 +1,12 @@
 import { useCallback, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { ToastContext, type Toast } from "../contexts/ToastContext";
 
 const DEFAULT_DURATION = 4000;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+    const { t } = useTranslation("common");
     const [toasts, setToasts] = useState<Toast[]>([]);
     const nextId = useRef(1);
 
@@ -49,7 +51,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         <button
                             onClick={() => dismiss(toast.id)}
                             className="shrink-0 text-current opacity-70 hover:opacity-100 transition-opacity"
-                            aria-label="Fechar notificação"
+                            aria-label={t("notifications.close")}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"

@@ -1,5 +1,6 @@
 import { memo, useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../hooks/useAuth";
 import { useGesture } from "../../hooks/useGesture";
 import { useSocket } from "../../hooks/useSocket";
@@ -14,6 +15,7 @@ import MessageActions from "./MessageActions";
 import TouchActions from "./TouchActions";
 import EmojiPicker from "./EmojiPicker";
 import MentionText from "./MentionText";
+import { formatTime } from "../../i18n/formatters";
 
 interface MessageBubbleProps {
     message: Message;
@@ -130,16 +132,17 @@ function MessageAttachments({
 }
 
 function ReplyPreview({ parent }: { parent: ParentMessage }) {
+    const { t } = useTranslation("chat");
     return (
         <div className="flex items-start gap-2 mb-1.5 px-2 py-1.5 bg-slate-100 border-l-2 border-emerald-500/60 rounded-r-md dark:bg-noir-card/80 dark:border-emerald-500/60">
             <div className="min-w-0">
                 <p className="text-xs font-semibold text-emerald-600 truncate dark:text-emerald-400">
-                    {parent.sender?.name || "Mensagem"}
+                    {parent.sender?.name || t("message.replyFallback")}
                 </p>
                 <p className="text-xs text-slate-500 truncate dark:text-noir-text-muted">
                     {parent.content ||
                         (parent.attachments && parent.attachments.length > 0
-                            ? "📎 Anexo"
+                            ? t("message.attachment")
                             : "")}
                 </p>
             </div>
@@ -162,6 +165,7 @@ function MessageBubbleComponent({
     currentUserId,
     participants,
 }: MessageBubbleProps) {
+    const { t } = useTranslation("chat");
     const { user } = useAuth();
     const { onlineUsers } = useSocket();
     const senderOnline = onlineUsers.some(
@@ -247,10 +251,7 @@ function MessageBubbleComponent({
 
     if (!message.sender) return null;
 
-    const time = new Date(message.createdAt).toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
+    const time = formatTime(message.createdAt);
 
     const handleSaveEdit = () => {
         const trimmed = editContent.trim();
@@ -321,8 +322,10 @@ function MessageBubbleComponent({
                     )}
                     <p className="text-sm italic text-slate-400 dark:text-noir-text-muted">
                         {isOwn
-                            ? "Você excluiu esta mensagem"
-                            : `${message.sender.name} excluiu esta mensagem`}
+                            ? t("message.deletedOwn")
+                            : t("message.deletedOther", {
+                                  name: message.sender.name,
+                              })}
                     </p>
                 </div>
             </div>
@@ -402,7 +405,7 @@ function MessageBubbleComponent({
                                 <button
                                     onClick={handleSaveEdit}
                                     className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors"
-                                    title="Salvar"
+                                    title={t("message.save")}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -422,7 +425,7 @@ function MessageBubbleComponent({
                                 <button
                                     onClick={handleCancelEdit}
                                     className="text-slate-400 hover:text-slate-600 dark:text-noir-text-muted dark:hover:text-noir-text-bright transition-colors"
-                                    title="Cancelar"
+                                    title={t("message.cancel")}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -471,18 +474,18 @@ function MessageBubbleComponent({
                             <span>
                                 {time}
                                 {isPinned && " 📌"}
-                                {message.edited && !editing && " (editado)"}
+                                {message.edited && !editing && ` ${t("message.edited")}`}
                                 {isRead &&
                                     !disableActions &&
                                     isOwn &&
-                                    ` · Lido`}
+                                    ` · ${t("message.read")}`}
                             </span>
                             {isPending && (
                                 <svg
                                     className="animate-spin h-3 w-3 shrink-0"
                                     viewBox="0 0 24 24"
                                     fill="none"
-                                    aria-label="Enviando"
+                                    aria-label={t("message.sending")}
                                     role="status"
                                 >
                                     <circle
@@ -503,7 +506,7 @@ function MessageBubbleComponent({
                             {isFailed && (
                                 <span
                                     className="flex items-center gap-1 font-semibold text-red-500 dark:text-red-400"
-                                    title="Falha ao enviar. O texto foi devolvido ao campo de mensagem."
+                                    title={t("message.failedTitle")}
                                 >
                                     <svg
                                         className="h-3 w-3 shrink-0"
@@ -518,7 +521,7 @@ function MessageBubbleComponent({
                                             d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
                                         />
                                     </svg>
-                                    Falhou
+                                    {t("message.failed")}
                                 </span>
                             )}
                         </div>
@@ -652,10 +655,10 @@ function MessageBubbleComponent({
                 createPortal(
                     <ConfirmDialog
                         isOpen={confirmDelete}
-                        title="Excluir mensagem"
-                        message="Como deseja excluir esta mensagem?"
-                        cancelLabel="Cancelar"
-                        confirmLabel="Para todos"
+                        title={t("message.deleteTitle")}
+                        message={t("message.deletePrompt")}
+                        cancelLabel={t("common:actions.cancel")}
+                        confirmLabel={t("message.deleteForEveryone")}
                         danger
                         onConfirm={() => {
                             setConfirmDelete(false);
@@ -663,7 +666,7 @@ function MessageBubbleComponent({
                         }}
                         onCancel={() => setConfirmDelete(false)}
                         extraButton={{
-                            label: "Só pra mim",
+                            label: t("message.deleteForMe"),
                             onExtra: () => {
                                 setConfirmDelete(false);
                                 onDelete(message._id, true);

@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import Avatar from "./Avatar";
 import CountryFlag from "./CountryFlag";
-import { getCountryName } from "../../utils/countries";
+import { countryName } from "../../i18n/catalogs";
 import { formatLastSeen } from "../../utils/formatLastSeen";
 import api from "../../services/api";
 
@@ -28,6 +29,7 @@ export default function UserProfilePopover({
     isOnline,
     lastSeen,
 }: UserProfilePopoverProps) {
+    const { t } = useTranslation("profile");
     const [open, setOpen] = useState(false);
     const [position, setPosition] = useState<"left" | "right">("right");
     const [country, setCountry] = useState<string>("");
@@ -138,14 +140,14 @@ export default function UserProfilePopover({
                                         #{publicId}
                                     </p>
                                 )}
-                                {getCountryName(country) && (
+                                {countryName(country) && (
                                     <p className="text-zinc-400 text-xs truncate flex items-center gap-1.5 mt-0.5">
                                         <CountryFlag
                                             country={country}
-                                            name={getCountryName(country)}
+                                            name={countryName(country)}
                                             className="w-4 h-3"
                                         />
-                                        {getCountryName(country)}
+                                        {countryName(country)}
                                     </p>
                                 )}
                             </div>
@@ -160,10 +162,10 @@ export default function UserProfilePopover({
                                 }
                             >
                                 {isOnline
-                                    ? "Online"
+                                    ? t("popover.online")
                                     : lastSeen
                                       ? formatLastSeen(lastSeen)
-                                      : "Offline"}
+                                      : t("popover.offline")}
                             </p>
                             {status && (
                                 <p className="text-zinc-400 truncate">
@@ -177,7 +179,7 @@ export default function UserProfilePopover({
                             onClick={() => setOpen(false)}
                             className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-zinc-600 px-2.5 py-1.5 text-xs font-medium text-emerald-300 transition-colors hover:bg-zinc-700/60 hover:text-emerald-200"
                         >
-                            Ver perfil completo
+                            {t("popover.viewFullProfile")}
                         </Link>
                     </div>
                 </div>

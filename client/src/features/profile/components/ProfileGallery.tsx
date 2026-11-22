@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { Post } from "../../../types";
 import ImageLightbox from "../../../components/ui/ImageLightbox";
 
@@ -12,9 +13,11 @@ export default function ProfileGallery({
     loading,
     error,
 }: ProfileGalleryProps) {
+    const { t } = useTranslation("profile");
+
     return (
         <section
-            aria-label="Galeria de fotos"
+            aria-label={t("gallery.aria")}
             className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-noir-border dark:bg-noir-surface"
         >
             <div className="flex items-center gap-2">
@@ -34,7 +37,7 @@ export default function ProfileGallery({
                     />
                 </svg>
                 <h2 className="text-base font-bold text-slate-900 dark:text-noir-text-bright">
-                    Galeria de fotos
+                    {t("gallery.title")}
                 </h2>
                 {images.length > 0 && (
                     <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-noir-surface-alt dark:text-noir-text-muted">
@@ -58,7 +61,7 @@ export default function ProfileGallery({
                 </p>
             ) : images.length === 0 ? (
                 <p className="mt-3 rounded-xl border border-dashed border-slate-300 p-4 text-center text-xs text-slate-500 dark:border-noir-border dark:text-noir-text-muted">
-                    As fotos publicadas no mural aparecerão aqui.
+                    {t("gallery.empty")}
                 </p>
             ) : (
                 <ul className="mt-3 grid grid-cols-3 gap-2">
@@ -70,7 +73,7 @@ export default function ProfileGallery({
                                     alt={
                                         post.content
                                             ? post.content.slice(0, 80)
-                                            : "Foto publicada no mural"
+                                            : t("gallery.imageFallback")
                                     }
                                     className="group relative block aspect-square w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-noir-border dark:bg-noir-surface-alt"
                                     imageClassName="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"

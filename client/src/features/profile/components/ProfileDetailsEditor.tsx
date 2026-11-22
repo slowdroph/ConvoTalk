@@ -1,16 +1,14 @@
-import { useState } from "react";
-import { GENDER_OPTIONS, MIN_AGE, MAX_AGE, getGenderOption } from "@shared/profile";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { GENDER_OPTIONS, MIN_AGE, MAX_AGE } from "@shared/profile";
 import type { PublicProfile } from "../../../types";
-import { COUNTRIES, getCountryName } from "../../../utils/countries";
 import { dateOfBirthError } from "../../../utils/date";
+import { countryName, countryOptions, genderLabel } from "../../../i18n/catalogs";
+import { getLocale } from "../../../i18n/formatters";
 import CityCombobox from "../../../components/ui/CityCombobox";
 import DateOfBirthInput from "../../../components/ui/DateOfBirthInput";
 import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
 import InlineEditButton from "./inline/InlineEditButton";
-
-const sortedCountries = [...COUNTRIES].sort((a, b) =>
-    a.name.localeCompare(b.name, "pt-BR"),
-);
 
 const fieldClass =
     "w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface-alt/60 dark:text-noir-text-bright dark:placeholder:text-noir-text-muted/70";
@@ -31,6 +29,16 @@ function DetailsForm({
     profile: PublicProfile;
     editor: ProfileSectionEditor;
 }) {
+    const { t, i18n } = useTranslation("profile");
+    const sortedCountries = useMemo(
+        () =>
+            countryOptions()
+                .slice()
+                .sort((a, b) =>
+                    a.name.localeCompare(b.name, getLocale(i18n.language)),
+                ),
+        [i18n.language],
+    );
     const [gender, setGender] = useState(profile.gender ?? "");
     const [birthdate, setBirthdate] = useState(
         (profile.birthdate ?? "").slice(0, 10),
@@ -70,7 +78,7 @@ function DetailsForm({
             <div className="grid grid-cols-2 gap-2">
                 <div>
                     <label htmlFor="details-gender" className={labelClass}>
-                        Gênero
+                        {t("details.gender")}
                     </label>
                     <select
                         id="details-gender"
@@ -79,10 +87,10 @@ function DetailsForm({
                         disabled={editor.saving}
                         className={`${fieldClass} cursor-pointer`}
                     >
-                        <option value="">Não informar</option>
+                        <option value="">{t("details.unspecified")}</option>
                         {GENDER_OPTIONS.map((option) => (
                             <option key={option.id} value={option.id}>
-                                {option.label}
+                                {genderLabel(option.id)}
                             </option>
                         ))}
                     </select>
@@ -92,7 +100,7 @@ function DetailsForm({
                         htmlFor="details-birthdate-day"
                         className={labelClass}
                     >
-                        Nascimento
+                        {t("details.birthdate")}
                     </label>
                     <DateOfBirthInput
                         id="details-birthdate"
@@ -110,7 +118,7 @@ function DetailsForm({
 
             <div>
                 <label htmlFor="details-country" className={labelClass}>
-                    País
+                    {t("details.country")}
                 </label>
                 <select
                     id="details-country"
@@ -119,7 +127,7 @@ function DetailsForm({
                     disabled={editor.saving}
                     className={`${fieldClass} cursor-pointer`}
                 >
-                    <option value="">Não informar</option>
+                    <option value="">{t("details.unspecified")}</option>
                     {sortedCountries.map((option) => (
                         <option key={option.code} value={option.code}>
                             {option.name}
@@ -130,7 +138,7 @@ function DetailsForm({
 
             <div>
                 <label htmlFor="details-city" className={labelClass}>
-                    Cidade
+                    {t("details.city")}
                 </label>
                 <CityCombobox
                     id="details-city"
@@ -138,7 +146,7 @@ function DetailsForm({
                     onChange={setCity}
                     country={country || undefined}
                     maxLength={80}
-                    placeholder="Ex: São Paulo"
+                    placeholder={t("details.cityPlaceholder")}
                     className={fieldClass}
                     disabled={editor.saving}
                 />
@@ -160,7 +168,7 @@ function DetailsForm({
                     disabled={editor.saving}
                     className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50 dark:border-noir-border dark:text-noir-text-muted dark:hover:bg-noir-surface-alt"
                 >
-                    Cancelar
+                    {t("details.cancel")}
                 </button>
                 <button
                     type="submit"
@@ -170,7 +178,7 @@ function DetailsForm({
                     {editor.saving && (
                         <span className="h-2.5 w-2.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     )}
-                    Salvar
+                    {t("details.save")}
                 </button>
             </div>
         </form>
@@ -182,19 +190,19 @@ export default function ProfileDetailsEditor({
     isSelf,
     editor,
 }: ProfileDetailsEditorProps) {
+    const { t } = useTranslation("profile");
     const editing = editor.isEditing("details");
-    const location = [profile.city, getCountryName(profile.country)]
-        .filter(Boolean)
-        .join(", ");
-    const genderLabel = profile.gender
-        ? getGenderOption(profile.gender)?.label
-        : undefined;
+    const country = profile.country
+        ? countryName(profile.country, profile.country)
+        : "";
+    const location = [profile.city, country].filter(Boolean).join(", ");
+    const gender = profile.gender ? genderLabel(profile.gender) : undefined;
 
     if (editing) {
         return <DetailsForm profile={profile} editor={editor} />;
     }
 
-    if (!location && !genderLabel && !isSelf) return null;
+    if (!location && !gender && !isSelf) return null;
 
     return (
         <div className="space-y-1">
@@ -225,7 +233,7 @@ export default function ProfileDetailsEditor({
                 </p>
             )}
 
-            {genderLabel && (
+            {gender && (
                 <p className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-noir-text-muted">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -242,13 +250,13 @@ export default function ProfileDetailsEditor({
                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                     </svg>
-                    {genderLabel}
+                    {gender}
                 </p>
             )}
 
             {isSelf && (
                 <InlineEditButton
-                    label="Editar detalhes do perfil"
+                    label={t("details.editLabel")}
                     onClick={() => editor.start("details")}
                 />
             )}

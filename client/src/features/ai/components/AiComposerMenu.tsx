@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { AiReplySuggestion } from "@shared/types";
 import type { AssistantLoading } from "../hooks/useAssistant";
 import { AI_ACTIONS, type AiActionId } from "../actions";
@@ -37,6 +38,7 @@ export default function AiComposerMenu({
     onUseSuggestion,
     onClearError,
 }: AiComposerMenuProps) {
+    const { t } = useTranslation("chat");
     const [open, setOpen] = useState(false);
     const [view, setView] = useState<MenuView>("menu");
     const wrapRef = useRef<HTMLDivElement>(null);
@@ -117,8 +119,8 @@ export default function AiComposerMenu({
                 disabled={disabled}
                 aria-haspopup="menu"
                 aria-expanded={open}
-                aria-label="Assistente de IA"
-                title="Assistente de IA"
+                aria-label={t("ai.menuLabel")}
+                title={t("ai.menuLabel")}
                 className={`p-2 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     open
                         ? "text-emerald-600 bg-emerald-600/10 dark:text-emerald-400"
@@ -138,13 +140,13 @@ export default function AiComposerMenu({
                 <div
                     className="absolute bottom-full mb-2 left-0 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-noir-surface-alt/95 backdrop-blur-md border border-noir-border shadow-2xl text-slate-900 dark:text-noir-text-bright"
                     role={view === "menu" ? "menu" : "dialog"}
-                    aria-label="Assistente de IA"
+                    aria-label={t("ai.menuLabel")}
                 >
                     {view === "menu" ? (
                         <div className="p-1.5">
                             <p className="flex items-center gap-2 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-noir-text-muted">
                                 <span className="text-emerald-500">✦</span>
-                                Assistente de IA
+                                {t("ai.menuTitle")}
                             </p>
                             <div className="space-y-0.5">
                                 {AI_ACTIONS.map((action) => (
@@ -171,10 +173,10 @@ export default function AiComposerMenu({
                                         </svg>
                                         <span className="min-w-0 flex-1">
                                             <span className="block text-xs font-medium text-slate-800 dark:text-noir-text-bright">
-                                                {action.label}
+                                                {t(action.labelKey)}
                                             </span>
                                             <span className="block text-[11px] text-slate-500 dark:text-noir-text-muted">
-                                                {action.description}
+                                                {t(action.descriptionKey)}
                                             </span>
                                         </span>
                                         {loading === action.id && (
@@ -194,8 +196,8 @@ export default function AiComposerMenu({
                                         onClearError();
                                     }}
                                     className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors dark:text-noir-text-muted dark:hover:bg-noir-card dark:hover:text-noir-text-bright"
-                                    aria-label="Voltar para as ações de IA"
-                                    title="Voltar"
+                                    aria-label={t("ai.backAria")}
+                                    title={t("ai.back")}
                                 >
                                     <svg
                                         className="h-4 w-4"
@@ -212,7 +214,7 @@ export default function AiComposerMenu({
                                     </svg>
                                 </button>
                                 <p className="flex-1 text-xs font-semibold">
-                                    Sugestões de resposta
+                                    {t("ai.suggestionsTitle")}
                                 </p>
                                 <button
                                     type="button"
@@ -222,8 +224,8 @@ export default function AiComposerMenu({
                                     }}
                                     disabled={loading === "suggest"}
                                     className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors disabled:opacity-50 dark:text-noir-text-muted dark:hover:bg-noir-card dark:hover:text-noir-text-bright"
-                                    aria-label="Gerar outras sugestões"
-                                    title="Gerar outras"
+                                    aria-label={t("ai.regenerateAria")}
+                                    title={t("ai.regenerateTitle")}
                                 >
                                     {loading === "suggest" ? (
                                         <Spinner className="h-4 w-4" />
@@ -247,8 +249,8 @@ export default function AiComposerMenu({
                                     type="button"
                                     onClick={close}
                                     className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors dark:text-noir-text-muted dark:hover:bg-noir-card dark:hover:text-noir-text-bright"
-                                    aria-label="Fechar assistente"
-                                    title="Fechar"
+                                    aria-label={t("ai.closeAria")}
+                                    title={t("ai.closeTitle")}
                                 >
                                     <svg
                                         className="h-4 w-4"
@@ -292,7 +294,7 @@ export default function AiComposerMenu({
                                     !error &&
                                     suggestions.length === 0 && (
                                         <p className="py-6 text-center text-xs text-slate-500 dark:text-noir-text-muted">
-                                            Nenhuma sugestão gerada ainda.
+                                            {t("ai.emptySuggestions")}
                                         </p>
                                     )}
                             </div>

@@ -1,0 +1,21 @@
+{
+    "VALIDATION_ERROR": "Check the information provided and try again.",
+    "INVALID_ID": "Invalid identifier.",
+    "NOT_FOUND": "Not found.",
+    "UNAUTHORIZED": "Your session expired. Please log in again.",
+    "FORBIDDEN": "You don't have permission to do this.",
+    "CONFLICT": "Could not complete the request: a record with this information already exists.",
+    "BAD_REQUEST": "Invalid request.",
+    "EMAIL_NOT_VERIFIED": "Verify your email before continuing.",
+    "INVALID_URL": "Invalid link.",
+    "BLOCKED_HOST": "This link is not allowed.",
+    "PREVIEW_UNAVAILABLE": "Could not load the preview for this link.",
+    "AI_DISABLED": "The AI assistant is disabled.",
+    "AI_UNAVAILABLE": "The AI assistant is unavailable right now.",
+    "AI_BAD_OUTPUT": "The assistant could not generate a response.",
+    "AI_RATE_LIMITED": "Too many AI requests. Please wait a moment.",
+    "INTERNAL_SERVER_ERROR": "Internal server error.",
+    "NETWORK_ERROR": "Could not connect to the server. Check your connection.",
+    "UNKNOWN": "Something went wrong. Please try again.",
+    "serverMessage": "The server returned an unexpected error."
+}

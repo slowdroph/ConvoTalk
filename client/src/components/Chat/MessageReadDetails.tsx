@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../../services/api";
 import { formatTimeAgo, formatDateTime } from "../../utils/format";
 
@@ -19,6 +20,7 @@ export default function MessageReadDetails({
     messageId,
     onClose,
 }: MessageReadDetailsProps) {
+    const { t } = useTranslation("chat");
     const [readDetails, setReadDetails] = useState<ReadDetail[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -32,25 +34,25 @@ export default function MessageReadDetails({
                 );
                 setReadDetails(response.data.readDetails);
             } catch {
-                setError("Erro ao carregar detalhes de leitura.");
+                setError(t("readDetails.loadError"));
             } finally {
                 setLoading(false);
             }
         };
 
         fetchReadDetails();
-    }, [messageId]);
+    }, [messageId, t]);
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden dark:bg-noir-surface">
                 <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-noir-border">
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-noir-text-bright">
-                        Quem leu esta mensagem
+                        {t("readDetails.title")}
                     </h3>
                     <button
                         onClick={onClose}
-                        aria-label="Fechar detalhes de leitura"
+                        aria-label={t("readDetails.close")}
                         className="text-slate-500 hover:text-slate-700 dark:text-noir-text-muted dark:hover:text-noir-text-bright transition-colors cursor-pointer"
                     >
                         <svg
@@ -95,7 +97,7 @@ export default function MessageReadDetails({
                     ) : readDetails.length === 0 ? (
                         <div className="text-center py-4">
                             <p className="text-slate-500 dark:text-noir-text-muted">
-                                Ninguém leu esta mensagem ainda.
+                                {t("readDetails.empty")}
                             </p>
                         </div>
                     ) : (
@@ -123,8 +125,14 @@ export default function MessageReadDetails({
                                             {detail.name}
                                         </p>
                                         <p className="text-xs text-slate-500 dark:text-noir-text-muted">
-                                            {formatTimeAgo(detail.readAt)} às{" "}
-                                            {formatDateTime(detail.readAt)}
+                                            {t("readDetails.at", {
+                                                time: formatTimeAgo(
+                                                    detail.readAt,
+                                                ),
+                                                date: formatDateTime(
+                                                    detail.readAt,
+                                                ),
+                                            })}
                                         </p>
                                     </div>
                                 </div>

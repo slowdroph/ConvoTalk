@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
@@ -25,6 +26,7 @@ export default function CreateGroupModal({
     onClose,
     onCreated,
 }: CreateGroupModalProps) {
+    const { t } = useTranslation("chat");
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [query, setQuery] = useState("");
@@ -47,7 +49,7 @@ export default function CreateGroupModal({
         }
         if (term.includes("@")) {
             setResults([]);
-            setError("Busque por nome ou #ID. Busca por email foi desativada.");
+            setError(t("sidebar.emailSearchDisabled"));
             setLoading(false);
             return;
         }
@@ -63,7 +65,7 @@ export default function CreateGroupModal({
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
     if (prevIsOpen !== isOpen) {
@@ -115,7 +117,7 @@ export default function CreateGroupModal({
         const file = e.target.files?.[0];
         if (!file) return;
         if (file.size > 5 * 1024 * 1024) {
-            setError("A imagem deve ter no máximo 5MB.");
+            setError(t("createGroup.imageSizeError"));
             return;
         }
         if (photoPreview) URL.revokeObjectURL(photoPreview);
@@ -144,7 +146,7 @@ export default function CreateGroupModal({
                         headers: { "Content-Type": "multipart/form-data" },
                     });
                 } catch {
-                    setError("Grupo criado, mas a foto não pôde ser enviada.");
+                    setError(t("createGroup.photoUploadError"));
                 }
             }
 
@@ -153,7 +155,7 @@ export default function CreateGroupModal({
             onClose();
         } catch (err: unknown) {
             setCreating(false);
-            setError(getErrorMessage(err, "Erro ao criar grupo"));
+            setError(getErrorMessage(err, t("createGroup.createError")));
         }
     };
 
@@ -220,7 +222,7 @@ export default function CreateGroupModal({
             onKeyDown={handleKeyDown}
             role="dialog"
             aria-modal="true"
-            aria-label="Criar grupo"
+            aria-label={t("createGroup.dialogAria")}
         >
             <div
                 className="relative w-full max-w-xl bg-[#111711] border border-emerald-500/25 rounded-2xl p-6 text-noir-text-bright flex flex-col gap-5 overflow-hidden max-h-[90vh] shadow-2xl shadow-black/90"
@@ -247,18 +249,17 @@ export default function CreateGroupModal({
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white tracking-tight">
-                                Criar grupo
+                                {t("createGroup.title")}
                             </h2>
                             <p className="text-xs text-noir-text-muted mt-0.5">
-                                Crie uma sala compartilhada para sua equipe ou
-                                comunidade.
+                                {t("createGroup.subtitle")}
                             </p>
                         </div>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
-                        title="Fechar (ESC)"
+                        title={t("createGroup.closeTitle")}
                         className="group flex items-center gap-1.5 p-1.5 rounded-lg text-noir-text-muted hover:text-white hover:bg-white/5 transition"
                     >
                         <kbd className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-black/40 border border-white/10 rounded text-noir-text-muted group-hover:text-noir-text-bright">
@@ -292,13 +293,13 @@ export default function CreateGroupModal({
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                title="Escolher foto do grupo"
+                                title={t("createGroup.photoTitle")}
                                 className="w-[60px] h-[60px] rounded-full bg-[#182318] border border-dashed border-emerald-500/40 hover:border-emerald-400 overflow-hidden flex flex-col items-center justify-center cursor-pointer transition group shadow-inner"
                             >
                                 {photoPreview ? (
                                     <img
                                         src={photoPreview}
-                                        alt="Foto do grupo"
+                                        alt={t("createGroup.photoAlt")}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
@@ -323,7 +324,7 @@ export default function CreateGroupModal({
                                             />
                                         </svg>
                                         <span className="text-[9px] text-emerald-300/80 font-medium tracking-tight mt-0.5">
-                                            Foto
+                                            {t("createGroup.photoLabel")}
                                         </span>
                                     </>
                                 )}
@@ -344,7 +345,7 @@ export default function CreateGroupModal({
                                     htmlFor="group-name"
                                     className="text-[11px] font-semibold tracking-wider text-noir-text-bright uppercase"
                                 >
-                                    Nome do grupo{" "}
+                                    {t("createGroup.nameLabel")}{" "}
                                     <span className="text-emerald-400">*</span>
                                 </label>
                                 <span className="text-[10px] text-noir-text-muted font-mono">
@@ -359,7 +360,7 @@ export default function CreateGroupModal({
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 maxLength={50}
-                                placeholder="Ex: Turma de estudos"
+                                placeholder={t("createGroup.namePlaceholder")}
                                 autoComplete="off"
                                 className="w-full bg-[#090f09] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-noir-text-muted focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition shadow-sm"
                             />
@@ -371,7 +372,7 @@ export default function CreateGroupModal({
                             htmlFor="group-desc"
                             className="block text-[11px] font-semibold tracking-wider text-noir-text-muted uppercase mb-1.5"
                         >
-                            Descrição (opcional)
+                            {t("createGroup.descriptionLabel")}
                         </label>
                         <textarea
                             name="description"
@@ -380,7 +381,7 @@ export default function CreateGroupModal({
                             onChange={(e) => setDescription(e.target.value)}
                             maxLength={200}
                             rows={2}
-                            placeholder="Sobre o que é o grupo? Compartilhe regras, links ou objetivos..."
+                            placeholder={t("createGroup.descriptionPlaceholder")}
                             className="w-full bg-[#090f09] border border-white/10 rounded-xl px-3.5 py-2 text-sm text-noir-text-bright placeholder-noir-text-muted focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none resize-none transition"
                         />
                     </div>
@@ -388,12 +389,13 @@ export default function CreateGroupModal({
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
                             <span className="text-[11px] font-semibold tracking-wider text-noir-text-bright uppercase">
-                                Adicionar participantes
+                                {t("createGroup.addParticipants")}
                             </span>
                             <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400 bg-emerald-950/70 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                {selected.length} selecionado
-                                {selected.length === 1 ? "" : "s"}
+                                {t("createGroup.selected", {
+                                    count: selected.length,
+                                })}
                             </span>
                         </div>
                         <div className="relative">
@@ -416,7 +418,7 @@ export default function CreateGroupModal({
                                 id="addParticipantsSearch"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                placeholder="Buscar por nome ou #ID..."
+                                placeholder={t("createGroup.searchPlaceholder")}
                                 maxLength={50}
                                 autoComplete="off"
                                 className="w-full bg-[#090f09] border border-emerald-500/40 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-noir-text-muted focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 focus:outline-none transition"
@@ -441,7 +443,7 @@ export default function CreateGroupModal({
                                         <button
                                             type="button"
                                             onClick={() => toggleUser(u)}
-                                            title="Remover"
+                                            title={t("createGroup.remove")}
                                             className="text-emerald-400/80 hover:text-white transition ml-0.5"
                                         >
                                             <svg
@@ -465,7 +467,7 @@ export default function CreateGroupModal({
 
                         {loading && (
                             <p className="text-noir-text-muted text-xs px-1">
-                                Buscando...
+                                {t("createGroup.searching")}
                             </p>
                         )}
 
@@ -538,20 +540,20 @@ export default function CreateGroupModal({
                             !loading &&
                             results.length === 0 && (
                                 <p className="text-noir-text-muted text-xs px-1">
-                                    Nenhum usuário encontrado.
+                                    {t("createGroup.noUsers")}
                                 </p>
                             )}
                     </div>
 
                     <div>
                         <span className="block text-[11px] font-semibold tracking-wider text-noir-text-muted uppercase mb-1.5">
-                            Privacidade
+                            {t("createGroup.privacy")}
                         </span>
                         <div className="grid grid-cols-2 gap-2.5">
                             {privacyCard(
                                 "private",
-                                "Privado",
-                                "Apenas convidados",
+                                t("createGroup.private"),
+                                t("createGroup.privateHint"),
                                 <svg
                                     className="w-3.5 h-3.5"
                                     fill="none"
@@ -568,8 +570,8 @@ export default function CreateGroupModal({
                             )}
                             {privacyCard(
                                 "public",
-                                "Público",
-                                "Qualquer um entra",
+                                t("createGroup.public"),
+                                t("createGroup.publicHint"),
                                 <svg
                                     className="w-3.5 h-3.5"
                                     fill="none"
@@ -590,11 +592,7 @@ export default function CreateGroupModal({
 
                 <footer className="border-t border-white/10 pt-4 mt-2 flex items-center justify-between">
                     <span className="text-xs text-noir-text-muted hidden sm:inline-block">
-                        Pressione{" "}
-                        <kbd className="px-1 py-0.5 bg-black/40 border border-white/10 rounded font-mono text-[10px] text-noir-text-muted">
-                            esc
-                        </kbd>{" "}
-                        para cancelar
+                        {t("createGroup.escHint")}
                     </span>
                     <div className="flex items-center gap-2 ml-auto">
                         <button
@@ -602,7 +600,7 @@ export default function CreateGroupModal({
                             onClick={onClose}
                             className="px-4 py-2 rounded-xl text-xs font-medium text-noir-text-muted hover:text-white hover:bg-white/5 transition"
                         >
-                            Cancelar
+                            {t("createGroup.cancel")}
                         </button>
                         <button
                             type="button"
@@ -623,7 +621,11 @@ export default function CreateGroupModal({
                                     strokeWidth={2.5}
                                 />
                             </svg>
-                            <span>{creating ? "Criando..." : "Criar grupo"}</span>
+                            <span>
+                                {creating
+                                    ? t("createGroup.creating")
+                                    : t("createGroup.create")}
+                            </span>
                         </button>
                     </div>
                 </footer>

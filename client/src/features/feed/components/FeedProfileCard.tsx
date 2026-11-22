@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "../../../contexts/ToastContext";
 import type { PostStats, User } from "../../../types";
 import Avatar from "../../../components/ui/Avatar";
 import CountryFlag from "../../../components/ui/CountryFlag";
-import { getCountryName } from "../../../utils/countries";
+import { countryName } from "../../../i18n/catalogs";
 
 interface FeedProfileCardProps {
     user: User;
@@ -18,6 +19,7 @@ export default function FeedProfileCard({
     stats,
     statsLoading = false,
 }: FeedProfileCardProps) {
+    const { t } = useTranslation("feed");
     const { showToast } = useToast();
     const [copied, setCopied] = useState(false);
 
@@ -28,18 +30,18 @@ export default function FeedProfileCard({
             await navigator.clipboard.writeText(`#${user.publicId}`);
             setCopied(true);
             window.setTimeout(() => setCopied(false), 2000);
-            showToast({ type: "success", message: "ID copiado." });
+            showToast({ type: "success", message: t("profileCard.idCopied") });
         } catch {
             showToast({
                 type: "error",
-                message: "Não foi possível copiar o ID.",
+                message: t("profileCard.idCopyError"),
             });
         }
     };
 
     return (
         <section
-            aria-label="Seu perfil"
+            aria-label={t("profileCard.aria")}
             className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm dark:border-noir-border dark:bg-noir-surface"
         >
             <div
@@ -55,7 +57,9 @@ export default function FeedProfileCard({
                     className="ring-4 ring-slate-100 dark:ring-noir-surface-alt"
                 />
                 <span
-                    aria-label={online ? "Online" : "Offline"}
+                    aria-label={
+                        online ? t("profileCard.online") : t("profileCard.offline")
+                    }
                     className={`absolute bottom-0 right-1 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-noir-surface ${
                         online ? "bg-emerald-500" : "bg-slate-400"
                     }`}
@@ -67,7 +71,7 @@ export default function FeedProfileCard({
                 {user.country && (
                     <CountryFlag
                         country={user.country}
-                        name={getCountryName(user.country)}
+                        name={countryName(user.country)}
                         className="h-3.5 w-5"
                     />
                 )}
@@ -77,8 +81,8 @@ export default function FeedProfileCard({
                 <button
                     type="button"
                     onClick={handleCopyId}
-                    title="Copiar ID único"
-                    aria-label="Copiar ID"
+                    title={t("profileCard.copyIdTitle")}
+                    aria-label={t("profileCard.copyId")}
                     className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-100 px-2.5 py-1 font-mono text-xs text-slate-500 transition-colors hover:border-emerald-500/40 hover:text-emerald-600 dark:border-noir-border dark:bg-noir-surface-alt dark:text-noir-text-muted dark:hover:text-emerald-400"
                 >
                     <span>#{user.publicId}</span>
@@ -98,7 +102,9 @@ export default function FeedProfileCard({
                         />
                     </svg>
                     <span className="sr-only">
-                        {copied ? "ID copiado" : "Copiar ID"}
+                        {copied
+                            ? t("profileCard.idCopiedShort")
+                            : t("profileCard.copyId")}
                     </span>
                 </button>
             )}
@@ -109,7 +115,7 @@ export default function FeedProfileCard({
                         {statsLoading ? "—" : (stats?.postCount ?? 0)}
                     </dd>
                     <dt className="text-[11px] font-medium text-slate-500 dark:text-noir-text-muted">
-                        Publicações
+                        {t("profileCard.posts")}
                     </dt>
                 </div>
                 <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-2 dark:border-noir-border/60 dark:bg-noir-surface-alt/60">
@@ -117,7 +123,7 @@ export default function FeedProfileCard({
                         {statsLoading ? "—" : (stats?.totalLikes ?? 0)}
                     </dd>
                     <dt className="text-[11px] font-medium text-slate-500 dark:text-noir-text-muted">
-                        Curtidas
+                        {t("profileCard.likes")}
                     </dt>
                 </div>
             </dl>
@@ -128,7 +134,10 @@ export default function FeedProfileCard({
                         online ? "animate-pulse bg-emerald-500" : "bg-slate-400"
                     }`}
                 />
-                Status: {online ? "Disponível" : "Offline"}
+                {t("profileCard.status")}{" "}
+                {online
+                    ? t("profileCard.available")
+                    : t("profileCard.offline")}
             </div>
         </section>
     );

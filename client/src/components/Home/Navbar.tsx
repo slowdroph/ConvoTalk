@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import LanguageSelector from "../ui/LanguageSelector";
 
 interface NavbarProps {
     activeSection: string;
@@ -7,13 +9,14 @@ interface NavbarProps {
 }
 
 const NAV_LINKS = [
-    { id: "recursos", label: "Recursos" },
-    { id: "como-funciona", label: "Como funciona" },
-    { id: "seguranca", label: "Segurança" },
-    { id: "arquitetura", label: "Arquitetura" },
+    { id: "recursos", labelKey: "nav.features" },
+    { id: "como-funciona", labelKey: "nav.howItWorks" },
+    { id: "seguranca", labelKey: "nav.security" },
+    { id: "arquitetura", labelKey: "nav.architecture" },
 ];
 
 export default function Navbar({ activeSection, scrolled }: NavbarProps) {
+    const { t } = useTranslation("home");
     const [menuOpen, setMenuOpen] = useState(false);
 
     const handleNavClick = () => setMenuOpen(false);
@@ -54,31 +57,34 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                                     : "text-on-surface-variant hover:text-primary"
                             }`}
                         >
-                            {link.label}
+                            {t(link.labelKey)}
                         </a>
                     ))}
                 </div>
 
                 {/* Actions */}
                 <div className="flex items-center gap-3">
+                    <div className="hidden md:block">
+                        <LanguageSelector tone="header" />
+                    </div>
                     <Link
                         to="/login"
                         className="text-sm font-medium text-on-surface-variant hover:text-on-surface px-3 py-1.5 transition-colors"
                     >
-                        Entrar
+                        {t("nav.login")}
                     </Link>
                     <Link
                         to="/login?mode=register"
                         className="inline-flex items-center gap-1.5 bg-primary-container text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary hover:text-on-primary-container transition-all shadow-[0_0_15px_rgba(0,168,75,0.25)] hover:shadow-[0_0_20px_rgba(89,224,123,0.4)]"
                     >
-                        Criar conta
+                        {t("nav.register")}
                     </Link>
                     <button
                         type="button"
                         onClick={() => setMenuOpen((v) => !v)}
                         className="md:hidden p-2 -mr-2 text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
                         aria-label={
-                            menuOpen ? "Fechar menu" : "Abrir menu"
+                            menuOpen ? t("nav.closeMenu") : t("nav.openMenu")
                         }
                         aria-expanded={menuOpen}
                     >
@@ -129,23 +135,26 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                                         : "text-on-surface-variant hover:text-primary"
                                 }`}
                             >
-                                {link.label}
+                                {t(link.labelKey)}
                             </a>
                         ))}
-                        <div className="pt-2 border-t border-outline-variant/30 flex items-center justify-between">
+                        <div className="border-t border-outline-variant/30 pt-3">
+                            <LanguageSelector tone="header" align="left" />
+                        </div>
+                        <div className="flex items-center justify-between">
                             <Link
                                 to="/login"
                                 onClick={handleNavClick}
                                 className="text-on-surface hover:text-primary text-sm font-medium transition-colors"
                             >
-                                Entrar
+                                {t("nav.login")}
                             </Link>
                             <Link
                                 to="/login?mode=register"
                                 onClick={handleNavClick}
                                 className="bg-primary-container text-white text-xs font-semibold px-3.5 py-2 rounded-lg"
                             >
-                                Criar conta
+                                {t("nav.register")}
                             </Link>
                         </div>
                     </div>

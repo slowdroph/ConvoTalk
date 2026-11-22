@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useSocket } from "../hooks/useSocket";
@@ -18,6 +19,7 @@ import type { FeedFilter } from "../features/feed/services/feedApi";
 import type { Post } from "../types";
 
 export default function FeedPage() {
+    const { t } = useTranslation("feed");
     const navigate = useNavigate();
     const { user } = useAuth();
     const { connected } = useSocket();
@@ -129,11 +131,10 @@ export default function FeedPage() {
                     >
                         <div className="flex flex-col">
                             <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-noir-text-bright">
-                                Feed
+                                {t("page.title")}
                             </h1>
                             <p className="mt-0.5 text-sm text-slate-500 dark:text-noir-text-muted">
-                                Compartilhe ideias, novidades e imagens com a
-                                comunidade.
+                                {t("page.subtitle")}
                             </p>
                         </div>
 

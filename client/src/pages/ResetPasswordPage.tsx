@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import { getErrorMessage } from "../utils/errors";
 
 export default function ResetPasswordPage() {
+    const { t } = useTranslation("auth");
     const [searchParams] = useSearchParams();
     const token = searchParams.get("token");
     const [password, setPassword] = useState("");
@@ -20,26 +22,26 @@ export default function ResetPasswordPage() {
 
         if (password !== confirmPassword) {
             setStatus("error");
-            setMessage("As senhas não coincidem.");
+            setMessage(t("reset.passwordsMismatch"));
             return;
         }
 
         if (!token) {
             setStatus("error");
-            setMessage("Token de redefinição não encontrado.");
+            setMessage(t("reset.missingToken"));
             return;
         }
 
         try {
-            const { data } = await api.post("/auth/reset-password", {
+            await api.post("/auth/reset-password", {
                 token,
                 password,
             });
             setStatus("success");
-            setMessage(data.message);
+            setMessage(t("reset.success"));
         } catch (err: unknown) {
             setStatus("error");
-            setMessage(getErrorMessage(err, "Erro ao redefinir a senha."));
+            setMessage(getErrorMessage(err, t("reset.error")));
         }
     };
 
@@ -53,7 +55,7 @@ export default function ResetPasswordPage() {
                         className="h-20 w-auto mx-auto mb-4 object-contain"
                     />
                     <h1 className="text-2xl font-bold text-white">ConvoTalk</h1>
-                    <p className="text-zinc-500 mt-1">Nova senha</p>
+                    <p className="text-zinc-500 mt-1">{t("reset.subtitle")}</p>
                 </div>
 
                 <div className="bg-zinc-900 rounded-2xl p-6 shadow-xl border border-zinc-800">
@@ -80,13 +82,13 @@ export default function ResetPasswordPage() {
                                 to="/login"
                                 className="block w-full py-3 bg-green-600 hover:bg-green-700 text-on-accent font-medium rounded-lg transition-colors text-sm"
                             >
-                                Ir para o login
+                                {t("reset.goToLogin")}
                             </Link>
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <p className="text-zinc-400 text-sm">
-                                Defina uma nova senha para sua conta.
+                                {t("reset.instructions")}
                             </p>
 
                             {status === "error" && (
@@ -100,7 +102,7 @@ export default function ResetPasswordPage() {
                                 name="password"
                                 id="password"
                                 autoComplete="new-password"
-                                placeholder="Nova senha"
+                                placeholder={t("reset.newPassword")}
                                 value={password}
                                 onChange={(e) => {
                                     setPassword(e.target.value);
@@ -118,7 +120,7 @@ export default function ResetPasswordPage() {
                                 name="confirmPassword"
                                 id="confirmPassword"
                                 autoComplete="new-password"
-                                placeholder="Confirmar nova senha"
+                                placeholder={t("reset.confirmPassword")}
                                 value={confirmPassword}
                                 onChange={(e) => {
                                     setConfirmPassword(e.target.value);
@@ -137,15 +139,15 @@ export default function ResetPasswordPage() {
                                 className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
                             >
                                 {status === "loading"
-                                    ? "Redefinindo..."
-                                    : "Redefinir senha"}
+                                    ? t("reset.submitting")
+                                    : t("reset.submit")}
                             </button>
 
                             <Link
                                 to="/login"
                                 className="block text-center text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
                             >
-                                Voltar para o login
+                                {t("reset.backToLogin")}
                             </Link>
                         </form>
                     )}

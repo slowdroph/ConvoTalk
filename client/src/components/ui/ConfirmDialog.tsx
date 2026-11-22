@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Button from "./Button";
 
 interface ConfirmDialogProps {
@@ -19,13 +20,14 @@ export default function ConfirmDialog({
     isOpen,
     title,
     message,
-    confirmLabel = "Confirmar",
-    cancelLabel = "Cancelar",
+    confirmLabel,
+    cancelLabel,
     danger = false,
     extraButton,
     onConfirm,
     onCancel,
 }: ConfirmDialogProps) {
+    const { t } = useTranslation("common");
     if (!isOpen) return null;
 
     return (
@@ -45,7 +47,7 @@ export default function ConfirmDialog({
                         className="flex-1"
                         onClick={onCancel}
                     >
-                        {cancelLabel}
+                        {cancelLabel ?? t("actions.cancel")}
                     </Button>
                     {extraButton && (
                         <Button
@@ -61,7 +63,7 @@ export default function ConfirmDialog({
                         className="flex-1"
                         onClick={onConfirm}
                     >
-                        {confirmLabel}
+                        {confirmLabel ?? t("actions.confirm")}
                     </Button>
                 </div>
             </div>

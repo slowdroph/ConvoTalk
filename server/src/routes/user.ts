@@ -13,6 +13,7 @@ import {
     statusSchema,
     aboutSchema,
     confirmEmailChangeSchema,
+    preferencesSchema,
 } from "../validations";
 import {
     getMe,
@@ -30,6 +31,7 @@ import {
     unblockUser,
     listBlockedUsers,
     confirmEmailChange,
+    updatePreferences,
 } from "../controllers/userController";
 
 const router = Router();
@@ -57,6 +59,13 @@ router.post(
     confirmEmailChange,
 );
 router.put("/status", auth, validate(statusSchema), updateStatus);
+router.put(
+    "/preferences",
+    auth,
+    profileUpdateLimiter,
+    validate(preferencesSchema),
+    updatePreferences,
+);
 router.put(
     "/about",
     auth,

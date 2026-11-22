@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../../utils/errors";
 import type { TrendingTopic } from "../../../types";
 import { getTrendingTopics } from "../services/feedApi";
 
 export function useTrendingTopics(limit = 5) {
+    const { t } = useTranslation("feed");
     const [topics, setTopics] = useState<TrendingTopic[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -21,14 +23,14 @@ export function useTrendingTopics(limit = 5) {
         } catch (err) {
             if (requestId !== requestIdRef.current) return;
             setError(
-                getErrorMessage(err, "Erro ao carregar os tópicos em alta."),
+                getErrorMessage(err, t("hooks.trendingError")),
             );
         } finally {
             if (requestId === requestIdRef.current) {
                 setLoading(false);
             }
         }
-    }, [limit]);
+    }, [limit, t]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect

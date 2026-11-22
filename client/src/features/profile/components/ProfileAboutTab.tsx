@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { PublicProfile } from "../../../types";
 import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
 import FeedComposer from "../../feed/components/FeedComposer";
@@ -25,6 +26,7 @@ export default function ProfileAboutTab({
     onOpenAuthor,
     onStatsChanged,
 }: ProfileAboutTabProps) {
+    const { t } = useTranslation("profile");
     const {
         posts,
         loading,
@@ -58,7 +60,7 @@ export default function ProfileAboutTab({
             <div className="flex items-center gap-2 pt-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                 <h2 className="text-lg font-bold text-slate-900 dark:text-noir-text-bright">
-                    Mural
+                    {t("wall.title")}
                 </h2>
             </div>
 
@@ -67,8 +69,8 @@ export default function ProfileAboutTab({
                 variant="compact"
                 placeholder={
                     isSelf
-                        ? "Escrever algo no seu mural..."
-                        : `Escrever algo no mural de ${profile.name}...`
+                        ? t("wall.placeholderSelf")
+                        : t("wall.placeholderOther", { name: profile.name })
                 }
                 onCreated={(post) => {
                     addPost(post);
@@ -85,12 +87,12 @@ export default function ProfileAboutTab({
                 currentUserId={currentUserId}
                 wallOwnerId={profileUserId}
                 emptyState={{
-                    title: "Mural vazio",
+                    title: t("wall.emptyTitle"),
                     description: isSelf
-                        ? "Publique algo para começar o seu mural."
-                        : `Seja a primeira pessoa a escrever no mural de ${profile.name}.`,
+                        ? t("wall.emptySelf")
+                        : t("wall.emptyOther", { name: profile.name }),
                 }}
-                endLabel="Você chegou ao fim do mural."
+                endLabel={t("wall.end")}
                 onLoadMore={() => void loadMore()}
                 onRetry={() => void load()}
                 onRetryMore={() => void loadMore()}

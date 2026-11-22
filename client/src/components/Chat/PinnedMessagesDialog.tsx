@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../../services/api";
 import type { Message } from "../../types";
 import { getErrorMessage } from "../../utils/errors";
+import { formatDate } from "../../i18n/formatters";
 
 interface PinnedMessagesDialogProps {
     isOpen: boolean;
@@ -24,6 +26,7 @@ export default function PinnedMessagesDialog({
     onOpenThread,
     onUnpin,
 }: PinnedMessagesDialogProps) {
+    const { t } = useTranslation("chat");
     const [pinned, setPinned] = useState<PinnedEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -42,7 +45,7 @@ export default function PinnedMessagesDialog({
                     setError(
                         getErrorMessage(
                             err,
-                            "Erro ao carregar mensagens fixadas.",
+                            t("pinned.loadError"),
                         ),
                     );
                 }
@@ -55,7 +58,7 @@ export default function PinnedMessagesDialog({
         return () => {
             cancelled = true;
         };
-    }, [isOpen, roomId]);
+    }, [isOpen, roomId, t]);
 
     if (!isOpen) return null;
 
@@ -64,12 +67,12 @@ export default function PinnedMessagesDialog({
             <div className="bg-noir-card border border-noir-border rounded-2xl p-6 w-full max-w-md mx-4 max-h-[80vh] flex flex-col shadow-2xl">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-noir-text-bright">
-                        Mensagens fixadas
+                        {t("pinned.title")}
                     </h3>
                     <button
                         onClick={onClose}
                         className="p-1.5 rounded-lg text-noir-text-muted hover:text-noir-text-bright hover:bg-noir-surface-alt transition-colors"
-                        title="Fechar"
+                        title={t("pinned.close")}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -99,7 +102,7 @@ export default function PinnedMessagesDialog({
                         </p>
                     ) : pinned.length === 0 ? (
                         <p className="text-sm text-noir-text-muted text-center py-6">
-                            Nenhuma mensagem fixada.
+                            {t("pinned.empty")}
                         </p>
                     ) : (
                         <ul className="space-y-2">
@@ -113,23 +116,24 @@ export default function PinnedMessagesDialog({
                                             onOpenThread(entry.message)
                                         }
                                         className="flex-1 min-w-0 text-left"
-                                        title="Abrir thread"
+                                        title={t("pinned.openThread")}
                                     >
                                         <p className="text-sm text-noir-text-bright line-clamp-2 wrap-break-word">
                                             {entry.message.content ||
                                                 (entry.message.attachments &&
                                                 entry.message.attachments
                                                     .length > 0
-                                                    ? "📎 Anexo"
+                                                    ? t("pinned.attachment")
                                                     : "")}
                                         </p>
                                         <p className="text-xs text-noir-text-muted mt-1">
                                             {entry.message.sender?.name ||
-                                                "Desconhecido"}{" "}
+                                                t("pinned.unknownSender")}{" "}
                                             ·{" "}
-                                            {new Date(
-                                                entry.pinnedAt,
-                                            ).toLocaleString("pt-BR")}
+                                            {formatDate(entry.pinnedAt, {
+                                                dateStyle: "short",
+                                                timeStyle: "short",
+                                            })}
                                         </p>
                                     </button>
                                     <button
@@ -137,7 +141,7 @@ export default function PinnedMessagesDialog({
                                             onUnpin(entry.message._id)
                                         }
                                         className="p-1.5 rounded-md text-noir-text-muted hover:text-red-400 transition-colors shrink-0"
-                                        title="Desafixar"
+                                        title={t("pinned.unpin")}
                                     >
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"

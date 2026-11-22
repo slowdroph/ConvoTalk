@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useSocket } from "../hooks/useSocket";
@@ -23,6 +24,7 @@ import {
 } from "../features/profile/services/profileApi";
 
 export default function ProfilePage() {
+    const { t } = useTranslation("profile");
     const { userId } = useParams();
     const navigate = useNavigate();
     const { user, updateUser } = useAuth();
@@ -81,9 +83,7 @@ export default function ProfilePage() {
             const room = await createDirectRoom(profileUserId);
             navigate(`/chat/${room._id}`);
         } catch (err) {
-            setStartError(
-                getErrorMessage(err, "Erro ao iniciar conversa."),
-            );
+            setStartError(getErrorMessage(err, t("page.startError")));
         } finally {
             setStarting(false);
         }
@@ -96,13 +96,13 @@ export default function ProfilePage() {
             await blockUserRequest(profileUserId);
             showToast({
                 type: "success",
-                message: "Usuário bloqueado.",
+                message: t("page.blocked"),
             });
             reload();
         } catch (err) {
             showToast({
                 type: "error",
-                message: getErrorMessage(err, "Erro ao bloquear usuário."),
+                message: getErrorMessage(err, t("page.blockError")),
             });
         } finally {
             setBlocking(false);
@@ -116,13 +116,13 @@ export default function ProfilePage() {
             await unblockUserRequest(profileUserId);
             showToast({
                 type: "success",
-                message: "Usuário desbloqueado.",
+                message: t("page.unblocked"),
             });
             reload();
         } catch (err) {
             showToast({
                 type: "error",
-                message: getErrorMessage(err, "Erro ao desbloquear usuário."),
+                message: getErrorMessage(err, t("page.unblockError")),
             });
         } finally {
             setBlocking(false);
@@ -134,14 +134,14 @@ export default function ProfilePage() {
         if (!file.type.startsWith("image/")) {
             showToast({
                 type: "error",
-                message: "Selecione um arquivo de imagem.",
+                message: t("page.imageTypeError"),
             });
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
             showToast({
                 type: "error",
-                message: "A imagem deve ter no máximo 5 MB.",
+                message: t("page.imageSizeError"),
             });
             return;
         }
@@ -149,12 +149,12 @@ export default function ProfilePage() {
         try {
             const updated = await updateAvatarRequest(file);
             updateUser(updated);
-            showToast({ type: "success", message: "Foto atualizada." });
+            showToast({ type: "success", message: t("page.photoUpdated") });
             reload();
         } catch (err) {
             showToast({
                 type: "error",
-                message: getErrorMessage(err, "Erro ao atualizar a foto."),
+                message: getErrorMessage(err, t("page.photoUpdateError")),
             });
         } finally {
             setPhotoUploading(false);
@@ -167,12 +167,12 @@ export default function ProfilePage() {
         try {
             const updated = await removeAvatarRequest();
             updateUser(updated);
-            showToast({ type: "success", message: "Foto removida." });
+            showToast({ type: "success", message: t("page.photoRemoved") });
             reload();
         } catch (err) {
             showToast({
                 type: "error",
-                message: getErrorMessage(err, "Erro ao remover a foto."),
+                message: getErrorMessage(err, t("page.photoRemoveError")),
             });
         } finally {
             setPhotoUploading(false);
@@ -183,7 +183,7 @@ export default function ProfilePage() {
         return (
             <div className="flex h-full min-h-0 flex-col bg-noir-base">
                 <main className="flex flex-1 items-center justify-center p-6 text-sm text-slate-500 dark:text-noir-text-muted">
-                    Carregando perfil...
+                    {t("page.loading")}
                 </main>
             </div>
         );
@@ -213,8 +213,8 @@ export default function ProfilePage() {
                 <main className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
                     <p className="text-sm font-medium text-slate-700 dark:text-noir-text-bright">
                         {notFound
-                            ? "Perfil não encontrado."
-                            : (error ?? "Não foi possível carregar o perfil.")}
+                            ? t("page.notFound")
+                            : (error ?? t("page.loadError"))}
                     </p>
                     <div className="flex items-center gap-2">
                         {error && (
@@ -223,14 +223,14 @@ export default function ProfilePage() {
                                 onClick={reload}
                                 className="rounded-lg border border-slate-300 bg-slate-100 px-4 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200 dark:border-noir-border dark:bg-noir-surface-alt dark:text-noir-text-bright dark:hover:bg-noir-border"
                             >
-                                Tentar novamente
+                                {t("page.retry")}
                             </button>
                         )}
                         <Link
                             to="/feed"
                             className="rounded-lg border border-emerald-700/30 bg-emerald-50 px-4 py-2 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
                         >
-                            Voltar ao feed
+                            {t("page.backToFeed")}
                         </Link>
                     </div>
                 </main>
@@ -267,18 +267,20 @@ export default function ProfilePage() {
                     </aside>
 
                     <section
-                        aria-label={`Perfil de ${profile.name}`}
+                        aria-label={t("page.profileAria", {
+                            name: profile.name,
+                        })}
                         className="col-span-12 flex flex-col gap-4 lg:col-span-8"
                     >
                         {contentHidden ? (
                             <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 px-6 py-10 text-center">
                                 <p className="text-sm font-semibold text-slate-800 dark:text-noir-text-bright">
-                                    Conteúdo oculto
+                                    {t("page.hiddenTitle")}
                                 </p>
                                 <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500 dark:text-noir-text-muted">
-                                    Você bloqueou {profile.name}. Desbloqueie
-                                    para ver as publicações, as fotos e o mural
-                                    deste perfil.
+                                    {t("page.hiddenMessage", {
+                                        name: profile.name,
+                                    })}
                                 </p>
                                 <button
                                     type="button"
@@ -289,7 +291,7 @@ export default function ProfilePage() {
                                     {blocking ? (
                                         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-600 border-t-transparent dark:border-red-400" />
                                     ) : null}
-                                    Desbloquear
+                                    {t("sidebar.unblock")}
                                 </button>
                             </div>
                         ) : (

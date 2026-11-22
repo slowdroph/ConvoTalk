@@ -1,10 +1,12 @@
 import { useContext } from "react";
+import { useTranslation } from "react-i18next";
 import { useSocket } from "../../hooks/useSocket";
 import { AuthContext } from "../../contexts/AuthContext";
 
 const MAX_ATTEMPTS = 20;
 
 export default function ConnectionBanner() {
+    const { t } = useTranslation("chat");
     const { connected, reconnecting, reconnectAttempt, hasConnectedOnce } =
         useSocket();
     const auth = useContext(AuthContext);
@@ -19,8 +21,10 @@ export default function ConnectionBanner() {
                 <>
                     <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
                     <p className="text-yellow-700 text-sm dark:text-yellow-400">
-                        Conexão perdida. Tentando reconectar ({reconnectAttempt}
-                        /{MAX_ATTEMPTS})...
+                        {t("connection.reconnecting", {
+                            attempt: reconnectAttempt,
+                            max: MAX_ATTEMPTS,
+                        })}
                     </p>
                 </>
             ) : (
@@ -40,13 +44,13 @@ export default function ConnectionBanner() {
                         />
                     </svg>
                     <p className="text-red-600 text-sm dark:text-red-400">
-                        Sem conexão. Verifique sua internet.
+                        {t("connection.offline")}
                     </p>
                     <button
                         onClick={() => window.location.reload()}
                         className="px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs rounded-lg transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-card dark:text-noir-text-bright"
                     >
-                        Reconectar
+                        {t("connection.reconnect")}
                     </button>
                 </>
             )}

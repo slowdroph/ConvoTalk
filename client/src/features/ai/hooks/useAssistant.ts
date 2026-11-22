@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type {
     AiReplySuggestion,
     AiSuggestRepliesRequest,
@@ -17,6 +18,7 @@ export interface AssistantError {
 }
 
 export function useAssistant(roomId: string) {
+    const { t } = useTranslation("chat");
     const [summary, setSummary] = useState<AiSummaryPayload | null>(null);
     const [suggestions, setSuggestions] = useState<AiReplySuggestion[]>([]);
     const [loading, setLoading] = useState<AssistantLoading>(null);
@@ -42,14 +44,14 @@ export function useAssistant(roomId: string) {
                     action: "summarize",
                     message: getErrorMessage(
                         err,
-                        "Não foi possível gerar o resumo.",
+                        t("ai.errors.summarize"),
                     ),
                 });
             } finally {
                 setLoading(null);
             }
         },
-        [roomId],
+        [roomId, t],
     );
 
     const suggest = useCallback(
@@ -64,14 +66,14 @@ export function useAssistant(roomId: string) {
                     action: "suggest",
                     message: getErrorMessage(
                         err,
-                        "Não foi possível sugerir respostas.",
+                        t("ai.errors.suggest"),
                     ),
                 });
             } finally {
                 setLoading(null);
             }
         },
-        [roomId],
+        [roomId, t],
     );
 
     const clearError = useCallback(() => setError(null), []);

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { AiSummaryPayload } from "@shared/types";
 
 interface SummaryCardProps {
@@ -5,6 +6,8 @@ interface SummaryCardProps {
 }
 
 export default function SummaryCard({ summary }: SummaryCardProps) {
+    const { t } = useTranslation("chat");
+
     return (
         <div className="rounded-xl border border-noir-border bg-noir-base/60 p-3">
             <p className="text-sm leading-relaxed text-slate-800 dark:text-noir-text-bright whitespace-pre-wrap">
@@ -24,7 +27,7 @@ export default function SummaryCard({ summary }: SummaryCardProps) {
                 </ul>
             )}
             <p className="mt-3 text-[10px] text-slate-400 dark:text-noir-text-muted/70">
-                {summary.messageCount} mensagens analisadas
+                {t("ai.analyzed", { count: summary.messageCount })}
             </p>
         </div>
     );

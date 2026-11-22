@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "../../../contexts/ToastContext";
 import { getErrorMessage } from "../../../utils/errors";
 import type { Comment } from "../../../types";
@@ -23,6 +24,7 @@ export default function PostComments({
     onCommentCountChange,
     onOpenAuthor,
 }: PostCommentsProps) {
+    const { t } = useTranslation("feed");
     const { showToast } = useToast();
     const {
         comments,
@@ -55,7 +57,7 @@ export default function PostComments({
         } catch (err) {
             showToast({
                 type: "error",
-                message: getErrorMessage(err, "Não foi possível comentar."),
+                message: getErrorMessage(err, t("comments.submitError")),
             });
         } finally {
             setSubmitting(false);
@@ -70,13 +72,13 @@ export default function PostComments({
             const count = await removeComment(pendingDelete._id);
             onCommentCountChange?.(count);
             setPendingDelete(null);
-            showToast({ type: "success", message: "Comentário excluído." });
+            showToast({ type: "success", message: t("comments.deleted") });
         } catch (err) {
             showToast({
                 type: "error",
                 message: getErrorMessage(
                     err,
-                    "Não foi possível excluir o comentário.",
+                    t("comments.deleteError"),
                 ),
             });
         } finally {
@@ -91,7 +93,7 @@ export default function PostComments({
 
     return (
         <section
-            aria-label="Comentários"
+            aria-label={t("comments.aria")}
             className="border-t border-slate-100 bg-slate-50/60 px-4 py-3 dark:border-noir-border/70 dark:bg-noir-surface-alt/20 sm:px-5"
         >
             <form onSubmit={handleSubmit} className="flex items-start gap-2">
@@ -102,8 +104,8 @@ export default function PostComments({
                     }
                     rows={2}
                     maxLength={MAX_CONTENT}
-                    placeholder="Escreva um comentário..."
-                    aria-label="Escrever comentário"
+                    placeholder={t("comments.placeholder")}
+                    aria-label={t("comments.writeAria")}
                     className="min-h-[44px] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright dark:placeholder:text-noir-text-muted"
                 />
                 <button
@@ -111,7 +113,7 @@ export default function PostComments({
                     disabled={!content.trim() || submitting}
                     className="min-h-[44px] shrink-0 rounded-xl bg-emerald-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    {submitting ? "..." : "Enviar"}
+                    {submitting ? "..." : t("comments.send")}
                 </button>
             </form>
 
@@ -131,14 +133,14 @@ export default function PostComments({
                         onClick={() => void load()}
                         className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
                     >
-                        Tentar novamente
+                        {t("comments.retry")}
                     </button>
                 </div>
             )}
 
             {!loading && !error && comments.length === 0 && (
                 <p className="py-3 text-center text-xs text-slate-500 dark:text-noir-text-muted">
-                    Nenhum comentário ainda. Seja o primeiro a comentar.
+                    {t("comments.empty")}
                 </p>
             )}
 
@@ -165,8 +167,8 @@ export default function PostComments({
                         className="text-xs font-medium text-emerald-700 hover:underline disabled:opacity-60 dark:text-emerald-400"
                     >
                         {loadingMore
-                            ? "Carregando..."
-                            : "Carregar mais comentários"}
+                            ? t("comments.loading")
+                            : t("comments.loadMore")}
                     </button>
                 </div>
             )}
@@ -181,16 +183,18 @@ export default function PostComments({
                         onClick={retryLoadMore}
                         className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
                     >
-                        Tentar novamente
+                        {t("comments.retry")}
                     </button>
                 </div>
             )}
 
             <ConfirmDialog
                 isOpen={Boolean(pendingDelete)}
-                title="Excluir comentário"
-                message="Esta ação não pode ser desfeita. Deseja excluir este comentário?"
-                confirmLabel={deleting ? "Excluindo..." : "Excluir"}
+                title={t("comments.deleteTitle")}
+                message={t("comments.deleteMessage")}
+                confirmLabel={
+                    deleting ? t("comments.deleting") : t("comments.deleteConfirm")
+                }
                 danger
                 onConfirm={handleConfirmDelete}
                 onCancel={() => setPendingDelete(null)}

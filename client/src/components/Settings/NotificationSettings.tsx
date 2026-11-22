@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
     getSoundEnabled,
     setSoundEnabled,
@@ -60,6 +61,7 @@ function ToggleRow({
 }
 
 export default function NotificationSettings() {
+    const { t } = useTranslation("settings");
     const [sound, setSound] = useState(getSoundEnabled);
     const [browser, setBrowser] = useState(
         () =>
@@ -133,7 +135,7 @@ export default function NotificationSettings() {
                 await unsubscribeFromPush();
             }
         } catch (err) {
-            console.error("Erro ao alternar notificações push:", err);
+            console.error("Failed to toggle push notifications:", err);
         } finally {
             setPushLoading(false);
         }
@@ -148,10 +150,10 @@ export default function NotificationSettings() {
         <div className="space-y-5">
             <div className="border-b border-noir-border pb-4">
                 <h2 className="text-base font-semibold text-noir-text-bright">
-                    Notificações
+                    {t("notifications.title")}
                 </h2>
                 <p className="text-xs text-noir-text-muted mt-0.5">
-                    Ajuste como e quando você recebe alertas no sistema.
+                    {t("notifications.description")}
                 </p>
             </div>
 
@@ -161,23 +163,22 @@ export default function NotificationSettings() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <span>
-                        As notificações estão bloqueadas nas configurações do seu navegador.
-                        Para ativá-las, permita as notificações para este site nas opções do navegador.
+                        {t("notifications.permissionDenied")}
                     </span>
                 </div>
             )}
 
             <div className="space-y-4 divide-y divide-noir-border/60">
                 <ToggleRow
-                    title="Som de notificação"
-                    description="Reproduz um som quando uma nova mensagem chega."
+                    title={t("notifications.soundTitle")}
+                    description={t("notifications.soundDescription")}
                     checked={sound}
                     onChange={handleSoundChange}
                 />
                 <div className="pt-3">
                     <ToggleRow
-                        title="Notificações Push / Navegador"
-                        description="Receba avisos de novas mensagens mesmo em segundo plano ou com a aba fechada."
+                        title={t("notifications.browserTitle")}
+                        description={t("notifications.browserDescription")}
                         checked={browser}
                         disabled={pushLoading || permissionStatus === "denied"}
                         onChange={handleBrowserChange}
@@ -185,8 +186,8 @@ export default function NotificationSettings() {
                 </div>
                 <div className="pt-3">
                     <ToggleRow
-                        title="Contador no título"
-                        description="Exibe o número de mensagens não lidas no título da aba."
+                        title={t("notifications.badgeTitle")}
+                        description={t("notifications.badgeDescription")}
                         checked={titleBadge}
                         onChange={handleTitleBadgeChange}
                     />

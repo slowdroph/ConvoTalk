@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import { getErrorMessage } from "../utils/errors";
 import SEO from "../components/SEO";
 
 export default function ForgotPasswordPage() {
+    const { t } = useTranslation("auth");
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState<
         "idle" | "loading" | "success" | "error"
@@ -17,22 +19,20 @@ export default function ForgotPasswordPage() {
         setMessage("");
 
         try {
-            const { data } = await api.post("/auth/forgot-password", { email });
+            await api.post("/auth/forgot-password", { email });
             setStatus("success");
-            setMessage(data.message);
+            setMessage(t("forgot.success"));
         } catch (err: unknown) {
             setStatus("error");
-            setMessage(
-                getErrorMessage(err, "Erro ao solicitar redefinição de senha."),
-            );
+            setMessage(getErrorMessage(err, t("forgot.error")));
         }
     };
 
     return (
         <div className="min-h-dvh-fallback bg-zinc-950 flex items-center justify-center px-4">
             <SEO
-                title="Redefinir senha"
-                description="Redefina sua senha do ConvoTalk. Informe seu email e receba um link seguro para criar uma nova senha."
+                title={t("forgot.title")}
+                description={t("forgot.description")}
                 canonical="/forgot-password"
             />
             <div className="w-full max-w-md">
@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
                         className="h-20 w-auto mx-auto mb-4 object-contain"
                     />
                     <h1 className="text-2xl font-bold text-white">ConvoTalk</h1>
-                    <p className="text-zinc-500 mt-1">Redefinir senha</p>
+                    <p className="text-zinc-500 mt-1">{t("forgot.subtitle")}</p>
                 </div>
 
                 <div className="bg-zinc-900 rounded-2xl p-6 shadow-xl border border-zinc-800">
@@ -70,14 +70,13 @@ export default function ForgotPasswordPage() {
                                 to="/login"
                                 className="block w-full py-3 bg-green-600 hover:bg-green-700 text-on-accent font-medium rounded-lg transition-colors text-sm"
                             >
-                                Voltar para o login
+                                {t("forgot.backToLogin")}
                             </Link>
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <p className="text-zinc-400 text-sm">
-                                Informe seu email cadastrado e enviaremos um
-                                link para redefinir sua senha.
+                                {t("forgot.instructions")}
                             </p>
 
                             {status === "error" && (
@@ -91,7 +90,7 @@ export default function ForgotPasswordPage() {
                                 name="email"
                                 id="email"
                                 autoComplete="email"
-                                placeholder="Email"
+                                placeholder={t("forgot.emailPlaceholder")}
                                 value={email}
                                 onChange={(e) => {
                                     setEmail(e.target.value);
@@ -109,15 +108,15 @@ export default function ForgotPasswordPage() {
                                 className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-on-accent font-medium rounded-lg transition-colors"
                             >
                                 {status === "loading"
-                                    ? "Enviando..."
-                                    : "Enviar link de redefinição"}
+                                    ? t("forgot.submitting")
+                                    : t("forgot.submit")}
                             </button>
 
                             <Link
                                 to="/login"
                                 className="block text-center text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
                             >
-                                Voltar para o login
+                                {t("forgot.backToLogin")}
                             </Link>
                         </form>
                     )}

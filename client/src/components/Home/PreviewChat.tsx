@@ -1,27 +1,29 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { io, Socket } from "socket.io-client";
 import Avatar from "../ui/Avatar";
 import type { PreviewMessage } from "../../types";
 import { SOCKET_URL } from "../../lib/apiUrl";
+import { getLocale } from "../../i18n/formatters";
 
 const MAX_LENGTH = 140;
 const WARN_LENGTH = 120;
 const NAME_STORAGE_KEY = "previewName";
 const TYPING_TIMEOUT_MS = 2500;
 
-function getGuestName(): string {
+function getGuestName(format: (number: number) => string): string {
     try {
         const stored = localStorage.getItem(NAME_STORAGE_KEY);
         if (stored && stored.trim()) return stored.trim();
     } catch {
         // localStorage unavailable
     }
-    return `Visitante-${Math.floor(1000 + Math.random() * 9000)}`;
+    return format(Math.floor(1000 + Math.random() * 9000));
 }
 
 function formatTime(iso: string): string {
     try {
-        return new Date(iso).toLocaleTimeString("pt-BR", {
+        return new Date(iso).toLocaleTimeString(getLocale(), {
             hour: "2-digit",
             minute: "2-digit",
         });
@@ -31,10 +33,13 @@ function formatTime(iso: string): string {
 }
 
 export default function PreviewChat() {
+    const { t } = useTranslation("home");
     const [messages, setMessages] = useState<PreviewMessage[]>([]);
     const [onlineCount, setOnlineCount] = useState(1);
     const [input, setInput] = useState("");
-    const [name, setName] = useState<string>(() => getGuestName());
+    const [name, setName] = useState<string>(() =>
+        getGuestName((number) => t("preview.guest", { number })),
+    );
     const [editingName, setEditingName] = useState(false);
     const [nameDraft, setNameDraft] = useState(name);
     const [connected, setConnected] = useState(false);
@@ -151,7 +156,7 @@ export default function PreviewChat() {
         if (!trimmed || !socket) return;
 
         if (trimmed.length > MAX_LENGTH) {
-            setError(`Mensagem muito longa (máximo ${MAX_LENGTH} caracteres).`);
+            setError(t("preview.tooLong", { max: MAX_LENGTH }));
             return;
         }
 
@@ -210,7 +215,7 @@ export default function PreviewChat() {
                             #
                         </span>
                         <span className="font-semibold text-xs sm:text-sm text-on-surface">
-                            Preview: Sala Geral
+                            {t("preview.title")}
                         </span>
                     </div>
                 </div>
@@ -219,7 +224,7 @@ export default function PreviewChat() {
                         <span
                             className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-primary animate-ping" : "bg-error"}`}
                         />
-                        {onlineCount} online
+                        {t("preview.online", { count: onlineCount })}
                     </span>
                 </div>
             </div>
@@ -236,11 +241,10 @@ export default function PreviewChat() {
                     </div>
                     <div className="bg-surface-container-high border border-outline-variant rounded-2xl rounded-bl-sm px-4 py-2.5 text-on-surface shadow-sm">
                         <p className="leading-relaxed">
-                            Olá! Bem-vindo ao ConvoTalk. Experimente a latência
-                            ultra-baixa com WebSockets em tempo real.
+                            {t("preview.welcome")}
                         </p>
                         <div className="flex items-center justify-end mt-1 gap-1 text-[10px] text-on-surface-variant">
-                            <span>Agora</span>
+                            <span>{t("preview.now")}</span>
                         </div>
                     </div>
                 </div>
@@ -295,7 +299,7 @@ export default function PreviewChat() {
                             <span className="w-1.5 h-1.5 rounded-full bg-primary bounce-2" />
                             <span className="w-1.5 h-1.5 rounded-full bg-primary bounce-3" />
                         </div>
-                        <span>{typingName} está digitando...</span>
+                        <span>{t("preview.typing", { name: typingName })}</span>
                     </div>
                 )}
             </div>
@@ -371,14 +375,14 @@ export default function PreviewChat() {
                             setError("");
                             handleTyping();
                         }}
-                        placeholder="Digite uma mensagem em tempo real..."
+                        placeholder={t("preview.placeholder")}
                         maxLength={MAX_LENGTH + 100}
                         className="flex-1 bg-surface-container-high/60 border border-outline-variant/30 rounded-full px-4 py-2 text-xs text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary/50 transition-colors"
                     />
                     <button
                         type="submit"
                         disabled={!input.trim() || isOverLimit || !connected}
-                        aria-label="Enviar mensagem"
+                        aria-label={t("preview.send")}
                         className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary text-xs shadow-lg shadow-primary/20 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed"
                     >
                         <span className="material-symbols-outlined text-[16px]">

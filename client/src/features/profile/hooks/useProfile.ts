@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../../utils/errors";
 import type { Post, ProfileStats, PublicProfile } from "../../../types";
 import {
@@ -28,6 +29,7 @@ interface StatsSlice {
 }
 
 export function useProfile(userId: string | null) {
+    const { t } = useTranslation("profile");
     const [profileSlice, setProfileSlice] = useState<ProfileSlice | null>(null);
     const [statsSlice, setStatsSlice] = useState<StatsSlice | null>(null);
     const [reloadKey, setReloadKey] = useState(0);
@@ -56,7 +58,7 @@ export function useProfile(userId: string | null) {
                     error:
                         statusOf(err) === 404
                             ? null
-                            : getErrorMessage(err, "Erro ao carregar o perfil."),
+                            : getErrorMessage(err, t("page.loadError")),
                 });
             });
 
@@ -75,7 +77,7 @@ export function useProfile(userId: string | null) {
         return () => {
             active = false;
         };
-    }, [userId, reloadKey]);
+    }, [userId, reloadKey, t]);
 
     const reload = useCallback(() => {
         setReloadKey((key) => key + 1);
@@ -118,6 +120,7 @@ interface GallerySlice {
 }
 
 export function useProfileGallery(userId: string | null, refreshKey = 0) {
+    const { t } = useTranslation("profile");
     const [slice, setSlice] = useState<GallerySlice | null>(null);
 
     useEffect(() => {
@@ -136,14 +139,14 @@ export function useProfileGallery(userId: string | null, refreshKey = 0) {
                     userId,
                     refreshKey,
                     images: [],
-                    error: getErrorMessage(err, "Erro ao carregar a galeria."),
+                    error: getErrorMessage(err, t("gallery.loadError")),
                 });
             });
 
         return () => {
             active = false;
         };
-    }, [userId, refreshKey]);
+    }, [userId, refreshKey, t]);
 
     const current =
         slice && slice.userId === userId && slice.refreshKey === refreshKey

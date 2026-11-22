@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "../../../contexts/ToastContext";
 import { useSocket } from "../../../hooks/useSocket";
 import { formatTimeAgo } from "../../../utils/format";
-import { getCountryName } from "../../../utils/countries";
+import { countryName } from "../../../i18n/catalogs";
 import type { Post } from "../../../types";
 import Avatar from "../../../components/ui/Avatar";
 import ConfirmDialog from "../../../components/ui/ConfirmDialog";
@@ -35,6 +36,7 @@ export default function PostCard({
     onCommentCountChange,
     onOpenAuthor,
 }: PostCardProps) {
+    const { t } = useTranslation("feed");
     const { showToast } = useToast();
     const { onlineUsers } = useSocket();
     const [liking, setLiking] = useState(false);
@@ -67,7 +69,7 @@ export default function PostCard({
         } catch {
             showToast({
                 type: "error",
-                message: "Não foi possível atualizar a curtida.",
+                message: t("post.likeFailed"),
             });
         } finally {
             setLiking(false);
@@ -82,7 +84,7 @@ export default function PostCard({
         } catch {
             showToast({
                 type: "error",
-                message: "Não foi possível atualizar os posts salvos.",
+                message: t("post.saveFailed"),
             });
         } finally {
             setSaving(false);
@@ -97,7 +99,7 @@ export default function PostCard({
         } catch {
             showToast({
                 type: "error",
-                message: "Não foi possível registrar o voto.",
+                message: t("post.voteFailed"),
             });
         } finally {
             setVotingPoll(false);
@@ -112,13 +114,13 @@ export default function PostCard({
             if (result === "copied") {
                 showToast({
                     type: "success",
-                    message: "Link do post copiado.",
+                    message: t("post.shareCopied"),
                 });
             }
         } catch {
             showToast({
                 type: "error",
-                message: "Não foi possível compartilhar o post.",
+                message: t("post.shareFailed"),
             });
         } finally {
             setSharing(false);
@@ -130,10 +132,10 @@ export default function PostCard({
         setDeleting(true);
         try {
             await onDelete(post._id);
-            showToast({ type: "success", message: "Post excluído." });
+            showToast({ type: "success", message: t("post.deleted") });
             setConfirmOpen(false);
         } catch {
-            showToast({ type: "error", message: "Erro ao excluir o post." });
+            showToast({ type: "error", message: t("post.deleteError") });
         } finally {
             setDeleting(false);
         }
@@ -151,8 +153,10 @@ export default function PostCard({
                         disabled={!post.author}
                         aria-label={
                             post.author
-                                ? `Abrir perfil de ${post.author.name}`
-                                : "Autor indisponível"
+                                ? t("post.openProfileOf", {
+                                      name: post.author.name,
+                                  })
+                                : t("post.authorUnavailable")
                         }
                         className="relative shrink-0 rounded-full transition-opacity hover:opacity-90 disabled:cursor-default"
                     >
@@ -180,18 +184,18 @@ export default function PostCard({
                                 disabled={!post.author}
                                 className="max-w-full truncate text-left text-sm font-bold text-slate-900 hover:underline disabled:cursor-default disabled:hover:no-underline dark:text-noir-text-bright"
                             >
-                                {post.author?.name ?? "Usuário"}
+                                {post.author?.name ?? t("post.user")}
                             </button>
                             {post.author?.country && (
                                 <CountryFlag
                                     country={post.author.country}
-                                    name={getCountryName(post.author.country)}
+                                    name={countryName(post.author.country)}
                                     className="h-3 w-4"
                                 />
                             )}
                             {isWallAuthor && (
                                 <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
-                                    Autor
+                                    {t("post.author")}
                                 </span>
                             )}
                         </div>
@@ -221,14 +225,16 @@ export default function PostCard({
                             {post.edited && (
                                 <>
                                     <span aria-hidden="true">•</span>
-                                    <span className="font-sans">editado</span>
+                                    <span className="font-sans">
+                                        {t("post.edited")}
+                                    </span>
                                 </>
                             )}
                             {isWallPost && (
                                 <>
                                     <span aria-hidden="true">•</span>
                                     <span className="font-sans text-emerald-600 dark:text-emerald-400">
-                                        escreveu no mural
+                                        {t("post.wroteOnWall")}
                                     </span>
                                 </>
                             )}
@@ -240,8 +246,8 @@ export default function PostCard({
                     <button
                         type="button"
                         onClick={() => setConfirmOpen(true)}
-                        aria-label="Excluir post"
-                        title="Excluir post"
+                        aria-label={t("post.delete")}
+                        title={t("post.delete")}
                         className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-noir-text-muted dark:hover:bg-red-950/20 dark:hover:text-red-400"
                     >
                         <svg
@@ -294,7 +300,9 @@ export default function PostCard({
                     disabled={liking}
                     aria-pressed={post.likedByMe}
                     aria-label={
-                        post.likedByMe ? "Descurtir post" : "Curtir post"
+                        post.likedByMe
+                            ? t("post.unlikeAria")
+                            : t("post.likeAria")
                     }
                     className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 font-medium transition-colors disabled:opacity-60 ${
                         post.likedByMe
@@ -318,10 +326,10 @@ export default function PostCard({
                     </svg>
                     <span>
                         {post.likeCount > 0
-                            ? `${post.likeCount} ${
-                                  post.likeCount === 1 ? "curtida" : "curtidas"
-                              }`
-                            : "Curtir"}
+                            ? t("post.likeCount", {
+                                  count: post.likeCount,
+                              })
+                            : t("post.like")}
                     </span>
                 </button>
 
@@ -329,7 +337,11 @@ export default function PostCard({
                     type="button"
                     onClick={() => setCommentsOpen((open) => !open)}
                     aria-expanded={commentsOpen}
-                    aria-label={commentsOpen ? "Ocultar comentários" : "Comentar"}
+                    aria-label={
+                        commentsOpen
+                            ? t("post.hideCommentsAria")
+                            : t("post.commentAria")
+                    }
                     className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 font-medium transition-colors ${
                         commentsOpen
                             ? "text-emerald-700 dark:text-emerald-400"
@@ -352,12 +364,10 @@ export default function PostCard({
                     </svg>
                     <span>
                         {post.commentCount > 0
-                            ? `${post.commentCount} ${
-                                  post.commentCount === 1
-                                      ? "comentário"
-                                      : "comentários"
-                              }`
-                            : "Comentar"}
+                            ? t("post.commentCount", {
+                                  count: post.commentCount,
+                              })
+                            : t("post.comment")}
                     </span>
                 </button>
 
@@ -367,10 +377,14 @@ export default function PostCard({
                     disabled={saving}
                     aria-pressed={Boolean(post.savedByMe)}
                     aria-label={
-                        post.savedByMe ? "Remover dos salvos" : "Salvar post"
+                        post.savedByMe
+                            ? t("post.removeSaved")
+                            : t("post.savePost")
                     }
                     title={
-                        post.savedByMe ? "Remover dos salvos" : "Salvar post"
+                        post.savedByMe
+                            ? t("post.removeSaved")
+                            : t("post.savePost")
                     }
                     className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 font-medium transition-colors disabled:opacity-60 ${
                         post.savedByMe
@@ -392,15 +406,17 @@ export default function PostCard({
                             d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
                         />
                     </svg>
-                    <span>{post.savedByMe ? "Salvo" : "Salvar"}</span>
+                    <span>
+                        {post.savedByMe ? t("post.saved") : t("post.save")}
+                    </span>
                 </button>
 
                 <button
                     type="button"
                     onClick={handleShare}
                     disabled={sharing}
-                    aria-label="Compartilhar post"
-                    title="Compartilhar post"
+                    aria-label={t("post.share")}
+                    title={t("post.share")}
                     className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 font-medium transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:opacity-60 dark:hover:bg-noir-surface-alt dark:hover:text-noir-text-bright"
                 >
                     <svg
@@ -417,7 +433,7 @@ export default function PostCard({
                             d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
                         />
                     </svg>
-                    <span>Compartilhar</span>
+                    <span>{t("post.share")}</span>
                 </button>
             </footer>
 
@@ -436,13 +452,15 @@ export default function PostCard({
             {onDelete && (
                 <ConfirmDialog
                     isOpen={confirmOpen}
-                    title="Excluir post"
+                    title={t("post.deleteTitle")}
                     message={
                         isWallPost && !isOwner
-                            ? "Este post foi escrito no seu mural. Deseja excluí-lo?"
-                            : "Esta ação não pode ser desfeita. Deseja excluir este post?"
+                            ? t("post.deleteWallMessage")
+                            : t("post.deleteMessage")
                     }
-                    confirmLabel={deleting ? "Excluindo..." : "Excluir"}
+                    confirmLabel={
+                        deleting ? t("post.deleting") : t("post.deleteConfirm")
+                    }
                     danger
                     onConfirm={handleDelete}
                     onCancel={() => setConfirmOpen(false)}

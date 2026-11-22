@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 export type ProfileTab = "about" | "publications" | "gallery";
 
@@ -11,20 +12,20 @@ interface ProfileTabsProps {
     loading?: boolean;
 }
 
-const TABS: Array<{ id: ProfileTab; label: string; icon: string }> = [
+const TABS: Array<{ id: ProfileTab; labelKey: string; icon: string }> = [
     {
         id: "about",
-        label: "Sobre & Interesses",
+        labelKey: "tabs.about",
         icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
     },
     {
         id: "publications",
-        label: "Publicações",
+        labelKey: "tabs.publications",
         icon: "M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2zM7 8h10M7 12h10M7 16h6",
     },
     {
         id: "gallery",
-        label: "Galeria de Fotos",
+        labelKey: "tabs.gallery",
         icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
     },
 ];
@@ -37,6 +38,7 @@ export default function ProfileTabs({
     photoCount,
     loading = false,
 }: ProfileTabsProps) {
+    const { t } = useTranslation("profile");
     const tabRefs = useRef<Record<ProfileTab, HTMLButtonElement | null>>({
         about: null,
         publications: null,
@@ -58,7 +60,7 @@ export default function ProfileTabs({
     return (
         <div
             role="tablist"
-            aria-label="Seções do perfil"
+            aria-label={t("tabs.aria")}
             className="flex items-stretch gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm custom-scrollbar dark:border-noir-border dark:bg-noir-surface"
         >
             {TABS.map((tab, index) => {
@@ -113,7 +115,7 @@ export default function ProfileTabs({
                                 d={tab.icon}
                             />
                         </svg>
-                        <span>{tab.label}</span>
+                        <span>{t(tab.labelKey)}</span>
                         <span
                             className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
                                 selected

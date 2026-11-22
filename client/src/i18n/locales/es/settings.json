@@ -1,0 +1,133 @@
+{
+    "title": "Configuración",
+    "subtitle": "Gestiona tu cuenta, preferencias y seguridad.",
+    "categories": {
+        "account": "Cuenta y perfil",
+        "preferences": "Preferencias",
+        "advanced": "Avanzado"
+    },
+    "tabs": {
+        "account": "Cuenta",
+        "security": "Seguridad y acceso",
+        "sessions": "Sesiones activas",
+        "appearance": "Apariencia",
+        "language": "Idioma",
+        "notifications": "Notificaciones",
+        "blocked": "Usuarios bloqueados",
+        "danger": "Zona de peligro"
+    },
+    "tabDescriptions": {
+        "account": "Gestiona tu nombre y correo de acceso. La foto, el estado y los datos del perfil están en tu página de perfil.",
+        "security": "Mantén tu cuenta protegida cambiando tu contraseña con regularidad.",
+        "sessions": "Supervisa los navegadores y dispositivos conectados a tu cuenta de ConvoTalk.",
+        "appearance": "Cambia el tema de la interfaz para mayor comodidad visual.",
+        "language": "Elige el idioma de la interfaz. La preferencia se guarda en tu cuenta y se aplica en todos los dispositivos.",
+        "notifications": "Ajusta las alertas de sonido, los avisos del navegador y los contadores de mensajes.",
+        "blocked": "Consulta y gestiona la lista de usuarios bloqueados para interactuar contigo.",
+        "danger": "Acciones irreversibles relacionadas con el cierre y la eliminación de tu cuenta."
+    },
+    "theme": {
+        "title": "Apariencia",
+        "description": "Ajusta el tema visual de tu interfaz de chat.",
+        "darkMode": "Modo oscuro",
+        "darkHint": "Ahorra batería y reduce el brillo.",
+        "lightHint": "Interfaz clara para entornos bien iluminados."
+    },
+    "language": {
+        "title": "Idioma de la interfaz",
+        "description": "Elige el idioma en el que se muestra ConvoTalk. El cambio se aplica de inmediato."
+    },
+    "header": {
+        "back": "Volver al chat",
+        "backTitle": "Volver al área de chats",
+        "breadcrumbAria": "Ruta de navegación"
+    },
+    "dangerZone": {
+        "title": "Zona de peligro",
+        "description": "Las acciones de esta área son permanentes y no se pueden deshacer.",
+        "explanation": "Eliminar tu cuenta borrará permanentemente todos tus datos de cuenta, mensajes enviados, archivos multimedia y conversaciones de ConvoTalk.",
+        "deleteAccount": "Eliminar mi cuenta"
+    },
+    "profile": {
+        "title": "Cuenta",
+        "description": "Gestiona tu nombre y correo de acceso. La foto, el estado y demás datos están en tu página de perfil.",
+        "pendingPrefix": "Cambio de correo pendiente: confirma el enlace enviado a",
+        "pendingSuffix": ". Tu correo actual sigue activo hasta la confirmación.",
+        "emailChangeSuccess": "Confirma el nuevo correo haciendo clic en el enlace enviado a {{email}}. Tu correo actual sigue activo hasta la confirmación.",
+        "success": "¡Cuenta actualizada correctamente!",
+        "error": "No se pudo actualizar la cuenta",
+        "name": "Nombre",
+        "email": "Correo electrónico",
+        "verified": "Verificado",
+        "currentPassword": "Contraseña actual para confirmar",
+        "currentPasswordPlaceholder": "Introduce tu contraseña actual",
+        "emailHint": "Se enviará un enlace de confirmación al nuevo correo. Tu correo actual sigue activo hasta que confirmes.",
+        "save": "Guardar cambios",
+        "saving": "Guardando..."
+    },
+    "password": {
+        "title": "Cambiar contraseña",
+        "description": "Mantén tu cuenta protegida con una combinación segura de caracteres.",
+        "success": "¡Contraseña cambiada correctamente!",
+        "error": "No se pudo cambiar la contraseña",
+        "current": "Contraseña actual",
+        "new": "Nueva contraseña",
+        "confirm": "Confirmar nueva contraseña",
+        "show": "Mostrar contraseña",
+        "hide": "Ocultar contraseña",
+        "mismatch": "Las contraseñas no coinciden.",
+        "tooShort": "La nueva contraseña debe tener al menos 8 caracteres.",
+        "submit": "Cambiar contraseña",
+        "submitting": "Cambiando..."
+    },
+    "notifications": {
+        "title": "Notificaciones",
+        "description": "Ajusta cómo y cuándo recibes alertas en el sistema.",
+        "permissionDenied": "Las notificaciones están bloqueadas en la configuración de tu navegador. Para activarlas, permite las notificaciones para este sitio en las opciones del navegador.",
+        "soundTitle": "Sonido de notificación",
+        "soundDescription": "Reproduce un sonido cuando llega un mensaje nuevo.",
+        "browserTitle": "Notificaciones push / del navegador",
+        "browserDescription": "Recibe avisos de mensajes nuevos incluso en segundo plano o con la pestaña cerrada.",
+        "badgeTitle": "Contador en el título",
+        "badgeDescription": "Muestra el número de mensajes no leídos en el título de la pestaña."
+    },
+    "sessions": {
+        "title": "Sesiones activas",
+        "description": "Gestiona los dispositivos conectados a tu cuenta de ConvoTalk.",
+        "endAllAria": "Cerrar todas las demás sesiones",
+        "endAll": "Cerrar todas las demás",
+        "ending": "Cerrando...",
+        "end": "Cerrar",
+        "endAria": "Cerrar sesión {{device}}",
+        "current": "Actual",
+        "device": "Dispositivo",
+        "unknownIp": "IP desconocida",
+        "now": "Ahora mismo",
+        "mainDevice": "Dispositivo principal",
+        "empty": "No se encontraron sesiones activas.",
+        "removed": "Sesión cerrada correctamente.",
+        "removeError": "No se pudo cerrar la sesión.",
+        "removedAll": "Se cerraron todas las demás sesiones.",
+        "removeAllError": "No se pudieron cerrar las otras sesiones.",
+        "loadError": "No se pudieron cargar las sesiones."
+    },
+    "blocked": {
+        "title": "Usuarios bloqueados",
+        "description": "Los usuarios bloqueados no pueden enviarte mensajes ni iniciar conversaciones.",
+        "empty": "No has bloqueado a ningún usuario.",
+        "unblock": "Desbloquear",
+        "unblocked": "Usuario desbloqueado.",
+        "unblockError": "No se pudo desbloquear al usuario.",
+        "loadError": "No se pudieron cargar los usuarios bloqueados."
+    },
+    "deleteAccount": {
+        "title": "Eliminar cuenta definitivamente",
+        "description": "Esta acción es irreversible. Todas tus conversaciones, mensajes y archivos multimedia se eliminarán permanentemente de los servidores. Introduce tu contraseña para confirmar.",
+        "password": "Tu contraseña actual",
+        "passwordPlaceholder": "Introduce tu contraseña para confirmar",
+        "cancel": "Cancelar",
+        "confirm": "Eliminar cuenta",
+        "deleting": "Eliminando...",
+        "error": "No se pudo eliminar la cuenta"
+    }
+}

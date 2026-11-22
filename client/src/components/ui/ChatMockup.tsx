@@ -1,4 +1,8 @@
+import { useTranslation } from "react-i18next";
+
 export default function ChatMockup() {
+    const { t } = useTranslation("common");
+
     return (
         <div
             aria-hidden="true"
@@ -12,9 +16,9 @@ export default function ChatMockup() {
                 </div>
                 <div className="flex items-center gap-2 text-xs font-medium text-zinc-300">
                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span>Equipe ConvoTalk</span>
+                    <span>{t("mockup.team")}</span>
                     <span className="text-zinc-600">•</span>
-                    <span className="text-emerald-400/90 font-semibold">online</span>
+                    <span className="text-emerald-400/90 font-semibold">{t("mockup.online")}</span>
                 </div>
             </div>
 
@@ -29,7 +33,7 @@ export default function ChatMockup() {
                             <span className="text-[10px] text-zinc-500">14:32</span>
                         </div>
                         <div className="bg-[#1b271b]/80 border border-white/5 rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-zinc-200 max-w-sm shadow-sm">
-                            Fala time! O update em tempo real via WebSockets já foi aplicado com sucesso. 🚀
+                            {t("mockup.message1")}
                         </div>
                     </div>
                 </div>
@@ -37,7 +41,7 @@ export default function ChatMockup() {
                 <div className="flex items-end justify-end gap-2 pt-1">
                     <div className="space-y-1 flex flex-col items-end">
                         <div className="bg-[#00a84b] hover:bg-emerald-600 transition-colors text-white font-medium rounded-2xl rounded-br-sm px-4 py-2.5 max-w-xs shadow-lg shadow-emerald-950/40 text-left">
-                            Excelente! Mensagens instantâneas e chamadas funcionando perfeitamente.
+                            {t("mockup.message2")}
                         </div>
                         <div className="flex items-center gap-1 text-[10px] text-zinc-400">
                             <span>14:33</span>
@@ -59,14 +63,14 @@ export default function ChatMockup() {
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce [animation-delay:0.2s]" />
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce [animation-delay:0.4s]" />
                     </div>
-                    <span className="text-[11px] text-zinc-500 italic">Mariana está digitando...</span>
+                    <span className="text-[11px] text-zinc-500 italic">{t("mockup.typing")}</span>
                 </div>
             </div>
 
             <div className="bg-black/40 px-4 py-2.5 border-t border-white/5 flex items-center justify-between text-[11px] text-zinc-400">
                 <span className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    Conexão em tempo real ativa
+                    {t("mockup.connection")}
                 </span>
                 <span className="text-zinc-500">Socket.IO &amp; WebRTC</span>
             </div>

@@ -13,7 +13,7 @@ function loadFlag(code: string): Promise<FlagComponent> {
 
     const loader = FLAG_LOADERS[code];
     if (!loader) {
-        return Promise.reject(new Error(`Sem bandeira para o código ${code}`));
+        return Promise.reject(new Error(`No flag for code ${code}`));
     }
 
     const promise = loader()

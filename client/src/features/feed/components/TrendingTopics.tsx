@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { TrendingTopic } from "../../../types";
 
 interface TrendingTopicsProps {
@@ -15,9 +16,10 @@ export default function TrendingTopics({
     onRetry,
     onSelectTopic,
 }: TrendingTopicsProps) {
+    const { t } = useTranslation("feed");
     return (
         <section
-            aria-label="Tópicos em Alta"
+            aria-label={t("trending.aria")}
             className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-noir-border dark:bg-noir-surface sm:p-5"
         >
             <div className="flex items-center gap-2">
@@ -37,7 +39,7 @@ export default function TrendingTopics({
                     />
                 </svg>
                 <h2 className="text-sm font-bold tracking-wide text-slate-900 dark:text-noir-text-bright">
-                    Tópicos em Alta
+                    {t("trending.title")}
                 </h2>
             </div>
 
@@ -67,7 +69,7 @@ export default function TrendingTopics({
                                 onClick={onRetry}
                                 className="mt-2 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
                             >
-                                Tentar novamente
+                                {t("trending.retry")}
                             </button>
                         )}
                     </div>
@@ -75,7 +77,7 @@ export default function TrendingTopics({
 
                 {!loading && !error && topics.length === 0 && (
                     <p className="px-1 py-2 text-xs text-slate-500 dark:text-noir-text-muted">
-                        Nenhum tópico em alta nos últimos dias.
+                        {t("trending.empty")}
                     </p>
                 )}
 
@@ -84,15 +86,16 @@ export default function TrendingTopics({
                         key={topic.tag}
                         type="button"
                         onClick={() => onSelectTopic?.(topic.tag)}
-                        aria-label={`Buscar posts sobre ${topic.tag}`}
+                        aria-label={t("trending.searchTag", {
+                            tag: topic.tag,
+                        })}
                         className="w-full rounded-xl border border-slate-100 bg-slate-50 p-2 text-left transition-colors hover:border-emerald-500/30 hover:bg-emerald-50 dark:border-noir-border/50 dark:bg-noir-surface-alt/40 dark:hover:border-emerald-800/40 dark:hover:bg-emerald-950/20"
                     >
                         <p className="truncate text-xs font-semibold text-slate-900 dark:text-noir-text-bright">
                             {topic.tag}
                         </p>
                         <p className="text-[11px] text-slate-500 dark:text-noir-text-muted">
-                            {topic.count}{" "}
-                            {topic.count === 1 ? "publicação" : "publicações"}
+                            {t("trending.postCount", { count: topic.count })}
                         </p>
                     </button>
                 ))}

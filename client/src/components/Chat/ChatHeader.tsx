@@ -1,7 +1,8 @@
+import { useTranslation } from "react-i18next";
 import Avatar from "../ui/Avatar";
 import CountryFlag from "../ui/CountryFlag";
 import Tooltip from "../ui/Tooltip";
-import { getCountryName } from "../../utils/countries";
+import { countryName } from "../../i18n/catalogs";
 import { formatLastSeen } from "../../utils/formatLastSeen";
 import ChatHeaderActions from "./ChatHeaderActions";
 
@@ -60,15 +61,17 @@ export default function ChatHeader({
     onClearConversation,
     pinnedCount,
 }: ChatHeaderProps) {
+    const { t } = useTranslation("chat");
+
     return (
         <div className="min-h-16 px-2 sm:px-6 py-1.5 border-b border-noir-border bg-noir-surface/90 flex items-center justify-between gap-2">
             <h2 className="text-slate-900 font-semibold flex items-center gap-2 min-w-0 flex-1 dark:text-noir-text-bright">
                 {onOpenSidebar && (
-                    <Tooltip content="Abrir lista de conversas">
+                    <Tooltip content={t("header.openConversationList")}>
                         <button
                             onClick={onOpenSidebar}
                             className="p-2 rounded-lg transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt md:hidden shrink-0"
-                            aria-label="Abrir lista de conversas"
+                            aria-label={t("header.openConversationList")}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -97,8 +100,8 @@ export default function ChatHeader({
                     className="flex items-center gap-2 min-w-0 flex-1 text-left rounded-lg px-1.5 py-1 transition-colors hover:bg-slate-100 dark:hover:bg-noir-surface-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
                     title={
                         roomType === "direct"
-                            ? "Ver informações do usuário"
-                            : "Ver informações do grupo"
+                            ? t("header.userInfo")
+                            : t("header.groupInfo")
                     }
                 >
                     <Avatar
@@ -112,7 +115,7 @@ export default function ChatHeader({
                             {roomType === "direct" && otherCountry && (
                                 <CountryFlag
                                     country={otherCountry}
-                                    name={getCountryName(otherCountry)}
+                                    name={countryName(otherCountry)}
                                     className="w-5 h-4 shrink-0"
                                 />
                             )}
@@ -134,15 +137,19 @@ export default function ChatHeader({
                                     }
                                 >
                                     {isOtherOnline
-                                        ? "Online"
+                                        ? t("header.online")
                                         : formatLastSeen(otherUserLastSeen)}
                                 </span>
                             </span>
                         ) : (
                             <span className="text-xs font-normal dark:text-noir-text-muted">
                                 {onlineCount > 0
-                                    ? `${onlineCount} online`
-                                    : `${participantCount} participantes`}
+                                    ? t("header.onlineCount", {
+                                          count: onlineCount,
+                                      })
+                                    : t("header.participants", {
+                                          count: participantCount,
+                                      })}
                             </span>
                         )}
                         {roomType === "direct" && otherStatus && (

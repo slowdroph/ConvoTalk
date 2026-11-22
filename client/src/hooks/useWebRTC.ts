@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Socket } from "socket.io-client";
+import i18n from "../i18n";
 import { stopRingtone } from "../utils/sound";
 import api from "../services/api";
 import type { TurnCredentialsResponse } from "../../../shared/types";
@@ -159,7 +160,7 @@ export function useWebRTC({
                 if (phaseRef.current === "connecting") {
                     notifyRef.current?.(
                         "error",
-                        "Tempo limite de conexão excedido.",
+                        i18n.t("chat:webRTC.timeout"),
                     );
                     cleanup();
                 }
@@ -176,11 +177,11 @@ export function useWebRTC({
         async (type: CallType): Promise<MediaStream | null> => {
             if (!navigator.mediaDevices?.getUserMedia) {
                 console.error(
-                    "getUserMedia indisponível (contexto não seguro).",
+                    "getUserMedia unavailable (insecure context).",
                 );
                 notifyRef.current?.(
                     "error",
-                    "Acesso à câmera/microfone não disponível neste contexto. Acesse via HTTPS ou localhost.",
+                    i18n.t("chat:webRTC.insecureContext"),
                 );
                 return null;
             }
@@ -199,18 +200,18 @@ export function useWebRTC({
                 setLocalStream(stream);
                 return stream;
             } catch (error) {
-                console.error("getUserMedia falhou:", error);
+                console.error("getUserMedia failed:", error);
                 const name = error instanceof DOMException ? error.name : "";
                 const message =
                     name === "NotAllowedError"
-                        ? "Permissão de câmera/microfone negada. Permita o acesso nas configurações do navegador e tente novamente."
+                        ? i18n.t("chat:webRTC.permissionDenied")
                         : name === "NotFoundError"
                           ? type === "video"
-                              ? "Nenhuma câmera ou microfone foi encontrado."
-                              : "Nenhum microfone foi encontrado."
+                              ? i18n.t("chat:webRTC.noDevicesVideo")
+                              : i18n.t("chat:webRTC.noDevicesAudio")
                           : name === "NotReadableError"
-                            ? "A câmera/microfone está em uso por outro aplicativo."
-                            : "Não foi possível acessar câmera/microfone.";
+                            ? i18n.t("chat:webRTC.inUse")
+                            : i18n.t("chat:webRTC.genericDevice");
                 notifyRef.current?.("error", message);
                 return null;
             }
@@ -271,13 +272,16 @@ export function useWebRTC({
                             });
                     }
                 } else {
-                    notifyRef.current?.("error", "Conexão de chamada perdida.");
+                    notifyRef.current?.(
+                        "error",
+                        i18n.t("chat:webRTC.connectionLost"),
+                    );
                     cleanup();
                 }
             } else if (state === "disconnected") {
                 notifyRef.current?.(
                     "info",
-                    "Conexão instável, tentando reconectar...",
+                    i18n.t("chat:webRTC.unstable"),
                 );
             }
         };
@@ -376,7 +380,7 @@ export function useWebRTC({
         if (!stream) {
             notifyRef.current?.(
                 "error",
-                "Não foi possível acessar câmera/microfone. Tente novamente ou recuse a chamada.",
+                i18n.t("chat:webRTC.acceptFailed"),
             );
             return;
         }
@@ -476,7 +480,7 @@ export function useWebRTC({
 
         const handleRejected = (data: { callId: string; roomId: string }) => {
             if (data.callId !== callIdRef.current) return;
-            notifyRef.current?.("info", "Chamada não atendida.");
+            notifyRef.current?.("info", i18n.t("chat:webRTC.missed"));
             cleanup();
         };
 

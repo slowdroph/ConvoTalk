@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useSocket } from "../../hooks/useSocket";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
@@ -17,6 +18,7 @@ interface UserSearchProps {
 }
 
 export default function UserSearch({ onConversationCreated }: UserSearchProps) {
+    const { t } = useTranslation("chat");
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);
@@ -34,7 +36,7 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
 
         if (term.includes("@")) {
             setResults([]);
-            setError("Busque por nome ou #ID. Busca por email foi desativada.");
+            setError(t("sidebar.emailSearchDisabled"));
             setLoading(false);
             return;
         }
@@ -50,11 +52,11 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
             setError("");
         } catch (err: unknown) {
             setResults([]);
-            setError(getErrorMessage(err, "Erro ao buscar usuários"));
+            setError(getErrorMessage(err, t("sidebar.searchUsersError")));
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -77,7 +79,7 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
             setQuery("");
             setResults([]);
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao criar conversa"));
+            setError(getErrorMessage(err, t("sidebar.createConversationError")));
         }
     };
 
@@ -104,7 +106,7 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                     />
                 </svg>
-                Buscar usuário
+                {t("sidebar.searchUser")}
             </button>
         );
     }
@@ -122,7 +124,7 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
                         setQuery(e.target.value);
                         setError("");
                     }}
-                    placeholder="Nome ou #ID..."
+                    placeholder={t("sidebar.userSearchPlaceholder")}
                     maxLength={50}
                     autoComplete="off"
                     className="flex-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-base placeholder-zinc-500 focus:outline-none focus:border-green-500 transition-colors"
@@ -135,7 +137,7 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
                     }}
                     className="text-zinc-400 hover:text-white transition-colors text-sm px-2"
                 >
-                    Cancelar
+                    {t("common:actions.cancel")}
                 </button>
             </div>
 
@@ -146,7 +148,7 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
             )}
 
             {loading && (
-                <p className="text-zinc-500 text-xs mt-2 px-1">Buscando...</p>
+                <p className="text-zinc-500 text-xs mt-2 px-1">{t("sidebar.searching")}</p>
             )}
 
             {results.length > 0 && (
@@ -185,7 +187,7 @@ export default function UserSearch({ onConversationCreated }: UserSearchProps) {
 
             {query.length > 0 && !loading && results.length === 0 && (
                 <p className="text-zinc-500 text-xs mt-2 px-1">
-                    Nenhum usuário encontrado.
+                    {t("sidebar.noUsers")}
                 </p>
             )}
         </div>

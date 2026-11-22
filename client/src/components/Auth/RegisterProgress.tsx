@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 interface RegisterProgressProps {
     current: number;
     total: number;
@@ -7,21 +9,23 @@ export default function RegisterProgress({
     current,
     total,
 }: RegisterProgressProps) {
+    const { t } = useTranslation("auth");
     const percentage = Math.round((current / total) * 100);
+    const stepLabel = t("register.step", { current, total });
 
     return (
         <div className="space-y-2">
             <div className="flex items-center justify-between text-[11px] font-medium text-zinc-400">
-                <span>Criação de conta</span>
-                <span aria-live="polite">Etapa {current} de {total}</span>
+                <span>{t("register.progressLabel")}</span>
+                <span aria-live="polite">{stepLabel}</span>
             </div>
             <div
                 role="progressbar"
-                aria-label="Progresso do cadastro"
+                aria-label={t("register.progressAria")}
                 aria-valuemin={1}
                 aria-valuemax={total}
                 aria-valuenow={current}
-                aria-valuetext={`Etapa ${current} de ${total}`}
+                aria-valuetext={stepLabel}
                 className="h-1.5 w-full overflow-hidden rounded-full bg-white/10"
             >
                 <span

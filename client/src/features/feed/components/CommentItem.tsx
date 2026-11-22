@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { formatTimeAgo } from "../../../utils/format";
 import type { Comment } from "../../../types";
 import Avatar from "../../../components/ui/Avatar";
@@ -15,6 +16,7 @@ export default function CommentItem({
     onDelete,
     onOpenAuthor,
 }: CommentItemProps) {
+    const { t } = useTranslation("feed");
     const pending = comment._id.startsWith("temp-");
     const author = comment.author;
 
@@ -30,8 +32,8 @@ export default function CommentItem({
                 disabled={!author}
                 aria-label={
                     author
-                        ? `Abrir perfil de ${author.name}`
-                        : "Autor indisponível"
+                        ? t("comment.openProfileOf", { name: author.name })
+                        : t("comment.authorUnavailable")
                 }
                 className="shrink-0 rounded-full transition-opacity hover:opacity-90 disabled:cursor-default"
             >
@@ -50,7 +52,7 @@ export default function CommentItem({
                         disabled={!author}
                         className="max-w-full truncate text-left font-semibold text-slate-800 hover:underline disabled:cursor-default disabled:hover:no-underline dark:text-noir-text-bright"
                     >
-                        {author?.name ?? "Usuário"}
+                        {author?.name ?? t("comment.user")}
                     </button>
                     {author?.publicId && (
                         <span className="truncate font-mono text-[10px] text-slate-400 dark:text-noir-text-muted">
@@ -67,15 +69,19 @@ export default function CommentItem({
                         dateTime={comment.createdAt}
                         className="shrink-0 text-[11px] text-slate-500 dark:text-noir-text-muted"
                     >
-                        {pending ? "enviando..." : formatTimeAgo(comment.createdAt)}
+                        {pending
+                            ? t("comment.sending")
+                            : formatTimeAgo(comment.createdAt)}
                     </time>
 
                     {canDelete && !pending && (
                         <button
                             type="button"
                             onClick={() => onDelete(comment)}
-                            aria-label={`Excluir comentário de ${author?.name ?? "Usuário"}`}
-                            title="Excluir comentário"
+                            aria-label={t("comment.deleteOf", {
+                                name: author?.name ?? t("comment.user"),
+                            })}
+                            title={t("comment.deleteTitle")}
                             className="ml-auto shrink-0 rounded-md p-1 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-noir-text-muted dark:hover:bg-red-950/20 dark:hover:text-red-400"
                         >
                             <svg

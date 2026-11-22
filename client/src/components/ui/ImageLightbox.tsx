@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -19,6 +20,7 @@ export default function ImageLightbox({
     triggerLabel,
     children,
 }: ImageLightboxProps) {
+    const { t } = useTranslation("common");
     const [open, setOpen] = useState(false);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const closeRef = useRef<HTMLButtonElement>(null);
@@ -61,7 +63,7 @@ export default function ImageLightbox({
                 ref={triggerRef}
                 type="button"
                 onClick={() => setOpen(true)}
-                aria-label={triggerLabel ?? `Ampliar imagem ${alt}`}
+                aria-label={triggerLabel ?? t("imageLightbox.expand", { alt })}
                 className={className}
             >
                 {children ?? (
@@ -81,13 +83,13 @@ export default function ImageLightbox({
                         onClick={() => setOpen(false)}
                         role="dialog"
                         aria-modal="true"
-                        aria-label={`Imagem ${alt}`}
+                        aria-label={t("imageLightbox.dialog", { alt })}
                     >
                         <button
                             ref={closeRef}
                             type="button"
                             onClick={() => setOpen(false)}
-                            aria-label="Fechar imagem"
+                            aria-label={t("imageLightbox.close")}
                             className="absolute right-4 top-4 rounded-full bg-black/60 p-2 text-white transition-colors hover:bg-black/80"
                         >
                             <svg

@@ -26,6 +26,9 @@ export interface IUser extends Document {
     birthdate: Date | null;
     languages: string[];
     languageLevels: Record<string, string>;
+    preferences?: {
+        language?: "pt-BR" | "en" | "es" | "fr";
+    };
     blockedUsers: IUser["_id"][];
     createdAt: Date;
 }

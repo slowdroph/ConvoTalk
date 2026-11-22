@@ -116,7 +116,7 @@ export async function subscribeToPush(): Promise<boolean> {
         await api.post("/push/subscribe", payload);
         return true;
     } catch (error) {
-        console.error("Erro ao registrar push subscription:", error);
+        console.error("Failed to register push subscription:", error);
         return false;
     }
 }
@@ -140,7 +140,7 @@ export async function unsubscribeFromPush(): Promise<boolean> {
         }
         return true;
     } catch (error) {
-        console.error("Erro ao desinscrever de push:", error);
+        console.error("Failed to unsubscribe from push:", error);
         return false;
     }
 }

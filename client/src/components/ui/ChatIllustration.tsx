@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 const bubbleLines = [
     { width: "70%", offset: 0 },
     { width: "50%", offset: 8 },
@@ -75,6 +77,7 @@ function Avatar({
 }
 
 export default function ChatIllustration() {
+    const { t } = useTranslation("common");
     return (
         <div
             className="relative w-full max-w-md mx-auto select-none"
@@ -88,11 +91,11 @@ export default function ChatIllustration() {
                     <div className="ml-3 flex items-center gap-2">
                         <Avatar className="w-5 h-5" />
                         <span className="text-xs text-zinc-400 font-medium">
-                            Equipe
+                            {t("mockup.teamShort")}
                         </span>
                         <span className="text-[10px] text-green-400 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                            online
+                            {t("mockup.online")}
                         </span>
                     </div>
                 </div>

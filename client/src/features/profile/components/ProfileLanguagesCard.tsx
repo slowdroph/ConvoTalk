@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     DEFAULT_LANGUAGE_LEVEL,
     LANGUAGE_LEVEL_OPTIONS,
@@ -9,6 +10,11 @@ import {
     getLanguageOption,
     normalizeLanguageLevels,
 } from "@shared/profile";
+import {
+    languageLevelLabel,
+    languageRegionLabel,
+    spokenLanguageLabel,
+} from "../../../i18n/catalogs";
 import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
 import { filterOptions } from "../../../utils/options";
 import OptionSearch from "../../../components/ui/OptionSearch";
@@ -39,6 +45,7 @@ function LanguagesEditor({
     languageLevels?: Record<string, string>;
     editor: ProfileSectionEditor;
 }) {
+    const { t } = useTranslation("profile");
     const [draft, setDraft] = useState(languages);
     const [levels, setLevels] = useState<Record<string, string>>(() =>
         normalizeLanguageLevels(languages, languageLevels),
@@ -59,7 +66,7 @@ function LanguagesEditor({
         }
 
         if (draft.length >= MAX_LANGUAGES) {
-            setLocalError(`Escolha no máximo ${MAX_LANGUAGES} idiomas.`);
+            setLocalError(t("languagesCard.maxError", { max: MAX_LANGUAGES }));
             return;
         }
 
@@ -74,7 +81,7 @@ function LanguagesEditor({
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
         if (draft.length === 0) {
-            setLocalError("Selecione pelo menos um idioma.");
+            setLocalError(t("languagesCard.minError"));
             return;
         }
         await editor.save({ languages: draft, languageLevels: levels });
@@ -95,8 +102,8 @@ function LanguagesEditor({
                     <OptionSearch
                         value={query}
                         onChange={setQuery}
-                        placeholder="Buscar idiomas..."
-                        label="Buscar idiomas"
+                        placeholder={t("languagesCard.searchPlaceholder")}
+                        label={t("languagesCard.searchLabel")}
                     />
                 </div>
                 <span className="shrink-0 text-[11px] text-slate-400 dark:text-noir-text-muted">
@@ -107,7 +114,7 @@ function LanguagesEditor({
             {draft.length > 0 && (
                 <div className="mt-3 space-y-1.5">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700/80 dark:text-emerald-400/80">
-                        Selecionados · nível
+                        {t("languagesCard.selected")}
                     </p>
                     {draft.map((code) => {
                         const option = getLanguageOption(code);
@@ -121,11 +128,15 @@ function LanguagesEditor({
                                     <span aria-hidden="true">
                                         {option.emoji}
                                     </span>{" "}
-                                    {option.label}
+                                    {spokenLanguageLabel(option.id)}
                                 </span>
                                 <div className="flex shrink-0 items-center gap-1">
                                     <select
-                                        aria-label={`Nível de ${option.label}`}
+                                        aria-label={t("languagesCard.levelAria", {
+                                            language: spokenLanguageLabel(
+                                                option.id,
+                                            ),
+                                        })}
                                         value={
                                             levels[code] ??
                                             DEFAULT_LANGUAGE_LEVEL
@@ -144,7 +155,7 @@ function LanguagesEditor({
                                                 key={level.id}
                                                 value={level.id}
                                             >
-                                                {level.label}
+                                                {languageLevelLabel(level.id)}
                                             </option>
                                         ))}
                                     </select>
@@ -152,7 +163,11 @@ function LanguagesEditor({
                                         type="button"
                                         onClick={() => toggle(code)}
                                         disabled={editor.saving}
-                                        aria-label={`Remover ${option.label}`}
+                                        aria-label={t("languagesCard.removeAria", {
+                                            language: spokenLanguageLabel(
+                                                option.id,
+                                            ),
+                                        })}
                                         className="rounded p-1 text-slate-400 transition-colors hover:text-red-600 disabled:opacity-50 dark:hover:text-red-400"
                                     >
                                         <svg
@@ -182,7 +197,7 @@ function LanguagesEditor({
                 {groups.map((group) => (
                     <div key={group.region}>
                         <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-noir-text-muted">
-                            {group.region}
+                            {languageRegionLabel(group.region)}
                         </p>
                         <div className="flex flex-wrap gap-2">
                             {group.options.map((option) => (
@@ -197,7 +212,7 @@ function LanguagesEditor({
                                     <span aria-hidden="true">
                                         {option.emoji}
                                     </span>
-                                    {option.label}
+                                    {spokenLanguageLabel(option.id)}
                                 </button>
                             ))}
                         </div>
@@ -206,7 +221,7 @@ function LanguagesEditor({
 
                 {groups.length === 0 && (
                     <p className="rounded-lg border border-dashed border-slate-300 p-3 text-center text-xs text-slate-500 dark:border-noir-border dark:text-noir-text-muted">
-                        Nenhum idioma encontrado para “{query}”.
+                        {t("languagesCard.emptySearch", { query })}
                     </p>
                 )}
             </div>
@@ -215,7 +230,7 @@ function LanguagesEditor({
                 saving={editor.saving}
                 error={localError ?? editor.error}
                 onCancel={editor.cancel}
-                submitLabel="Salvar idiomas"
+                submitLabel={t("languagesCard.save")}
             />
         </form>
     );
@@ -228,6 +243,7 @@ export default function ProfileLanguagesCard({
     editor,
     className = "",
 }: ProfileLanguagesCardProps) {
+    const { t } = useTranslation("profile");
     const editing = editor.isEditing("languages");
     const levels = normalizeLanguageLevels(languages, languageLevels);
     const options = languages
@@ -238,7 +254,7 @@ export default function ProfileLanguagesCard({
 
     return (
         <section
-            aria-label="Idiomas falados"
+            aria-label={t("languagesCard.aria")}
             className={`px-5 py-4 ${className}`}
         >
             <div className="flex items-center justify-between gap-2">
@@ -259,7 +275,7 @@ export default function ProfileLanguagesCard({
                         />
                     </svg>
                     <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-noir-text-muted">
-                        Idiomas que falo
+                        {t("languagesCard.title")}
                     </h2>
                 </div>
                 <div className="flex items-center gap-2">
@@ -270,7 +286,7 @@ export default function ProfileLanguagesCard({
                     )}
                     {isSelf && !editing && (
                         <InlineEditButton
-                            label="Editar idiomas"
+                            label={t("languagesCard.editLabel")}
                             onClick={() => editor.start("languages")}
                         />
                     )}
@@ -304,17 +320,26 @@ export default function ProfileLanguagesCard({
                                             {option.emoji}
                                         </span>
                                         <span className="font-medium">
-                                            {option.label}
+                                            {spokenLanguageLabel(option.id)}
                                         </span>
                                     </div>
                                     <span className="text-[11px] text-slate-400 dark:text-noir-text-muted">
-                                        {level?.label ?? "Intermediário"}
+                                        {level
+                                            ? languageLevelLabel(level.id)
+                                            : t("languagesCard.defaultLevel")}
                                     </span>
                                 </div>
                                 <div
                                     className="mt-1.5 flex gap-1"
                                     role="img"
-                                    aria-label={`${option.label}: ${level?.label ?? "Intermediário"}`}
+                                    aria-label={t("languagesCard.levelSummary", {
+                                        language: spokenLanguageLabel(
+                                            option.id,
+                                        ),
+                                        level: level
+                                            ? languageLevelLabel(level.id)
+                                            : t("languagesCard.defaultLevel"),
+                                    })}
                                 >
                                     {[1, 2, 3, 4].map((step) => (
                                         <span
@@ -335,8 +360,8 @@ export default function ProfileLanguagesCard({
                 <div className="mt-3 rounded-xl border border-dashed border-slate-300 p-3 text-center dark:border-noir-border">
                     <p className="text-xs text-slate-500 dark:text-noir-text-muted">
                         {isSelf
-                            ? "Informe os idiomas que você fala para aparecerem no seu perfil."
-                            : "Nenhum idioma informado ainda."}
+                            ? t("languagesCard.emptySelf")
+                            : t("languagesCard.emptyOther")}
                     </p>
                     {isSelf && (
                         <button
@@ -344,7 +369,7 @@ export default function ProfileLanguagesCard({
                             onClick={() => editor.start("languages")}
                             className="mt-1.5 text-xs font-medium text-emerald-700 transition-colors hover:underline dark:text-emerald-400"
                         >
-                            Informar idiomas
+                            {t("languagesCard.select")}
                         </button>
                     )}
                 </div>

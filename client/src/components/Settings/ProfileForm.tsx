@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 
 export default function ProfileForm() {
+    const { t } = useTranslation("settings");
     const { user, updateUser } = useAuth();
     const [name, setName] = useState(user?.name || "");
     const [email, setEmail] = useState(user?.email || "");
@@ -30,15 +32,17 @@ export default function ProfileForm() {
             updateUser(data);
             if (emailChanged) {
                 setSuccess(
-                    `Confirme o novo email clicando no link enviado para ${data.pendingEmail || email}. Seu email atual continua ativo até a confirmação.`,
+                    t("profile.emailChangeSuccess", {
+                        email: data.pendingEmail || email,
+                    }),
                 );
                 setCurrentPassword("");
                 setEmail(user?.email || "");
             } else {
-                setSuccess("Conta atualizada com sucesso!");
+                setSuccess(t("profile.success"));
             }
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao atualizar a conta"));
+            setError(getErrorMessage(err, t("profile.error")));
         } finally {
             setProfileLoading(false);
         }
@@ -51,11 +55,10 @@ export default function ProfileForm() {
         <div className="space-y-6">
             <div className="border-b border-noir-border pb-4">
                 <h2 className="text-base font-semibold text-noir-text-bright">
-                    Conta
+                    {t("profile.title")}
                 </h2>
                 <p className="text-xs text-noir-text-muted mt-0.5">
-                    Gerencie seu nome e email de acesso. Foto, status e demais
-                    informações ficam no seu perfil.
+                    {t("profile.description")}
                 </p>
             </div>
 
@@ -65,8 +68,9 @@ export default function ProfileForm() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <span>
-                        Alteração de email pendente: confirme o link enviado para{" "}
-                        <strong className="text-amber-200">{user.pendingEmail}</strong>. Seu email atual continua ativo até a confirmação.
+                        {t("profile.pendingPrefix")}{" "}
+                        <strong className="text-amber-200">{user.pendingEmail}</strong>
+                        {t("profile.pendingSuffix")}
                     </span>
                 </div>
             )}
@@ -95,7 +99,7 @@ export default function ProfileForm() {
                         htmlFor="input-nome"
                         className="block text-xs font-medium text-noir-text-bright mb-1.5"
                     >
-                        Nome
+                        {t("profile.name")}
                     </label>
                     <input
                         type="text"
@@ -115,13 +119,13 @@ export default function ProfileForm() {
                             htmlFor="input-email"
                             className="block text-xs font-medium text-noir-text-bright"
                         >
-                            Email
+                            {t("profile.email")}
                         </label>
                         <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            Verificado
+                            {t("profile.verified")}
                         </span>
                     </div>
                     <input
@@ -142,7 +146,7 @@ export default function ProfileForm() {
                             htmlFor="currentPassword"
                             className="block text-xs font-medium text-noir-text-bright"
                         >
-                            Senha atual para confirmação
+                            {t("profile.currentPassword")}
                         </label>
                         <input
                             type="password"
@@ -152,11 +156,11 @@ export default function ProfileForm() {
                             onChange={(e) => setCurrentPassword(e.target.value)}
                             required
                             autoComplete="current-password"
-                            placeholder="Digite sua senha atual"
+                            placeholder={t("profile.currentPasswordPlaceholder")}
                             className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2 text-sm text-noir-text-bright focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition"
                         />
                         <p className="text-[11px] text-noir-text-muted">
-                            Um link de confirmação será enviado para o novo email. Seu email atual continua ativo até você confirmar.
+                            {t("profile.emailHint")}
                         </p>
                     </div>
                 )}
@@ -167,7 +171,7 @@ export default function ProfileForm() {
                         disabled={profileLoading}
                         className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs tracking-wide shadow-md shadow-emerald-500/20 transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
-                        {profileLoading ? "Salvando..." : "Salvar alterações"}
+                        {profileLoading ? t("profile.saving") : t("profile.save")}
                     </button>
                 </div>
             </form>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import { useAuth } from "../../hooks/useAuth";
@@ -30,6 +31,7 @@ export default function GroupSettings({
     onRoomUpdated,
     onRoomDeleted,
 }: GroupSettingsProps) {
+    const { t } = useTranslation("chat");
     const { user } = useAuth();
     const [name, setName] = useState(room.name);
     const [description, setDescription] = useState(room.description);
@@ -52,30 +54,33 @@ export default function GroupSettings({
     const isAdmin = (room.admins ?? []).some((a) => a._id === user?._id);
     const canEdit = isCreator || isAdmin;
 
-    const search = useCallback(async (term: string) => {
-        if (term.trim().length < 3) {
-            setResults([]);
-            return;
-        }
-        if (term.includes("@")) {
-            setResults([]);
-            setError("Busque por nome ou #ID. Busca por email foi desativada.");
-            setLoading(false);
-            return;
-        }
-        setLoading(true);
-        try {
-            const { data } = await api.get(
-                `/users/search?q=${encodeURIComponent(term)}`,
-            );
-            const list = Array.isArray(data) ? data : (data?.data ?? []);
-            setResults(list);
-        } catch {
-            setResults([]);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    const search = useCallback(
+        async (term: string) => {
+            if (term.trim().length < 3) {
+                setResults([]);
+                return;
+            }
+            if (term.includes("@")) {
+                setResults([]);
+                setError(t("group.searchEmailDisabled"));
+                setLoading(false);
+                return;
+            }
+            setLoading(true);
+            try {
+                const { data } = await api.get(
+                    `/users/search?q=${encodeURIComponent(term)}`,
+                );
+                const list = Array.isArray(data) ? data : (data?.data ?? []);
+                setResults(list);
+            } catch {
+                setResults([]);
+            } finally {
+                setLoading(false);
+            }
+        },
+        [t],
+    );
 
     const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
     const [prevRoomId, setPrevRoomId] = useState<string | null>(
@@ -122,7 +127,7 @@ export default function GroupSettings({
             setSaving(false);
         } catch (err: unknown) {
             setSaving(false);
-            setError(getErrorMessage(err, "Erro ao salvar o grupo"));
+            setError(getErrorMessage(err, t("group.saveError")));
         }
     };
 
@@ -136,7 +141,7 @@ export default function GroupSettings({
             setResults((prev) => prev.filter((r) => r._id !== userId));
             setQuery("");
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao adicionar membro"));
+            setError(getErrorMessage(err, t("group.addMemberError")));
         }
     };
 
@@ -148,7 +153,7 @@ export default function GroupSettings({
             );
             onRoomUpdated(data);
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao remover membro"));
+            setError(getErrorMessage(err, t("group.removeMemberError")));
         }
     };
 
@@ -160,7 +165,7 @@ export default function GroupSettings({
             });
             onRoomUpdated(data);
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao promover administrador"));
+            setError(getErrorMessage(err, t("group.promoteError")));
         }
     };
 
@@ -172,7 +177,7 @@ export default function GroupSettings({
             );
             onRoomUpdated(data);
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao rebaixar administrador"));
+            setError(getErrorMessage(err, t("group.demoteError")));
         }
     };
 
@@ -183,7 +188,7 @@ export default function GroupSettings({
         if (!file) return;
 
         if (file.size > 5 * 1024 * 1024) {
-            setError("A imagem deve ter no máximo 5MB.");
+            setError(t("group.avatarSizeError"));
             return;
         }
 
@@ -205,7 +210,7 @@ export default function GroupSettings({
             setAvatarPreview(null);
         } catch (err: unknown) {
             setAvatarPreview(null);
-            setError(getErrorMessage(err, "Erro ao fazer upload da imagem"));
+            setError(getErrorMessage(err, t("group.avatarUploadError")));
         } finally {
             setAvatarLoading(false);
         }
@@ -219,7 +224,7 @@ export default function GroupSettings({
             onRoomUpdated(data);
             setAvatarPreview(null);
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao remover avatar"));
+            setError(getErrorMessage(err, t("group.avatarRemoveError")));
         } finally {
             setAvatarLoading(false);
         }
@@ -285,7 +290,7 @@ export default function GroupSettings({
             onKeyDown={handleKeyDown}
             role="dialog"
             aria-modal="true"
-            aria-label="Configurações do grupo"
+            aria-label={t("group.settingsAria")}
         >
             <div
                 className="relative w-full max-w-xl bg-[#111711] border border-emerald-500/25 rounded-2xl p-6 text-noir-text-bright flex flex-col gap-5 overflow-hidden max-h-[90vh] shadow-2xl shadow-black/90"
@@ -318,17 +323,17 @@ export default function GroupSettings({
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white tracking-tight">
-                                Configurações do grupo
+                                {t("group.settingsTitle")}
                             </h2>
                             <p className="text-xs text-noir-text-muted mt-0.5">
-                                Gerencie foto, membros e privacidade.
+                                {t("group.settingsSubtitle")}
                             </p>
                         </div>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
-                        title="Fechar (ESC)"
+                        title={t("group.closeWithEsc")}
                         className="group flex items-center gap-1.5 p-1.5 rounded-lg text-noir-text-muted hover:text-white hover:bg-white/5 transition"
                     >
                         <kbd className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-black/40 border border-white/10 rounded text-noir-text-muted group-hover:text-noir-text-bright">
@@ -373,8 +378,8 @@ export default function GroupSettings({
                                 className="px-3 py-1.5 bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 text-emerald-300 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
                             >
                                 {avatarLoading
-                                    ? "Enviando..."
-                                    : "Alterar foto"}
+                                    ? t("group.uploading")
+                                    : t("group.changePhoto")}
                             </button>
                             {room.avatar && (
                                 <button
@@ -383,7 +388,7 @@ export default function GroupSettings({
                                     disabled={avatarLoading}
                                     className="px-3 py-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
                                 >
-                                    Remover
+                                    {t("group.removePhoto")}
                                 </button>
                             )}
                             <input
@@ -405,7 +410,7 @@ export default function GroupSettings({
                                     htmlFor="groupSettingsName"
                                     className="text-[11px] font-semibold tracking-wider text-noir-text-bright uppercase"
                                 >
-                                    Nome do grupo
+                                    {t("group.groupName")}
                                 </label>
                                 <span className="text-[10px] text-noir-text-muted font-mono">
                                     {name.length}/50
@@ -429,7 +434,7 @@ export default function GroupSettings({
                             htmlFor="groupSettingsDescription"
                             className="block text-[11px] font-semibold tracking-wider text-noir-text-muted uppercase mb-1.5"
                         >
-                            Descrição
+                            {t("group.description")}
                         </label>
                         <textarea
                             name="description"
@@ -438,25 +443,25 @@ export default function GroupSettings({
                             onChange={(e) => setDescription(e.target.value)}
                             maxLength={200}
                             rows={2}
-                            placeholder="Sobre o que é o grupo?"
+                            placeholder={t("group.descriptionPlaceholder")}
                             className="w-full bg-[#090f09] border border-white/10 rounded-xl px-3.5 py-2 text-sm text-noir-text-bright placeholder-noir-text-muted focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none resize-none transition"
                         />
                     </div>
 
                     <div>
                         <span className="block text-[11px] font-semibold tracking-wider text-noir-text-muted uppercase mb-1.5">
-                            Privacidade
+                            {t("group.privacy")}
                         </span>
                         <div className="grid grid-cols-2 gap-2.5">
                             {visibilityCard(
                                 "private",
-                                "Privado",
-                                "Apenas convidados",
+                                t("group.private"),
+                                t("group.privateHint"),
                             )}
                             {visibilityCard(
                                 "public",
-                                "Público",
-                                "Qualquer um entra",
+                                t("group.public"),
+                                t("group.publicHint"),
                             )}
                         </div>
                     </div>
@@ -466,7 +471,7 @@ export default function GroupSettings({
                             htmlFor="settingsAddMemberSearch"
                             className="block text-[11px] font-semibold tracking-wider text-noir-text-bright uppercase"
                         >
-                            Adicionar membro
+                            {t("group.addMember")}
                         </label>
                         <div className="relative">
                             <svg
@@ -489,7 +494,7 @@ export default function GroupSettings({
                                 id="settingsAddMemberSearch"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                placeholder="Buscar por nome ou #ID..."
+                                placeholder={t("group.searchPlaceholder")}
                                 maxLength={50}
                                 autoComplete="off"
                                 className="w-full bg-[#090f09] border border-emerald-500/40 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-noir-text-muted focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 focus:outline-none transition"
@@ -497,7 +502,7 @@ export default function GroupSettings({
                         </div>
                         {loading && (
                             <p className="text-noir-text-muted text-xs px-1">
-                                Buscando...
+                                {t("group.searching")}
                             </p>
                         )}
                         {results.length > 0 && (
@@ -534,8 +539,8 @@ export default function GroupSettings({
                                             </div>
                                             <span className="text-[11px] text-emerald-400 shrink-0">
                                                 {member
-                                                    ? "Já é membro"
-                                                    : "+ Adicionar"}
+                                                    ? t("group.alreadyMember")
+                                                    : t("group.add")}
                                             </span>
                                         </div>
                                     );
@@ -546,7 +551,9 @@ export default function GroupSettings({
 
                     <div>
                         <span className="block text-[11px] font-semibold tracking-wider text-noir-text-muted uppercase mb-1.5">
-                            Participantes ({participants.length})
+                            {t("group.participantsCount", {
+                                count: participants.length,
+                            })}
                         </span>
                         <ul className="border border-white/10 rounded-xl bg-[#090f09]/80 divide-y divide-white/5 overflow-hidden">
                             {participants.map((p: PublicUser) => (
@@ -565,15 +572,15 @@ export default function GroupSettings({
                                         </p>
                                         {p._id === room.createdBy ? (
                                             <p className="text-[11px] text-emerald-400">
-                                                Criador
+                                                {t("group.creator")}
                                             </p>
                                         ) : isAdminOf(p._id) ? (
                                             <p className="text-[11px] text-amber-400">
-                                                Administrador
+                                                {t("group.admin")}
                                             </p>
                                         ) : (
                                             <p className="text-[11px] text-noir-text-muted">
-                                                Membro
+                                                {t("group.member")}
                                             </p>
                                         )}
                                     </div>
@@ -584,7 +591,7 @@ export default function GroupSettings({
                                                 handleRemoveMember(p._id)
                                             }
                                             className="text-noir-text-muted hover:text-red-400 transition-colors p-1"
-                                            title="Remover do grupo"
+                                            title={t("group.removeFromGroup")}
                                         >
                                             <svg
                                                 className="h-4 w-4"
@@ -611,7 +618,7 @@ export default function GroupSettings({
                                                     handleDemoteAdmin(p._id)
                                                 }
                                                 className="text-noir-text-muted hover:text-amber-400 transition-colors p-1"
-                                                title="Rebaixar administrador"
+                                                title={t("group.demoteAdmin")}
                                             >
                                                 <svg
                                                     className="h-4 w-4"
@@ -634,7 +641,7 @@ export default function GroupSettings({
                                                     handlePromoteAdmin(p._id)
                                                 }
                                                 className="text-noir-text-muted hover:text-emerald-400 transition-colors p-1"
-                                                title="Promover a administrador"
+                                                title={t("group.promoteAdmin")}
                                             >
                                                 <svg
                                                     className="h-4 w-4"
@@ -663,7 +670,7 @@ export default function GroupSettings({
                                 onClick={() => setDeleteConfirm(true)}
                                 className="w-full px-4 py-2.5 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 font-medium rounded-xl transition-colors text-xs"
                             >
-                                Excluir grupo
+                                {t("group.deleteGroup")}
                             </button>
                         </div>
                     )}
@@ -671,11 +678,11 @@ export default function GroupSettings({
 
                 <footer className="border-t border-white/10 pt-4 mt-2 flex items-center justify-between">
                     <span className="text-xs text-noir-text-muted hidden sm:inline-block">
-                        Pressione{" "}
+                        {t("group.pressEscPrefix")}{" "}
                         <kbd className="px-1 py-0.5 bg-black/40 border border-white/10 rounded font-mono text-[10px] text-noir-text-muted">
                             esc
                         </kbd>{" "}
-                        para fechar
+                        {t("group.pressEscSuffix")}
                     </span>
                     <div className="flex items-center gap-2 ml-auto">
                         <button
@@ -683,7 +690,7 @@ export default function GroupSettings({
                             onClick={onClose}
                             className="px-4 py-2 rounded-xl text-xs font-medium text-noir-text-muted hover:text-white hover:bg-white/5 transition"
                         >
-                            Fechar
+                            {t("group.closeAction")}
                         </button>
                         <button
                             type="button"
@@ -693,7 +700,9 @@ export default function GroupSettings({
                             }
                             className="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 shadow-lg shadow-emerald-950/60"
                         >
-                            {saving ? "Salvando..." : "Salvar alterações"}
+                            {saving
+                                ? t("common:actions.saving")
+                                : t("group.saveChanges")}
                         </button>
                     </div>
                 </footer>
@@ -701,9 +710,11 @@ export default function GroupSettings({
 
             <ConfirmDialog
                 isOpen={deleteConfirm}
-                title="Excluir grupo"
-                message={`Tem certeza que deseja excluir "${room.name}"? Todas as mensagens serão removidas e isso não pode ser desfeito.`}
-                confirmLabel="Excluir"
+                title={t("group.deleteConfirmTitle")}
+                message={t("group.deleteConfirmMessage", {
+                    name: room.name,
+                })}
+                confirmLabel={t("group.deleteConfirmLabel")}
                 danger
                 onCancel={() => setDeleteConfirm(false)}
                 onConfirm={() => {

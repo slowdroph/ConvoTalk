@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../hooks/useAuth";
 import { useSocket } from "../../../hooks/useSocket";
 import { getErrorMessage } from "../../../utils/errors";
@@ -46,6 +47,7 @@ function mergeIncoming(current: Comment[], incoming: Comment): Comment[] {
 }
 
 export function usePostComments(postId: string, enabled: boolean) {
+    const { t } = useTranslation("feed");
     const { user } = useAuth();
     const { socket, connected } = useSocket();
     const [comments, setComments] = useState<Comment[]>([]);
@@ -94,14 +96,14 @@ export function usePostComments(postId: string, enabled: boolean) {
         } catch (err) {
             if (requestId !== requestIdRef.current) return;
             setError(
-                getErrorMessage(err, "Erro ao carregar os comentários."),
+                getErrorMessage(err, t("hooks.commentsLoadError")),
             );
         } finally {
             if (requestId === requestIdRef.current) {
                 setLoading(false);
             }
         }
-    }, [enabled, postId]);
+    }, [enabled, postId, t]);
 
     const loadMore = useCallback(async () => {
         if (!enabled || !postId || loadingMoreRef.current || !nextCursor) {
@@ -138,7 +140,7 @@ export function usePostComments(postId: string, enabled: boolean) {
             setError(
                 getErrorMessage(
                     err,
-                    "Erro ao carregar mais comentários.",
+                    t("hooks.commentsLoadMoreError"),
                 ),
             );
         } finally {
@@ -147,7 +149,7 @@ export function usePostComments(postId: string, enabled: boolean) {
                 setLoadingMore(false);
             }
         }
-    }, [enabled, nextCursor, postId]);
+    }, [enabled, nextCursor, postId, t]);
 
     const retryLoadMore = useCallback(() => {
         void loadMore();
@@ -197,7 +199,7 @@ export function usePostComments(postId: string, enabled: boolean) {
         async (content: string): Promise<number> => {
             const trimmed = content.trim();
             if (!postId || !trimmed) {
-                throw new Error("Escreva um comentário.");
+                throw new Error(t("hooks.commentEmpty"));
             }
 
             const clientCommentId = crypto.randomUUID();
@@ -250,13 +252,13 @@ export function usePostComments(postId: string, enabled: boolean) {
                 throw err;
             }
         },
-        [postId, user],
+        [postId, t, user],
     );
 
     const removeComment = useCallback(
         async (commentId: string): Promise<number> => {
             if (!postId) {
-                throw new Error("Post indisponível.");
+                throw new Error(t("hooks.postUnavailable"));
             }
 
             const removed = commentsRef.current.find(
@@ -280,7 +282,7 @@ export function usePostComments(postId: string, enabled: boolean) {
                 throw err;
             }
         },
-        [postId],
+        [postId, t],
     );
 
     return {

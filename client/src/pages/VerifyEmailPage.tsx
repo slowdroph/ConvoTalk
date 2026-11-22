@@ -1,15 +1,18 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
+import { getErrorMessage } from "../utils/errors";
 
 export default function VerifyEmailPage() {
+    const { t } = useTranslation("auth");
     const [searchParams] = useSearchParams();
     const token = searchParams.get("token");
     const [status, setStatus] = useState<"loading" | "success" | "error">(
         token ? "loading" : "error",
     );
     const [message, setMessage] = useState(
-        token ? "" : "Token de verificação não encontrado.",
+        token ? "" : t("verify.missingToken"),
     );
     const called = useRef(false);
 
@@ -19,23 +22,17 @@ export default function VerifyEmailPage() {
 
         const verify = async () => {
             try {
-                const { data } = await api.get(`/auth/verify/${token}`);
+                await api.get(`/auth/verify/${token}`);
                 setStatus("success");
-                setMessage(data.message);
+                setMessage(t("verify.successMessage"));
             } catch (err: unknown) {
                 setStatus("error");
-                const axiosErr = err as {
-                    response?: { data?: { message?: string } };
-                };
-                setMessage(
-                    axiosErr?.response?.data?.message ||
-                        "Erro ao verificar email. O token pode ser inválido ou ter expirado.",
-                );
+                setMessage(getErrorMessage(err, t("verify.error")));
             }
         };
 
         verify();
-    }, [token]);
+    }, [token, t]);
 
     return (
         <div className="min-h-dvh-fallback bg-zinc-950 flex items-center justify-center px-4">
@@ -45,7 +42,7 @@ export default function VerifyEmailPage() {
                         <>
                             <div className="w-16 h-16 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto" />
                             <h1 className="text-white text-lg font-semibold">
-                                Verificando seu email...
+                                {t("verify.loading")}
                             </h1>
                         </>
                     )}
@@ -69,14 +66,14 @@ export default function VerifyEmailPage() {
                                 </svg>
                             </div>
                             <h1 className="text-white text-lg font-semibold">
-                                Email verificado!
+                                {t("verify.successTitle")}
                             </h1>
                             <p className="text-zinc-400 text-sm">{message}</p>
                             <Link
                                 to="/login"
                                 className="block w-full py-3 bg-green-600 hover:bg-green-700 text-on-accent font-medium rounded-lg transition-colors text-sm"
                             >
-                                Ir para o login
+                                {t("verify.goToLogin")}
                             </Link>
                         </>
                     )}
@@ -100,14 +97,14 @@ export default function VerifyEmailPage() {
                                 </svg>
                             </div>
                             <h1 className="text-white text-lg font-semibold">
-                                Falha na verificação
+                                {t("verify.errorTitle")}
                             </h1>
                             <p className="text-zinc-400 text-sm">{message}</p>
                             <Link
                                 to="/login"
                                 className="block w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-lg transition-colors text-sm"
                             >
-                                Voltar para o login
+                                {t("verify.backToLogin")}
                             </Link>
                         </>
                     )}

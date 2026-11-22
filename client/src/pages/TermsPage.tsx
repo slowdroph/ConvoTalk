@@ -1,5 +1,7 @@
+import { useTranslation } from "react-i18next";
 import LegalLayout from "../components/LegalLayout";
 import SEO from "../components/SEO";
+import { getLocale } from "../i18n/formatters";
 
 interface SectionProps {
     icon: string;
@@ -54,154 +56,81 @@ function ProhibitedList({ items }: { items: string[] }) {
 }
 
 export default function TermsPage() {
-    const lastUpdated = new Date().toLocaleDateString("pt-BR", {
+    const { t } = useTranslation("legal");
+    const lastUpdated = new Date().toLocaleDateString(getLocale(), {
         day: "numeric",
         month: "long",
         year: "numeric",
     });
+    const prohibited = t("terms.s2Items", {
+        returnObjects: true,
+    }) as string[];
 
     return (
-        <LegalLayout title="Termos de Uso" lastUpdated={lastUpdated}>
+        <LegalLayout title={t("terms.title")} lastUpdated={lastUpdated}>
             <SEO
-                title="Termos de Uso"
-                description="Leia os termos de uso do ConvoTalk. Regras, responsabilidades e condicoes para utilizacao da plataforma."
+                title={t("terms.seoTitle")}
+                description={t("terms.seoDescription")}
                 canonical="/terms"
             />
             <div className="space-y-12">
+                <p className="rounded-lg border border-outline-variant bg-surface-container px-4 py-3 text-sm text-on-surface-variant">
+                    {t("notice")}
+                </p>
+
                 <Section
                     icon="lock"
-                    title="1. Privacidade e Proteção de Dados"
+                    title={t("terms.s1Title")}
                     highlighted
                 >
                     <p>
-                        A sua privacidade é uma prioridade do ConvoTalk. O
-                        tratamento dos seus dados pessoais é realizado em
-                        conformidade com a Lei Geral de Proteção de Dados (Lei
-                        nº 13.709/2018 - LGPD). Os detalhes completos sobre a
-                        coleta, o uso e a proteção das suas informações estão
-                        descritos na nossa{" "}
+                        {t("terms.s1Before")}{" "}
                         <a
                             href="/privacy"
                             className="text-primary hover:text-on-surface transition-colors"
                         >
-                            Política de Privacidade
+                            {t("terms.s1Link")}
                         </a>
-                        , que integra estes Termos.
+                        {t("terms.s1After")}
                     </p>
                 </Section>
 
-                <Section icon="gavel" title="2. Responsabilidades do Usuário">
-                    <p className="mb-4">
-                        Ao utilizar nossa plataforma, você se compromete a ter
-                        uma conduta apropriada e lícita. É estritamente proibido
-                        o uso do ConvoTalk para:
-                    </p>
-                    <ProhibitedList
-                        items={[
-                            "Distribuir conteúdo ilegal, difamatório, abusivo, violento ou discriminatório.",
-                            "Assediar, ameaçar ou intimidar outros usuários.",
-                            "Tentar violar as medidas de segurança da plataforma ou disseminar malware.",
-                            "Enviar mensagens em massa não solicitadas (spam) ou coletar dados de outros usuários sem consentimento.",
-                            "Publicar conteúdo que viole direitos de terceiros, incluindo direitos autorais e de imagem.",
-                            "Utilizar o serviço para finalidades ilícitas ou não autorizadas.",
-                        ]}
-                    />
+                <Section icon="gavel" title={t("terms.s2Title")}>
+                    <p className="mb-4">{t("terms.s2Intro")}</p>
+                    <ProhibitedList items={prohibited} />
                 </Section>
 
-                <Section icon="description" title="3. Conteúdo do Usuário">
-                    <p>
-                        Você mantém a titularidade dos conteúdos que publica no
-                        ConvoTalk, incluindo mensagens, arquivos e imagens. Ao
-                        publicar, você nos concede uma licença limitada para
-                        armazenar, processar e transmitir tais conteúdos com a
-                        finalidade exclusiva de operar e melhorar o serviço.
-                    </p>
-                    <p className="mt-4">
-                        Você é o único responsável pelos conteúdos que publica e
-                        pelo cumprimento da legislação aplicável.
-                    </p>
+                <Section icon="description" title={t("terms.s3Title")}>
+                    <p>{t("terms.s3Text1")}</p>
+                    <p className="mt-4">{t("terms.s3Text2")}</p>
                 </Section>
 
-                <Section icon="copyright" title="4. Propriedade Intelectual">
-                    <p>
-                        O ConvoTalk, incluindo seu nome, logotipo, código-fonte,
-                        design e demais elementos distintivos, é de titularidade
-                        exclusiva dos seus responsáveis. Nenhum elemento destes
-                        Termos concede a você qualquer direito de propriedade
-                        intelectual sobre o serviço.
-                    </p>
+                <Section icon="copyright" title={t("terms.s4Title")}>
+                    <p>{t("terms.s4Text")}</p>
                 </Section>
 
-                <Section
-                    icon="info"
-                    title="5. Disponibilidade e Isenção de Responsabilidade"
-                >
-                    <p>
-                        O ConvoTalk é fornecido "no estado em que se encontra",
-                        sem garantias de disponibilidade contínua, ausência de
-                        erros ou adequação a finalidades específicas. Não
-                        garantimos a entrega, integridade ou disponibilidade de
-                        mensagens, chamadas ou arquivos transmitidos pelo
-                        serviço.
-                    </p>
+                <Section icon="info" title={t("terms.s5Title")}>
+                    <p>{t("terms.s5Text")}</p>
                 </Section>
 
-                <Section
-                    icon="balance"
-                    title="6. Limitação de Responsabilidade"
-                >
-                    <p>
-                        Na máxima extensão permitida pela legislação aplicável,
-                        o ConvoTalk não será responsável por danos diretos,
-                        indiretos, incidentais ou consequenciais decorrentes do
-                        uso ou da impossibilidade de uso do serviço, incluindo
-                        perda de dados, interrupções de comunicação, conteúdo
-                        ofensivo enviado por outros usuários ou prejuízos
-                        resultantes de chamadas de áudio ou vídeo.
-                    </p>
+                <Section icon="balance" title={t("terms.s6Title")}>
+                    <p>{t("terms.s6Text")}</p>
                 </Section>
 
-                <Section icon="update" title="7. Alterações nos Termos">
-                    <p>
-                        O ConvoTalk reserva-se o direito de modificar estes
-                        Termos a qualquer momento. Notificaremos os usuários
-                        sobre mudanças significativas através da própria
-                        plataforma ou por e-mail com pelo menos 30 dias de
-                        antecedência antes que as novas condições entrem em
-                        vigor.
-                    </p>
+                <Section icon="update" title={t("terms.s7Title")}>
+                    <p>{t("terms.s7Text")}</p>
                 </Section>
 
-                <Section icon="logout" title="8. Rescisão">
-                    <p>
-                        Você pode encerrar sua conta a qualquer momento na
-                        página de Configurações, utilizando a opção "Excluir
-                        minha conta". Reservamo-nos o direito de suspender ou
-                        encerrar contas que violem estes Termos ou a legislação
-                        aplicável, com ou sem aviso prévio.
-                    </p>
+                <Section icon="logout" title={t("terms.s8Title")}>
+                    <p>{t("terms.s8Text")}</p>
                 </Section>
 
-                <Section icon="gavel" title="9. Lei Aplicável e Foro">
-                    <p>
-                        Estes Termos são regidos pelas leis da República
-                        Federativa do Brasil, em especial pelo Marco Civil da
-                        Internet (Lei nº 12.965/2014) e pela Lei Geral de
-                        Proteção de Dados (Lei nº 13.709/2018 - LGPD). As partes
-                        elegem o foro da comarca de domicílio do usuário para
-                        dirimir quaisquer controvérsias decorrentes destes
-                        Termos, sem prejuízo das disposições do Código de Defesa
-                        do Consumidor quando aplicáveis.
-                    </p>
+                <Section icon="gavel" title={t("terms.s9Title")}>
+                    <p>{t("terms.s9Text")}</p>
                 </Section>
 
-                <Section icon="mail" title="10. Contato">
-                    <p>
-                        Para dúvidas, solicitações ou reclamações sobre estes
-                        Termos, entre em contato conosco pelo e-mail de suporte
-                        disponibilizado na página inicial ou no menu de
-                        configurações.
-                    </p>
+                <Section icon="mail" title={t("terms.s10Title")}>
+                    <p>{t("terms.s10Text")}</p>
                 </Section>
             </div>
         </LegalLayout>

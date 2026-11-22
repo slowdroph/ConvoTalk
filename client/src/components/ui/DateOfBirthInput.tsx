@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     datePartsFromIso,
     type DateParts,
@@ -55,6 +56,7 @@ export default function DateOfBirthInput({
     className = DEFAULT_CLASS,
     required = false,
 }: DateOfBirthInputProps) {
+    const { t } = useTranslation("common");
     const [parts, setParts] = useState<DateParts>(() =>
         datePartsFromIso(value),
     );
@@ -131,7 +133,7 @@ export default function DateOfBirthInput({
                     type="text"
                     inputMode="numeric"
                     autoComplete="bday-day"
-                    aria-label="Dia"
+                    aria-label={t("dateOfBirth.day")}
                     placeholder="DD"
                     maxLength={2}
                     value={parts.day}
@@ -156,7 +158,7 @@ export default function DateOfBirthInput({
                     type="text"
                     inputMode="numeric"
                     autoComplete="bday-month"
-                    aria-label="Mês"
+                    aria-label={t("dateOfBirth.month")}
                     placeholder="MM"
                     maxLength={2}
                     value={parts.month}
@@ -180,7 +182,7 @@ export default function DateOfBirthInput({
                     type="text"
                     inputMode="numeric"
                     autoComplete="bday-year"
-                    aria-label="Ano"
+                    aria-label={t("dateOfBirth.year")}
                     placeholder="AAAA"
                     maxLength={4}
                     value={parts.year}

@@ -1,0 +1,133 @@
+{
+    "title": "Settings",
+    "subtitle": "Manage your account, preferences, and security.",
+    "categories": {
+        "account": "Account & Profile",
+        "preferences": "Preferences",
+        "advanced": "Advanced"
+    },
+    "tabs": {
+        "account": "Account",
+        "security": "Security & Access",
+        "sessions": "Active Sessions",
+        "appearance": "Appearance",
+        "language": "Language",
+        "notifications": "Notifications",
+        "blocked": "Blocked Users",
+        "danger": "Danger Zone"
+    },
+    "tabDescriptions": {
+        "account": "Manage your name and sign-in email. Your photo, status, and profile details are on your profile page.",
+        "security": "Keep your account protected by changing your password regularly.",
+        "sessions": "Monitor the browsers and devices connected to your ConvoTalk account.",
+        "appearance": "Switch the interface theme for better visual comfort.",
+        "language": "Choose the interface language. Your preference is saved to your account and applied on every device.",
+        "notifications": "Adjust sound alerts, browser notifications, and message counters.",
+        "blocked": "View and manage the list of users blocked from interacting with you.",
+        "danger": "Irreversible actions related to closing and deleting your account."
+    },
+    "theme": {
+        "title": "Appearance",
+        "description": "Adjust the visual theme of your chat interface.",
+        "darkMode": "Dark mode",
+        "darkHint": "Saves battery and reduces brightness.",
+        "lightHint": "Light interface for well-lit environments."
+    },
+    "language": {
+        "title": "Interface language",
+        "description": "Choose the language ConvoTalk is displayed in. The change applies immediately."
+    },
+    "header": {
+        "back": "Back to chat",
+        "backTitle": "Back to the chat area",
+        "breadcrumbAria": "Breadcrumb"
+    },
+    "dangerZone": {
+        "title": "Danger Zone",
+        "description": "Actions in this area are permanent and cannot be undone.",
+        "explanation": "Deleting your account permanently removes all your account data, sent messages, media, and conversations from ConvoTalk.",
+        "deleteAccount": "Delete my account"
+    },
+    "profile": {
+        "title": "Account",
+        "description": "Manage your name and sign-in email. Your photo, status, and other details are on your profile page.",
+        "pendingPrefix": "Pending email change: confirm the link sent to",
+        "pendingSuffix": ". Your current email stays active until confirmation.",
+        "emailChangeSuccess": "Confirm the new email by clicking the link sent to {{email}}. Your current email stays active until confirmation.",
+        "success": "Account updated successfully!",
+        "error": "Could not update your account",
+        "name": "Name",
+        "email": "Email",
+        "verified": "Verified",
+        "currentPassword": "Current password for confirmation",
+        "currentPasswordPlaceholder": "Enter your current password",
+        "emailHint": "A confirmation link will be sent to the new email. Your current email stays active until you confirm.",
+        "save": "Save changes",
+        "saving": "Saving..."
+    },
+    "password": {
+        "title": "Change Password",
+        "description": "Keep your account protected with a strong combination of characters.",
+        "success": "Password changed successfully!",
+        "error": "Could not change your password",
+        "current": "Current password",
+        "new": "New password",
+        "confirm": "Confirm new password",
+        "show": "Show password",
+        "hide": "Hide password",
+        "mismatch": "Passwords do not match.",
+        "tooShort": "The new password must be at least 8 characters.",
+        "submit": "Change password",
+        "submitting": "Changing..."
+    },
+    "notifications": {
+        "title": "Notifications",
+        "description": "Adjust how and when you receive alerts in the app.",
+        "permissionDenied": "Notifications are blocked in your browser settings. To enable them, allow notifications for this site in your browser options.",
+        "soundTitle": "Notification sound",
+        "soundDescription": "Plays a sound when a new message arrives.",
+        "browserTitle": "Push / Browser notifications",
+        "browserDescription": "Get notified about new messages even in the background or with the tab closed.",
+        "badgeTitle": "Title counter",
+        "badgeDescription": "Shows the number of unread messages in the tab title."
+    },
+    "sessions": {
+        "title": "Active Sessions",
+        "description": "Manage the devices connected to your ConvoTalk account.",
+        "endAllAria": "End all other sessions",
+        "endAll": "End all others",
+        "ending": "Ending...",
+        "end": "End",
+        "endAria": "End session {{device}}",
+        "current": "Current",
+        "device": "Device",
+        "unknownIp": "Unknown IP",
+        "now": "Just now",
+        "mainDevice": "Main device",
+        "empty": "No active sessions found.",
+        "removed": "Session ended successfully.",
+        "removeError": "Could not end the session.",
+        "removedAll": "All other sessions were ended.",
+        "removeAllError": "Could not end the other sessions.",
+        "loadError": "Could not load sessions."
+    },
+    "blocked": {
+        "title": "Blocked users",
+        "description": "Blocked users cannot send you messages or start conversations.",
+        "empty": "You haven't blocked any users.",
+        "unblock": "Unblock",
+        "unblocked": "User unblocked.",
+        "unblockError": "Could not unblock the user.",
+        "loadError": "Could not load blocked users."
+    },
+    "deleteAccount": {
+        "title": "Delete account permanently",
+        "description": "This action is irreversible. All your conversations, messages, and media will be permanently deleted from the servers. Enter your password to confirm.",
+        "password": "Your current password",
+        "passwordPlaceholder": "Enter your password to confirm",
+        "cancel": "Cancel",
+        "confirm": "Delete account",
+        "deleting": "Deleting...",
+        "error": "Could not delete your account"
+    }
+}

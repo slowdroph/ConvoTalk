@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../hooks/useAuth";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
@@ -12,6 +13,7 @@ export default function DeleteAccountModal({
     isOpen,
     onClose,
 }: DeleteAccountModalProps) {
+    const { t } = useTranslation("settings");
     const { logout } = useAuth();
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -28,7 +30,7 @@ export default function DeleteAccountModal({
             await api.delete("/user/account", { data: { password } });
             logout();
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao excluir conta"));
+            setError(getErrorMessage(err, t("deleteAccount.error")));
         } finally {
             setLoading(false);
         }
@@ -48,12 +50,12 @@ export default function DeleteAccountModal({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <h3 className="text-base font-semibold text-red-400">
-                        Excluir conta definitivamente
+                        {t("deleteAccount.title")}
                     </h3>
                 </div>
 
                 <p className="text-xs text-noir-text-muted leading-relaxed">
-                    Esta ação é irreversível. Todas as suas conversas, mensagens e mídias serão excluídas permanentemente dos servidores. Digite sua senha para confirmar.
+                    {t("deleteAccount.description")}
                 </p>
 
                 {error && (
@@ -71,14 +73,14 @@ export default function DeleteAccountModal({
                             htmlFor="password"
                             className="block text-xs font-medium text-noir-text-bright mb-1.5"
                         >
-                            Sua senha atual
+                            {t("deleteAccount.password")}
                         </label>
                         <input
                             type="password"
                             name="password"
                             id="password"
                             autoComplete="current-password"
-                            placeholder="Digite sua senha para confirmar"
+                            placeholder={t("deleteAccount.passwordPlaceholder")}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -93,14 +95,14 @@ export default function DeleteAccountModal({
                             className="flex-1 px-4 py-2.5 rounded-xl bg-noir-surface-alt hover:bg-noir-card text-xs font-medium text-noir-text-bright border border-noir-border-light transition cursor-pointer"
                             onClick={handleClose}
                         >
-                            Cancelar
+                            {t("deleteAccount.cancel")}
                         </button>
                         <button
                             type="submit"
                             className="flex-1 px-4 py-2.5 rounded-xl border border-red-800/80 bg-red-950/60 hover:bg-red-900/70 text-red-300 font-semibold text-xs transition duration-150 cursor-pointer disabled:opacity-50"
                             disabled={loading}
                         >
-                            {loading ? "Excluindo..." : "Excluir conta"}
+                            {loading ? t("deleteAccount.deleting") : t("deleteAccount.confirm")}
                         </button>
                     </div>
                 </form>

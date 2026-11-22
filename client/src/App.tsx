@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { useTranslation } from "react-i18next";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import { SocketProvider } from "./providers/SocketProvider";
@@ -23,11 +24,12 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 
 function LoadingScreen() {
+    const { t } = useTranslation("common");
     return (
         <div className="h-dvh-fallback bg-zinc-950 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
                 <div className="w-10 h-10 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-                <p className="text-zinc-500 text-sm">Carregando...</p>
+                <p className="text-zinc-500 text-sm">{t("actions.loading")}</p>
             </div>
         </div>
     );

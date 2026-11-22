@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
 import ChatWindow from "../components/Chat/ChatWindow";
@@ -30,6 +31,7 @@ export default function ChatPage() {
 }
 
 function ChatPageInner() {
+    const { t } = useTranslation("chat");
     const { roomId } = useParams();
     const navigate = useNavigate();
     const {
@@ -137,7 +139,7 @@ function ChatPageInner() {
             await api.delete(`/rooms/${roomId}`);
             removeRoom(roomId);
         } catch (error) {
-            console.error("Erro ao excluir conversa:", error);
+            console.error("Failed to delete conversation:", error);
         }
     };
 
@@ -203,7 +205,7 @@ function ChatPageInner() {
           )
         : null;
 
-    const callerName = callerParticipant?.name ?? "Usuário";
+    const callerName = callerParticipant?.name ?? t("page.userFallback");
     const callerAvatar = callerParticipant?.avatar;
 
     const otherUser = activeRoomData?.type === "direct"
@@ -239,7 +241,7 @@ function ChatPageInner() {
                             onClick={loadRooms}
                             className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-border dark:text-noir-text-bright"
                         >
-                            Tentar novamente
+                            {t("common:actions.retry")}
                         </button>
                     </div>
                 ) : activeRoomData ? (
@@ -270,11 +272,10 @@ function ChatPageInner() {
                     <div className="flex-1 flex flex-col gap-5 p-6 pt-8 overflow-y-auto min-h-0">
                         <div className="text-center">
                             <h3 className="text-slate-900 font-semibold dark:text-noir-text-bright">
-                                Nenhuma conversa ainda
+                                {t("page.noRoomsTitle")}
                             </h3>
                             <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1 dark:text-noir-text-muted">
-                                Comece uma nova conversa com alguém abaixo ou crie
-                                um grupo.
+                                {t("page.noRoomsDescription")}
                             </p>
                         </div>
                         <SuggestedUsers
@@ -298,7 +299,7 @@ function ChatPageInner() {
                                     d="M4 6h16M4 12h16M4 18h16"
                                 />
                             </svg>
-                            Abrir conversas
+                            {t("page.openConversations")}
                         </button>
                     </div>
                 ) : (
@@ -321,7 +322,7 @@ function ChatPageInner() {
                                     d="M4 6h16M4 12h16M4 18h16"
                                 />
                             </svg>
-                            Abrir conversas
+                            {t("page.openConversations")}
                         </button>
                     </div>
                 )}
@@ -353,7 +354,7 @@ function ChatPageInner() {
                 <CallModal
                     phase={webrtcState.phase}
                     callType={webrtcState.callType}
-                    remoteName={otherUser?.name ?? "Usuário"}
+                    remoteName={otherUser?.name ?? t("page.userFallback")}
                     remoteAvatar={otherUser?.avatar}
                     localName={user?.name}
                     localAvatar={user?.avatar}

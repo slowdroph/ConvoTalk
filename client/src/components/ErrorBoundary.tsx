@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react";
+import i18n from "../i18n";
 
 interface ErrorBoundaryProps {
     children: ReactNode;
@@ -19,7 +20,7 @@ export default class ErrorBoundary extends Component<
     }
 
     componentDidCatch(error: Error) {
-        console.error("Erro não tratado:", error);
+        console.error("Unhandled error:", error);
     }
 
     render() {
@@ -43,17 +44,16 @@ export default class ErrorBoundary extends Component<
                         </svg>
                     </div>
                     <h1 className="text-xl font-semibold text-white">
-                        Algo deu errado
+                        {i18n.t("common:errorBoundary.title")}
                     </h1>
                     <p className="text-zinc-500 text-sm max-w-md">
-                        Ocorreu um erro inesperado. Recarregue a página para
-                        continuar.
+                        {i18n.t("common:errorBoundary.description")}
                     </p>
                     <button
                         onClick={() => window.location.reload()}
                         className="px-6 py-3 bg-green-600 hover:bg-green-700 text-on-accent font-medium rounded-lg transition-colors"
                     >
-                        Recarregar
+                        {i18n.t("common:errorBoundary.reload")}
                     </button>
                 </div>
             );

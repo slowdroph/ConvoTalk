@@ -1,3 +1,4 @@
+import i18n from "../../i18n";
 import type { Post } from "../../types";
 
 export type SharePostResult = "shared" | "copied" | "dismissed";
@@ -13,8 +14,8 @@ export function buildPostUrl(postId: string): string {
 export async function sharePost(post: Post): Promise<SharePostResult> {
     const url = buildPostUrl(post._id);
     const title = post.author?.name
-        ? `Post de ${post.author.name} no ConvoTalk`
-        : "Post no ConvoTalk";
+        ? i18n.t("feed:share.titleWithAuthor", { name: post.author.name })
+        : i18n.t("feed:share.title");
 
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
         try {
@@ -32,7 +33,7 @@ export async function sharePost(post: Post): Promise<SharePostResult> {
     }
 
     if (!navigator.clipboard) {
-        throw new Error("Compartilhamento indisponível.");
+        throw new Error(i18n.t("feed:share.unavailable"));
     }
 
     await navigator.clipboard.writeText(url);

@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     getInterestOption,
     INTEREST_CATEGORIES,
     INTEREST_OPTIONS,
     MAX_INTERESTS,
 } from "@shared/interests";
+import { interestCategoryLabel, interestLabel } from "../../../i18n/catalogs";
 import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
 import { filterOptions } from "../../../utils/options";
 import OptionSearch from "../../../components/ui/OptionSearch";
@@ -47,7 +49,7 @@ function InterestChip({
             className={chipClass(selected)}
         >
             <span aria-hidden="true">{option.emoji}</span>
-            {option.label}
+            {interestLabel(option.id)}
         </button>
     );
 }
@@ -59,6 +61,7 @@ function InterestsEditor({
     interests: string[];
     editor: ProfileSectionEditor;
 }) {
+    const { t } = useTranslation("profile");
     const [draft, setDraft] = useState(interests);
     const [query, setQuery] = useState("");
     const [localError, setLocalError] = useState<string | null>(null);
@@ -73,7 +76,7 @@ function InterestsEditor({
         }
 
         if (draft.length >= MAX_INTERESTS) {
-            setLocalError(`Escolha no máximo ${MAX_INTERESTS} interesses.`);
+            setLocalError(t("interestsCard.maxError", { max: MAX_INTERESTS }));
             return;
         }
 
@@ -101,8 +104,8 @@ function InterestsEditor({
                     <OptionSearch
                         value={query}
                         onChange={setQuery}
-                        placeholder="Buscar interesses..."
-                        label="Buscar interesses"
+                        placeholder={t("interestsCard.searchPlaceholder")}
+                        label={t("interestsCard.searchLabel")}
                     />
                 </div>
                 <span className="shrink-0 text-[11px] text-slate-400 dark:text-noir-text-muted">
@@ -113,7 +116,7 @@ function InterestsEditor({
             {draft.length > 0 && (
                 <div className="mt-3">
                     <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700/80 dark:text-emerald-400/80">
-                        Selecionados
+                        {t("interestsCard.selected")}
                     </p>
                     <div className="flex flex-wrap gap-2">
                         {draft.map((id) => (
@@ -133,7 +136,7 @@ function InterestsEditor({
                 {groups.map((group) => (
                     <div key={group.category}>
                         <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-noir-text-muted">
-                            {group.category}
+                            {interestCategoryLabel(group.category)}
                         </p>
                         <div className="flex flex-wrap gap-2">
                             {group.options.map((option) => (
@@ -151,7 +154,7 @@ function InterestsEditor({
 
                 {groups.length === 0 && (
                     <p className="rounded-lg border border-dashed border-slate-300 p-3 text-center text-xs text-slate-500 dark:border-noir-border dark:text-noir-text-muted">
-                        Nenhum interesse encontrado para “{query}”.
+                        {t("interestsCard.emptySearch", { query })}
                     </p>
                 )}
             </div>
@@ -160,7 +163,7 @@ function InterestsEditor({
                 saving={editor.saving}
                 error={localError ?? editor.error}
                 onCancel={editor.cancel}
-                submitLabel="Salvar interesses"
+                submitLabel={t("interestsCard.save")}
             />
         </form>
     );
@@ -171,6 +174,7 @@ export default function ProfileInterestsCard({
     isSelf,
     editor,
 }: ProfileInterestsCardProps) {
+    const { t } = useTranslation("profile");
     const editing = editor.isEditing("interests");
     const options = interests
         .map((id) => getInterestOption(id))
@@ -180,7 +184,7 @@ export default function ProfileInterestsCard({
 
     return (
         <section
-            aria-label="Hobbies e interesses"
+            aria-label={t("interestsCard.aria")}
             className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-noir-border dark:bg-noir-surface"
         >
             <div className="flex items-center justify-between gap-2">
@@ -201,18 +205,21 @@ export default function ProfileInterestsCard({
                         />
                     </svg>
                     <h2 className="text-base font-bold text-slate-900 dark:text-noir-text-bright">
-                        Hobbies &amp; Interesses
+                        {t("interestsCard.title")}
                     </h2>
                 </div>
                 <div className="flex items-center gap-2">
                     {!editing && (
                         <span className="text-[11px] text-slate-400 dark:text-noir-text-muted">
-                            {options.length}/{MAX_INTERESTS} selecionados
+                            {t("interestsCard.count", {
+                                count: options.length,
+                                max: MAX_INTERESTS,
+                            })}
                         </span>
                     )}
                     {isSelf && !editing && (
                         <InlineEditButton
-                            label="Editar interesses"
+                            label={t("interestsCard.editLabel")}
                             onClick={() => editor.start("interests")}
                         />
                     )}
@@ -231,7 +238,9 @@ export default function ProfileInterestsCard({
                             <span aria-hidden="true" className="text-base">
                                 {option.emoji}
                             </span>
-                            <span className="font-medium">{option.label}</span>
+                            <span className="font-medium">
+                                {interestLabel(option.id)}
+                            </span>
                         </li>
                     ))}
                 </ul>
@@ -239,8 +248,10 @@ export default function ProfileInterestsCard({
                 <div className="mt-3 rounded-xl border border-dashed border-slate-300 p-4 text-center dark:border-noir-border">
                     <p className="text-xs text-slate-500 dark:text-noir-text-muted">
                         {isSelf
-                            ? `Escolha até ${MAX_INTERESTS} interesses para mostrar no seu perfil.`
-                            : "Nenhum interesse selecionado ainda."}
+                            ? t("interestsCard.emptySelf", {
+                                  max: MAX_INTERESTS,
+                              })
+                            : t("interestsCard.emptyOther")}
                     </p>
                     {isSelf && (
                         <button
@@ -248,7 +259,7 @@ export default function ProfileInterestsCard({
                             onClick={() => editor.start("interests")}
                             className="mt-2 text-xs font-medium text-emerald-700 transition-colors hover:underline dark:text-emerald-400"
                         >
-                            Selecionar interesses
+                            {t("interestsCard.select")}
                         </button>
                     )}
                 </div>

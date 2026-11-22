@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../utils/errors";
 import { reportSignupConversion } from "../../lib/ads";
-import { COUNTRIES } from "../../utils/countries";
 import {
     DEFAULT_LANGUAGE_LEVEL,
     GENDER_OPTIONS,
@@ -16,6 +16,13 @@ import {
 } from "@shared/profile";
 import api from "../../services/api";
 import { dateOfBirthError } from "../../utils/date";
+import {
+    genderLabel,
+    languageLevelLabel,
+    languageRegionLabel,
+    spokenLanguageLabel,
+} from "../../i18n/catalogs";
+import { useCountryOptions } from "../../hooks/useCountryOptions";
 import { filterOptions } from "../../utils/options";
 import CityCombobox from "../ui/CityCombobox";
 import DateOfBirthInput from "../ui/DateOfBirthInput";
@@ -26,10 +33,6 @@ import RegisterProgress from "./RegisterProgress";
 interface RegisterFormProps {
     onSwitchToLogin: () => void;
 }
-
-const sortedCountries = [...COUNTRIES].sort((a, b) =>
-    a.name.localeCompare(b.name, "pt-BR"),
-);
 
 const labelClass = "block text-xs font-semibold text-zinc-300";
 
@@ -46,24 +49,26 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const STEPS = [
     {
-        title: "Sua conta",
-        description: "Defina como você vai entrar no ConvoTalk.",
+        titleKey: "register.steps.account.title",
+        descriptionKey: "register.steps.account.description",
     },
     {
-        title: "Sobre você",
-        description: "Esses dados aparecem no seu perfil.",
+        titleKey: "register.steps.about.title",
+        descriptionKey: "register.steps.about.description",
     },
     {
-        title: "Onde você mora",
-        description: "Ajuda a encontrar pessoas por perto.",
+        titleKey: "register.steps.location.title",
+        descriptionKey: "register.steps.location.description",
     },
     {
-        title: "Idiomas e termos",
-        description: "Escolha os idiomas que você fala.",
+        titleKey: "register.steps.languages.title",
+        descriptionKey: "register.steps.languages.description",
     },
 ] as const;
 
 export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
+    const { t } = useTranslation("auth");
+    const countries = useCountryOptions();
     const { register } = useAuth();
     const [step, setStep] = useState(0);
     const [name, setName] = useState("");
@@ -83,6 +88,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
     const [resending, setResending] = useState(false);
     const [resendMessage, setResendMessage] = useState("");
+    const [resendIsError, setResendIsError] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [acceptedTerms, setAcceptedTerms] = useState(false);
 
@@ -134,14 +140,16 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     const validateStep = (index: number): string | null => {
         switch (index) {
             case 0:
-                if (name.trim().length < 2) return "Informe seu nome.";
-                if (!EMAIL_PATTERN.test(email.trim())) return "Email inválido.";
+                if (name.trim().length < 2)
+                    return t("register.validation.nameRequired");
+                if (!EMAIL_PATTERN.test(email.trim()))
+                    return t("register.validation.emailInvalid");
                 if (password.length < 8) {
-                    return "A senha deve ter pelo menos 8 caracteres.";
+                    return t("register.validation.passwordMin");
                 }
                 return null;
             case 1: {
-                if (!gender) return "Selecione seu gênero.";
+                if (!gender) return t("register.validation.genderRequired");
                 const birthdateError = dateOfBirthError(birthdate, {
                     minAge: MIN_AGE,
                     maxAge: MAX_AGE,
@@ -150,15 +158,16 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                 return null;
             }
             case 2:
-                if (!country) return "Selecione seu país.";
-                if (!city.trim()) return "Informe sua cidade.";
+                if (!country) return t("register.validation.countryRequired");
+                if (!city.trim())
+                    return t("register.validation.cityRequired");
                 return null;
             case 3:
                 if (languages.length === 0) {
-                    return "Selecione pelo menos um idioma.";
+                    return t("register.validation.languagesRequired");
                 }
                 if (!acceptedTerms) {
-                    return "Você precisa aceitar os Termos de Uso e a Política de Privacidade.";
+                    return t("register.validation.termsRequired");
                 }
                 return null;
             default:
@@ -207,7 +216,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             reportSignupConversion();
             setRegisteredEmail(email.trim());
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao criar conta"));
+            setError(getErrorMessage(err, t("register.error")));
         } finally {
             setLoading(false);
         }
@@ -223,15 +232,15 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         if (!registeredEmail) return;
         setResending(true);
         setResendMessage("");
+        setResendIsError(false);
         try {
             await api.post("/auth/resend-verification", {
                 email: registeredEmail,
             });
-            setResendMessage(
-                "Se o email for válido e ainda não confirmado, enviamos um novo link de confirmação.",
-            );
+            setResendMessage(t("login.resendSuccess"));
         } catch (err: unknown) {
-            setResendMessage(getErrorMessage(err, "Erro ao reenviar email"));
+            setResendMessage(getErrorMessage(err, t("login.resendError")));
+            setResendIsError(true);
         } finally {
             setResending(false);
         }
@@ -257,22 +266,22 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                     </svg>
                 </div>
                 <h2 className="text-white text-lg font-semibold">
-                    Verifique seu email
+                    {t("register.verifyTitle")}
                 </h2>
                 <p className="text-zinc-400 text-sm">
-                    Se o email for válido, enviamos um link de confirmação para{" "}
+                    {t("register.verifyDescription")}{" "}
                     <span className="text-white font-medium">
                         {registeredEmail}
                     </span>
                 </p>
                 <p className="text-zinc-500 text-xs">
-                    Clique no link no email para ativar sua conta.
+                    {t("register.verifyHint")}
                 </p>
 
                 {resendMessage && (
                     <div
                         className={`text-sm px-4 py-2 rounded-xl ${
-                            resendMessage.includes("Erro")
+                            resendIsError
                                 ? "bg-red-500/10 border border-red-500/50 text-red-400"
                                 : "bg-green-500/10 border border-green-500/50 text-green-400"
                         }`}
@@ -287,7 +296,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                     disabled={resending}
                     className="w-full py-3 bg-zinc-800/90 hover:bg-zinc-700 disabled:opacity-50 text-white font-medium rounded-xl transition-colors text-sm border border-white/10"
                 >
-                    {resending ? "Reenviando..." : "Reenviar email"}
+                    {resending ? t("login.resending") : t("register.resend")}
                 </button>
 
                 <button
@@ -295,7 +304,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                     onClick={onSwitchToLogin}
                     className="w-full py-3 px-4 bg-[#00a84b] hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all text-sm flex items-center justify-center gap-2"
                 >
-                    Ir para o login
+                    {t("register.goToLogin")}
                 </button>
             </div>
         );
@@ -321,10 +330,10 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                         tabIndex={-1}
                         className="text-base font-semibold text-white outline-none"
                     >
-                        {STEPS[step].title}
+                        {t(STEPS[step].titleKey)}
                     </h3>
                     <p className="text-xs text-zinc-400">
-                        {STEPS[step].description}
+                        {t(STEPS[step].descriptionKey)}
                     </p>
                 </div>
 
@@ -333,7 +342,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                         <>
                             <div className="space-y-1.5">
                                 <label htmlFor="name" className={labelClass}>
-                                    Nome
+                                    {t("register.fields.name")}
                                 </label>
                                 <div className="relative rounded-lg shadow-sm">
                                     <div className={fieldIconClass}>
@@ -357,8 +366,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         name="name"
                                         id="name"
                                         autoComplete="name"
-                                        placeholder="Seu nome"
-                                        aria-label="Nome"
+                                        placeholder={t("register.fields.namePlaceholder")}
+                                        aria-label={t("register.fields.name")}
                                         value={name}
                                         onChange={(e) => {
                                             setName(e.target.value);
@@ -376,7 +385,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                     htmlFor="register-email"
                                     className={labelClass}
                                 >
-                                    E-mail
+                                    {t("register.fields.email")}
                                 </label>
                                 <div className="relative rounded-lg shadow-sm">
                                     <div className={fieldIconClass}>
@@ -400,8 +409,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         name="email"
                                         id="register-email"
                                         autoComplete="email"
-                                        placeholder="seu@email.com"
-                                        aria-label="Email"
+                                        placeholder={t("register.fields.emailPlaceholder")}
+                                        aria-label={t("register.fields.email")}
                                         value={email}
                                         onChange={(e) => {
                                             setEmail(e.target.value);
@@ -419,7 +428,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                     htmlFor="register-password"
                                     className={labelClass}
                                 >
-                                    Senha
+                                    {t("register.fields.password")}
                                 </label>
                                 <div className="relative rounded-lg shadow-sm">
                                     <div className={fieldIconClass}>
@@ -443,8 +452,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         name="password"
                                         id="register-password"
                                         autoComplete="new-password"
-                                        placeholder="Mínimo 8 caracteres"
-                                        aria-label="Senha"
+                                        placeholder={t("register.fields.passwordPlaceholder")}
+                                        aria-label={t("register.fields.password")}
                                         value={password}
                                         onChange={(e) => {
                                             setPassword(e.target.value);
@@ -462,8 +471,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         }
                                         aria-label={
                                             showPassword
-                                                ? "Ocultar senha"
-                                                : "Mostrar senha"
+                                                ? t("login.hidePassword")
+                                                : t("login.showPassword")
                                         }
                                         className={`absolute inset-y-0 right-0 flex items-center pr-3.5 transition-colors focus:outline-none ${
                                             showPassword
@@ -516,7 +525,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         htmlFor="register-gender"
                                         className={labelClass}
                                     >
-                                        Gênero
+                                        {t("register.fields.gender")}
                                     </label>
                                     <select
                                         id="register-gender"
@@ -529,13 +538,15 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         required
                                         className={`${inputClass} cursor-pointer`}
                                     >
-                                        <option value="">Selecione</option>
+                                        <option value="">
+                                            {t("register.fields.select")}
+                                        </option>
                                         {GENDER_OPTIONS.map((option) => (
                                             <option
                                                 key={option.id}
                                                 value={option.id}
                                             >
-                                                {option.label}
+                                                {genderLabel(option.id)}
                                             </option>
                                         ))}
                                     </select>
@@ -546,7 +557,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         htmlFor="register-birthdate-day"
                                         className={labelClass}
                                     >
-                                        Data de nascimento
+                                        {t("register.fields.birthdate")}
                                     </label>
                                     <DateOfBirthInput
                                         id="register-birthdate"
@@ -563,8 +574,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                             </div>
 
                             <p className="text-[11px] leading-relaxed text-zinc-500">
-                                Mostramos apenas a sua idade no perfil — a data
-                                completa fica privada.
+                                {t("register.hints.birthdatePrivacy")}
                             </p>
                         </>
                     )}
@@ -577,7 +587,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         htmlFor="register-country"
                                         className={labelClass}
                                     >
-                                        País
+                                        {t("register.fields.country")}
                                     </label>
                                     <select
                                         id="register-country"
@@ -590,8 +600,10 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         required
                                         className={`${inputClass} cursor-pointer`}
                                     >
-                                        <option value="">Selecione</option>
-                                        {sortedCountries.map((option) => (
+                                        <option value="">
+                                            {t("register.fields.select")}
+                                        </option>
+                                        {countries.map((option) => (
                                             <option
                                                 key={option.code}
                                                 value={option.code}
@@ -607,7 +619,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         htmlFor="register-city"
                                         className={labelClass}
                                     >
-                                        Cidade
+                                        {t("register.fields.city")}
                                     </label>
                                     <CityCombobox
                                         id="register-city"
@@ -618,15 +630,14 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                         }}
                                         country={country || undefined}
                                         maxLength={80}
-                                        placeholder="Ex: São Paulo"
+                                        placeholder={t("register.fields.cityPlaceholder")}
                                         className={inputClass}
                                     />
                                 </div>
                             </div>
 
                             <p className="text-[11px] leading-relaxed text-zinc-500">
-                                Cidade e país aparecem no seu perfil para
-                                aproximar você de outras pessoas.
+                                {t("register.hints.location")}
                             </p>
                         </>
                     )}
@@ -636,7 +647,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-semibold text-zinc-300">
-                                        Idiomas que falo
+                                        {t("register.fields.spokenLanguages")}
                                     </span>
                                     <span className="text-[11px] text-zinc-500">
                                         {languages.length}/{MAX_LANGUAGES}
@@ -646,8 +657,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                 <OptionSearch
                                     value={languageQuery}
                                     onChange={setLanguageQuery}
-                                    placeholder="Buscar idiomas..."
-                                    label="Buscar idiomas"
+                                    placeholder={t("register.fields.languageSearchPlaceholder")}
+                                    label={t("register.fields.languageSearchLabel")}
                                     className="w-full rounded-lg border border-white/10 bg-[#131c13]/60 py-2 pl-8 pr-2.5 text-xs text-zinc-200 outline-none transition-colors placeholder:text-zinc-500 focus:border-emerald-500/50"
                                 />
 
@@ -655,7 +666,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                     {languageGroups.map((group) => (
                                         <div key={group.region}>
                                             <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-                                                {group.region}
+                                                {languageRegionLabel(group.region)}
                                             </p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {group.options.map((option) => {
@@ -684,7 +695,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                                             <span aria-hidden="true">
                                                                 {option.emoji}
                                                             </span>
-                                                            {option.label}
+                                                            {spokenLanguageLabel(option.id)}
                                                         </button>
                                                     );
                                                 })}
@@ -694,8 +705,9 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
                                     {languageGroups.length === 0 && (
                                         <p className="rounded-lg border border-dashed border-white/10 p-2.5 text-center text-[11px] text-zinc-500">
-                                            Nenhum idioma encontrado para “
-                                            {languageQuery}”.
+                                            {t("register.fields.noLanguages", {
+                                                query: languageQuery,
+                                            })}
                                         </p>
                                     )}
                                 </div>
@@ -703,7 +715,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                 {languages.length > 0 && (
                                     <div className="space-y-1.5 pt-1">
                                         <span className="text-[11px] text-zinc-500">
-                                            Nível em cada idioma
+                                            {t("register.fields.levelsTitle")}
                                         </span>
                                         {languages.map((code) => {
                                             const option =
@@ -718,10 +730,12 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                                         <span aria-hidden="true">
                                                             {option.emoji}
                                                         </span>{" "}
-                                                        {option.label}
+                                                        {spokenLanguageLabel(option.id)}
                                                     </span>
                                                     <select
-                                                        aria-label={`Nível de ${option.label}`}
+                                                        aria-label={t("register.fields.levelOf", {
+                                                            language: spokenLanguageLabel(option.id),
+                                                        })}
                                                         value={
                                                             languageLevels[
                                                                 code
@@ -752,7 +766,9 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                                                     }
                                                                 >
                                                                     {
-                                                                        level.label
+                                                                        languageLevelLabel(
+                                                                            level.id,
+                                                                        )
                                                                     }
                                                                 </option>
                                                             ),
@@ -778,25 +794,25 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                     className="mt-0.5 h-4 w-4 rounded border-white/10 bg-[#131c13] text-emerald-500 focus:ring-emerald-500/20 cursor-pointer"
                                 />
                                 <span className="text-zinc-400 text-xs leading-relaxed">
-                                    Li e aceito os{" "}
+                                    {t("register.terms.prefix")}{" "}
                                     <a
                                         href="/terms"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
                                     >
-                                        Termos de Uso
+                                        {t("register.terms.termsLink")}
                                     </a>{" "}
-                                    e a{" "}
+                                    {t("register.terms.and")}{" "}
                                     <a
                                         href="/privacy"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
                                     >
-                                        Política de Privacidade
+                                        {t("register.terms.privacyLink")}
                                     </a>
-                                    .
+                                    {t("register.terms.suffix")}
                                 </span>
                             </label>
                         </>
@@ -827,15 +843,15 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
                             />
                         </svg>
-                        Voltar
+                        {t("register.back")}
                     </button>
                 )}
                 <div className="min-w-0 flex-1">
                     <AuthSubmitButton
                         loading={loading}
                         disabled={isLastStep && !acceptedTerms}
-                        label={isLastStep ? "Criar conta" : "Continuar"}
-                        loadingLabel="Criando conta..."
+                        label={isLastStep ? t("register.submit") : t("register.next")}
+                        loadingLabel={t("register.loading")}
                     />
                 </div>
             </div>

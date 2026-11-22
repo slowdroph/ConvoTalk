@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { useSocket } from "../../../hooks/useSocket";
 import { getErrorMessage } from "../../../utils/errors";
 import type {
@@ -35,6 +36,7 @@ export default function SharedPostDialog({
     onOpenAuthor,
     onCommentCountChange,
 }: SharedPostDialogProps) {
+    const { t } = useTranslation("feed");
     const [post, setPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export default function SharedPostDialog({
             .catch((err: unknown) => {
                 if (requestId !== requestIdRef.current) return;
                 setError(
-                    getErrorMessage(err, "Erro ao carregar o post."),
+                    getErrorMessage(err, t("shared.loadError")),
                 );
             })
             .finally(() => {
@@ -71,7 +73,7 @@ export default function SharedPostDialog({
                     setLoading(false);
                 }
             });
-    }, [postId]);
+    }, [postId, t]);
 
     useEffect(() => {
         if (!postId) return;
@@ -198,7 +200,7 @@ export default function SharedPostDialog({
             onClick={onClose}
             role="dialog"
             aria-modal="true"
-            aria-label="Post compartilhado"
+            aria-label={t("shared.aria")}
         >
             <div
                 className="w-full max-w-xl"
@@ -206,13 +208,13 @@ export default function SharedPostDialog({
             >
                 <div className="mb-2 flex items-center justify-between gap-3 px-1">
                     <h2 className="text-sm font-semibold text-white">
-                        Post compartilhado
+                        {t("shared.title")}
                     </h2>
                     <button
                         ref={closeRef}
                         type="button"
                         onClick={onClose}
-                        aria-label="Fechar post compartilhado"
+                        aria-label={t("shared.closeAria")}
                         className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                     >
                         <svg
@@ -248,7 +250,7 @@ export default function SharedPostDialog({
                             onClick={onClose}
                             className="mt-3 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 dark:border-noir-border dark:text-noir-text-bright dark:hover:bg-noir-surface-alt"
                         >
-                            Fechar
+                            {t("shared.close")}
                         </button>
                     </div>
                 )}

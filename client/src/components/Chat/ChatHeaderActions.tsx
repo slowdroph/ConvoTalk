@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import DropdownMenu from "../ui/DropdownMenu";
 import Tooltip from "../ui/Tooltip";
 
@@ -41,6 +42,8 @@ export default function ChatHeaderActions({
     onClearConversation,
     pinnedCount = 0,
 }: ChatHeaderActionsProps) {
+    const { t } = useTranslation("chat");
+
     return (
         <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             {roomType === "direct" && (
@@ -48,15 +51,15 @@ export default function ChatHeaderActions({
                     <Tooltip
                         content={
                             callDisabled
-                                ? "Usuário indisponível"
-                                : "Chamada de voz"
+                                ? t("header.unavailable")
+                                : t("header.voiceCall")
                         }
                     >
                         <button
                             onClick={() => onStartCall("audio")}
                             disabled={callDisabled}
                             className={callButtonClass}
-                            aria-label="Chamada de voz"
+                            aria-label={t("header.voiceCall")}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -77,15 +80,15 @@ export default function ChatHeaderActions({
                     <Tooltip
                         content={
                             callDisabled
-                                ? "Usuário indisponível"
-                                : "Vídeo chamada"
+                                ? t("header.unavailable")
+                                : t("header.videoCall")
                         }
                     >
                         <button
                             onClick={() => onStartCall("video")}
                             disabled={callDisabled}
                             className={callButtonClass}
-                            aria-label="Vídeo chamada"
+                            aria-label={t("header.videoCall")}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -111,7 +114,7 @@ export default function ChatHeaderActions({
             )}
             <DropdownMenu
                 trigger={({ onClick, ...ariaProps }) => (
-                    <Tooltip content="Opções da conversa">
+                    <Tooltip content={t("actions.conversationOptions")}>
                         <button
                             onClick={onClick}
                             {...ariaProps}
@@ -162,11 +165,11 @@ export default function ChatHeaderActions({
                                             d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                                         />
                                     </svg>
-                                    <span>Chamada de voz</span>
+                                    <span>{t("header.voiceCall")}</span>
                                 </span>
                                 {callDisabled && (
                                     <span className="text-[10px] text-noir-text-muted">
-                                        Indisponível
+                                        {t("actions.unavailable")}
                                     </span>
                                 )}
                             </button>
@@ -190,11 +193,11 @@ export default function ChatHeaderActions({
                                             d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                                         />
                                     </svg>
-                                    <span>Vídeo chamada</span>
+                                    <span>{t("header.videoCall")}</span>
                                 </span>
                                 {callDisabled && (
                                     <span className="text-[10px] text-noir-text-muted">
-                                        Indisponível
+                                        {t("actions.unavailable")}
                                     </span>
                                 )}
                             </button>
@@ -228,7 +231,7 @@ export default function ChatHeaderActions({
                                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                                 />
                             </svg>
-                            <span>Buscar mensagens</span>
+                            <span>{t("actions.searchMessages")}</span>
                         </span>
                     </button>
                     <button
@@ -250,7 +253,7 @@ export default function ChatHeaderActions({
                                     d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
                                 />
                             </svg>
-                            <span>Mensagens fixadas</span>
+                            <span>{t("actions.pinnedMessages")}</span>
                         </span>
                         {pinnedCount > 0 && (
                             <span className="px-1.5 py-0.2 rounded-full bg-noir-surface border border-noir-border text-[10px] text-emerald-400 font-mono">
@@ -284,7 +287,7 @@ export default function ChatHeaderActions({
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                                 />
                             </svg>
-                            <span>Exportar conversa</span>
+                            <span>{t("actions.exportConversation")}</span>
                         </span>
                     </button>
                     {roomType === "group" && canManageGroup && (
@@ -313,7 +316,7 @@ export default function ChatHeaderActions({
                                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                                     />
                                 </svg>
-                                <span>Configurações do grupo</span>
+                                <span>{t("actions.groupSettings")}</span>
                             </span>
                         </button>
                     )}
@@ -346,8 +349,8 @@ export default function ChatHeaderActions({
                                 </svg>
                                 <span>
                                     {isBlocked
-                                        ? "Desbloquear usuário"
-                                        : "Bloquear usuário"}
+                                        ? t("actions.unblockUser")
+                                        : t("actions.blockUser")}
                                 </span>
                             </span>
                         </button>
@@ -371,7 +374,7 @@ export default function ChatHeaderActions({
                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                 />
                             </svg>
-                            <span>Limpar conversa</span>
+                            <span>{t("actions.clearConversation")}</span>
                         </span>
                     </button>
                 </div>

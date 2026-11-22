@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { PostPollPayload } from "../../../types";
 
 interface PostPollProps {
@@ -11,8 +12,9 @@ export default function PostPoll({
     voting = false,
     onVote,
 }: PostPollProps) {
+    const { t } = useTranslation("feed");
     return (
-        <div className="mt-3 space-y-2" aria-label="Enquete">
+        <div className="mt-3 space-y-2" aria-label={t("poll.aria")}>
             {poll.options.map((option) => {
                 const selected = poll.myVoteOptionId === option._id;
                 const percent =
@@ -29,8 +31,8 @@ export default function PostPoll({
                         aria-pressed={selected}
                         aria-label={
                             selected
-                                ? `Remover voto de ${option.text}`
-                                : `Votar em ${option.text}`
+                                ? t("poll.removeVote", { option: option.text })
+                                : t("poll.vote", { option: option.text })
                         }
                         className={`relative w-full overflow-hidden rounded-xl border text-left transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${
                             selected
@@ -79,11 +81,12 @@ export default function PostPoll({
             })}
 
             <p className="text-[11px] text-slate-500 dark:text-noir-text-muted">
-                {poll.totalVotes}{" "}
-                {poll.totalVotes === 1 ? "voto" : "votos"}
+                {poll.totalVotes === 1
+                    ? t("poll.voteCount_one", { count: poll.totalVotes })
+                    : t("poll.voteCount_other", { count: poll.totalVotes })}
                 {poll.myVoteOptionId
-                    ? " · Toque na opção para remover seu voto"
-                    : " · Escolha uma opção para votar"}
+                    ? t("poll.hintRemove")
+                    : t("poll.hintVote")}
             </p>
         </div>
     );

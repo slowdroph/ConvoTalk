@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import { useToast } from "../../contexts/ToastContext";
@@ -13,6 +14,7 @@ interface BlockedUser {
 }
 
 export default function BlockedUsers() {
+    const { t } = useTranslation("settings");
     const [users, setUsers] = useState<BlockedUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -26,14 +28,11 @@ export default function BlockedUsers() {
             })
             .catch((err) => {
                 setError(
-                    getErrorMessage(
-                        err,
-                        "Erro ao carregar usuários bloqueados.",
-                    ),
+                    getErrorMessage(err, t("blocked.loadError")),
                 );
             })
             .finally(() => setLoading(false));
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         load();
@@ -43,11 +42,11 @@ export default function BlockedUsers() {
         try {
             await api.delete(`/user/${id}/block`);
             setUsers((prev) => prev.filter((u) => u._id !== id));
-            showToast({ type: "info", message: "Usuário desbloqueado." });
+            showToast({ type: "info", message: t("blocked.unblocked") });
         } catch (err) {
             showToast({
                 type: "error",
-                message: getErrorMessage(err, "Erro ao desbloquear usuário."),
+                message: getErrorMessage(err, t("blocked.unblockError")),
             });
         }
     };
@@ -56,11 +55,10 @@ export default function BlockedUsers() {
         <div className="space-y-5">
             <div className="border-b border-noir-border pb-4">
                 <h2 className="text-base font-semibold text-noir-text-bright">
-                    Usuários bloqueados
+                    {t("blocked.title")}
                 </h2>
                 <p className="text-xs text-noir-text-muted mt-0.5">
-                    Usuários bloqueados não podem enviar mensagens a você nem
-                    iniciar conversas.
+                    {t("blocked.description")}
                 </p>
             </div>
 
@@ -106,7 +104,7 @@ export default function BlockedUsers() {
                         </svg>
                     </div>
                     <p className="text-xs text-noir-text-muted">
-                        Você não bloqueou nenhum usuário.
+                        {t("blocked.empty")}
                     </p>
                 </div>
             ) : (
@@ -135,7 +133,7 @@ export default function BlockedUsers() {
                                 onClick={() => handleUnblock(user._id)}
                                 className="px-3 py-1.5 rounded-lg bg-noir-surface-alt hover:bg-noir-card text-xs font-medium text-noir-text-bright border border-noir-border-light transition cursor-pointer shrink-0"
                             >
-                                Desbloquear
+                                {t("blocked.unblock")}
                             </button>
                         </li>
                     ))}

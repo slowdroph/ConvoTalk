@@ -1,4 +1,5 @@
 import { MAX_AGE, MIN_AGE, calculateAge } from "@shared/profile";
+import i18n from "../i18n";
 
 export interface DateParts {
     day: string;
@@ -48,14 +49,15 @@ export function dateOfBirthError(
     value: string,
     { minAge = MIN_AGE, maxAge = MAX_AGE }: DateOfBirthLimits = {},
 ): string | null {
-    if (!value) return "Informe sua data de nascimento.";
-    if (!isValidIsoDate(value)) return "Data de nascimento inválida.";
+    if (!value) return i18n.t("auth:validation.birthdateRequired");
+    if (!isValidIsoDate(value))
+        return i18n.t("auth:validation.birthdateInvalid");
 
     const age = calculateAge(value);
     if (age === null || age < minAge) {
-        return `É necessário ter pelo menos ${minAge} anos.`;
+        return i18n.t("auth:validation.minimumAge", { age: minAge });
     }
-    if (age > maxAge) return "Data de nascimento inválida.";
+    if (age > maxAge) return i18n.t("auth:validation.birthdateInvalid");
 
     return null;
 }

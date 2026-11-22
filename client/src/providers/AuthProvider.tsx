@@ -9,6 +9,8 @@ import api, {
 } from "../services/api";
 import { unsubscribeFromPush } from "../services/push";
 import type { RegisterInput, User } from "../contexts/AuthContext";
+import i18n from "../i18n";
+import { normalizeLanguage } from "@shared/i18n";
 
 const SESSION_FLAG_KEY = "chat_has_session";
 
@@ -105,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         async (input: RegisterInput) => {
             const { data } = await api.post("/auth/register", {
                 ...input,
+                language: normalizeLanguage(i18n.language),
                 acceptedTerms: true,
             });
             if (data.token) {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { CallPhase, CallType } from "../../hooks/useWebRTC";
 import Avatar from "../ui/Avatar";
 
@@ -121,6 +122,7 @@ export default function CallModal({
     onToggleMute,
     onToggleCamera,
 }: CallModalProps) {
+    const { t } = useTranslation("chat");
     const audioRef = useRef<HTMLAudioElement>(null);
 
     useEffect(() => {
@@ -157,7 +159,7 @@ export default function CallModal({
                                 {remoteName}
                             </p>
                             <p className="text-noir-text-muted text-sm">
-                                Conectando...
+                                {t("call.connecting")}
                             </p>
                         </div>
                     )}
@@ -172,7 +174,7 @@ export default function CallModal({
                             <div className="w-full h-full bg-noir-surface-alt flex items-center justify-center">
                                 <Avatar
                                     src={localAvatar}
-                                    name={localName ?? "Você"}
+                                    name={localName ?? t("call.you")}
                                     size="sm"
                                 />
                             </div>
@@ -188,25 +190,28 @@ export default function CallModal({
                         </p>
                         {phase === "incoming" && (
                             <p className="text-noir-text-muted text-sm mt-1">
-                                Chamada de {isVideo ? "vídeo" : "áudio"}{" "}
-                                recebida
+                                {t(
+                                    isVideo
+                                        ? "call.incomingVideo"
+                                        : "call.incomingAudio",
+                                )}
                             </p>
                         )}
                         {phase === "outgoing" && (
                             <p className="text-noir-text-muted text-sm mt-1">
                                 {isOtherOnline
-                                    ? "Chamando..."
-                                    : "Usuário indisponível no momento"}
+                                    ? t("call.calling")
+                                    : t("call.unavailable")}
                             </p>
                         )}
                         {phase === "connecting" && (
                             <p className="text-noir-text-muted text-sm mt-1">
-                                Conectando...
+                                {t("call.connecting")}
                             </p>
                         )}
                         {phase === "active" && (
                             <p className="text-noir-text-muted text-sm mt-1">
-                                Em chamada{" "}
+                                {t("call.active")}{" "}
                                 {callStartTime && (
                                     <CallDuration startTime={callStartTime} />
                                 )}
@@ -237,7 +242,7 @@ export default function CallModal({
                         <ControlButton
                             onClick={onReject}
                             danger
-                            label="Recusar"
+                            label={t("call.reject")}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -256,7 +261,7 @@ export default function CallModal({
                         </ControlButton>
                         <ControlButton
                             onClick={onAccept}
-                            label="Aceitar"
+                            label={t("call.accept")}
                             active
                         >
                             <svg
@@ -283,7 +288,7 @@ export default function CallModal({
                                     onClick={onToggleMute}
                                     active={muted}
                                     label={
-                                        muted ? "Ativar microfone" : "Silenciar"
+                                        muted ? t("call.unmute") : t("call.mute")
                                     }
                                 >
                                     {muted ? (
@@ -330,8 +335,8 @@ export default function CallModal({
                                         active={cameraOff}
                                         label={
                                             cameraOff
-                                                ? "Ligar câmera"
-                                                : "Desligar câmera"
+                                                ? t("call.cameraOn")
+                                                : t("call.cameraOff")
                                         }
                                     >
                                         {cameraOff ? (
@@ -375,7 +380,7 @@ export default function CallModal({
                                 )}
                             </>
                         )}
-                        <ControlButton onClick={onEnd} danger label="Encerrar">
+                        <ControlButton onClick={onEnd} danger label={t("call.end")}>
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 className="h-6 w-6 rotate-[135deg]"

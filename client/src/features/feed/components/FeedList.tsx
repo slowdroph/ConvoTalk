@@ -1,32 +1,33 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import type { Post } from "../../../types";
 import type { FeedFilter } from "../services/feedApi";
 import PostCard from "./PostCard";
 import PostSkeleton from "./PostSkeleton";
 
-const EMPTY_STATE: Record<
+const EMPTY_STATE_KEYS: Record<
     FeedFilter,
-    { title: string; description: string }
+    { titleKey: string; descriptionKey: string }
 > = {
     all: {
-        title: "Nenhum post ainda",
-        description: "Seja a primeira pessoa a compartilhar algo no feed.",
+        titleKey: "list.emptyAllTitle",
+        descriptionKey: "list.emptyAllDescription",
     },
     popular: {
-        title: "Nenhum post popular ainda",
-        description: "Curta e interaja para destacar as publicações.",
+        titleKey: "list.emptyPopularTitle",
+        descriptionKey: "list.emptyPopularDescription",
     },
     media: {
-        title: "Nenhuma mídia publicada ainda",
-        description: "Posts com fotos e imagens aparecerão aqui.",
+        titleKey: "list.emptyMediaTitle",
+        descriptionKey: "list.emptyMediaDescription",
     },
     mine: {
-        title: "Você ainda não publicou nada",
-        description: "Compartilhe sua primeira ideia com a comunidade.",
+        titleKey: "list.emptyMineTitle",
+        descriptionKey: "list.emptyMineDescription",
     },
     saved: {
-        title: "Nenhum post salvo",
-        description: "Salve posts para encontrá-los rapidamente aqui.",
+        titleKey: "list.emptySavedTitle",
+        descriptionKey: "list.emptySavedDescription",
     },
 };
 
@@ -64,7 +65,7 @@ export default function FeedList({
     filter = "all",
     query = "",
     emptyState,
-    endLabel = "Você chegou ao fim do feed.",
+    endLabel,
     onLoadMore,
     onRetry,
     onRetryMore,
@@ -75,6 +76,7 @@ export default function FeedList({
     onCommentCountChange,
     onOpenAuthor,
 }: FeedListProps) {
+    const { t } = useTranslation("feed");
     const sentinelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -113,7 +115,7 @@ export default function FeedList({
                     onClick={onRetry}
                     className="rounded-lg border border-slate-300 bg-slate-100 px-4 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-200 dark:border-noir-border dark:bg-noir-surface-alt dark:text-noir-text-bright dark:hover:bg-noir-border"
                 >
-                    Tentar novamente
+                    {t("list.retry")}
                 </button>
             </div>
         );
@@ -123,10 +125,17 @@ export default function FeedList({
         const trimmedQuery = query.trim();
         const empty = trimmedQuery
             ? {
-                  title: "Nenhum post encontrado",
-                  description: `Nada corresponde a "${trimmedQuery}".`,
+                  title: t("list.emptySearchTitle"),
+                  description: t("list.emptySearchDescription", {
+                      query: trimmedQuery,
+                  }),
               }
-            : (emptyState ?? EMPTY_STATE[filter]);
+            : emptyState
+              ? emptyState
+              : {
+                    title: t(EMPTY_STATE_KEYS[filter].titleKey),
+                    description: t(EMPTY_STATE_KEYS[filter].descriptionKey),
+                };
         return (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center dark:border-noir-border dark:bg-noir-surface">
                 <p className="text-sm font-medium text-slate-700 dark:text-noir-text-bright">
@@ -174,14 +183,14 @@ export default function FeedList({
                         onClick={onRetryMore}
                         className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
                     >
-                        Tentar novamente
+                        {t("list.retry")}
                     </button>
                 </div>
             )}
 
             {!hasMore && !loadingMore && posts.length > 0 && (
                 <p className="py-4 text-center text-xs text-slate-400 dark:text-noir-text-muted">
-                    {endLabel}
+                    {endLabel ?? t("list.end")}
                 </p>
             )}
         </div>

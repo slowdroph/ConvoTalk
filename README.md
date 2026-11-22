@@ -74,6 +74,29 @@ ConvoTalk is a production-grade chat platform featuring real-time messaging with
 - Loading skeletons, error boundaries and toast notifications
 - Progressive Web App: installable, service worker, offline-ready shell
 - Landing page with a live interactive preview chat
+- Multi-language interface: Portuguese (pt-BR), English, Spanish and French
+
+## Internationalization
+
+The interface is available in Brazilian Portuguese (`pt-BR`, default), English
+(`en`, key fallback), Spanish (`es`) and French (`fr`). Language resolution uses
+the following priority:
+
+1. The account preference (`preferences.language`), when authenticated.
+2. The language previously chosen on this device (`localStorage`).
+3. The browser language.
+4. `pt-BR`.
+
+Switching the language is immediate and does not reload the page. Signed-in
+users have their choice persisted to the account; unauthenticated visitors keep
+their choice only on the current device. Dates, times, numbers and relative
+times use `Intl` formatters with the selected language, while time zones remain
+independent of it.
+
+Server responses expose stable error codes that the client maps to translated
+messages. Push notifications are localized per recipient; transactional emails
+and persisted system chat messages remain in Portuguese. Machine translations
+should be reviewed by native speakers before production use.
 
 ## Tech Stack
 

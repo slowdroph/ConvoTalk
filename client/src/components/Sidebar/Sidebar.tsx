@@ -1,4 +1,5 @@
 import RoomList from "./RoomList";
+import { useTranslation } from "react-i18next";
 import UserSearchModal from "./UserSearchModal";
 import CreateGroupModal from "./CreateGroupModal";
 import Avatar from "../ui/Avatar";
@@ -39,6 +40,7 @@ export default function Sidebar({
     isOpen,
     onClose,
 }: SidebarProps) {
+    const { t } = useTranslation("chat");
     const [groupModalOpen, setGroupModalOpen] = useState(false);
     const [userSearchOpen, setUserSearchOpen] = useState(false);
     const [query, setQuery] = useState("");
@@ -110,17 +112,17 @@ export default function Sidebar({
                 className={`fixed inset-y-0 left-0 z-50 w-[380px] max-w-[85vw] md:min-w-[340px] md:max-w-[420px] bg-noir-surface border-r border-noir-border flex flex-col h-full transition-transform duration-200 md:static md:translate-x-0 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] ${
                     isOpen ? "translate-x-0" : "-translate-x-full"
                 }`}
-                aria-label="Lista de conversas"
+                aria-label={t("sidebar.aria")}
             >
                 <div className="flex items-center justify-between gap-2 px-4 pt-3 md:hidden">
                     <span className="text-sm font-semibold text-slate-900 dark:text-noir-text-bright">
-                        Conversas
+                        {t("sidebar.title")}
                     </span>
                     {onClose && (
                         <button
                             type="button"
                             onClick={onClose}
-                            aria-label="Fechar lista de conversas"
+                            aria-label={t("sidebar.closeAria")}
                             className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-noir-text-muted dark:hover:bg-noir-surface-alt dark:hover:text-noir-text-bright"
                         >
                             <svg
@@ -164,8 +166,8 @@ export default function Sidebar({
                             type="text"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Buscar mensagem..."
-                            aria-label="Buscar mensagens em todas as conversas"
+                            placeholder={t("sidebar.searchPlaceholder")}
+                            aria-label={t("sidebar.searchAria")}
                             className="w-full bg-slate-100 text-slate-700 placeholder-slate-400 rounded-xl pl-9 pr-14 py-2 border border-slate-200 focus:outline-none focus:border-emerald-600/60 focus:ring-1 focus:ring-emerald-600 transition text-sm dark:bg-noir-surface-alt dark:text-noir-text-bright dark:placeholder-noir-text-muted/70 dark:border-noir-border"
                         />
                         <span className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none gap-1.5">
@@ -181,7 +183,7 @@ export default function Sidebar({
                     <div className="grid grid-cols-2 gap-2 text-xs">
                         <button
                             onClick={() => setGroupModalOpen(true)}
-                            title="Criar grupo"
+                            title={t("sidebar.createGroup")}
                             className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition dark:bg-noir-surface-alt dark:hover:bg-noir-border dark:text-noir-text-bright dark:border-noir-border/60"
                         >
                             <svg
@@ -198,11 +200,11 @@ export default function Sidebar({
                                     d="M12 4v16m8-8H4"
                                 />
                             </svg>
-                            <span className="font-medium">Criar grupo</span>
+                            <span className="font-medium">{t("sidebar.createGroup")}</span>
                         </button>
                         <button
                             onClick={() => setUserSearchOpen(true)}
-                            title="Iniciar nova conversa"
+                            title={t("sidebar.newConversation")}
                             className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-700 border border-emerald-600/30 transition dark:text-emerald-400 dark:border-emerald-600/30"
                         >
                             <svg
@@ -219,7 +221,7 @@ export default function Sidebar({
                                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                                 />
                             </svg>
-                            <span className="font-medium">Nova conversa</span>
+                            <span className="font-medium">{t("sidebar.newConversation")}</span>
                         </button>
                     </div>
                 </div>
@@ -227,7 +229,7 @@ export default function Sidebar({
                     <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pb-4">
                         {!searchLoading && results.length === 0 && (
                             <p className="px-3 py-8 text-center text-sm text-slate-500 dark:text-noir-text-muted">
-                                Nenhum resultado encontrado.
+                                {t("sidebar.noSearchResults")}
                             </p>
                         )}
                         {results.map((result) => (
@@ -243,14 +245,14 @@ export default function Sidebar({
                             >
                                 <Avatar
                                     src={result.sender?.avatar}
-                                    name={result.sender?.name ?? "Sistema"}
+                                    name={result.sender?.name ?? t("sidebar.system")}
                                     size="sm"
                                 />
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-semibold text-slate-900 truncate dark:text-noir-text-bright">
                                             {result.sender?.name ??
-                                                "Mensagem de sistema"}
+                                                t("sidebar.systemMessage")}
                                         </span>
                                         <span className="text-xs text-slate-500 truncate shrink-0 dark:text-noir-text-muted">
                                             {result.room.name}

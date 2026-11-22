@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { Socket } from "socket.io-client";
 import type { Message, MentionNotificationPayload } from "../types";
+import i18n from "../i18n";
 import { playNotificationSound } from "../utils/sound";
 import { useToast } from "../contexts/ToastContext";
 import {
@@ -106,8 +107,11 @@ export function useNotifications(
             const isHidden = document.hidden;
 
             if (!isHidden) {
+                const mentionTitle = i18n.t("chat:notifications.mentionTitle", {
+                    name: payload.sender.name,
+                });
                 showToast({
-                    title: `@${payload.sender.name} mencionou você`,
+                    title: mentionTitle,
                     message:
                         payload.content.length > 100
                             ? payload.content.slice(0, 100) + "..."
@@ -138,14 +142,19 @@ export function useNotifications(
                     }
                 }
                 if (!hasPushSubscription) {
-                    new Notification(`@${payload.sender.name} mencionou você`, {
-                        body:
-                            payload.content.length > 100
-                                ? payload.content.slice(0, 100) + "..."
-                                : payload.content,
-                        icon: "/favicon.svg",
-                        tag: `mention-${payload.roomId}`,
-                    });
+                    new Notification(
+                        i18n.t("chat:notifications.mentionTitle", {
+                            name: payload.sender.name,
+                        }),
+                        {
+                            body:
+                                payload.content.length > 100
+                                    ? payload.content.slice(0, 100) + "..."
+                                    : payload.content,
+                            icon: "/favicon.svg",
+                            tag: `mention-${payload.roomId}`,
+                        },
+                    );
                 }
             }
         };

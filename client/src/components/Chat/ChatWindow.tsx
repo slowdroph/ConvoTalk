@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useSocket } from "../../hooks/useSocket";
 import { useAuth } from "../../hooks/useAuth";
 import { useWebRTC } from "../../hooks/useWebRTC";
@@ -61,6 +62,7 @@ export default function ChatWindow({
     initialPinnedMessageIds,
     onWebRTCState,
 }: ChatWindowProps) {
+    const { t } = useTranslation("chat");
     const { socket, onlineUsers, connected } = useSocket();
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -197,9 +199,9 @@ export default function ChatWindow({
                     setHasMore(data.hasMore);
                 }
             } catch (error) {
-                console.error("Erro ao carregar mensagens:", error);
+                console.error("Failed to load messages:", error);
                 if (!cancelled) {
-                    setMessagesError("Erro ao carregar mensagens.");
+                    setMessagesError(t("window.loadError"));
                 }
             } finally {
                 if (!cancelled) {
@@ -213,11 +215,12 @@ export default function ChatWindow({
         return () => {
             cancelled = true;
         };
-    }, [roomId, setMessages]);
+    }, [roomId, setMessages, t]);
 
     const displayName =
         roomType === "direct"
-            ? participants.find((p) => p._id !== user?._id)?.name || "Usuário"
+            ? participants.find((p) => p._id !== user?._id)?.name ||
+              t("window.user")
             : roomName;
 
     const otherUserId =
@@ -445,20 +448,20 @@ export default function ChatWindow({
             if (isBlocked) {
                 await api.delete(`/user/${otherUserId}/block`);
                 setIsBlocked(false);
-                showToast({ type: "info", message: "Usuário desbloqueado." });
+                showToast({ type: "info", message: t("window.unblocked") });
             } else {
                 await api.post(`/user/${otherUserId}/block`);
                 setIsBlocked(true);
                 setMessages([]);
-                showToast({ type: "info", message: "Usuário bloqueado." });
+                showToast({ type: "info", message: t("window.blocked") });
             }
         } catch (err) {
             showToast({
                 type: "error",
-                message: getErrorMessage(err, "Erro ao atualizar bloqueio."),
+                message: getErrorMessage(err, t("window.blockError")),
             });
         }
-    }, [otherUserId, isBlocked, setMessages, showToast]);
+    }, [otherUserId, isBlocked, setMessages, showToast, t]);
 
     const handleClearConversation = useCallback(() => {
         if (!socket) return;
@@ -475,12 +478,12 @@ export default function ChatWindow({
                     setClearConfirmOpen(false);
                     showToast({
                         type: "success",
-                        message: "Conversa limpa com sucesso.",
+                        message: t("window.cleared"),
                     });
                 }
             },
         );
-    }, [socket, roomId, showToast]);
+    }, [socket, roomId, showToast, t]);
 
     const handleLoadOlderMessages = useCallback(
         async (container: HTMLDivElement | null) => {
@@ -513,7 +516,7 @@ export default function ChatWindow({
                     });
                 }
             } catch (error) {
-                console.error("Erro ao carregar mensagens anteriores:", error);
+                console.error("Failed to load older messages:", error);
             } finally {
                 setLoadingMore(false);
             }
@@ -663,7 +666,7 @@ export default function ChatWindow({
                                     })
                                     .catch(() => {
                                         setMessagesError(
-                                            "Erro ao carregar mensagens.",
+                                            t("window.loadError"),
                                         );
                                     })
                                     .finally(() => {
@@ -672,7 +675,7 @@ export default function ChatWindow({
                             }}
                             className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm rounded-lg transition-colors dark:bg-noir-surface-alt dark:border-noir-border dark:hover:bg-noir-card dark:text-noir-text-bright"
                         >
-                            Tentar novamente
+                            {t("window.retry")}
                         </button>
                     </div>
                 ) : (
@@ -763,9 +766,9 @@ export default function ChatWindow({
 
             <ConfirmDialog
                 isOpen={clearConfirmOpen}
-                title="Limpar conversa"
-                message="Tem certeza que deseja limpar todas as mensagens desta conversa? Essa ação não pode ser desfeita."
-                confirmLabel="Limpar"
+                title={t("window.clearTitle")}
+                message={t("window.clearMessage")}
+                confirmLabel={t("window.clearConfirm")}
                 danger
                 onConfirm={handleClearConversation}
                 onCancel={() => setClearConfirmOpen(false)}

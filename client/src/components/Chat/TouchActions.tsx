@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
     EditIcon,
     PinIcon,
@@ -33,6 +34,7 @@ export default function TouchActions({
     actionsRef,
     position,
 }: TouchActionsProps) {
+    const { t } = useTranslation("chat");
     if (!position) return null;
 
     return (
@@ -47,7 +49,7 @@ export default function TouchActions({
             }}
             className="flex flex-wrap justify-center gap-1 max-w-[calc(100vw-1rem)] bg-white border border-slate-200 rounded-lg p-1.5 shadow-lg dark:bg-noir-card dark:border-noir-border pointer-events-auto"
         >
-            <Tooltip content="Reagir">
+            <Tooltip content={t("message.react")}>
                 <button
                     onClick={onTogglePicker}
                     className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
@@ -56,7 +58,7 @@ export default function TouchActions({
                 </button>
             </Tooltip>
             {onReply && (
-                <Tooltip content="Responder">
+                <Tooltip content={t("message.reply")}>
                     <button
                         onClick={onReply}
                         className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
@@ -66,7 +68,7 @@ export default function TouchActions({
                 </Tooltip>
             )}
             {onOpenThread && (
-                <Tooltip content="Ver respostas">
+                <Tooltip content={t("message.viewReplies")}>
                     <button
                         onClick={onOpenThread}
                         className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
@@ -78,7 +80,7 @@ export default function TouchActions({
             {onTogglePin && (
                 <Tooltip
                     content={
-                        isPinned ? "Desafixar mensagem" : "Fixar mensagem"
+                        isPinned ? t("message.unpin") : t("message.pin")
                     }
                 >
                     <button
@@ -91,7 +93,7 @@ export default function TouchActions({
             )}
             {isOwn && (
                 <>
-                    <Tooltip content="Editar mensagem">
+                    <Tooltip content={t("message.edit")}>
                         <button
                             onClick={onEdit}
                             className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"
@@ -99,7 +101,7 @@ export default function TouchActions({
                             <EditIcon />
                         </button>
                     </Tooltip>
-                    <Tooltip content="Excluir mensagem">
+                    <Tooltip content={t("message.delete")}>
                         <button
                             onClick={onDelete}
                             className="p-2 rounded-md hover:bg-slate-100 text-slate-600 dark:hover:bg-noir-surface-alt dark:text-noir-text-muted transition-colors"

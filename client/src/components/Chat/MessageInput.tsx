@@ -7,6 +7,7 @@ import {
     useImperativeHandle,
 } from "react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { useSocket } from "../../hooks/useSocket";
 import { useAuth } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../utils/errors";
@@ -67,6 +68,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
         }: MessageInputProps,
         ref,
     ) {
+    const { t } = useTranslation("chat");
     const [message, setMessage] = useState("");
     const { socket, connected } = useSocket();
     const { user } = useAuth();
@@ -237,13 +239,13 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
         if (rejected > 0) {
             showToast({
                 type: "error",
-                message: `${rejected} arquivo(s) ignorado(s) por tipo ou tamanho inválido.`,
+                message: t("input.fileRejected", { count: rejected }),
             });
         }
         if (incoming.length > remaining) {
             showToast({
                 type: "error",
-                message: `No máximo ${MAX_FILES} anexos por mensagem.`,
+                message: t("input.maxFiles", { count: MAX_FILES }),
             });
         }
         setError("");
@@ -293,21 +295,20 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
         if (!trimmed && !hasFiles) return;
         if (isBlocked) return;
         if (trimmed.length > MAX_LENGTH) {
-            setError(`Mensagem muito longa (máximo ${MAX_LENGTH} caracteres).`);
+            setError(t("input.tooLong", { count: MAX_LENGTH }));
             return;
         }
 
         if (offline) {
             if (hasFiles) {
-                setError("Sem conexão. Tente novamente quando estiver online.");
+                setError(t("input.offlineWithFiles"));
                 return;
             }
             await queuePendingMessage(roomId, trimmed);
             setMessage("");
             showToast({
                 type: "info",
-                message:
-                    "Sem conexão. A mensagem será enviada quando você voltar online.",
+                message: t("input.offlineQueued"),
             });
             return;
         }
@@ -336,7 +337,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                 );
                 attachments = data.files;
             } catch (err: unknown) {
-                setError(getErrorMessage(err, "Erro ao enviar arquivo"));
+                setError(getErrorMessage(err, t("input.uploadError")));
                 setUploading(false);
                 return;
             }
@@ -404,7 +405,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                 onOptimisticFailed?.(clientMessageId);
                 showToast({
                     type: "error",
-                    message: "Não foi possível enviar a mensagem.",
+                    message: t("input.sendError"),
                 });
                 setMessage((prev) => prev || trimmed);
             };
@@ -445,8 +446,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
             setUploading(false);
             showToast({
                 type: "info",
-                message:
-                    "Sem conexão. A mensagem será enviada quando você voltar online.",
+                message: t("input.offlineQueued"),
             });
             return;
         }
@@ -458,7 +458,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
         setError("");
 
         if (offline) {
-            setError("Sem conexão para enviar o áudio.");
+            setError(t("input.offlineAudio"));
             return;
         }
 
@@ -493,7 +493,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                             setError(
                                 getErrorMessage(
                                     response,
-                                    "Erro ao enviar áudio",
+                                    t("input.audioError"),
                                 ),
                             );
                         } else {
@@ -505,7 +505,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                 setUploading(false);
             }
         } catch (err) {
-            setError(getErrorMessage(err, "Erro ao enviar áudio"));
+            setError(getErrorMessage(err, t("input.audioError")));
             setUploading(false);
         }
     };
@@ -545,10 +545,10 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                             />
                         </svg>
                         <p className="text-sm font-medium">
-                            Solte os arquivos para enviar
+                            {t("input.dropFiles")}
                         </p>
                         <p className="text-xs opacity-80">
-                            Imagens, áudios, PDF, TXT ou JSON
+                            {t("input.dropHint")}
                         </p>
                     </div>
                 </div>
@@ -563,14 +563,17 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                 <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 mb-2 dark:bg-noir-surface-alt dark:border-noir-border">
                     <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                            Respondendo a{" "}
-                            {replyingTo.sender?.name || "mensagem"}
+                            {t("input.replyingTo", {
+                                name:
+                                    replyingTo.sender?.name ||
+                                    t("input.messageFallback"),
+                            })}
                         </p>
                         <p className="text-xs text-slate-500 truncate dark:text-noir-text-muted">
                             {replyingTo.content ||
                                 (replyingTo.attachments &&
                                 replyingTo.attachments.length > 0
-                                    ? "📎 Anexo"
+                                    ? t("input.attachment")
                                     : "")}
                         </p>
                     </div>
@@ -579,8 +582,8 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                         onClick={onCancelReply}
                         disabled={uploading}
                         className="text-slate-400 hover:text-slate-600 dark:text-noir-text-muted dark:hover:text-noir-text-bright transition-colors disabled:opacity-50 p-2 rounded-lg shrink-0"
-                        title="Cancelar resposta"
-                        aria-label="Cancelar resposta"
+                        title={t("input.cancelReply")}
+                        aria-label={t("input.cancelReply")}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -629,7 +632,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                                 onClick={() => removeFile(i)}
                                 disabled={uploading}
                                 className="text-slate-400 hover:text-slate-600 dark:text-noir-text-muted dark:hover:text-noir-text-bright transition-colors disabled:opacity-50"
-                                title="Remover arquivo"
+                                title={t("input.removeFile")}
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -660,8 +663,8 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                                 type="button"
                                 onClick={() => setEmojiOpen((prev) => !prev)}
                                 className="p-2 text-slate-500 hover:text-yellow-600 hover:bg-slate-200 rounded-xl transition-colors dark:text-noir-text-muted dark:hover:text-emerald-400 dark:hover:bg-noir-card"
-                            title="Emoji"
-                            aria-label="Abrir seletor de emojis"
+                            title={t("input.emoji")}
+                            aria-label={t("input.openEmoji")}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -694,8 +697,8 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                             onClick={() => setIsRecording(true)}
                             disabled={uploading || files.length > 0}
                             className="p-2 text-slate-500 hover:text-red-600 hover:bg-slate-200 rounded-xl transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:text-noir-text-muted dark:hover:text-red-400 dark:hover:bg-noir-card"
-                        title="Gravar mensagem de voz"
-                        aria-label="Gravar mensagem de voz"
+                        title={t("input.recordVoice")}
+                        aria-label={t("input.recordVoice")}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -732,7 +735,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploading || files.length >= MAX_FILES}
                         className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-200 rounded-xl transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:text-noir-text-muted dark:hover:text-emerald-400 dark:hover:bg-noir-card"
-                        title="Anexar arquivo"
+                        title={t("input.attachFile")}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -776,18 +779,18 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                         name="message"
                         id="message"
                         value={message}
-                        aria-label="Escrever mensagem"
+                        aria-label={t("input.writeMessage")}
                         rows={1}
                         onChange={handleTextareaChange}
                         onKeyDown={handleTextareaKeyDown}
                         placeholder={
                             isBlocked
-                                ? "Você bloqueou este usuário"
+                                ? t("input.blockedPlaceholder")
                                 : uploading
-                                  ? "Enviando arquivo..."
+                                  ? t("input.uploadingPlaceholder")
                                   : files.length > 0
-                                    ? "Adicione uma legenda (opcional)..."
-                                    : "Digite sua mensagem..."
+                                    ? t("input.captionPlaceholder")
+                                    : t("input.placeholder")
                         }
                         disabled={uploading || isBlocked}
                         maxLength={MAX_LENGTH + 100}
@@ -796,7 +799,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                     <button
                         type="submit"
                         disabled={!canSubmit}
-                        aria-label="Enviar mensagem"
+                        aria-label={t("input.send")}
                         className="w-11 h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-30 disabled:hover:bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-glow-emerald transition-all"
                     >
                         {uploading ? (

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
     EditIcon,
     PinIcon,
@@ -37,6 +38,7 @@ export default function MessageActions({
     onDelete,
     pickerRef,
 }: MessageActionsProps) {
+    const { t } = useTranslation("chat");
     return (
         <div
             aria-hidden="true"
@@ -44,7 +46,7 @@ export default function MessageActions({
         >
             {/* Emoji picker button */}
             <div className="relative flex items-center">
-                <Tooltip content="Reagir">
+                <Tooltip content={t("message.react")}>
                     <button
                         onClick={onTogglePicker}
                         className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
@@ -78,7 +80,7 @@ export default function MessageActions({
             </div>
             {/* Reply button */}
             {onReply && (
-                <Tooltip content="Responder">
+                <Tooltip content={t("message.reply")}>
                     <button
                         onClick={onReply}
                         className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
@@ -89,7 +91,7 @@ export default function MessageActions({
             )}
             {/* Thread button */}
             {onOpenThread && (
-                <Tooltip content="Ver respostas">
+                <Tooltip content={t("message.viewReplies")}>
                     <button
                         onClick={onOpenThread}
                         className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
@@ -102,7 +104,7 @@ export default function MessageActions({
             {onTogglePin && (
                 <Tooltip
                     content={
-                        isPinned ? "Desafixar mensagem" : "Fixar mensagem"
+                        isPinned ? t("message.unpin") : t("message.pin")
                     }
                 >
                     <button
@@ -116,7 +118,7 @@ export default function MessageActions({
             {/* Edit and delete buttons (only for own messages) */}
             {isOwn && (
                 <>
-                    <Tooltip content="Editar mensagem">
+                    <Tooltip content={t("message.edit")}>
                         <button
                             onClick={onEdit}
                             className="text-slate-500 hover:text-emerald-600 dark:text-noir-text-muted dark:hover:text-emerald-400 transition-colors"
@@ -124,7 +126,7 @@ export default function MessageActions({
                             <EditIcon />
                         </button>
                     </Tooltip>
-                    <Tooltip content="Excluir mensagem">
+                    <Tooltip content={t("message.delete")}>
                         <button
                             onClick={onDelete}
                             className="text-slate-500 hover:text-red-600 dark:text-noir-text-muted dark:hover:text-red-400 transition-colors"

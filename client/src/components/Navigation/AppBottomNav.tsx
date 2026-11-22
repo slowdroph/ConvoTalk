@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useRooms } from "../../hooks/useRooms";
 import {
     MOBILE_NAV_ITEMS,
@@ -10,6 +11,7 @@ const HEIGHT_CLASS = "h-[calc(4rem+env(safe-area-inset-bottom))]";
 
 function BottomLink({ item, badge }: { item: NavItem; badge?: number }) {
     const { pathname } = useLocation();
+    const { t } = useTranslation("common");
     const active = isNavItemActive(pathname, item.to);
 
     return (
@@ -50,18 +52,19 @@ function BottomLink({ item, badge }: { item: NavItem; badge?: number }) {
                 ) : null}
             </span>
             <span className="text-[10px] font-medium leading-none">
-                {item.shortLabel ?? item.label}
+                {t(item.shortLabelKey ?? item.labelKey)}
             </span>
         </Link>
     );
 }
 
 export default function AppBottomNav() {
+    const { t } = useTranslation("common");
     const { totalUnread } = useRooms();
 
     return (
         <nav
-            aria-label="Navegação principal"
+            aria-label={t("nav.main")}
             className={`fixed inset-x-0 bottom-0 z-40 flex ${HEIGHT_CLASS} items-stretch border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden dark:border-noir-border dark:bg-noir-surface/95`}
         >
             {MOBILE_NAV_ITEMS.map((item) => (

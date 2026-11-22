@@ -9,6 +9,11 @@ import {
     isLanguageId,
     isLanguageLevelId,
 } from "../../../shared/profile";
+import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
+
+export const languagePreferenceSchema = z.enum(SUPPORTED_LANGUAGES, {
+    message: "Idioma inválido.",
+});
 
 const genderSchema = z
     .string()
@@ -110,6 +115,7 @@ export const registerSchema = z
             city: citySchema,
             languages: languagesSchema,
             languageLevels: languageLevelsSchema.default({}),
+            language: languagePreferenceSchema.optional(),
         }),
     })
     .refine(
@@ -128,6 +134,12 @@ export const loginSchema = z.object({
     body: z.object({
         email: z.string().email("Email inválido."),
         password: z.string().min(1, "Senha é obrigatória."),
+    }),
+});
+
+export const preferencesSchema = z.object({
+    body: z.object({
+        language: languagePreferenceSchema,
     }),
 });
 

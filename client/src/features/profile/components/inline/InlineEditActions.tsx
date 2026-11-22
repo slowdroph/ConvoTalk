@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 interface InlineEditActionsProps {
     saving: boolean;
     error: string | null;
@@ -9,8 +11,10 @@ export default function InlineEditActions({
     saving,
     error,
     onCancel,
-    submitLabel = "Salvar",
+    submitLabel,
 }: InlineEditActionsProps) {
+    const { t } = useTranslation("profile");
+
     return (
         <div className="mt-3">
             {error && (
@@ -28,7 +32,7 @@ export default function InlineEditActions({
                     disabled={saving}
                     className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-50 dark:border-noir-border dark:text-noir-text-muted dark:hover:bg-noir-surface-alt"
                 >
-                    Cancelar
+                    {t("inline.cancel")}
                 </button>
                 <button
                     type="submit"
@@ -38,7 +42,7 @@ export default function InlineEditActions({
                     {saving && (
                         <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     )}
-                    {submitLabel}
+                    {submitLabel ?? t("inline.save")}
                 </button>
             </div>
         </div>

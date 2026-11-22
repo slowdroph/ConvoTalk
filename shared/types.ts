@@ -1,3 +1,5 @@
+import type { LanguageCode } from "./i18n";
+
 export interface PublicUserPayload {
     _id: string;
     name: string;
@@ -18,6 +20,9 @@ export interface UserPayload extends PublicUserPayload {
     birthdate?: string | null;
     languages?: string[];
     languageLevels?: Record<string, string>;
+    preferences?: {
+        language?: LanguageCode;
+    };
 }
 
 export interface SenderPayload {

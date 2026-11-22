@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 interface AuthTabsProps {
     isLogin: boolean;
@@ -9,6 +10,7 @@ const tabButtonClasses =
     "relative z-10 w-1/2 py-2 px-3 text-xs sm:text-sm rounded-lg outline-none [-webkit-tap-highlight-color:transparent] select-none touch-manipulation transition-[color,background-color] duration-150 focus-visible:ring-1 focus-visible:ring-emerald-300/70 focus-visible:ring-inset cursor-pointer";
 
 export default function AuthTabs({ isLogin, onChange }: AuthTabsProps) {
+    const { t } = useTranslation("auth");
     const loginRef = useRef<HTMLButtonElement>(null);
     const registerRef = useRef<HTMLButtonElement>(null);
 
@@ -23,7 +25,7 @@ export default function AuthTabs({ isLogin, onChange }: AuthTabsProps) {
     return (
         <div
             role="tablist"
-            aria-label="Alternar entre entrar e criar conta"
+            aria-label={t("tabs.switchLabel")}
             onKeyDown={handleKeyDown}
             className="relative p-1 bg-black/40 border border-white/5 rounded-xl flex items-center mb-7"
         >
@@ -40,7 +42,7 @@ export default function AuthTabs({ isLogin, onChange }: AuthTabsProps) {
                 onClick={() => onChange(true)}
                 className={`${tabButtonClasses} ${isLogin ? "font-semibold text-white" : "font-medium text-zinc-400 hover:text-zinc-200"}`}
             >
-                Entrar
+                {t("tabs.login")}
             </button>
             <button
                 ref={registerRef}
@@ -51,7 +53,7 @@ export default function AuthTabs({ isLogin, onChange }: AuthTabsProps) {
                 onClick={() => onChange(false)}
                 className={`${tabButtonClasses} ${!isLogin ? "font-semibold text-white" : "font-medium text-zinc-400 hover:text-zinc-200"}`}
             >
-                Criar conta
+                {t("tabs.register")}
             </button>
         </div>
     );

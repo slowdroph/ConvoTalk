@@ -1,10 +1,14 @@
+import { useTranslation } from "react-i18next";
+
 export default function BackToTop({ visible }: { visible: boolean }) {
+    const { t } = useTranslation("home");
+
     if (!visible) return null;
 
     return (
         <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            aria-label="Voltar ao topo"
+            aria-label={t("backToTop")}
             className="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full bg-primary-container text-on-accent shadow-lg shadow-black/30 hover:bg-primary transition-colors flex items-center justify-center"
         >
             <svg

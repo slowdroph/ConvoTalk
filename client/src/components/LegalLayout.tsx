@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import LanguageSelector from "./ui/LanguageSelector";
 
 interface LegalLayoutProps {
     title: string;
@@ -12,6 +14,7 @@ export default function LegalLayout({
     lastUpdated,
     children,
 }: LegalLayoutProps) {
+    const { t } = useTranslation("legal");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     return (
         <div className="bg-background text-on-surface font-hanken antialiased flex flex-col min-h-dvh-fallback">
@@ -32,40 +35,45 @@ export default function LegalLayout({
                             to="/#recursos"
                             className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                         >
-                            Recursos
+                            {t("layout.features")}
                         </Link>
                         <Link
                             to="/#como-funciona"
                             className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                         >
-                            Como funciona
+                            {t("layout.howItWorks")}
                         </Link>
                         <Link
                             to="/#seguranca"
                             className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                         >
-                            Segurança
+                            {t("layout.security")}
                         </Link>
                     </nav>
                     <div className="flex items-center gap-3">
+                        <div className="hidden md:block">
+                            <LanguageSelector tone="header" />
+                        </div>
                         <Link
                             to="/login"
                             className="hidden md:block text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200 px-3 py-2"
                         >
-                            Login
+                            {t("layout.login")}
                         </Link>
                         <Link
                             to="/login?mode=register"
                             className="text-[13px] leading-4.5 tracking-[0.02em] font-medium bg-primary-container text-white rounded px-4 py-2 hover:opacity-90 transition-opacity"
                         >
-                            Criar conta
+                            {t("layout.register")}
                         </Link>
                         <button
                             type="button"
                             onClick={() => setMobileMenuOpen((v) => !v)}
                             className="md:hidden p-2 -mr-2 text-on-surface-variant hover:text-primary transition-colors"
                             aria-label={
-                                mobileMenuOpen ? "Fechar menu" : "Abrir menu"
+                                mobileMenuOpen
+                                    ? t("layout.closeMenu")
+                                    : t("layout.openMenu")
                             }
                             aria-expanded={mobileMenuOpen}
                         >
@@ -103,35 +111,41 @@ export default function LegalLayout({
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                             >
-                                Recursos
+                                {t("layout.features")}
                             </Link>
                             <Link
                                 to="/#como-funciona"
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                             >
-                                Como funciona
+                                {t("layout.howItWorks")}
                             </Link>
                             <Link
                                 to="/#seguranca"
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                             >
-                                Segurança
+                                {t("layout.security")}
                             </Link>
+                            <div className="border-t border-outline-variant/40 pt-3">
+                                <LanguageSelector
+                                    tone="header"
+                                    align="left"
+                                />
+                            </div>
                             <Link
                                 to="/login"
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                             >
-                                Login
+                                {t("layout.login")}
                             </Link>
                             <Link
                                 to="/login?mode=register"
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-[13px] leading-4.5 tracking-[0.02em] font-medium bg-primary-container text-white rounded px-4 py-2 hover:opacity-90 transition-opacity"
                             >
-                                Criar conta
+                                {t("layout.register")}
                             </Link>
                         </nav>
                     </div>
@@ -146,7 +160,7 @@ export default function LegalLayout({
                         </h1>
                         {lastUpdated && (
                             <p className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant">
-                                Última atualização: {lastUpdated}
+                                {t("layout.lastUpdated", { date: lastUpdated })}
                             </p>
                         )}
                     </header>
@@ -161,8 +175,9 @@ export default function LegalLayout({
                             ConvoTalk
                         </span>
                         <span className="text-sm leading-5 text-on-surface-variant">
-                            © {new Date().getFullYear()} ConvoTalk. Todos os
-                            direitos reservados.
+                            {t("layout.rights", {
+                                year: new Date().getFullYear(),
+                            })}
                         </span>
                     </div>
                     <nav className="flex flex-wrap justify-center gap-6">
@@ -170,13 +185,13 @@ export default function LegalLayout({
                             to="/privacy"
                             className="text-[11px] leading-4 tracking-wider text-primary font-bold hover:text-on-surface transition-colors"
                         >
-                            Privacidade
+                            {t("layout.privacy")}
                         </Link>
                         <Link
                             to="/terms"
                             className="text-[11px] leading-4 tracking-wider font-semibold text-primary hover:text-on-surface transition-colors"
                         >
-                            Termos
+                            {t("layout.terms")}
                         </Link>
                     </nav>
                 </div>

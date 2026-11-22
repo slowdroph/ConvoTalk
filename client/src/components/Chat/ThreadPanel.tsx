@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSocket } from "../../hooks/useSocket";
 import { useAuth } from "../../hooks/useAuth";
 import MessageBubble from "./MessageBubble";
@@ -32,6 +33,7 @@ export default function ThreadPanel({
     isPinned,
     participants,
 }: ThreadPanelProps) {
+    const { t } = useTranslation("chat");
     const { socket } = useSocket();
     const { user } = useAuth();
     const [replies, setReplies] = useState<Message[]>([]);
@@ -54,7 +56,7 @@ export default function ThreadPanel({
                 }
             } catch {
                 if (!cancelled) {
-                    setError("Erro ao carregar respostas.");
+                    setError(t("thread.loadError"));
                 }
             } finally {
                 if (!cancelled) {
@@ -68,7 +70,7 @@ export default function ThreadPanel({
         return () => {
             cancelled = true;
         };
-    }, [roomId, parent._id]);
+    }, [roomId, parent._id, t]);
 
     useEffect(() => {
         if (!socket) return;
@@ -164,13 +166,13 @@ export default function ThreadPanel({
         <div className="fixed inset-0 z-40 w-full md:relative md:w-80 md:z-auto flex flex-col border-t md:border-t-0 md:border-l border-noir-border bg-noir-surface md:max-h-full">
             <div className="px-4 py-3 border-b border-noir-border flex items-center justify-between shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))]">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-noir-text-bright">
-                    Respostas
+                    {t("thread.title")}
                 </h3>
                 <button
                     onClick={onClose}
                     className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
-                    title="Fechar respostas"
-                    aria-label="Fechar respostas"
+                    title={t("thread.close")}
+                    aria-label={t("thread.close")}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -218,7 +220,7 @@ export default function ThreadPanel({
                     </p>
                 ) : replies.length === 0 ? (
                     <p className="text-sm text-slate-500 text-center py-6 dark:text-noir-text-muted">
-                        Nenhuma resposta ainda. Seja o primeiro a responder!
+                        {t("thread.empty")}
                     </p>
                 ) : (
                     replies.map((reply) => (

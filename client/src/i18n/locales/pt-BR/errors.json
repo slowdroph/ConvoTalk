@@ -1,0 +1,21 @@
+{
+    "VALIDATION_ERROR": "Verifique os dados informados e tente novamente.",
+    "INVALID_ID": "Identificador inválido.",
+    "NOT_FOUND": "Não encontrado.",
+    "UNAUTHORIZED": "Sua sessão expirou. Entre novamente.",
+    "FORBIDDEN": "Você não tem permissão para realizar esta ação.",
+    "CONFLICT": "Não foi possível concluir: já existe um registro com esses dados.",
+    "BAD_REQUEST": "Requisição inválida.",
+    "EMAIL_NOT_VERIFIED": "Verifique seu email antes de continuar.",
+    "INVALID_URL": "Link inválido.",
+    "BLOCKED_HOST": "Este link não é permitido.",
+    "PREVIEW_UNAVAILABLE": "Não foi possível carregar a prévia deste link.",
+    "AI_DISABLED": "O assistente de IA está desativado.",
+    "AI_UNAVAILABLE": "O assistente de IA está indisponível no momento.",
+    "AI_BAD_OUTPUT": "O assistente não conseguiu gerar uma resposta.",
+    "AI_RATE_LIMITED": "Muitas solicitações de IA. Aguarde um momento.",
+    "INTERNAL_SERVER_ERROR": "Erro interno do servidor.",
+    "NETWORK_ERROR": "Não foi possível conectar ao servidor. Verifique sua conexão.",
+    "UNKNOWN": "Algo deu errado. Tente novamente.",
+    "serverMessage": "O servidor retornou um erro inesperado."
+}

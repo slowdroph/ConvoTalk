@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { useSocket } from "../../hooks/useSocket";
 import api from "../../services/api";
 import { createDirectRoom } from "../../services/rooms";
 import { getErrorMessage } from "../../utils/errors";
-import { getCountryName } from "../../utils/countries";
+import { countryName } from "../../i18n/catalogs";
 import Avatar from "../ui/Avatar";
 import CountryFlag from "../ui/CountryFlag";
 import type { PublicUser } from "../../types";
@@ -40,7 +41,9 @@ function SuggestedUserCard({
     onStart,
     onViewProfile,
 }: SuggestedUserCardProps) {
-    const statusText = user.status || (online ? "Online" : "Offline");
+    const { t } = useTranslation("chat");
+    const statusText =
+        user.status || (online ? t("suggestions.online") : t("suggestions.offline"));
 
     return (
         <li className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-noir-card border border-noir-border hover:border-emerald-500/40 transition">
@@ -70,7 +73,7 @@ function SuggestedUserCard({
                     {user.country && (
                         <CountryFlag
                             country={user.country}
-                            name={getCountryName(user.country)}
+                            name={countryName(user.country)}
                             className="w-4 h-3"
                         />
                     )}
@@ -102,13 +105,15 @@ function SuggestedUserCard({
                             />
                         </svg>
                     )}
-                    Conversar
+                    {t("suggestions.chat")}
                 </button>
                 <button
                     type="button"
                     onClick={onViewProfile}
-                    title="Ver perfil"
-                    aria-label={`Ver perfil de ${user.name}`}
+                    title={t("suggestions.viewProfile")}
+                    aria-label={t("suggestions.viewProfileOf", {
+                        name: user.name,
+                    })}
                     className="p-2 rounded-xl text-noir-text-muted border border-noir-border hover:text-emerald-400 hover:bg-noir-surface-alt hover:border-emerald-500/40 transition"
                 >
                     <svg
@@ -133,6 +138,7 @@ function SuggestedUserCard({
 export default function SuggestedUsers({
     onConversationCreated,
 }: SuggestedUsersProps) {
+    const { t } = useTranslation("chat");
     const [users, setUsers] = useState<PublicUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -154,12 +160,12 @@ export default function SuggestedUsers({
             } catch (err: unknown) {
                 if (axios.isCancel(err)) return;
                 if (err instanceof Error && err.name === "AbortError") return;
-                setError(getErrorMessage(err, "Erro ao carregar sugestões"));
+                setError(getErrorMessage(err, t("suggestions.loadError")));
             } finally {
                 setLoading(false);
             }
         },
-        [],
+        [t],
     );
 
     useEffect(() => {
@@ -180,7 +186,7 @@ export default function SuggestedUsers({
             const room = await createDirectRoom(userId);
             onConversationCreated(room._id);
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao criar conversa"));
+            setError(getErrorMessage(err, t("suggestions.createError")));
         } finally {
             setCreatingId(null);
         }
@@ -192,7 +198,7 @@ export default function SuggestedUsers({
                 className="w-full max-w-5xl mx-auto"
                 role="status"
                 aria-live="polite"
-                aria-label="Carregando sugestões"
+                aria-label={t("suggestions.loading")}
             >
                 <div className={GRID_CLASS}>
                     {Array.from({ length: SUGGESTIONS_LIMIT }).map((_, i) => (
@@ -225,7 +231,7 @@ export default function SuggestedUsers({
                     }}
                     className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition"
                 >
-                    Tentar novamente
+                    {t("suggestions.retry")}
                 </button>
             </div>
         );
@@ -239,10 +245,10 @@ export default function SuggestedUsers({
         <div className="w-full max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-3 px-1">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-noir-text-muted">
-                    Sugestões
+                    {t("suggestions.title")}
                 </h4>
                 <span className="text-[10px] font-mono text-emerald-400/80 lowercase">
-                    {users.length} usuário{users.length === 1 ? "" : "s"}
+                    {t("suggestions.userCount", { count: users.length })}
                 </span>
             </div>
             <ul className={GRID_CLASS}>

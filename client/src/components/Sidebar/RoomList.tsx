@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../hooks/useAuth";
 import { useSocket } from "../../hooks/useSocket";
 import type { Room } from "../../types";
@@ -24,13 +25,14 @@ export default function RoomList({
     unreadCounts,
     mentionUnreadCounts,
 }: RoomListProps) {
+    const { t } = useTranslation("chat");
     const { user } = useAuth();
     const { onlineUsers } = useSocket();
     const [deleteTarget, setDeleteTarget] = useState<Room | null>(null);
 
     const getDmDisplayName = (room: Room) => {
         const other = room.participants.find((p) => p._id !== user?._id);
-        return other?.name || "Usuário";
+        return other?.name || t("sidebar.userFallback");
     };
 
     const getDmAvatarUrl = (room: Room) => {
@@ -61,10 +63,10 @@ export default function RoomList({
         <div className="flex-1 overflow-y-auto custom-scrollbar pb-4">
             {/* Header */}
             <div className="px-4 py-1.5 flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider dark:text-noir-text-muted">
-                <span>Conversas Recentes</span>
+                <span>{t("sidebar.recent")}</span>
                 {activeCount > 0 && (
                     <span className="text-[10px] normal-case text-slate-400 dark:text-noir-text-muted/60">
-                        {activeCount} {activeCount === 1 ? "ativa" : "ativas"}
+                        {t("sidebar.active", { count: activeCount })}
                     </span>
                 )}
             </div>
@@ -170,14 +172,16 @@ export default function RoomList({
 
                                 {/* Botão deletar (DMs) */}
                                 {room.type === "direct" && (
-                                    <Tooltip content="Excluir conversa">
+                                    <Tooltip content={t("sidebar.deleteChat")}>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setDeleteTarget(room);
                                             }}
                                             className="text-slate-400 hover:text-red-600 transition-colors p-1.5 opacity-0 group-hover:opacity-100 shrink-0 dark:text-noir-text-muted dark:hover:text-red-400 max-sm:opacity-60"
-                                            aria-label={`Excluir conversa com ${displayName}`}
+                                            aria-label={t("sidebar.deleteChatWith", {
+                                                name: displayName,
+                                            })}
                                         >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -205,13 +209,15 @@ export default function RoomList({
             {/* Modal de confirmação */}
             <ConfirmDialog
                 isOpen={deleteTarget !== null}
-                title="Excluir conversa"
+                title={t("sidebar.deleteChatTitle")}
                 message={
                     deleteTarget
-                        ? `Tem certeza que deseja excluir a conversa com ${getDmDisplayName(deleteTarget)}? Todas as mensagens serão removidas.`
+                        ? t("sidebar.deleteChatMessage", {
+                              name: getDmDisplayName(deleteTarget),
+                          })
                         : ""
                 }
-                confirmLabel="Excluir"
+                confirmLabel={t("common:actions.delete")}
                 danger
                 onConfirm={() => {
                     if (deleteTarget) {

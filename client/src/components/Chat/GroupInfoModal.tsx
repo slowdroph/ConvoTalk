@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 import Avatar from "../ui/Avatar";
@@ -22,6 +23,7 @@ export default function GroupInfoModal({
     onClose,
     onLeft,
 }: GroupInfoModalProps) {
+    const { t } = useTranslation("chat");
     const navigate = useNavigate();
     const [leaving, setLeaving] = useState(false);
     const [confirmLeave, setConfirmLeave] = useState(false);
@@ -36,10 +38,10 @@ export default function GroupInfoModal({
     const creatorBlocked =
         isCreator && (participants.length <= 1 || otherAdmins.length === 0);
 
-    const roleOf = (p: PublicUser) => {
-        if (p._id === room.createdBy) return "Criador";
-        if (admins.some((a) => a._id === p._id)) return "Administrador";
-        return "Membro";
+    const roleOf = (p: PublicUser): "creator" | "admin" | "member" => {
+        if (p._id === room.createdBy) return "creator";
+        if (admins.some((a) => a._id === p._id)) return "admin";
+        return "member";
     };
 
     const handleLeave = async () => {
@@ -55,7 +57,7 @@ export default function GroupInfoModal({
         } catch (err: unknown) {
             setLeaving(false);
             setConfirmLeave(false);
-            setError(getErrorMessage(err, "Erro ao sair do grupo"));
+            setError(getErrorMessage(err, t("group.leaveError")));
         }
     };
 
@@ -75,7 +77,7 @@ export default function GroupInfoModal({
             onKeyDown={handleKeyDown}
             role="dialog"
             aria-modal="true"
-            aria-label="Informações do grupo"
+            aria-label={t("group.infoAria")}
         >
             <div
                 className="relative w-full max-w-xl bg-[#111711] border border-emerald-500/25 rounded-2xl p-6 text-noir-text-bright flex flex-col gap-5 overflow-hidden max-h-[90vh] shadow-2xl shadow-black/90"
@@ -102,17 +104,17 @@ export default function GroupInfoModal({
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white tracking-tight">
-                                Informações do grupo
+                                {t("group.infoTitle")}
                             </h2>
                             <p className="text-xs text-noir-text-muted mt-0.5">
-                                Detalhes, membros e saída.
+                                {t("group.infoSubtitle")}
                             </p>
                         </div>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
-                        title="Fechar (ESC)"
+                        title={t("group.closeWithEsc")}
                         className="group flex items-center gap-1.5 p-1.5 rounded-lg text-noir-text-muted hover:text-white hover:bg-white/5 transition"
                     >
                         <kbd className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-black/40 border border-white/10 rounded text-noir-text-muted group-hover:text-noir-text-bright">
@@ -164,13 +166,14 @@ export default function GroupInfoModal({
                                 >
                                     {(room.visibility ?? "private") ===
                                     "public"
-                                        ? "PÚBLICO"
-                                        : "PRIVADO"}
+                                        ? t("group.publicBadge")
+                                        : t("group.privateBadge")}
                                 </span>
                             </div>
                             <p className="text-xs text-noir-text-muted mt-0.5">
-                                {participants.length} participante
-                                {participants.length === 1 ? "" : "s"}
+                                {t("group.memberCount", {
+                                    count: participants.length,
+                                })}
                             </p>
                         </div>
                     </div>
@@ -183,7 +186,9 @@ export default function GroupInfoModal({
 
                     <div>
                         <span className="block text-[11px] font-semibold tracking-wider text-noir-text-muted uppercase mb-1.5">
-                            Membros ({participants.length})
+                            {t("group.members", {
+                                count: participants.length,
+                            })}
                         </span>
                         <ul className="border border-white/10 rounded-xl bg-[#090f09]/80 divide-y divide-white/5 overflow-hidden max-h-56 overflow-y-auto custom-scrollbar">
                             {participants.map((p) => (
@@ -202,20 +207,20 @@ export default function GroupInfoModal({
                                             {p._id === currentUserId && (
                                                 <span className="text-noir-text-muted font-normal">
                                                     {" "}
-                                                    (você)
+                                                    {t("group.you")}
                                                 </span>
                                             )}
                                         </p>
                                         <p
                                             className={`text-[11px] ${
-                                                roleOf(p) === "Membro"
+                                                roleOf(p) === "member"
                                                     ? "text-noir-text-muted"
-                                                    : roleOf(p) === "Criador"
+                                                    : roleOf(p) === "creator"
                                                       ? "text-emerald-400"
                                                       : "text-amber-400"
                                             }`}
                                         >
-                                            {roleOf(p)}
+                                            {t(`group.${roleOf(p)}`)}
                                         </p>
                                     </div>
                                     {p._id !== currentUserId && (
@@ -224,8 +229,10 @@ export default function GroupInfoModal({
                                             onClick={() =>
                                                 navigate(`/profile/${p._id}`)
                                             }
-                                            title="Ver perfil"
-                                            aria-label={`Ver perfil de ${p.name}`}
+                                            title={t("group.viewProfile")}
+                                            aria-label={t("group.viewProfileOf", {
+                                                name: p.name,
+                                            })}
                                             className="flex-shrink-0 p-1.5 rounded-lg text-noir-text-muted hover:text-emerald-400 hover:bg-white/5 transition"
                                         >
                                             <svg
@@ -255,18 +262,18 @@ export default function GroupInfoModal({
                             disabled={creatorBlocked}
                             title={
                                 creatorBlocked
-                                    ? "Promova um administrador antes de sair do grupo"
-                                    : "Sair do grupo"
+                                    ? t("group.leaveBlockedPromote")
+                                    : t("group.leaveGroup")
                             }
                             className="w-full px-4 py-2.5 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 font-medium rounded-xl transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Sair do grupo
+                            {t("group.leaveGroup")}
                         </button>
                         {creatorBlocked && (
                             <p className="text-[11px] text-amber-400/90 mt-1.5 px-1">
                                 {participants.length <= 1
-                                    ? "Você é o único membro. Exclua o grupo nas configurações para encerrá-lo."
-                                    : "Como criador, promova um administrador antes de sair do grupo."}
+                                    ? t("group.soleMemberHint")
+                                    : t("group.creatorPromoteHint")}
                             </p>
                         )}
                     </div>
@@ -274,11 +281,11 @@ export default function GroupInfoModal({
 
                 <footer className="border-t border-white/10 pt-4 mt-2 flex items-center justify-between">
                     <span className="text-xs text-noir-text-muted hidden sm:inline-block">
-                        Pressione{" "}
+                        {t("group.pressEscPrefix")}{" "}
                         <kbd className="px-1 py-0.5 bg-black/40 border border-white/10 rounded font-mono text-[10px] text-noir-text-muted">
                             esc
                         </kbd>{" "}
-                        para fechar
+                        {t("group.pressEscSuffix")}
                     </span>
                     <div className="flex items-center gap-2 ml-auto">
                         <button
@@ -286,7 +293,7 @@ export default function GroupInfoModal({
                             onClick={onClose}
                             className="px-4 py-2 rounded-xl text-xs font-medium text-noir-text-muted hover:text-white hover:bg-white/5 transition"
                         >
-                            Fechar
+                            {t("group.closeAction")}
                         </button>
                     </div>
                 </footer>
@@ -294,9 +301,13 @@ export default function GroupInfoModal({
 
             <ConfirmDialog
                 isOpen={confirmLeave}
-                title="Sair do grupo"
-                message={`Tem certeza que deseja sair de "${room.name}"? Você deixará de receber as mensagens do grupo.`}
-                confirmLabel={leaving ? "Saindo..." : "Sair"}
+                title={t("group.leaveConfirmTitle")}
+                message={t("group.leaveConfirmMessage", {
+                    name: room.name,
+                })}
+                confirmLabel={
+                    leaving ? t("group.leaving") : t("group.leave")
+                }
                 danger
                 onCancel={() => setConfirmLeave(false)}
                 onConfirm={handleLeave}

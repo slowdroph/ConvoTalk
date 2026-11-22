@@ -15,6 +15,22 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
     }
 }
 
+export async function updatePreferences(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const { language } = req.body;
+        const preferences = await userService.updatePreferences(
+            req.user!._id,
+            language,
+        );
+        res.json({ preferences });
+    } catch (error) {
+        handleError(error, res, "Erro ao atualizar preferências.");
+    }
+}
+
 export async function getUserStatus(
     req: AuthRequest,
     res: Response,

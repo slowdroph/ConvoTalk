@@ -1,15 +1,17 @@
+import { useTranslation } from "react-i18next";
 import { useTheme } from "../../hooks/useTheme";
 
 export default function ThemeToggle() {
+    const { t } = useTranslation("settings");
     const { theme, toggleTheme } = useTheme();
     const isDark = theme === "dark";
 
     return (
         <div className="space-y-6">
             <div className="border-b border-noir-border pb-4">
-                <h2 className="text-base font-semibold text-noir-text-bright">Aparência</h2>
+                <h2 className="text-base font-semibold text-noir-text-bright">{t("theme.title")}</h2>
                 <p className="text-xs text-noir-text-muted mt-0.5">
-                    Ajuste o tema visual da sua interface de chat.
+                    {t("theme.description")}
                 </p>
             </div>
 
@@ -17,12 +19,12 @@ export default function ThemeToggle() {
                 <div className="flex items-center justify-between">
                     <div>
                         <h3 className="text-sm font-medium text-noir-text-bright">
-                            Modo escuro
+                            {t("theme.darkMode")}
                         </h3>
                         <p className="text-xs text-noir-text-muted mt-0.5">
                             {isDark
-                                ? "Economiza bateria e reduz brilho."
-                                : "Interface clara para ambientes bem iluminados."}
+                                ? t("theme.darkHint")
+                                : t("theme.lightHint")}
                         </p>
                     </div>
 

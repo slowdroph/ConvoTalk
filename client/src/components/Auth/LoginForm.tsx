@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../utils/errors";
 import api from "../../services/api";
 import AuthSubmitButton from "./AuthSubmitButton";
 
 export default function LoginForm() {
+    const { t } = useTranslation("auth");
     const { login } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -14,6 +16,7 @@ export default function LoginForm() {
     const [loading, setLoading] = useState(false);
     const [resending, setResending] = useState(false);
     const [resendMessage, setResendMessage] = useState("");
+    const [resendIsError, setResendIsError] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -46,9 +49,9 @@ export default function LoginForm() {
                     errorData?.error?.code === "EMAIL_NOT_VERIFIED");
             if (needsVerification) {
                 setNeedsVerification(true);
-                setError(errorData?.error?.message || "Verifique seu email.");
+                setError(t("login.verifyEmail"));
             } else {
-                setError(getErrorMessage(err, "Erro ao fazer login"));
+                setError(getErrorMessage(err, t("login.error")));
             }
         } finally {
             setLoading(false);
@@ -58,13 +61,13 @@ export default function LoginForm() {
     const handleResend = async () => {
         setResending(true);
         setResendMessage("");
+        setResendIsError(false);
         try {
             await api.post("/auth/resend-verification", { email });
-            setResendMessage(
-                "Se o email for válido e ainda não confirmado, enviamos um novo link de confirmação.",
-            );
+            setResendMessage(t("login.resendSuccess"));
         } catch (err: unknown) {
-            setResendMessage(getErrorMessage(err, "Erro ao reenviar email"));
+            setResendMessage(getErrorMessage(err, t("login.resendError")));
+            setResendIsError(true);
         } finally {
             setResending(false);
         }
@@ -84,7 +87,7 @@ export default function LoginForm() {
                     {resendMessage && (
                         <p
                             className={
-                                resendMessage.includes("Erro")
+                                resendIsError
                                     ? "text-red-400"
                                     : "text-green-400"
                             }
@@ -98,16 +101,14 @@ export default function LoginForm() {
                         disabled={resending}
                         className="text-sm text-green-400 hover:text-green-300 transition-colors underline"
                     >
-                        {resending
-                            ? "Reenviando..."
-                            : "Reenviar email de verificação"}
+                        {resending ? t("login.resending") : t("login.resend")}
                     </button>
                 </div>
             )}
 
             <div className="space-y-1.5">
                 <label htmlFor="email" className="block text-xs font-semibold text-zinc-300">
-                    E-mail
+                    {t("login.email")}
                 </label>
                 <div className="relative rounded-lg shadow-sm">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
@@ -120,8 +121,8 @@ export default function LoginForm() {
                         name="email"
                         id="email"
                         autoComplete="email"
-                        placeholder="seu@email.com"
-                        aria-label="Email"
+                        placeholder={t("login.emailPlaceholder")}
+                        aria-label={t("login.emailAria")}
                         value={email}
                         onChange={(e) => {
                             setEmail(e.target.value);
@@ -137,7 +138,7 @@ export default function LoginForm() {
 
             <div className="space-y-1.5">
                 <label htmlFor="password" className="block text-xs font-semibold text-zinc-300">
-                    Senha
+                    {t("login.password")}
                 </label>
                 <div className="relative rounded-lg shadow-sm">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-500">
@@ -151,7 +152,7 @@ export default function LoginForm() {
                         id="password"
                         autoComplete="current-password"
                         placeholder="••••••••"
-                        aria-label="Senha"
+                        aria-label={t("login.password")}
                         value={password}
                         onChange={(e) => {
                             setPassword(e.target.value);
@@ -165,7 +166,7 @@ export default function LoginForm() {
                     <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                        aria-label={showPassword ? t("login.hidePassword") : t("login.showPassword")}
                         className={`absolute inset-y-0 right-0 flex items-center pr-3.5 transition-colors focus:outline-none ${showPassword ? "text-emerald-400" : "text-zinc-500 hover:text-zinc-300"}`}
                     >
                         {showPassword ? (
@@ -186,15 +187,15 @@ export default function LoginForm() {
                     to="/forgot-password"
                     className="text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors focus:outline-none focus:underline"
                 >
-                    Esqueceu a senha?
+                    {t("login.forgotPassword")}
                 </Link>
             </div>
 
             <div className="pt-2">
                 <AuthSubmitButton
                     loading={loading}
-                    label="Entrar"
-                    loadingLabel="Entrando..."
+                    label={t("login.submit")}
+                    loadingLabel={t("login.submitting")}
                 />
             </div>
         </form>

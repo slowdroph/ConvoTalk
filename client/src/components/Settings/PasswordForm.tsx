@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/errors";
 
 export default function PasswordForm() {
+    const { t } = useTranslation("settings");
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,12 +21,12 @@ export default function PasswordForm() {
         setSuccess("");
 
         if (newPassword !== confirmPassword) {
-            setError("As senhas não coincidem.");
+            setError(t("password.mismatch"));
             return;
         }
 
         if (newPassword.length < 8) {
-            setError("A nova senha deve ter pelo menos 8 caracteres.");
+            setError(t("password.tooShort"));
             return;
         }
 
@@ -32,12 +34,12 @@ export default function PasswordForm() {
 
         try {
             await api.put("/user/password", { currentPassword, newPassword });
-            setSuccess("Senha alterada com sucesso!");
+            setSuccess(t("password.success"));
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao alterar senha"));
+            setError(getErrorMessage(err, t("password.error")));
         } finally {
             setLoading(false);
         }
@@ -47,10 +49,10 @@ export default function PasswordForm() {
         <div className="space-y-6">
             <div className="border-b border-noir-border pb-4">
                 <h2 className="text-base font-semibold text-noir-text-bright">
-                    Alterar Senha
+                    {t("password.title")}
                 </h2>
                 <p className="text-xs text-noir-text-muted mt-0.5">
-                    Mantenha sua conta protegida usando uma combinação forte de caracteres.
+                    {t("password.description")}
                 </p>
             </div>
 
@@ -78,7 +80,7 @@ export default function PasswordForm() {
                         htmlFor="currentPassword"
                         className="block text-xs font-medium text-noir-text-bright mb-1.5"
                     >
-                        Senha atual
+                        {t("password.current")}
                     </label>
                     <div className="relative">
                         <input
@@ -96,7 +98,7 @@ export default function PasswordForm() {
                             type="button"
                             onClick={() => setShowCurrent((prev) => !prev)}
                             className="absolute right-3 top-3 text-zinc-500 hover:text-zinc-300 transition-colors"
-                            title={showCurrent ? "Ocultar senha" : "Exibir senha"}
+                            title={showCurrent ? t("password.hide") : t("password.show")}
                         >
                             {showCurrent ? (
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,7 +119,7 @@ export default function PasswordForm() {
                         htmlFor="newPassword"
                         className="block text-xs font-medium text-noir-text-bright mb-1.5"
                     >
-                        Nova senha
+                        {t("password.new")}
                     </label>
                     <div className="relative">
                         <input
@@ -136,7 +138,7 @@ export default function PasswordForm() {
                             type="button"
                             onClick={() => setShowNew((prev) => !prev)}
                             className="absolute right-3 top-3 text-zinc-500 hover:text-zinc-300 transition-colors"
-                            title={showNew ? "Ocultar senha" : "Exibir senha"}
+                            title={showNew ? t("password.hide") : t("password.show")}
                         >
                             {showNew ? (
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,7 +159,7 @@ export default function PasswordForm() {
                         htmlFor="confirmPassword"
                         className="block text-xs font-medium text-noir-text-bright mb-1.5"
                     >
-                        Confirmar nova senha
+                        {t("password.confirm")}
                     </label>
                     <div className="relative">
                         <input
@@ -176,7 +178,7 @@ export default function PasswordForm() {
                             type="button"
                             onClick={() => setShowConfirm((prev) => !prev)}
                             className="absolute right-3 top-3 text-zinc-500 hover:text-zinc-300 transition-colors"
-                            title={showConfirm ? "Ocultar senha" : "Exibir senha"}
+                            title={showConfirm ? t("password.hide") : t("password.show")}
                         >
                             {showConfirm ? (
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,7 +200,7 @@ export default function PasswordForm() {
                         disabled={loading}
                         className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs tracking-wide shadow-md shadow-emerald-500/20 transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
-                        {loading ? "Alterando..." : "Alterar senha"}
+                        {loading ? t("password.submitting") : t("password.submit")}
                     </button>
                 </div>
             </form>

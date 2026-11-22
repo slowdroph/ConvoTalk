@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { useSocket } from "../../hooks/useSocket";
@@ -48,6 +49,7 @@ export default function UserSearchModal({
     onGroupJoined,
     rooms = [],
 }: UserSearchModalProps) {
+    const { t } = useTranslation("chat");
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<UserResult[]>([]);
     const [loading, setLoading] = useState(false);
@@ -103,7 +105,7 @@ export default function UserSearchModal({
 
         if (term.includes("@")) {
             setResults([]);
-            setError("Busque por nome ou #ID. Busca por email foi desativada.");
+            setError(t("sidebar.emailSearchDisabled"));
             setLoading(false);
             return;
         }
@@ -120,11 +122,11 @@ export default function UserSearchModal({
             setError("");
         } catch (err: unknown) {
             setResults([]);
-            setError(getErrorMessage(err, "Erro ao buscar usuários"));
+            setError(getErrorMessage(err, t("sidebar.searchUsersError")));
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const searchPublic = useCallback(async (term: string) => {
         setPublicLoading(true);
@@ -193,7 +195,7 @@ export default function UserSearchModal({
             onConversationCreated(data._id);
             handleClose();
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao criar conversa"));
+            setError(getErrorMessage(err, t("sidebar.createConversationError")));
         } finally {
             setCreatingId(null);
         }
@@ -213,7 +215,7 @@ export default function UserSearchModal({
             onGroupJoined?.(data._id);
             handleClose();
         } catch (err: unknown) {
-            setError(getErrorMessage(err, "Erro ao entrar no grupo"));
+            setError(getErrorMessage(err, t("newConversation.joinError")));
         } finally {
             setJoiningId(null);
         }
@@ -291,7 +293,7 @@ export default function UserSearchModal({
             onKeyDown={handleKeyDown}
             role="dialog"
             aria-modal="true"
-            aria-label="Nova conversa"
+            aria-label={t("newConversation.dialogAria")}
         >
             <div
                 className="w-full max-w-xl bg-[#111714] border border-emerald-500/30 rounded-2xl shadow-2xl shadow-black/90 overflow-hidden flex flex-col max-h-[80vh]"
@@ -323,10 +325,10 @@ export default function UserSearchModal({
                             setSelectedIndex(0);
                             setError("");
                         }}
-                        placeholder="Buscar por nome ou #ID..."
+                        placeholder={t("newConversation.searchPlaceholder")}
                         maxLength={50}
                         autoComplete="off"
-                        aria-label="Buscar usuário ou grupo"
+                        aria-label={t("newConversation.searchAria")}
                         aria-autocomplete="list"
                         aria-controls="new-conversation-results"
                         aria-activedescendant={
@@ -346,7 +348,7 @@ export default function UserSearchModal({
                         <button
                             type="button"
                             onClick={handleClose}
-                            aria-label="Fechar"
+                            aria-label={t("newConversation.close")}
                             className="p-1 text-noir-text-muted hover:text-noir-text-bright hover:bg-noir-surface-alt rounded-lg transition"
                         >
                             <svg
@@ -367,9 +369,9 @@ export default function UserSearchModal({
                 </div>
 
                 <div className="px-4 py-2.5 flex items-center gap-2 border-b border-noir-border/50 bg-[#0d1310]">
-                    {tabButton("all", "Todos", userCount + groupResults.length)}
-                    {tabButton("users", "Usuários", userCount)}
-                    {tabButton("groups", "Grupos")}
+                    {tabButton("all", t("newConversation.all"), userCount + groupResults.length)}
+                    {tabButton("users", t("newConversation.users"), userCount)}
+                    {tabButton("groups", t("newConversation.groups"))}
                 </div>
 
                 {error && (
@@ -382,34 +384,36 @@ export default function UserSearchModal({
                     id="new-conversation-results"
                     ref={listRef}
                     role="listbox"
-                    aria-label="Resultados da busca"
+                    aria-label={t("newConversation.resultsAria")}
                     className="p-3 overflow-y-auto max-h-[360px] space-y-2 custom-scrollbar"
                 >
                     <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-noir-text-muted flex items-center justify-between">
                         <span>
                             {query.trim()
-                                ? "Contatos sugeridos"
-                                : "Buscar para começar"}
+                                ? t("newConversation.suggested")
+                                : t("newConversation.startHint")}
                         </span>
                         <span className="text-[10px] font-mono text-emerald-400/80 lowercase">
-                            {totalCount} resultado{totalCount === 1 ? "" : "s"}
+                            {t("newConversation.resultCount", {
+                                count: totalCount,
+                            })}
                         </span>
                     </div>
 
                     {!query.trim() && items.length === 0 && (
                         <p className="px-2 py-8 text-center text-noir-text-muted text-sm">
-                            Digite um nome ou #ID para buscar pessoas
+                            {t("newConversation.typeHint")}
                             {groupResults.length > 0
-                                ? " ou escolha um grupo abaixo."
-                                : "."}
+                                ? t("newConversation.typeHintGroups")
+                                : t("newConversation.typeHintEnd")}
                         </p>
                     )}
 
                     {showEmpty && (
                         <p className="px-2 py-8 text-center text-noir-text-muted text-sm">
                             {tab === "groups"
-                                ? "Nenhum grupo encontrado."
-                                : "Nenhum usuário encontrado."}
+                                ? t("newConversation.emptyGroup")
+                                : t("newConversation.emptyUser")}
                         </p>
                     )}
 
@@ -448,20 +452,24 @@ export default function UserSearchModal({
                                                     {room.name}
                                                 </span>
                                                 <span className="text-[10px] bg-noir-surface border border-noir-border/80 text-noir-text-muted font-mono px-1.5 py-0.2 rounded">
-                                                    GRUPO
+                                                    {t("newConversation.groupBadge")}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-noir-text-muted truncate mt-0.5">
-                                                {room.participants.length}{" "}
-                                                participante
-                                                {room.participants.length === 1
-                                                    ? ""
-                                                    : "s"}
+                                                {t(
+                                                    "newConversation.participantCount",
+                                                    {
+                                                        count: room.participants
+                                                            .length,
+                                                    },
+                                                )}
                                             </p>
                                         </div>
                                     </div>
                                     <span className="text-xs text-noir-text-muted group-hover:text-emerald-400 p-1.5 flex-shrink-0 hidden sm:inline text-[11px]">
-                                        {selected ? "↵ Abrir" : "Abrir"}
+                                        {selected
+                                            ? t("newConversation.openSelected")
+                                            : t("newConversation.open")}
                                     </span>
                                 </div>
                             );
@@ -526,8 +534,11 @@ export default function UserSearchModal({
                                             handleClose();
                                             navigate(`/profile/${user._id}`);
                                         }}
-                                        title="Ver perfil"
-                                        aria-label={`Ver perfil de ${user.name}`}
+                                        title={t("newConversation.viewProfile")}
+                                        aria-label={t(
+                                            "newConversation.viewProfileOf",
+                                            { name: user.name },
+                                        )}
                                         className="flex items-center gap-1 p-1.5 rounded-lg text-noir-text-muted hover:text-emerald-400 hover:bg-noir-surface transition"
                                     >
                                         <svg
@@ -544,7 +555,7 @@ export default function UserSearchModal({
                                             />
                                         </svg>
                                         <span className="hidden sm:inline text-[11px]">
-                                            Perfil
+                                            {t("newConversation.profile")}
                                         </span>
                                     </button>
                                     {busy ? (
@@ -554,7 +565,7 @@ export default function UserSearchModal({
                                             <span className="font-mono text-xs">
                                                 ↵
                                             </span>{" "}
-                                            Conversar
+                                            {t("newConversation.chat")}
                                         </span>
                                     ) : (
                                         <span className="text-xs text-noir-text-muted group-hover:text-emerald-400 p-1.5 rounded-lg hover:bg-noir-surface transition flex items-center gap-1">
@@ -572,7 +583,7 @@ export default function UserSearchModal({
                                                 />
                                             </svg>
                                             <span className="hidden sm:inline text-[11px]">
-                                                Iniciar chat
+                                                {t("newConversation.startChat")}
                                             </span>
                                         </span>
                                     )}
@@ -583,22 +594,23 @@ export default function UserSearchModal({
                     {tab !== "users" && (
                         <>
                             <div className="px-2 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-noir-text-muted flex items-center justify-between">
-                                <span>Grupos públicos</span>
+                                <span>{t("newConversation.publicGroups")}</span>
                                 <span className="text-[10px] font-mono text-emerald-400/80 lowercase">
-                                    {publicGroups.length} disponíve
-                                    {publicGroups.length === 1 ? "l" : "is"}
+                                    {t("newConversation.publicAvailable", {
+                                        count: publicGroups.length,
+                                    })}
                                 </span>
                             </div>
 
                             {publicLoading && publicGroups.length === 0 && (
                                 <p className="px-2 py-4 text-center text-noir-text-muted text-sm">
-                                    Buscando grupos públicos...
+                                    {t("newConversation.searchingGroups")}
                                 </p>
                             )}
 
                             {!publicLoading && publicGroups.length === 0 && (
                                 <p className="px-2 py-4 text-center text-noir-text-muted text-sm">
-                                    Nenhum grupo público disponível.
+                                    {t("newConversation.noPublicGroups")}
                                 </p>
                             )}
 
@@ -623,12 +635,17 @@ export default function UserSearchModal({
                                                         {g.name}
                                                     </span>
                                                     <span className="text-[10px] bg-noir-surface border border-noir-border/80 text-emerald-400 font-mono px-1.5 py-0.2 rounded shrink-0">
-                                                        PÚBLICO
+                                                        {t("newConversation.publicBadge")}
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-noir-text-muted truncate mt-0.5">
                                                     {g.description ||
-                                                        `${g.participantCount} participante${g.participantCount === 1 ? "" : "s"}`}
+                                                        t(
+                                                            "newConversation.participantCount",
+                                                            {
+                                                                count: g.participantCount,
+                                                            },
+                                                        )}
                                                 </p>
                                             </div>
                                         </div>
@@ -643,7 +660,7 @@ export default function UserSearchModal({
                                             {joining ? (
                                                 <span className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
                                             ) : (
-                                                "Entrar"
+                                                t("newConversation.join")
                                             )}
                                         </button>
                                     </div>
@@ -659,19 +676,19 @@ export default function UserSearchModal({
                             <kbd className="px-1.5 py-0.5 rounded bg-noir-surface border border-noir-border text-noir-text-bright">
                                 ↑↓
                             </kbd>{" "}
-                            navegar
+                            {t("newConversation.navHint")}
                         </span>
                         <span className="flex items-center gap-1">
                             <kbd className="px-1.5 py-0.5 rounded bg-noir-surface border border-noir-border text-noir-text-bright">
                                 ↵
                             </kbd>{" "}
-                            selecionar
+                            {t("newConversation.selectHint")}
                         </span>
                         <span className="flex items-center gap-1">
                             <kbd className="px-1.5 py-0.5 rounded bg-noir-surface border border-noir-border text-noir-text-bright">
                                 esc
                             </kbd>{" "}
-                            fechar
+                            {t("newConversation.closeHint")}
                         </span>
                     </div>
                     <button
@@ -695,7 +712,7 @@ export default function UserSearchModal({
                                 strokeWidth={2}
                             />
                         </svg>
-                        <span>Criar novo grupo</span>
+                        <span>{t("newConversation.createGroup")}</span>
                     </button>
                 </div>
             </div>

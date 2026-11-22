@@ -7,6 +7,17 @@ import {
     isLanguageId,
     isLanguageLevelId,
 } from "../../../shared/profile";
+import { SUPPORTED_LANGUAGES } from "../../../shared/i18n";
+
+const preferencesSchema = new Schema(
+    {
+        language: {
+            type: String,
+            enum: [...SUPPORTED_LANGUAGES],
+        },
+    },
+    { _id: false },
+);
 
 const userSchema = new Schema<IUser>({
     name: {
@@ -174,6 +185,9 @@ const userSchema = new Schema<IUser>({
             },
             message: "Níveis de idioma inválidos.",
         },
+    },
+    preferences: {
+        type: preferencesSchema,
     },
     blockedUsers: [
         {

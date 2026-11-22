@@ -25,6 +25,7 @@ export async function register(req: Request, res: Response): Promise<void> {
             city,
             languages,
             languageLevels,
+            language,
         } = req.body;
         const clientIp = getHttpClientIp(req);
         const result = await authService.registerUser(
@@ -38,6 +39,7 @@ export async function register(req: Request, res: Response): Promise<void> {
                 city,
                 languages,
                 languageLevels,
+                language,
             },
             clientIp,
         );

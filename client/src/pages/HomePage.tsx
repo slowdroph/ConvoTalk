@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import PreviewChat from "../components/Home/PreviewChat";
@@ -11,38 +12,10 @@ import SectionHeader from "../components/Home/SectionHeader";
 import IconBadge from "../components/Home/IconBadge";
 import FeatureCard from "../components/Home/FeatureCard";
 
-const FAQ_ITEMS = [
-    {
-        question: "O ConvoTalk é gratuito?",
-        answer: "Sim! O ConvoTalk é uma plataforma gratuita.",
-    },
-    {
-        question: "Preciso criar uma conta para usar?",
-        answer: "Você pode experimentar demonstrações públicas instantaneamente, mas para ter histórico persistente e gerenciar grupos basta criar uma conta em menos de 1 minuto.",
-    },
-    {
-        question: "Posso fazer chamadas de vídeo?",
-        answer: "Sim, o ConvoTalk integra chamadas de áudio e vídeo em tempo real peer-to-peer utilizando WebRTC com alta fidelidade e baixa latência sem depender de softwares de terceiros.",
-    },
-    {
-        question: "Posso criar grupos?",
-        answer: "Sim, você pode criar grupos com múltiplos membros, controle de administradores e mensagens fixadas.",
-    },
-    {
-        question: "Posso enviar arquivos?",
-        answer: "Sim, você pode anexar imagens, documentos PDF, planilhas e mensagens de voz gravadas diretamente no chat com validação de tipo MIME.",
-    },
-    {
-        question: "Posso usar o ConvoTalk no celular?",
-        answer: "Sim! O ConvoTalk foi desenvolvido como PWA (Progressive Web App), funcionando perfeitamente em navegadores mobile.",
-    },
-    {
-        question: "Como minhas mensagens são protegidas?",
-        answer: "Todas as conexões utilizam túneis criptografados HTTPS/WSS, autenticação por cookies HTTP-only, rate limiting e validação estrita de schema Zod em todas as mensagens trafegadas.",
-    },
-];
+const FAQ_ITEMS = [1, 2, 3, 4, 5, 6, 7] as const;
 
 export default function HomePage() {
+    const { t } = useTranslation("home");
     const { activeSection, scrolled, showBackToTop } = useScrollSpy();
     const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -53,8 +26,7 @@ export default function HomePage() {
                 "@type": "WebApplication",
                 name: "ConvoTalk",
                 url: "https://convotalk.live",
-                description:
-                    "Plataforma completa para mensagens instantâneas, grupos, chamadas de áudio e vídeo e compartilhamento de arquivos em tempo real.",
+                description: t("seo.structuredDescription"),
                 applicationCategory: "CommunicationApplication",
                 operatingSystem: "Web",
                 offers: {
@@ -63,7 +35,7 @@ export default function HomePage() {
                     priceCurrency: "BRL",
                 },
             }),
-        [],
+        [t],
     );
 
     const toggleFaq = (index: number) => {
@@ -73,8 +45,8 @@ export default function HomePage() {
     return (
         <div className="min-h-dvh-fallback bg-background text-on-surface font-sans antialiased selection:bg-primary-container selection:text-white">
             <SEO
-                title="Converse em tempo real"
-                description="ConvoTalk - Converse em tempo real com quem importa. Plataforma completa para mensagens instantâneas, grupos, chamadas de áudio e vídeo e compartilhamento de arquivos."
+                title={t("seo.title")}
+                description={t("seo.description")}
                 canonical="/"
             />
             <Helmet>
@@ -87,7 +59,7 @@ export default function HomePage() {
             {/* 2. HERO */}
             <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden bg-grid-dots">
                 {/* Radial emerald glows */}
-                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[550px] bg-primary/10 rounded-full blur-[140px] pointer-events-none" />
+                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-175 h-137.5 bg-primary/10 rounded-full blur-[140px] pointer-events-none" />
                 <div className="absolute -top-24 right-10 w-96 h-96 bg-primary-container/10 rounded-full blur-[100px] pointer-events-none" />
 
                 <div className="max-w-5xl mx-auto text-center relative z-10">
@@ -96,7 +68,7 @@ export default function HomePage() {
                         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/30 bg-surface-container-high/60 backdrop-blur text-xs font-medium text-on-surface mb-8 shadow-sm">
                             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                             <span className="text-on-surface-variant">
-                                Chamadas WebRTC & PWA Ativados
+                                {t("hero.badge")}
                             </span>
                         </div>
                     </Reveal>
@@ -104,18 +76,16 @@ export default function HomePage() {
                     {/* Title & Sub */}
                     <Reveal delay={100}>
                         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-on-surface max-w-4xl mx-auto leading-[1.15]">
-                            Converse. Compartilhe. Conecte-se. <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary-fixed to-primary-container">
-                                Em tempo real.
+                            {t("hero.title")} <br />
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-primary via-primary-fixed to-primary-container">
+                                {t("hero.titleHighlight")}
                             </span>
                         </h1>
                     </Reveal>
 
                     <Reveal delay={200}>
                         <p className="mt-6 text-lg sm:text-xl text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-                            Uma plataforma completa para mensagens instantâneas,
-                            grupos, chamadas de áudio e vídeo e compartilhamento
-                            de arquivos.
+                            {t("hero.subtitle")}
                         </p>
                     </Reveal>
 
@@ -124,9 +94,9 @@ export default function HomePage() {
                         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Link
                                 to="/login?mode=register"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary-container to-primary text-white px-7 py-3.5 rounded-lg font-semibold text-sm shadow-[0_0_25px_rgba(0,168,75,0.4)] hover:shadow-[0_0_35px_rgba(89,224,123,0.6)] hover:-translate-y-0.5 transition-all"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-linear-to-r from-primary-container to-primary text-white px-7 py-3.5 rounded-lg font-semibold text-sm shadow-[0_0_25px_rgba(0,168,75,0.4)] hover:shadow-[0_0_35px_rgba(89,224,123,0.6)] hover:-translate-y-0.5 transition-all"
                             >
-                                <span>Começar agora</span>
+                                <span>{t("hero.start")}</span>
                                 <span className="material-symbols-outlined text-lg">
                                     arrow_forward
                                 </span>
@@ -135,7 +105,7 @@ export default function HomePage() {
                                 to="/login"
                                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-outline-variant bg-surface-container/60 hover:bg-surface-container-high text-on-surface px-7 py-3.5 rounded-lg font-semibold text-sm transition-all"
                             >
-                                <span>Entrar na conta</span>
+                                <span>{t("hero.login")}</span>
                             </Link>
                         </div>
                     </Reveal>
@@ -144,8 +114,7 @@ export default function HomePage() {
                     <div className="mt-14 max-w-4xl mx-auto text-left">
                         <PreviewChat />
                         <p className="text-center text-xs text-on-surface-variant mt-4">
-                            Experimente o ConvoTalk — Envie uma mensagem e veja
-                            a comunicação acontecer em tempo real.
+                            {t("hero.previewHint")}
                         </p>
                     </div>
                 </div>
@@ -156,24 +125,24 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 min-w-max text-xs font-medium text-on-surface-variant">
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
                         <IconBadge name="bolt" />
-                        <span>Mensagens em tempo real</span>
+                        <span>{t("strip.realtime")}</span>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
                         <IconBadge name="groups" />
-                        <span>Conversas em grupo</span>
+                        <span>{t("strip.groups")}</span>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
                         <IconBadge name="videocam" />
-                        <span>Áudio e vídeo WebRTC</span>
+                        <span>{t("strip.calls")}</span>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
                         <IconBadge name="attach_file" />
-                        <span>Compartilhamento de arquivos</span>
+                        <span>{t("strip.files")}</span>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
                         <IconBadge name="search" />
                         <span>
-                            Busca inteligente{" "}
+                            {t("strip.search")}{" "}
                             <kbd className="px-1.5 py-0.5 bg-surface-container-high rounded text-[10px] border border-outline-variant">
                                 ⌘K
                             </kbd>
@@ -181,10 +150,10 @@ export default function HomePage() {
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 hover:border-primary/40 transition-colors">
                         <IconBadge name="smartphone" />
-                        <span>PWA & Suporte Offline</span>
+                        <span>{t("strip.pwa")}</span>
                     </div>
                 </div>
-                <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-surface-container-lowest to-transparent md:hidden" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-linear-to-l from-surface-container-lowest to-transparent md:hidden" />
             </section>
 
             {/* 4. FEATURE OVERVIEW */}
@@ -195,9 +164,9 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <SectionHeader
-                            badge="Recursos Centrais"
-                            title="Tudo o que você precisa para conversar"
-                            subtitle="Mais do que mensagens. O ConvoTalk reúne as principais ferramentas para comunicação em um único lugar."
+                            badge={t("features.badge")}
+                            title={t("features.title")}
+                            subtitle={t("features.subtitle")}
                         />
                     </div>
 
@@ -206,8 +175,8 @@ export default function HomePage() {
                         <Reveal delay={0}>
                             <FeatureCard
                                 icon="bolt"
-                                title="Mensagens em tempo real"
-                                description="Envie e receba mensagens instantaneamente com indicadores de digitação, presença online e confirmação de leitura."
+                                title={t("features.realtimeTitle")}
+                                description={t("features.realtimeDescription")}
                             />
                         </Reveal>
 
@@ -215,8 +184,8 @@ export default function HomePage() {
                         <Reveal delay={100}>
                             <FeatureCard
                                 icon="groups"
-                                title="Conversas privadas e grupos"
-                                description="Converse individualmente ou reúna várias pessoas em uma mesma conversa com canais temáticos dedicados."
+                                title={t("features.groupsTitle")}
+                                description={t("features.groupsDescription")}
                             />
                         </Reveal>
 
@@ -224,8 +193,8 @@ export default function HomePage() {
                         <Reveal delay={200}>
                             <FeatureCard
                                 icon="video_call"
-                                title="Chamadas de áudio e vídeo"
-                                description="Inicie chamadas diretamente de uma conversa usando comunicação peer-to-peer em tempo real via WebRTC."
+                                title={t("features.callsTitle")}
+                                description={t("features.callsDescription")}
                             />
                         </Reveal>
 
@@ -233,8 +202,8 @@ export default function HomePage() {
                         <Reveal delay={300}>
                             <FeatureCard
                                 icon="cloud_upload"
-                                title="Compartilhamento de arquivos"
-                                description="Envie imagens, documentos, áudios e outros arquivos diretamente pelo chat com preview instantâneo."
+                                title={t("features.filesTitle")}
+                                description={t("features.filesDescription")}
                             />
                         </Reveal>
 
@@ -242,8 +211,8 @@ export default function HomePage() {
                         <Reveal delay={400}>
                             <FeatureCard
                                 icon="push_pin"
-                                title="Organização das conversas"
-                                description="Responda, fixe, reaja, edite e organize suas mensagens mantendo as prioridades visíveis a todos."
+                                title={t("features.organizeTitle")}
+                                description={t("features.organizeDescription")}
                             />
                         </Reveal>
 
@@ -251,8 +220,8 @@ export default function HomePage() {
                         <Reveal delay={500}>
                             <FeatureCard
                                 icon="search"
-                                title="Busca inteligente"
-                                description="Encontre rapidamente mensagens, contatos e informações dentro das suas conversas usando comandos rápidos."
+                                title={t("features.searchTitle")}
+                                description={t("features.searchDescription")}
                             />
                         </Reveal>
                     </div>
@@ -266,12 +235,12 @@ export default function HomePage() {
                     <div className="lg:col-span-7 order-2 lg:order-1">
                         <Reveal>
                             <div className="glass-card rounded-2xl overflow-hidden shadow-2xl border border-outline-variant">
-                                <div className="grid grid-cols-12 min-h-[460px]">
+                                <div className="grid grid-cols-12 min-h-115">
                                     {/* Sidebar preview */}
                                     <div className="col-span-4 bg-surface-container-low border-r border-outline-variant/60 p-3 hidden sm:flex flex-col justify-between">
                                         <div className="space-y-2">
                                             <div className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-outline">
-                                                Conversas
+                                                {t("chatMockup.conversations")}
                                             </div>
                                             {/* Contact: Caique */}
                                             <div className="flex items-center gap-2.5 p-2 rounded-lg bg-surface-container-high/40 hover:bg-surface-container-high transition-colors cursor-pointer">
@@ -286,7 +255,9 @@ export default function HomePage() {
                                                         caique
                                                     </p>
                                                     <p className="text-[10px] text-on-surface-variant truncate">
-                                                        Combinado às 15h!
+                                                        {t(
+                                                            "chatMockup.contact1Message",
+                                                        )}
                                                     </p>
                                                 </div>
                                             </div>
@@ -303,7 +274,7 @@ export default function HomePage() {
                                                         teste
                                                     </p>
                                                     <p className="text-[10px] text-primary/80 truncate">
-                                                        digitando...
+                                                        {t("chatMockup.typing")}
                                                     </p>
                                                 </div>
                                             </div>
@@ -317,7 +288,9 @@ export default function HomePage() {
                                                         Dev Team Convo
                                                     </p>
                                                     <p className="text-[10px] text-on-surface-variant truncate">
-                                                        Novo deploy feito
+                                                        {t(
+                                                            "chatMockup.contact3Message",
+                                                        )}
                                                     </p>
                                                 </div>
                                                 <span className="w-4 h-4 rounded-full bg-primary text-on-primary-container text-[10px] font-bold flex items-center justify-center">
@@ -347,7 +320,7 @@ export default function HomePage() {
                                                     </h4>
                                                     <p className="text-[10px] text-primary flex items-center gap-1">
                                                         <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                                        online
+                                                        {t("chatMockup.online")}
                                                     </p>
                                                 </div>
                                             </div>
@@ -356,7 +329,9 @@ export default function HomePage() {
                                                 <span className="material-symbols-outlined text-[13px] text-primary">
                                                     push_pin
                                                 </span>
-                                                <span>Sprint v2</span>
+                                                <span>
+                                                    {t("chatMockup.pinned")}
+                                                </span>
                                             </div>
                                         </div>
 
@@ -370,13 +345,15 @@ export default function HomePage() {
                                                             lock
                                                         </span>
                                                         <span>
-                                                            Mensagem segura
+                                                            {t(
+                                                                "chatMockup.secure",
+                                                            )}
                                                         </span>
                                                     </div>
                                                     <p className="text-on-surface">
-                                                        As APIs do WebSocket já
-                                                        estão respondendo com
-                                                        latência abaixo de 20ms.
+                                                        {t(
+                                                            "chatMockup.message1",
+                                                        )}
                                                     </p>
                                                     <div className="flex items-center justify-between mt-2 pt-1 border-t border-outline-variant/30 text-[10px] text-on-surface-variant">
                                                         <span>14:02</span>
@@ -396,15 +373,16 @@ export default function HomePage() {
                                             <div className="flex flex-col items-end gap-1">
                                                 <div className="bg-primary-container/25 border border-primary/40 rounded-xl rounded-tr-sm p-3 max-w-[85%] text-on-surface">
                                                     <p>
-                                                        Excelente! Acabei de
-                                                        rodar a suíte de testes
-                                                        de stress e segurou 10k
-                                                        conexões simultâneas.
+                                                        {t(
+                                                            "chatMockup.message2",
+                                                        )}
                                                     </p>
                                                     <div className="flex items-center justify-end gap-1.5 mt-1 text-[10px] text-primary">
                                                         <span>14:03</span>
                                                         <span className="font-bold">
-                                                            Lido ✓✓
+                                                            {t(
+                                                                "chatMockup.read",
+                                                            )}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -418,7 +396,9 @@ export default function HomePage() {
                                                     <span className="w-1.5 h-1.5 rounded-full bg-primary bounce-3" />
                                                 </div>
                                                 <span>
-                                                    teste está digitando...
+                                                    {t(
+                                                        "chatMockup.typingIndicator",
+                                                    )}
                                                 </span>
                                             </div>
                                         </div>
@@ -427,10 +407,14 @@ export default function HomePage() {
                                         <div className="p-3 border-t border-outline-variant/50 bg-surface-container/60 flex items-center gap-2">
                                             <input
                                                 className="bg-surface-container-high border border-outline-variant rounded-lg px-3 py-1.5 text-xs text-on-surface flex-1 focus:outline-none focus:border-primary"
-                                                placeholder="Escreva uma mensagem..."
+                                                placeholder={t(
+                                                    "chatMockup.inputPlaceholder",
+                                                )}
                                                 readOnly
                                                 type="text"
-                                                defaultValue="Show! Vamos abrir a call de demonstração?"
+                                                defaultValue={t(
+                                                    "chatMockup.draft",
+                                                )}
                                             />
                                             <div className="bg-primary text-on-primary-container p-1.5 rounded-lg flex items-center justify-center">
                                                 <span className="material-symbols-outlined text-[16px]">
@@ -448,30 +432,30 @@ export default function HomePage() {
                     <div className="lg:col-span-5 order-1 lg:order-2 space-y-6">
                         <Reveal>
                             <SectionHeader
-                                badge="Comunicação Instantânea"
-                                title="Mais do que apenas mensagens"
-                                subtitle="Uma experiência de comunicação pensada para conversas que não param. Mantenha-se sempre sincronizado com respostas rápidas e contexto preservado."
+                                badge={t("messaging.badge")}
+                                title={t("messaging.title")}
+                                subtitle={t("messaging.subtitle")}
                                 align="left"
                             />
                         </Reveal>
 
                         <div className="space-y-3 pt-2">
                             {[
-                                "Indicador de digitação dinâmico em tempo real",
-                                "Status online e presença instantânea com WebSockets",
-                                "Confirmação de leitura e entrega (Lido ✓✓)",
-                                "Reações expressivas com emojis nas mensagens",
-                                "Respostas em fio (threads) para conversas focadas",
-                                "Mensagens fixadas no topo do chat",
-                                "Edição rápida e exclusão segura sem rastro",
+                                "messaging.list1",
+                                "messaging.list2",
+                                "messaging.list3",
+                                "messaging.list4",
+                                "messaging.list5",
+                                "messaging.list6",
+                                "messaging.list7",
                             ].map((feature, idx) => (
-                                <Reveal key={idx} delay={idx * 60}>
+                                <Reveal key={feature} delay={idx * 60}>
                                     <div className="flex items-center gap-3 text-sm text-on-surface">
                                         <IconBadge
                                             name="check_circle"
                                             size="lg"
                                         />
-                                        <span>{feature}</span>
+                                        <span>{t(feature)}</span>
                                     </div>
                                 </Reveal>
                             ))}
@@ -487,9 +471,9 @@ export default function HomePage() {
                     <div className="lg:col-span-5 space-y-6">
                         <Reveal>
                             <SectionHeader
-                                badge="WebRTC Nativo"
-                                title="Quando uma mensagem não é suficiente"
-                                subtitle="Comece uma chamada de áudio ou vídeo diretamente da conversa com zero atrito e sem precisar de softwares externos ou plugins."
+                                badge={t("calls.badge")}
+                                title={t("calls.title")}
+                                subtitle={t("calls.subtitle")}
                                 align="left"
                             />
                         </Reveal>
@@ -500,13 +484,10 @@ export default function HomePage() {
                                     <IconBadge name="mic" size="lg" />
                                     <div>
                                         <h4 className="text-sm font-bold text-on-surface">
-                                            Áudio em tempo real com cancelamento
-                                            de ruído
+                                            {t("calls.audioTitle")}
                                         </h4>
                                         <p className="text-xs text-on-surface-variant mt-0.5">
-                                            Voz cristalina processada pelo
-                                            navegador com supressão de eco
-                                            nativa.
+                                            {t("calls.audioDescription")}
                                         </p>
                                     </div>
                                 </div>
@@ -517,12 +498,10 @@ export default function HomePage() {
                                     <IconBadge name="videocam" size="lg" />
                                     <div>
                                         <h4 className="text-sm font-bold text-on-surface">
-                                            Vídeo HD de baixa latência ponto a
-                                            ponto
+                                            {t("calls.videoTitle")}
                                         </h4>
                                         <p className="text-xs text-on-surface-variant mt-0.5">
-                                            Resolução fluida adaptável de acordo
-                                            com a velocidade da conexão.
+                                            {t("calls.videoDescription")}
                                         </p>
                                     </div>
                                 </div>
@@ -533,11 +512,10 @@ export default function HomePage() {
                                     <IconBadge name="settings" size="lg" />
                                     <div>
                                         <h4 className="text-sm font-bold text-on-surface">
-                                            Controles intuitivos na tela
+                                            {t("calls.controlsTitle")}
                                         </h4>
                                         <p className="text-xs text-on-surface-variant mt-0.5">
-                                            Mude microfone, ligue câmera ou
-                                            compartilhe sua tela em 1 clique.
+                                            {t("calls.controlsDescription")}
                                         </p>
                                     </div>
                                 </div>
@@ -550,10 +528,10 @@ export default function HomePage() {
                         <Reveal>
                             <div className="glass-card rounded-2xl overflow-hidden shadow-2xl border border-primary/30 relative">
                                 {/* Main video area */}
-                                <div className="relative bg-gradient-to-b from-surface-container-low to-surface-container-lowest h-96 flex flex-col justify-between p-6">
+                                <div className="relative bg-linear-to-b from-surface-container-low to-surface-container-lowest h-96 flex flex-col justify-between p-6">
                                     {/* Participant Video Simulated Center */}
                                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                        <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary-container to-primary flex items-center justify-center text-3xl font-bold text-white shadow-[0_0_40px_rgba(89,224,123,0.3)]">
+                                        <div className="w-24 h-24 rounded-full bg-linear-to-tr from-primary-container to-primary flex items-center justify-center text-3xl font-bold text-white shadow-[0_0_40px_rgba(89,224,123,0.3)]">
                                             P
                                         </div>
                                         {/* Audio wave animation */}
@@ -611,7 +589,7 @@ export default function HomePage() {
                                             VC
                                         </div>
                                         <span className="text-[10px] text-on-surface font-medium mt-1">
-                                            Você
+                                            {t("calls.self")}
                                         </span>
                                     </div>
 
@@ -619,7 +597,7 @@ export default function HomePage() {
                                     <div className="relative z-20 self-center bg-surface-container/90 backdrop-blur-md px-5 py-2.5 rounded-full border border-outline-variant flex items-center gap-4 shadow-xl">
                                         <button
                                             type="button"
-                                            aria-label="Microfone"
+                                            aria-label={t("calls.mic")}
                                             className="w-10 h-10 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface hover:text-primary transition-colors cursor-pointer"
                                         >
                                             <span className="material-symbols-outlined text-[20px]">
@@ -628,7 +606,7 @@ export default function HomePage() {
                                         </button>
                                         <button
                                             type="button"
-                                            aria-label="Vídeo"
+                                            aria-label={t("calls.camera")}
                                             className="w-10 h-10 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface hover:text-primary transition-colors cursor-pointer"
                                         >
                                             <span className="material-symbols-outlined text-[20px]">
@@ -637,7 +615,7 @@ export default function HomePage() {
                                         </button>
                                         <button
                                             type="button"
-                                            aria-label="Compartilhar tela"
+                                            aria-label={t("calls.shareScreen")}
                                             className="w-10 h-10 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface hover:text-primary transition-colors cursor-pointer"
                                         >
                                             <span className="material-symbols-outlined text-[20px]">
@@ -647,7 +625,7 @@ export default function HomePage() {
                                         <div className="w-px h-6 bg-outline-variant" />
                                         <button
                                             type="button"
-                                            aria-label="Encerrar chamada"
+                                            aria-label={t("calls.hangUp")}
                                             className="w-10 h-10 rounded-full bg-error-container hover:bg-red-700 flex items-center justify-center text-white transition-colors shadow-[0_0_15px_rgba(255,100,100,0.3)] cursor-pointer"
                                         >
                                             <span className="material-symbols-outlined text-[20px]">
@@ -667,9 +645,9 @@ export default function HomePage() {
                 <div className="max-w-6xl mx-auto text-center">
                     <Reveal>
                         <SectionHeader
-                            badge="Espaços Colaborativos"
-                            title="Converse do seu jeito: de 1-a-1 a grandes equipes"
-                            subtitle="Crie salas temáticas, gerencie participantes e centralize discussões com controle total de moderação e privilégios."
+                            badge={t("groups.badge")}
+                            title={t("groups.title")}
+                            subtitle={t("groups.subtitle")}
                         />
                     </Reveal>
 
@@ -688,17 +666,17 @@ export default function HomePage() {
                                                 Dev Team Convo
                                             </h3>
                                             <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-primary/20 text-primary border border-primary/30">
-                                                Canal Público
+                                                {t("groups.publicChannel")}
                                             </span>
                                         </div>
                                         <p className="text-xs text-on-surface-variant">
-                                            18 membros • 6 online agora
+                                            {t("groups.membersOnline")}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-surface-container-high border border-outline-variant text-on-surface">
-                                        Regras do Canal
+                                        {t("groups.rules")}
                                     </span>
                                     <button
                                         type="button"
@@ -707,7 +685,7 @@ export default function HomePage() {
                                         <span className="material-symbols-outlined text-[15px]">
                                             person_add
                                         </span>
-                                        <span>Convidar</span>
+                                        <span>{t("groups.invite")}</span>
                                     </button>
                                 </div>
                             </div>
@@ -718,16 +696,15 @@ export default function HomePage() {
                                     campaign
                                 </span>
                                 <span className="font-semibold text-primary">
-                                    Anúncio Fixado:
+                                    {t("groups.pinnedAnnouncement")}
                                 </span>
                                 <span className="text-on-surface-variant">
-                                    Atualização da stack ConvoTalk
-                                    realizada com sucesso às 10:00 UTC.
+                                    {t("groups.announcement")}
                                 </span>
                             </div>
 
                             {/* Group Content Viewport */}
-                            <div className="grid grid-cols-1 md:grid-cols-12 min-h-[260px]">
+                            <div className="grid grid-cols-1 md:grid-cols-12 min-h-65">
                                 {/* Active Chat / Discussion */}
                                 <div className="md:col-span-8 p-6 space-y-4 bg-surface-container-lowest">
                                     <div className="flex items-start gap-3">
@@ -740,16 +717,14 @@ export default function HomePage() {
                                                     Lucas (Lead)
                                                 </span>
                                                 <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.2 rounded font-mono">
-                                                    Admin
+                                                    {t("groups.admin")}
                                                 </span>
                                                 <span className="text-[10px] text-on-surface-variant">
                                                     11:20
                                                 </span>
                                             </div>
                                             <p className="text-xs text-on-surface mt-1">
-                                                Pessoal, o canal de chamadas
-                                                para a daily está aberto na sala
-                                                de reuniões.
+                                                {t("groups.message1")}
                                             </p>
                                         </div>
                                     </div>
@@ -764,15 +739,14 @@ export default function HomePage() {
                                                     Marina
                                                 </span>
                                                 <span className="text-[10px] bg-outline-variant text-on-surface-variant px-1.5 py-0.2 rounded font-mono">
-                                                    Membro
+                                                    {t("groups.member")}
                                                 </span>
                                                 <span className="text-[10px] text-on-surface-variant">
                                                     11:22
                                                 </span>
                                             </div>
                                             <p className="text-xs text-on-surface mt-1">
-                                                Conectando agora! Já deixei o
-                                                pull request pronto pra revisão.
+                                                {t("groups.message2")}
                                             </p>
                                         </div>
                                     </div>
@@ -781,7 +755,7 @@ export default function HomePage() {
                                 {/* Right Side Panel: Participants */}
                                 <div className="md:col-span-4 bg-surface-container-low/60 border-l border-outline-variant/60 p-4 space-y-3">
                                     <div className="text-[11px] font-bold uppercase tracking-wider text-outline">
-                                        Participantes (6)
+                                        {t("groups.participants")}
                                     </div>
                                     <div className="flex items-center justify-between text-xs py-1">
                                         <div className="flex items-center gap-2">
@@ -791,7 +765,7 @@ export default function HomePage() {
                                             </span>
                                         </div>
                                         <span className="text-[10px] text-primary">
-                                            Admin
+                                            {t("groups.admin")}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between text-xs py-1">
@@ -802,7 +776,7 @@ export default function HomePage() {
                                             </span>
                                         </div>
                                         <span className="text-[10px] text-on-surface-variant">
-                                            Moderador
+                                            {t("groups.moderator")}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between text-xs py-1">
@@ -813,7 +787,7 @@ export default function HomePage() {
                                             </span>
                                         </div>
                                         <span className="text-[10px] text-on-surface-variant">
-                                            Membro
+                                            {t("groups.member")}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between text-xs py-1">
@@ -824,7 +798,7 @@ export default function HomePage() {
                                             </span>
                                         </div>
                                         <span className="text-[10px] text-outline">
-                                            Ausente
+                                            {t("groups.away")}
                                         </span>
                                     </div>
                                 </div>
@@ -842,12 +816,10 @@ export default function HomePage() {
                                     </span>
                                 </div>
                                 <h4 className="text-base font-bold text-on-surface mb-1">
-                                    Membros & Permissões
+                                    {t("groups.membersPermissionsTitle")}
                                 </h4>
                                 <p className="text-xs text-on-surface-variant leading-relaxed">
-                                    Papéis granulares de administrador,
-                                    moderador e membro para controlar quem pode
-                                    enviar mensagens, fixar ou moderar.
+                                    {t("groups.membersPermissionsText")}
                                 </p>
                             </div>
                         </Reveal>
@@ -860,12 +832,10 @@ export default function HomePage() {
                                     </span>
                                 </div>
                                 <h4 className="text-base font-bold text-on-surface mb-1">
-                                    Notificações por Canal
+                                    {t("groups.notificationsTitle")}
                                 </h4>
                                 <p className="text-xs text-on-surface-variant leading-relaxed">
-                                    Silencie conversas secundárias ou receba
-                                    notificações imediatas somente quando for
-                                    mencionado com @nome.
+                                    {t("groups.notificationsText")}
                                 </p>
                             </div>
                         </Reveal>
@@ -878,12 +848,10 @@ export default function HomePage() {
                                     </span>
                                 </div>
                                 <h4 className="text-base font-bold text-on-surface mb-1">
-                                    Perfis & Avatares Personalizados
+                                    {t("groups.profilesTitle")}
                                 </h4>
                                 <p className="text-xs text-on-surface-variant leading-relaxed">
-                                    Identidade rica com status customizados,
-                                    bio, links e avatares que facilitam o
-                                    reconhecimento de cada membro.
+                                    {t("groups.profilesText")}
                                 </p>
                             </div>
                         </Reveal>
@@ -910,14 +878,14 @@ export default function HomePage() {
                                             relatorio_arquitetura_v2.pdf
                                         </h5>
                                         <p className="text-[11px] text-on-surface-variant">
-                                            4.2 MB • Enviado por Paulo
+                                            {t("files.pdfSentBy")}
                                         </p>
                                     </div>
                                 </div>
                                 <button
                                     type="button"
                                     className="p-2 rounded-lg bg-surface-container-high hover:bg-primary-container text-on-surface hover:text-white transition-colors cursor-pointer"
-                                    title="Download"
+                                    title={t("files.download")}
                                 >
                                     <span className="material-symbols-outlined text-[18px]">
                                         download
@@ -934,14 +902,14 @@ export default function HomePage() {
                                         <span className="material-symbols-outlined text-[16px]">
                                             graphic_eq
                                         </span>
-                                        Mensagem de áudio
+                                        {t("files.audioMessage")}
                                     </span>
                                     <span className="font-mono">0:42</span>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <button
                                         type="button"
-                                        aria-label="Tocar áudio"
+                                        aria-label={t("files.playAudio")}
                                         className="w-9 h-9 rounded-full bg-primary text-on-primary-container flex items-center justify-center shrink-0 cursor-pointer"
                                     >
                                         <span
@@ -999,9 +967,9 @@ export default function HomePage() {
                     <div className="lg:col-span-6 space-y-6">
                         <Reveal>
                             <SectionHeader
-                                badge="Produtividade & Arquivos"
-                                title="Compartilhe mais do que mensagens"
-                                subtitle="Envie arquivos sem perder a qualidade original. Centralize documentos importantes, notas de voz e capturas de tela diretamente no fluxo contínuo da conversa."
+                                badge={t("files.badge")}
+                                title={t("files.title")}
+                                subtitle={t("files.subtitle")}
                                 align="left"
                             />
                         </Reveal>
@@ -1010,25 +978,25 @@ export default function HomePage() {
                             <Reveal delay={100}>
                                 <div className="flex items-center gap-2">
                                     <IconBadge name="photo_camera" />
-                                    <span>Imagens em alta definição</span>
+                                    <span>{t("files.images")}</span>
                                 </div>
                             </Reveal>
                             <Reveal delay={150}>
                                 <div className="flex items-center gap-2">
                                     <IconBadge name="description" />
-                                    <span>Documentos & PDFs</span>
+                                    <span>{t("files.documents")}</span>
                                 </div>
                             </Reveal>
                             <Reveal delay={200}>
                                 <div className="flex items-center gap-2">
                                     <IconBadge name="music_note" />
-                                    <span>Mensagens de áudio contínuas</span>
+                                    <span>{t("files.audio")}</span>
                                 </div>
                             </Reveal>
                             <Reveal delay={250}>
                                 <div className="flex items-center gap-2">
                                     <IconBadge name="attach_file" />
-                                    <span>Arquivos compactados e código</span>
+                                    <span>{t("files.archives")}</span>
                                 </div>
                             </Reveal>
                         </div>
@@ -1039,13 +1007,10 @@ export default function HomePage() {
                                 <IconBadge name="folder_open" size="xl" />
                                 <div className="text-xs sm:text-sm">
                                     <span className="font-bold text-primary">
-                                        Exporte suas conversas:
+                                        {t("files.exportTitle")}
                                     </span>
                                     <p className="text-on-surface-variant mt-1 leading-relaxed">
-                                        Guarde o histórico das suas conversas e
-                                        canais exportando-os com facilidade para
-                                        PDF formatado com carimbos de data/hora
-                                        oficiais.
+                                        {t("files.exportText")}
                                     </p>
                                 </div>
                             </div>
@@ -1059,9 +1024,9 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto text-center">
                     <Reveal>
                         <SectionHeader
-                            badge="Sempre Disponível"
-                            title="Suas conversas, onde você estiver"
-                            subtitle="Uma experiência web moderna, responsiva e preparada para qualquer dispositivo, até mesmo quando o sinal cai."
+                            badge={t("pwa.badge")}
+                            title={t("pwa.title")}
+                            subtitle={t("pwa.subtitle")}
                         />
                     </Reveal>
 
@@ -1076,20 +1041,17 @@ export default function HomePage() {
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-bold text-on-surface mb-2">
-                                        Progressive Web App (PWA)
+                                        {t("pwa.installTitle")}
                                     </h3>
                                     <p className="text-sm text-on-surface-variant leading-relaxed">
-                                        Instale no Windows, macOS, Android ou
-                                        iOS sem passar por lojas de aplicativos.
-                                        Experiência em tela cheia idêntica a um
-                                        app nativo.
+                                        {t("pwa.installText")}
                                     </p>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-outline-variant/40 flex items-center gap-2 text-xs text-primary font-semibold">
                                     <span className="material-symbols-outlined text-[16px]">
                                         devices
                                     </span>
-                                    <span>Compatível com todos os SOs</span>
+                                    <span>{t("pwa.installFooter")}</span>
                                 </div>
                             </div>
                         </Reveal>
@@ -1104,20 +1066,17 @@ export default function HomePage() {
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-bold text-on-surface mb-2">
-                                        Persistência Offline & IndexedDB
+                                        {t("pwa.offlineTitle")}
                                     </h3>
                                     <p className="text-sm text-on-surface-variant leading-relaxed">
-                                        Consulte seu histórico de mensagens e
-                                        anexos recentes mesmo sem conexão à
-                                        internet. Cache local instantâneo com
-                                        zero tela branca.
+                                        {t("pwa.offlineText")}
                                     </p>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-outline-variant/40 flex items-center gap-2 text-xs text-primary font-semibold">
                                     <span className="material-symbols-outlined text-[16px]">
                                         cloud_off
                                     </span>
-                                    <span>Acesso local ininterrupto</span>
+                                    <span>{t("pwa.offlineFooter")}</span>
                                 </div>
                             </div>
                         </Reveal>
@@ -1132,20 +1091,17 @@ export default function HomePage() {
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-bold text-on-surface mb-2">
-                                        Fila de Envio Inteligente (Queue)
+                                        {t("pwa.queueTitle")}
                                     </h3>
                                     <p className="text-sm text-on-surface-variant leading-relaxed">
-                                        Envie mensagens mesmo offline; o
-                                        ConvoTalk enfileira e sincroniza tudo
-                                        automaticamente no servidor assim que a
-                                        conexão retornar.
+                                        {t("pwa.queueText")}
                                     </p>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-outline-variant/40 flex items-center gap-2 text-xs text-primary font-semibold">
                                     <span className="material-symbols-outlined text-[16px]">
                                         schedule_send
                                     </span>
-                                    <span>Zero perda de mensagens</span>
+                                    <span>{t("pwa.queueFooter")}</span>
                                 </div>
                             </div>
                         </Reveal>
@@ -1162,9 +1118,9 @@ export default function HomePage() {
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <Reveal>
                             <SectionHeader
-                                badge="Confiabilidade & Privacidade"
-                                title="Segurança em cada camada"
-                                subtitle="Projetado com rigor técnico para manter suas conversas e dados completamente protegidos contra acessos indesejados."
+                                badge={t("security.badge")}
+                                title={t("security.title")}
+                                subtitle={t("security.subtitle")}
                             />
                         </Reveal>
                     </div>
@@ -1179,17 +1135,11 @@ export default function HomePage() {
                                         <IconBadge name="lock" />
                                     </div>
                                     <h3 className="text-base sm:text-lg font-bold text-on-surface">
-                                        Autenticação Segura
+                                        {t("security.authTitle")}
                                     </h3>
                                 </div>
                                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Access tokens JWT de curta duração com
-                                    rotação contínua de refresh tokens
-                                    armazenados exclusivamente em cookies{" "}
-                                    <code className="text-primary font-mono text-xs">
-                                        HTTP-only
-                                    </code>{" "}
-                                    e protegidos contra ataques XSS.
+                                    {t("security.authText")}
                                 </p>
                             </div>
                         </Reveal>
@@ -1202,14 +1152,11 @@ export default function HomePage() {
                                         <IconBadge name="shield" />
                                     </div>
                                     <h3 className="text-base sm:text-lg font-bold text-on-surface">
-                                        Proteção contra Abuso
+                                        {t("security.abuseTitle")}
                                     </h3>
                                 </div>
                                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Rate limiting em múltiplas camadas tanto
-                                    para endpoints REST na API Express quanto
-                                    para eventos em tempo real no Socket.IO,
-                                    neutralizando abusos e spam.
+                                    {t("security.abuseText")}
                                 </p>
                             </div>
                         </Reveal>
@@ -1222,14 +1169,11 @@ export default function HomePage() {
                                         <IconBadge name="check" />
                                     </div>
                                     <h3 className="text-base sm:text-lg font-bold text-on-surface">
-                                        Validação Estrita de Dados
+                                        {t("security.validationTitle")}
                                     </h3>
                                 </div>
                                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Validação integral e sanitização de payloads
-                                    com schemas rigorosos Zod em runtime,
-                                    garantindo prevenção estrutural contra
-                                    injeções SQL/NoSQL e dados maliciosos.
+                                    {t("security.validationText")}
                                 </p>
                             </div>
                         </Reveal>
@@ -1242,14 +1186,11 @@ export default function HomePage() {
                                         <IconBadge name="language" />
                                     </div>
                                     <h3 className="text-base sm:text-lg font-bold text-on-surface">
-                                        Comunicação Segura
+                                        {t("security.secureCommsTitle")}
                                     </h3>
                                 </div>
                                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                                    Túneis criptografados via HTTPS e WebSockets
-                                    seguros (WSS), além de headers de segurança
-                                    CSP modernos e políticas CORS restritivas de
-                                    ponta a ponta.
+                                    {t("security.secureCommsText")}
                                 </p>
                             </div>
                         </Reveal>
@@ -1260,10 +1201,7 @@ export default function HomePage() {
                         <div className="mt-10 text-center">
                             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high border border-outline-variant text-xs text-on-surface font-medium">
                                 <IconBadge name="verified" />
-                                <span>
-                                    Arquivos protegidos com verificação de tipo
-                                    MIME e armazenamento seguro.
-                                </span>
+                                <span>{t("security.filesNote")}</span>
                             </div>
                         </div>
                     </Reveal>
@@ -1278,9 +1216,9 @@ export default function HomePage() {
                 <div className="max-w-6xl mx-auto text-center">
                     <Reveal>
                         <SectionHeader
-                            badge="Engenharia Robusta"
-                            title="Construído para comunicação em tempo real"
-                            subtitle="Uma arquitetura moderna e reativa criada para oferecer altíssima performance, baixa latência e escalabilidade horizontal contínua."
+                            badge={t("architecture.badge")}
+                            title={t("architecture.title")}
+                            subtitle={t("architecture.subtitle")}
                         />
                     </Reveal>
 
@@ -1294,14 +1232,15 @@ export default function HomePage() {
                                         <span className="material-symbols-outlined text-[18px]">
                                             devices
                                         </span>
-                                        <span>Cliente Frontend</span>
+                                        <span>
+                                            {t("architecture.frontend")}
+                                        </span>
                                     </div>
                                     <h4 className="font-bold text-sm text-on-surface">
-                                        React 19 + Tailwind
+                                        {t("architecture.frontendTitle")}
                                     </h4>
                                     <p className="text-xs text-on-surface-variant mt-1">
-                                        PWA offline-first, WebSockets Client &
-                                        WebRTC Media Engine.
+                                        {t("architecture.frontendText")}
                                     </p>
                                 </div>
 
@@ -1310,7 +1249,7 @@ export default function HomePage() {
                                     <span className="hidden md:block">⇆</span>
                                     <span className="md:hidden">⇅</span>
                                     <span className="text-[10px] text-on-surface-variant font-sans text-center">
-                                        WSS / WebRTC
+                                        {t("architecture.wss")}
                                     </span>
                                 </div>
 
@@ -1320,14 +1259,13 @@ export default function HomePage() {
                                         <span className="material-symbols-outlined text-[18px]">
                                             dns
                                         </span>
-                                        <span>Gateway & API</span>
+                                        <span>{t("architecture.gateway")}</span>
                                     </div>
                                     <h4 className="font-bold text-sm text-on-surface">
-                                        Node.js + Express
+                                        {t("architecture.gatewayTitle")}
                                     </h4>
                                     <p className="text-xs text-on-surface-variant mt-1">
-                                        Socket.IO Clusters, Auth JWT Middleware
-                                        e Rate Limiters.
+                                        {t("architecture.gatewayText")}
                                     </p>
                                 </div>
 
@@ -1336,7 +1274,7 @@ export default function HomePage() {
                                     <span className="hidden md:block">⇆</span>
                                     <span className="md:hidden">⇅</span>
                                     <span className="text-[10px] text-on-surface-variant font-sans text-center">
-                                        Connection Pool
+                                        {t("architecture.connectionPool")}
                                     </span>
                                 </div>
 
@@ -1346,14 +1284,15 @@ export default function HomePage() {
                                         <span className="material-symbols-outlined text-[18px]">
                                             database
                                         </span>
-                                        <span>Banco & Armazenamento</span>
+                                        <span>
+                                            {t("architecture.database")}
+                                        </span>
                                     </div>
                                     <h4 className="font-bold text-sm text-on-surface">
-                                        MongoDB & Storage
+                                        {t("architecture.databaseTitle")}
                                     </h4>
                                     <p className="text-xs text-on-surface-variant mt-1">
-                                        Coleções indexadas, persistência de
-                                        canais e upload de mídias.
+                                        {t("architecture.databaseText")}
                                     </p>
                                 </div>
                             </div>
@@ -1400,16 +1339,16 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto text-center">
                     <Reveal>
                         <SectionHeader
-                            badge="Onboarding Simples"
-                            title="Comece em poucos segundos"
-                            subtitle="Sem configurações complicadas ou instalações pesadas."
+                            badge={t("howItWorks.badge")}
+                            title={t("howItWorks.title")}
+                            subtitle={t("howItWorks.subtitle")}
                         />
                     </Reveal>
 
                     {/* Timeline with connecting glowing line */}
                     <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 relative">
                         {/* Desktop Line */}
-                        <div className="hidden md:block absolute top-8 left-[18%] right-[18%] h-[2px] bg-gradient-to-r from-primary-container via-primary to-primary-container -z-0 opacity-40" />
+                        <div className="hidden md:block absolute top-8 left-[18%] right-[18%] h-0.5 bg-linear-to-r from-primary-container via-primary to-primary-container z-0 opacity-40" />
 
                         {/* Step 01 */}
                         <Reveal delay={100}>
@@ -1418,11 +1357,10 @@ export default function HomePage() {
                                     01
                                 </div>
                                 <h3 className="text-lg font-bold text-on-surface mb-2">
-                                    Crie sua conta
+                                    {t("howItWorks.step1Title")}
                                 </h3>
                                 <p className="text-sm text-on-surface-variant leading-relaxed max-w-xs">
-                                    Configure seu perfil, escolha seu nome de
-                                    usuário e personalize sua conta em segundos.
+                                    {t("howItWorks.step1Text")}
                                 </p>
                             </div>
                         </Reveal>
@@ -1434,12 +1372,10 @@ export default function HomePage() {
                                     02
                                 </div>
                                 <h3 className="text-lg font-bold text-on-surface mb-2">
-                                    Encontre alguém
+                                    {t("howItWorks.step2Title")}
                                 </h3>
                                 <p className="text-sm text-on-surface-variant leading-relaxed max-w-xs">
-                                    Procure contatos cadastrados através da
-                                    busca instantânea ou entre em salas públicas
-                                    e grupos temáticos.
+                                    {t("howItWorks.step2Text")}
                                 </p>
                             </div>
                         </Reveal>
@@ -1451,12 +1387,10 @@ export default function HomePage() {
                                     03
                                 </div>
                                 <h3 className="text-lg font-bold text-on-surface mb-2">
-                                    Comece a conversar
+                                    {t("howItWorks.step3Title")}
                                 </h3>
                                 <p className="text-sm text-on-surface-variant leading-relaxed max-w-xs">
-                                    Envie mensagens, transfira arquivos ou
-                                    inicie uma videoconferência com um único
-                                    clique.
+                                    {t("howItWorks.step3Text")}
                                 </p>
                             </div>
                         </Reveal>
@@ -1473,9 +1407,9 @@ export default function HomePage() {
                     <div className="text-center mb-16">
                         <Reveal>
                             <SectionHeader
-                                badge="Dúvidas Frequentes"
-                                title="Perguntas Frequentes"
-                                subtitle="Tudo o que você precisa saber sobre o ConvoTalk."
+                                badge={t("faq.badge")}
+                                title={t("faq.title")}
+                                subtitle={t("faq.subtitle")}
                             />
                         </Reveal>
                     </div>
@@ -1498,7 +1432,7 @@ export default function HomePage() {
                                             className="w-full p-5 text-left flex items-center justify-between gap-4 hover:text-primary transition-colors focus:outline-none cursor-pointer"
                                         >
                                             <span className="font-bold text-sm sm:text-base text-on-surface">
-                                                {faq.question}
+                                                {t(`faq.q${faq}`)}
                                             </span>
                                             <span
                                                 className={`material-symbols-outlined text-primary text-xl transition-transform duration-300 ${
@@ -1515,7 +1449,7 @@ export default function HomePage() {
                                             hidden={!isOpen}
                                             className="px-5 pb-5 text-sm text-on-surface-variant leading-relaxed border-t border-outline-variant/30 pt-3"
                                         >
-                                            {faq.answer}
+                                            {t(`faq.a${faq}`)}
                                         </div>
                                     </div>
                                 </Reveal>
@@ -1536,19 +1470,17 @@ export default function HomePage() {
 
                             <div className="relative z-10">
                                 <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-on-surface mb-6">
-                                    Sua próxima conversa começa aqui.
+                                    {t("cta.title")}
                                 </h2>
                                 <p className="text-base sm:text-xl text-on-surface-variant max-w-2xl mx-auto mb-10 leading-relaxed">
-                                    Crie sua conta e experimente uma experiência
-                                    de comunicação feita para acontecer em tempo
-                                    real.
+                                    {t("cta.subtitle")}
                                 </p>
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                                     <Link
                                         to="/login?mode=register"
-                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary-container to-primary text-white px-8 py-4 rounded-xl font-bold text-sm shadow-[0_0_30px_rgba(0,168,75,0.5)] hover:shadow-[0_0_40px_rgba(89,224,123,0.7)] hover:-translate-y-0.5 transition-all"
+                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-linear-to-r from-primary-container to-primary text-white px-8 py-4 rounded-xl font-bold text-sm shadow-[0_0_30px_rgba(0,168,75,0.5)] hover:shadow-[0_0_40px_rgba(89,224,123,0.7)] hover:-translate-y-0.5 transition-all"
                                     >
-                                        <span>Começar agora</span>
+                                        <span>{t("cta.start")}</span>
                                         <span className="material-symbols-outlined text-lg">
                                             arrow_forward
                                         </span>
@@ -1578,21 +1510,18 @@ export default function HomePage() {
                                 </span>
                             </div>
                             <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed max-w-sm">
-                                Comunicação em tempo real, segura e fluida.
-                                Desenvolvido para simplificar conversas
-                                particulares, salas públicas e
-                                videoconferências.
+                                {t("footer.tagline")}
                             </p>
                             <div className="flex items-center gap-2 text-xs text-primary font-medium">
                                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                                <span>Todos os sistemas operacionais</span>
+                                <span>{t("footer.systems")}</span>
                             </div>
                         </div>
 
                         {/* Nav Column 1: Produto */}
                         <div className="space-y-3">
                             <h5 className="text-xs font-bold uppercase tracking-wider text-on-surface">
-                                Produto
+                                {t("footer.product")}
                             </h5>
                             <ul className="space-y-2 text-xs sm:text-sm text-on-surface-variant">
                                 <li>
@@ -1600,7 +1529,7 @@ export default function HomePage() {
                                         className="hover:text-primary transition-colors"
                                         href="#recursos"
                                     >
-                                        Recursos
+                                        {t("nav.features")}
                                     </a>
                                 </li>
                             </ul>
@@ -1609,7 +1538,7 @@ export default function HomePage() {
                         {/* Nav Column 2: Plataforma */}
                         <div className="space-y-3">
                             <h5 className="text-xs font-bold uppercase tracking-wider text-on-surface">
-                                Plataforma
+                                {t("footer.platform")}
                             </h5>
                             <ul className="space-y-2 text-xs sm:text-sm text-on-surface-variant">
                                 <li>
@@ -1617,7 +1546,7 @@ export default function HomePage() {
                                         className="hover:text-primary transition-colors"
                                         href="#como-funciona"
                                     >
-                                        Como funciona
+                                        {t("nav.howItWorks")}
                                     </a>
                                 </li>
                                 <li>
@@ -1625,7 +1554,7 @@ export default function HomePage() {
                                         className="hover:text-primary transition-colors"
                                         href="#arquitetura"
                                     >
-                                        Arquitetura
+                                        {t("nav.architecture")}
                                     </a>
                                 </li>
                                 <li>
@@ -1633,7 +1562,7 @@ export default function HomePage() {
                                         className="hover:text-primary transition-colors"
                                         href="#seguranca"
                                     >
-                                        Segurança
+                                        {t("nav.security")}
                                     </a>
                                 </li>
                                 <li>
@@ -1641,7 +1570,7 @@ export default function HomePage() {
                                         className="hover:text-primary transition-colors"
                                         href="#perguntas-frequentes"
                                     >
-                                        Perguntas Frequentes
+                                        {t("footer.faq")}
                                     </a>
                                 </li>
                             </ul>
@@ -1650,7 +1579,7 @@ export default function HomePage() {
                         {/* Nav Column 4: Legal */}
                         <div className="space-y-3">
                             <h5 className="text-xs font-bold uppercase tracking-wider text-on-surface">
-                                Legal
+                                {t("footer.legal")}
                             </h5>
                             <ul className="space-y-2 text-xs sm:text-sm text-on-surface-variant">
                                 <li>
@@ -1658,7 +1587,7 @@ export default function HomePage() {
                                         className="hover:text-primary transition-colors"
                                         to="/privacy"
                                     >
-                                        Privacidade
+                                        {t("footer.privacy")}
                                     </Link>
                                 </li>
                                 <li>
@@ -1666,7 +1595,7 @@ export default function HomePage() {
                                         className="hover:text-primary transition-colors"
                                         to="/terms"
                                     >
-                                        Termos de Uso
+                                        {t("footer.terms")}
                                     </Link>
                                 </li>
                             </ul>
@@ -1676,15 +1605,16 @@ export default function HomePage() {
                     {/* Bottom Bar */}
                     <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
                         <p>
-                            © {new Date().getFullYear()} ConvoTalk. Todos os
-                            direitos reservados.
+                            {t("footer.rights", {
+                                year: new Date().getFullYear(),
+                            })}
                         </p>
                         <p className="flex items-center gap-2">
-                            <span>Construído com</span>
+                            <span>{t("footer.builtWith")}</span>
                             <span className="text-primary font-semibold">
                                 Socket.IO
                             </span>
-                            <span>e</span>
+                            <span>{t("footer.and")}</span>
                             <span className="text-primary font-semibold">
                                 WebRTC
                             </span>

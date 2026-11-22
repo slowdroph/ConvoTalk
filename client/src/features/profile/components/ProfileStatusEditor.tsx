@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
 import InlineEditButton from "./inline/InlineEditButton";
 
@@ -17,6 +18,7 @@ function StatusForm({
     status: string;
     editor: ProfileSectionEditor;
 }) {
+    const { t } = useTranslation("profile");
     const [draft, setDraft] = useState(status);
 
     const handleSubmit = async (event: React.FormEvent) => {
@@ -29,20 +31,20 @@ function StatusForm({
             <div className="flex items-center gap-1.5">
                 <input
                     type="text"
-                    aria-label="Status"
+                    aria-label={t("status.aria")}
                     value={draft}
                     onChange={(event) =>
                         setDraft(event.target.value.slice(0, MAX_STATUS))
                     }
                     maxLength={MAX_STATUS}
                     disabled={editor.saving}
-                    placeholder="Ex: Disponível, Em reunião..."
+                    placeholder={t("status.placeholder")}
                     className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface-alt/60 dark:text-noir-text-bright dark:placeholder:text-noir-text-muted/70"
                 />
                 <button
                     type="submit"
                     disabled={editor.saving}
-                    aria-label="Salvar status"
+                    aria-label={t("status.save")}
                     className="rounded-lg bg-emerald-600 p-1.5 text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     {editor.saving ? (
@@ -69,7 +71,7 @@ function StatusForm({
                     type="button"
                     onClick={editor.cancel}
                     disabled={editor.saving}
-                    aria-label="Cancelar edição de status"
+                    aria-label={t("status.cancel")}
                     className="rounded-lg border border-slate-200 p-1.5 text-slate-500 transition-colors hover:bg-slate-100 disabled:opacity-50 dark:border-noir-border dark:text-noir-text-muted dark:hover:bg-noir-surface-alt"
                 >
                     <svg
@@ -106,6 +108,8 @@ export default function ProfileStatusEditor({
     isSelf,
     editor,
 }: ProfileStatusEditorProps) {
+    const { t } = useTranslation("profile");
+
     if (isSelf && editor.isEditing("status")) {
         return <StatusForm status={status} editor={editor} />;
     }
@@ -121,11 +125,11 @@ export default function ProfileStatusEditor({
                         : "italic text-slate-400 dark:text-noir-text-muted/80"
                 }`}
             >
-                {status || "Sem status"}
+                {status || t("status.empty")}
             </span>
             {isSelf && (
                 <InlineEditButton
-                    label="Editar status"
+                    label={t("status.editLabel")}
                     onClick={() => editor.start("status")}
                 />
             )}

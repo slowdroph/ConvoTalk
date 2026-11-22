@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../../services/api";
 import type { Message } from "../../types";
 
@@ -15,6 +16,7 @@ export default function MessageSearch({
     onQueryChange,
     onClose,
 }: MessageSearchProps) {
+    const { t } = useTranslation("chat");
     const [query, setQuery] = useState("");
     const [filter, setFilter] = useState<"all" | "mentions">("all");
     const [results, setResults] = useState<Message[]>([]);
@@ -128,8 +130,8 @@ export default function MessageSearch({
                     id="search"
                     value={query}
                     onChange={(e) => handleQueryChange(e.target.value)}
-                    placeholder={filter === "mentions" ? "Filtrar menções (opcional)..." : "Buscar mensagens..."}
-                    aria-label="Buscar mensagens"
+                    placeholder={filter === "mentions" ? t("search.filterMentions") : t("search.placeholder")}
+                    aria-label={t("search.ariaLabel")}
                     autoFocus
                     className="w-full pl-9 pr-4 py-1.5 bg-noir-surface-alt border border-noir-border rounded-lg text-noir-text-bright text-base placeholder-noir-text-muted/70 focus:outline-none focus:border-emerald-500 transition-colors"
                 />
@@ -144,7 +146,7 @@ export default function MessageSearch({
                             : "text-slate-600 hover:text-slate-900 dark:text-noir-text-muted dark:hover:text-noir-text-bright"
                     }`}
                 >
-                    Todas
+                    {t("search.all")}
                 </button>
                 <button
                     onClick={() => handleFilterChange("mentions")}
@@ -154,7 +156,7 @@ export default function MessageSearch({
                             : "text-slate-600 hover:text-slate-900 dark:text-noir-text-muted dark:hover:text-noir-text-bright"
                     }`}
                 >
-                    Menções
+                    {t("search.mentions")}
                 </button>
             </div>
 
@@ -164,14 +166,14 @@ export default function MessageSearch({
                 <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-noir-text-muted">
                     <span>
                         {results.length === 0
-                            ? "Nenhum resultado"
+                            ? t("search.noResults")
                             : `${Math.min(current + 1, results.length)}/${results.length}`}
                     </span>
                     <button
                         onClick={handlePrev}
                         disabled={current <= 0 || results.length === 0}
                         className="text-slate-500 hover:text-slate-900 dark:text-noir-text-muted dark:hover:text-noir-text-bright disabled:opacity-30 transition-colors"
-                        title="Resultado anterior"
+                        title={t("search.prev")}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -195,7 +197,7 @@ export default function MessageSearch({
                             results.length === 0
                         }
                         className="text-slate-500 hover:text-slate-900 dark:text-noir-text-muted dark:hover:text-noir-text-bright disabled:opacity-30 transition-colors"
-                        title="Próximo resultado"
+                        title={t("search.next")}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -218,7 +220,7 @@ export default function MessageSearch({
             <button
                 onClick={onClose}
                 className="text-slate-500 hover:text-slate-900 dark:text-noir-text-muted dark:hover:text-noir-text-bright transition-colors"
-                title="Fechar busca"
+                title={t("search.close")}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

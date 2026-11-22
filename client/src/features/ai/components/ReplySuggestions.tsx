@@ -1,10 +1,5 @@
-import type { AiReplySuggestion, AiTone } from "@shared/types";
-
-const TONE_LABELS: Record<AiTone, string> = {
-    short: "Curta",
-    friendly: "Amigável",
-    formal: "Formal",
-};
+import { useTranslation } from "react-i18next";
+import type { AiReplySuggestion } from "@shared/types";
 
 interface ReplySuggestionsProps {
     suggestions: AiReplySuggestion[];
@@ -15,6 +10,8 @@ export default function ReplySuggestions({
     suggestions,
     onUse,
 }: ReplySuggestionsProps) {
+    const { t } = useTranslation("chat");
+
     return (
         <div className="space-y-2">
             {suggestions.map((suggestion, index) => (
@@ -23,10 +20,10 @@ export default function ReplySuggestions({
                     type="button"
                     onClick={() => onUse(suggestion.text)}
                     className="w-full text-left rounded-xl border border-noir-border bg-noir-base/60 p-3 hover:border-emerald-500/60 hover:bg-emerald-600/10 transition-colors"
-                    title="Usar esta resposta"
+                    title={t("ai.useSuggestion")}
                 >
                     <span className="text-[10px] uppercase tracking-wide text-emerald-500">
-                        {TONE_LABELS[suggestion.tone]}
+                        {t(`ai.tones.${suggestion.tone}`)}
                     </span>
                     <p className="mt-1 text-sm text-slate-800 dark:text-noir-text-bright">
                         {suggestion.text}

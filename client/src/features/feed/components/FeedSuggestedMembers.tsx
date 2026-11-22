@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSocket } from "../../../hooks/useSocket";
 import { useToast } from "../../../contexts/ToastContext";
 import { getErrorMessage } from "../../../utils/errors";
-import { getCountryName } from "../../../utils/countries";
+import { countryName } from "../../../i18n/catalogs";
 import { createDirectRoom } from "../../../services/rooms";
 import api from "../../../services/api";
 import Avatar from "../../../components/ui/Avatar";
@@ -20,6 +21,7 @@ export default function FeedSuggestedMembers({
     onOpenProfile,
     onConversationCreated,
 }: FeedSuggestedMembersProps) {
+    const { t } = useTranslation("feed");
     const { onlineUsers } = useSocket();
     const { showToast } = useToast();
     const [users, setUsers] = useState<PublicUser[]>([]);
@@ -42,14 +44,14 @@ export default function FeedSuggestedMembers({
         } catch (err) {
             if (requestId !== requestIdRef.current) return;
             setError(
-                getErrorMessage(err, "Erro ao carregar sugestões."),
+                getErrorMessage(err, t("suggested.loadError")),
             );
         } finally {
             if (requestId === requestIdRef.current) {
                 setLoading(false);
             }
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -71,7 +73,7 @@ export default function FeedSuggestedMembers({
         } catch (err) {
             showToast({
                 type: "error",
-                message: getErrorMessage(err, "Erro ao iniciar conversa."),
+                message: getErrorMessage(err, t("suggested.startError")),
             });
         } finally {
             setStartingId(null);
@@ -80,15 +82,15 @@ export default function FeedSuggestedMembers({
 
     return (
         <section
-            aria-label="Membros Sugeridos"
+            aria-label={t("suggested.aria")}
             className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-noir-border dark:bg-noir-surface sm:p-5"
         >
             <div className="flex items-center justify-between gap-2">
                 <h2 className="text-sm font-bold tracking-wide text-slate-900 dark:text-noir-text-bright">
-                    Membros Sugeridos
+                    {t("suggested.title")}
                 </h2>
                 <span className="font-mono text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                    {onlineCount} online
+                    {t("suggested.onlineCount", { count: onlineCount })}
                 </span>
             </div>
 
@@ -119,14 +121,14 @@ export default function FeedSuggestedMembers({
                         onClick={() => void load()}
                         className="mt-2 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
                     >
-                        Tentar novamente
+                        {t("suggested.retry")}
                     </button>
                 </div>
             )}
 
             {!loading && !error && users.length === 0 && (
                 <p className="text-xs text-slate-500 dark:text-noir-text-muted">
-                    Nenhuma sugestão no momento.
+                    {t("suggested.empty")}
                 </p>
             )}
 
@@ -142,7 +144,9 @@ export default function FeedSuggestedMembers({
                                 <button
                                     type="button"
                                     onClick={() => onOpenProfile(member)}
-                                    aria-label={`Abrir perfil de ${member.name}`}
+                                    aria-label={t("suggested.openProfileOf", {
+                                        name: member.name,
+                                    })}
                                     className="flex min-w-0 items-center gap-2.5 text-left"
                                 >
                                     <span className="relative shrink-0">
@@ -168,7 +172,7 @@ export default function FeedSuggestedMembers({
                                             {member.country && (
                                                 <CountryFlag
                                                     country={member.country}
-                                                    name={getCountryName(
+                                                    name={countryName(
                                                         member.country,
                                                     )}
                                                     className="h-2.5 w-4"
@@ -179,8 +183,8 @@ export default function FeedSuggestedMembers({
                                             {member.publicId
                                                 ? `#${member.publicId}`
                                                 : online
-                                                  ? "Disponível"
-                                                  : "Offline"}
+                                                  ? t("suggested.available")
+                                                  : t("suggested.offline")}
                                         </span>
                                     </span>
                                 </button>
@@ -191,8 +195,10 @@ export default function FeedSuggestedMembers({
                                         void handleStartConversation(member._id)
                                     }
                                     disabled={startingId === member._id}
-                                    aria-label={`Conversar com ${member.name}`}
-                                    title="Conversar"
+                                    aria-label={t("suggested.chatWith", {
+                                        name: member.name,
+                                    })}
+                                    title={t("suggested.chat")}
                                     className="shrink-0 rounded-lg border border-emerald-700/30 bg-emerald-50 p-1.5 text-emerald-700 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
                                 >
                                     {startingId === member._id ? (

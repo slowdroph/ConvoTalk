@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import { getErrorMessage } from "../utils/errors";
 
 export default function ConfirmEmailChangePage() {
+    const { t } = useTranslation("auth");
     const [searchParams] = useSearchParams();
     const token = searchParams.get("token");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
         token ? "idle" : "error",
     );
     const [message, setMessage] = useState(
-        token ? "" : "Token de confirmação não encontrado.",
+        token ? "" : t("confirmEmailChange.missingToken"),
     );
 
     const handleConfirm = async () => {
@@ -18,19 +20,14 @@ export default function ConfirmEmailChangePage() {
         setStatus("loading");
 
         try {
-            const { data } = await api.post("/user/confirm-email-change", {
+            await api.post("/user/confirm-email-change", {
                 token,
             });
             setStatus("success");
-            setMessage(data.message);
+            setMessage(t("confirmEmailChange.successMessage"));
         } catch (err: unknown) {
             setStatus("error");
-            setMessage(
-                getErrorMessage(
-                    err,
-                    "Erro ao confirmar a alteração. O token pode ser inválido, expirado ou o email já estar em uso.",
-                ),
-            );
+            setMessage(getErrorMessage(err, t("confirmEmailChange.error")));
         }
     };
 
@@ -42,11 +39,11 @@ export default function ConfirmEmailChangePage() {
                         <>
                             <div
                                 role="status"
-                                aria-label="Carregando"
+                                aria-label={t("confirmEmailChange.loading")}
                                 className="w-16 h-16 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto"
                             />
                             <h1 className="text-white text-lg font-semibold">
-                                Confirmando novo email...
+                                {t("confirmEmailChange.loading")}
                             </h1>
                         </>
                     )}
@@ -71,17 +68,16 @@ export default function ConfirmEmailChangePage() {
                                 </svg>
                             </div>
                             <h1 className="text-white text-lg font-semibold">
-                                Confirmar alteração de email
+                                {t("confirmEmailChange.title")}
                             </h1>
                             <p className="text-zinc-400 text-sm">
-                                Clique no botão abaixo para confirmar a
-                                alteração do seu email.
+                                {t("confirmEmailChange.instructions")}
                             </p>
                             <button
                                 onClick={handleConfirm}
                                 className="block w-full py-3 bg-green-600 hover:bg-green-700 text-on-accent font-medium rounded-lg transition-colors text-sm cursor-pointer"
                             >
-                                Confirmar novo email
+                                {t("confirmEmailChange.confirm")}
                             </button>
                         </>
                     )}
@@ -106,14 +102,14 @@ export default function ConfirmEmailChangePage() {
                                 </svg>
                             </div>
                             <h1 className="text-white text-lg font-semibold">
-                                Email atualizado!
+                                {t("confirmEmailChange.successTitle")}
                             </h1>
                             <p className="text-zinc-400 text-sm">{message}</p>
                             <Link
                                 to="/login"
                                 className="block w-full py-3 bg-green-600 hover:bg-green-700 text-on-accent font-medium rounded-lg transition-colors text-sm"
                             >
-                                Ir para o login
+                                {t("confirmEmailChange.goToLogin")}
                             </Link>
                         </>
                     )}
@@ -138,14 +134,14 @@ export default function ConfirmEmailChangePage() {
                                 </svg>
                             </div>
                             <h1 className="text-white text-lg font-semibold">
-                                Falha na confirmação
+                                {t("confirmEmailChange.errorTitle")}
                             </h1>
                             <p className="text-zinc-400 text-sm">{message}</p>
                             <Link
                                 to="/settings"
                                 className="block w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-lg transition-colors text-sm"
                             >
-                                Voltar para as configurações
+                                {t("confirmEmailChange.backToSettings")}
                             </Link>
                         </>
                     )}

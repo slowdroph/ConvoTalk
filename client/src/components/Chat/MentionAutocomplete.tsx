@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { PublicUser } from "../../types";
 
 interface MentionAutocompleteProps {
@@ -20,6 +21,7 @@ export default function MentionAutocomplete({
     onClose,
     position,
 }: MentionAutocompleteProps) {
+    const { t } = useTranslation("chat");
     const [selectedIndex, setSelectedIndex] = useState(0);
     const listRef = useRef<HTMLUListElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -109,7 +111,7 @@ export default function MentionAutocomplete({
                 top: position ? position.top - 200 : 0,
             }}
             role="listbox"
-            aria-label="Sugestões de menção"
+            aria-label={t("mention.suggestions")}
             aria-activedescendant={activeDescendantId}
         >
             <ul ref={listRef} className="py-1">

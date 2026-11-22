@@ -2,10 +2,13 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 import type { Types } from "mongoose";
 import User from "../models/User";
 import type { IAttachment } from "../types";
+import type { PushNotificationPayload } from "../../../shared/types";
 import { getRoomInfo } from "./roomCache";
 import { getUserSocketIds } from "./onlineUsers";
 import { sendPushToUsers } from "../services/pushNotification";
 import { parseMentionTokens, getUniqueMentionUserIds } from "../../../shared/mentions";
+import { DEFAULT_LANGUAGE, normalizeLanguage, type LanguageCode } from "../../../shared/i18n";
+import { getPushCopy } from "../i18n/push";
 import { logger } from "../config/logger";
 
 export interface SenderInfo {
@@ -106,6 +109,40 @@ export async function isRoomBlocked(roomId: string, userId: string): Promise<boo
     return isBlockedBetween(userId, other);
 }
 
+async function sendLocalizedPush(
+    userIds: Array<string | Types.ObjectId>,
+    buildPayload: (language: LanguageCode) => PushNotificationPayload,
+): Promise<void> {
+    if (userIds.length === 0) return;
+
+    const ids = userIds.map((id) => String(id));
+    const users = await User.find(
+        { _id: { $in: ids } },
+        { preferences: 1 },
+    ).lean<Array<{ _id: Types.ObjectId; preferences?: { language?: string } }>>();
+
+    const languages = new Map<string, LanguageCode>(
+        users.map((user) => [
+            String(user._id),
+            normalizeLanguage(user.preferences?.language),
+        ]),
+    );
+
+    const groups = new Map<LanguageCode, string[]>();
+    for (const id of ids) {
+        const language = languages.get(id) ?? DEFAULT_LANGUAGE;
+        const group = groups.get(language) ?? [];
+        group.push(id);
+        groups.set(language, group);
+    }
+
+    await Promise.all(
+        Array.from(groups.entries()).map(([language, groupIds]) =>
+            sendPushToUsers(groupIds, buildPayload(language)),
+        ),
+    );
+}
+
 export async function triggerPushForRoom(
     roomId: string,
     senderId: string,
@@ -139,16 +176,18 @@ export async function triggerPushForRoom(
                 ? `${senderName} (${room.name})`
                 : senderName;
 
-        const truncatedBody =
-            content && content.trim()
-                ? content.length > 100
-                    ? content.slice(0, 97) + "..."
-                    : content
-                : "Enviou um anexo";
+        const hasContent = Boolean(content && content.trim());
+        const truncatedBody = hasContent
+            ? content.length > 100
+                ? content.slice(0, 97) + "..."
+                : content
+            : "";
 
-        await sendPushToUsers(finalRecipients, {
+        await sendLocalizedPush(finalRecipients, (language) => ({
             title: roomTitle,
-            body: truncatedBody,
+            body: hasContent
+                ? truncatedBody
+                : getPushCopy(language).attachment,
             icon: "/icon-192.png",
             badge: "/icon-192.png",
             tag: roomId,
@@ -158,7 +197,7 @@ export async function triggerPushForRoom(
                 senderId,
                 url: `/chat/${roomId}`,
             },
-        });
+        }));
     } catch (error) {
         logger.error(
             { error, roomId, senderId },
@@ -243,11 +282,12 @@ export async function triggerMentionNotifications(
             }
         }
 
-        await sendPushToUsers(recipients, {
-            title: `@${senderInfo.name} mencionou você`,
-            body: message.content.length > 100
-                ? message.content.slice(0, 97) + "..."
-                : message.content,
+        await sendLocalizedPush(recipients, (language) => ({
+            title: getPushCopy(language).mention(senderInfo.name),
+            body:
+                message.content.length > 100
+                    ? message.content.slice(0, 97) + "..."
+                    : message.content,
             icon: "/icon-192.png",
             badge: "/icon-192.png",
             tag: `mention-${roomId}`,
@@ -258,7 +298,7 @@ export async function triggerMentionNotifications(
                 url: `/chat/${roomId}`,
                 mention: true,
             },
-        });
+        }));
     } catch (error) {
         logger.error({ error, roomId, senderId }, "erro ao disparar notificação de menção");
     }

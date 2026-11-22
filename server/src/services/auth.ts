@@ -25,6 +25,7 @@ import { getSocketIO } from "../config/io";
 import { emitForceLogout } from "../utils/socket";
 import { generatePublicId } from "../utils/publicId";
 import { normalizeLanguageLevels } from "../../../shared/profile";
+import { DEFAULT_LANGUAGE, type LanguageCode } from "../../../shared/i18n";
 
 function publicUser(user: {
     _id: unknown;
@@ -34,6 +35,7 @@ function publicUser(user: {
     avatar: string;
     country?: string;
     city?: string;
+    preferences?: { language?: string };
 }): {
     _id: string;
     name: string;
@@ -42,6 +44,7 @@ function publicUser(user: {
     avatar: string;
     country: string;
     city: string;
+    preferences?: { language?: string };
 } {
     return {
         _id: String(user._id),
@@ -51,6 +54,9 @@ function publicUser(user: {
         avatar: user.avatar,
         country: user.country || "",
         city: user.city || "",
+        preferences: user.preferences?.language
+            ? { language: user.preferences.language }
+            : undefined,
     };
 }
 
@@ -97,6 +103,7 @@ export async function registerUser(
         city: string;
         languages: string[];
         languageLevels?: Record<string, string>;
+        language?: LanguageCode;
     },
     ip?: string,
 ) {
@@ -110,6 +117,7 @@ export async function registerUser(
         city,
         languages,
         languageLevels,
+        language,
     } = input;
 
     const existingUser = await User.findOne({ email });
@@ -142,6 +150,7 @@ export async function registerUser(
                     languages,
                     languageLevels,
                 ),
+                preferences: { language: language ?? DEFAULT_LANGUAGE },
                 verificationToken: hashSecretToken(verificationToken),
                 verificationTokenExpiry: new Date(
                     Date.now() + VERIFICATION_TOKEN_EXPIRES_MIN * 60 * 1000,

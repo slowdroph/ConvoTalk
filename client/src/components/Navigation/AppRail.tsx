@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../hooks/useAuth";
 import { useRooms } from "../../hooks/useRooms";
 import {
@@ -10,12 +11,13 @@ import {
 
 function RailLink({ item, badge }: { item: NavItem; badge?: number }) {
     const { pathname } = useLocation();
+    const { t } = useTranslation("common");
     const active = isNavItemActive(pathname, item.to);
 
     return (
         <Link
             to={item.to}
-            title={item.label}
+            title={t(item.labelKey)}
             aria-current={active ? "page" : undefined}
             className={`relative flex w-full flex-col items-center justify-center gap-1 rounded-xl px-1 py-2.5 text-center transition-colors ${
                 active
@@ -51,25 +53,26 @@ function RailLink({ item, badge }: { item: NavItem; badge?: number }) {
                 ) : null}
             </span>
             <span className="text-[10px] font-medium leading-none">
-                {item.shortLabel ?? item.label}
+                {t(item.shortLabelKey ?? item.labelKey)}
             </span>
         </Link>
     );
 }
 
 export default function AppRail() {
+    const { t } = useTranslation("common");
     const { logout } = useAuth();
     const { totalUnread } = useRooms();
 
     return (
         <nav
-            aria-label="Navegação principal"
+            aria-label={t("nav.main")}
             className="hidden w-[76px] shrink-0 flex-col items-center border-r border-slate-200 bg-white py-3 lg:flex dark:border-noir-border dark:bg-noir-surface"
         >
             <Link
                 to="/chat"
                 title="ConvoTalk"
-                aria-label="ConvoTalk — ir para o chat"
+                aria-label={t("nav.goToChat")}
                 className="mb-3 rounded-xl p-1.5 transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
             >
                 <img
@@ -94,8 +97,8 @@ export default function AppRail() {
                 <button
                     type="button"
                     onClick={logout}
-                    title="Sair"
-                    aria-label="Sair da conta"
+                    title={t("nav.logoutTitle")}
+                    aria-label={t("nav.logoutTitle")}
                     className="flex w-full flex-col items-center justify-center gap-1 rounded-xl px-1 py-2.5 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-noir-text-muted dark:hover:bg-red-950/20 dark:hover:text-red-400"
                 >
                     <svg
@@ -113,7 +116,7 @@ export default function AppRail() {
                         />
                     </svg>
                     <span className="text-[10px] font-medium leading-none">
-                        Sair
+                        {t("nav.logout")}
                     </span>
                 </button>
             </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../hooks/useAuth";
 import { useToast } from "../../../contexts/ToastContext";
 import { getErrorMessage } from "../../../utils/errors";
@@ -32,9 +33,11 @@ interface SelectedImage {
 export default function FeedComposer({
     onCreated,
     profileId,
-    placeholder = "O que você gostaria de compartilhar com a comunidade ConvoTalk?",
+    placeholder,
     variant = "default",
 }: FeedComposerProps) {
+    const { t } = useTranslation("feed");
+    const resolvedPlaceholder = placeholder ?? t("composer.placeholder");
     const isCompact = variant === "compact";
     const { user } = useAuth();
     const { showToast } = useToast();
@@ -81,8 +84,7 @@ export default function FeedComposer({
         if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
             showToast({
                 type: "error",
-                message:
-                    "Formato de imagem não suportado. Use JPEG, PNG, WebP ou GIF.",
+                message: t("composer.imageTypeError"),
             });
             event.target.value = "";
             return;
@@ -91,7 +93,7 @@ export default function FeedComposer({
         if (file.size > MAX_IMAGE_BYTES) {
             showToast({
                 type: "error",
-                message: "A imagem deve ter no máximo 5 MB.",
+                message: t("composer.imageSizeError"),
             });
             event.target.value = "";
             return;
@@ -147,18 +149,18 @@ export default function FeedComposer({
 
         if (pollOptions) {
             if (!trimmed) {
-                setPollError("Escreva a pergunta da enquete.");
+                setPollError(t("composer.pollQuestion"));
                 return;
             }
             if (trimmedOptions.some((option) => !option)) {
-                setPollError("Preencha todas as opções da enquete.");
+                setPollError(t("composer.pollFill"));
                 return;
             }
             if (
                 new Set(trimmedOptions.map((option) => option.toLowerCase()))
                     .size !== trimmedOptions.length
             ) {
-                setPollError("As opções da enquete não podem se repetir.");
+                setPollError(t("composer.pollDuplicate"));
                 return;
             }
         }
@@ -186,12 +188,14 @@ export default function FeedComposer({
             clearImage();
             showToast({
                 type: "success",
-                message: profileId ? "Publicado no mural!" : "Post publicado!",
+                message: profileId
+                    ? t("composer.publishedWall")
+                    : t("composer.published"),
             });
         } catch (err) {
             showToast({
                 type: "error",
-                message: getErrorMessage(err, "Erro ao publicar o post."),
+                message: getErrorMessage(err, t("composer.publishError")),
             });
         } finally {
             setSubmitting(false);
@@ -219,8 +223,8 @@ export default function FeedComposer({
                         ref={textareaRef}
                         value={content}
                         onChange={handleContentChange}
-                        placeholder={placeholder}
-                        aria-label="Escreva seu post"
+                        placeholder={resolvedPlaceholder}
+                        aria-label={t("composer.writeAria")}
                         rows={isCompact ? 1 : 2}
                         disabled={submitting}
                         className={
@@ -234,13 +238,13 @@ export default function FeedComposer({
                         <div className="relative mt-2 overflow-hidden rounded-xl border border-slate-200 dark:border-noir-border">
                             <img
                                 src={image.url}
-                                alt="Prévia da imagem selecionada"
+                                alt={t("composer.previewAlt")}
                                 className="max-h-64 w-full object-cover"
                             />
                             <button
                                 type="button"
                                 onClick={clearImage}
-                                aria-label="Remover imagem"
+                                aria-label={t("composer.removeImage")}
                                 className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white transition-colors hover:bg-black/80"
                             >
                                 <svg
@@ -267,10 +271,10 @@ export default function FeedComposer({
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-noir-border dark:bg-noir-surface-alt/40">
                     <div className="flex items-center justify-between gap-2">
                         <p className="text-xs font-semibold text-slate-700 dark:text-noir-text-bright">
-                            Enquete
+                            {t("composer.pollTitle")}
                         </p>
                         <span className="text-[11px] text-slate-500 dark:text-noir-text-muted">
-                            2 a 4 opções
+                            {t("composer.pollOptionsHint")}
                         </span>
                     </div>
 
@@ -288,8 +292,12 @@ export default function FeedComposer({
                                             event.target.value,
                                         )
                                     }
-                                    placeholder={`Opção ${index + 1}`}
-                                    aria-label={`Opção ${index + 1}`}
+                                    placeholder={t("composer.option", {
+                                        number: index + 1,
+                                    })}
+                                    aria-label={t("composer.optionAria", {
+                                        number: index + 1,
+                                    })}
                                     maxLength={100}
                                     disabled={submitting}
                                     className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright dark:placeholder:text-noir-text-muted"
@@ -301,8 +309,10 @@ export default function FeedComposer({
                                         pollOptions.length <=
                                             MIN_POLL_OPTIONS || submitting
                                     }
-                                    aria-label={`Remover opção ${index + 1}`}
-                                    title="Remover opção"
+                                    aria-label={t("composer.removeOptionAria", {
+                                        number: index + 1,
+                                    })}
+                                    title={t("composer.removeOption")}
                                     className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-red-950/20 dark:hover:text-red-400"
                                 >
                                     <svg
@@ -332,7 +342,7 @@ export default function FeedComposer({
                             disabled={submitting}
                             className="mt-2 text-xs font-medium text-emerald-700 hover:underline disabled:opacity-50 dark:text-emerald-400"
                         >
-                            Adicionar opção
+                            {t("composer.addOption")}
                         </button>
                     )}
 
@@ -368,10 +378,10 @@ export default function FeedComposer({
                         disabled={submitting || Boolean(image)}
                         title={
                             image
-                                ? "Remova a imagem para escolher outra"
-                                : "Adicionar imagem"
+                                ? t("composer.imageLocked")
+                                : t("composer.addImage")
                         }
-                        aria-label="Adicionar imagem"
+                        aria-label={t("composer.addImage")}
                         className={
                             isCompact
                                 ? "inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-noir-text-muted dark:hover:bg-noir-surface-alt dark:hover:text-emerald-400"
@@ -392,7 +402,7 @@ export default function FeedComposer({
                                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                         </svg>
-                        {!isCompact && "Imagem"}
+                        {!isCompact && t("composer.image")}
                     </button>
 
                     <button
@@ -401,13 +411,13 @@ export default function FeedComposer({
                         disabled={submitting}
                         title={
                             pollOptions
-                                ? "Remover enquete"
-                                : "Adicionar enquete"
+                                ? t("composer.removePoll")
+                                : t("composer.addPoll")
                         }
                         aria-label={
                             pollOptions
-                                ? "Remover enquete"
-                                : "Adicionar enquete"
+                                ? t("composer.removePoll")
+                                : t("composer.addPoll")
                         }
                         aria-pressed={pollOptions !== null}
                         className={
@@ -438,7 +448,7 @@ export default function FeedComposer({
                                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                             />
                         </svg>
-                        {!isCompact && "Enquete"}
+                        {!isCompact && t("composer.poll")}
                     </button>
 
                     {content.length > MAX_CONTENT - 200 && (
@@ -471,7 +481,7 @@ export default function FeedComposer({
                                 <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
                             </svg>
                     )}
-                    Publicar
+                    {t("composer.publish")}
                 </button>
             </div>
         </form>

@@ -1,0 +1,109 @@
+{
+    "appName": "ConvoTalk",
+    "nav": {
+        "main": "Navegação principal",
+        "chat": "Chat",
+        "feed": "Feed",
+        "profile": "Perfil",
+        "settings": "Configurações",
+        "settingsShort": "Ajustes",
+        "logout": "Sair",
+        "logoutTitle": "Sair da conta",
+        "home": "Início",
+        "goToChat": "ConvoTalk — ir para o chat"
+    },
+    "actions": {
+        "save": "Salvar",
+        "saving": "Salvando...",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar",
+        "close": "Fechar",
+        "delete": "Excluir",
+        "edit": "Editar",
+        "back": "Voltar",
+        "next": "Continuar",
+        "retry": "Tentar novamente",
+        "search": "Buscar",
+        "send": "Enviar",
+        "copy": "Copiar",
+        "copied": "Copiado!",
+        "share": "Compartilhar",
+        "remove": "Remover",
+        "loading": "Carregando...",
+        "seeMore": "Ver mais",
+        "seeLess": "Ver menos",
+        "dismiss": "Dispensar",
+        "savingChanges": "Salvando alterações...",
+        "saved": "Alterações salvas."
+    },
+    "language": {
+        "label": "Idioma",
+        "title": "Idioma da interface",
+        "description": "Escolha o idioma em que o ConvoTalk será exibido. A mudança é aplicada imediatamente.",
+        "select": "Selecionar idioma",
+        "current": "Idioma atual",
+        "changed": "Idioma atualizado.",
+        "syncError": "Não foi possível salvar seu idioma na conta. Tente novamente.",
+        "deviceHint": "Seu idioma é salvo na conta e neste dispositivo. Ao entrar em outro dispositivo, sua preferência da conta será aplicada."
+    },
+    "time": {
+        "now": "Agora mesmo",
+        "yesterday": "Ontem",
+        "today": "Hoje",
+        "minutesAgo": "{{count}}min atrás",
+        "hoursAgo": "{{count}}h atrás",
+        "daysAgo": "{{count}}d atrás"
+    },
+    "notifications": {
+        "close": "Fechar notificação",
+        "newMessage": "Nova mensagem",
+        "defaultBody": "Você tem uma nova mensagem.",
+        "mentionTitle": "@{{name}} mencionou você",
+        "attachmentBody": "Enviou um anexo"
+    },
+    "footer": {
+        "privacy": "Privacidade",
+        "terms": "Termos",
+        "rights": "© {{year}} ConvoTalk Inc. Todos os direitos reservados."
+    },
+    "ui": {
+        "closeDialog": "Fechar diálogo",
+        "openMenu": "Abrir menu",
+        "moreOptions": "Mais opções"
+    },
+    "seo": {
+        "defaultDescription": "ConvoTalk - Converse em tempo real com quem importa. Plataforma segura, rápida e intuitiva de mensagens instantâneas."
+    },
+    "optionSearch": {
+        "placeholder": "Buscar opções...",
+        "label": "Buscar opções"
+    },
+    "dateOfBirth": {
+        "day": "Dia",
+        "month": "Mês",
+        "year": "Ano"
+    },
+    "cityCombobox": {
+        "suggestions": "Sugestões de cidades",
+        "searching": "Buscando cidades…"
+    },
+    "errorBoundary": {
+        "title": "Algo deu errado",
+        "description": "Ocorreu um erro inesperado. Recarregue a página para continuar.",
+        "reload": "Recarregar"
+    },
+    "mockup": {
+        "team": "Equipe ConvoTalk",
+        "online": "online",
+        "message1": "Fala time! O update em tempo real via WebSockets já foi aplicado com sucesso. 🚀",
+        "message2": "Excelente! Mensagens instantâneas e chamadas funcionando perfeitamente.",
+        "typing": "Mariana está digitando...",
+        "connection": "Conexão em tempo real ativa",
+        "teamShort": "Equipe"
+    },
+    "imageLightbox": {
+        "expand": "Ampliar imagem {{alt}}",
+        "dialog": "Imagem {{alt}}",
+        "close": "Fechar imagem"
+    }
+}

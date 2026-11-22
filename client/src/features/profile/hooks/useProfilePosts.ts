@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../hooks/useAuth";
 import { useSocket } from "../../../hooks/useSocket";
 import { getErrorMessage } from "../../../utils/errors";
@@ -44,6 +45,7 @@ export function useProfilePosts(
     profileUserId: string | null,
     options: { authored?: boolean } = {},
 ) {
+    const { t } = useTranslation("profile");
     const authored = options.authored ?? false;
     const { user } = useAuth();
     const { socket, connected } = useSocket();
@@ -105,8 +107,8 @@ export function useProfilePosts(
                 getErrorMessage(
                     err,
                     authored
-                        ? "Erro ao carregar as publicações."
-                        : "Erro ao carregar o mural.",
+                        ? t("publications.loadError")
+                        : t("wall.loadError"),
                 ),
             );
         } finally {
@@ -114,7 +116,7 @@ export function useProfilePosts(
                 setLoading(false);
             }
         }
-    }, [profileUserId, authored]);
+    }, [profileUserId, authored, t]);
 
     const loadMore = useCallback(async () => {
         if (loadingMoreRef.current || !nextCursor || !profileUserId) return;
@@ -140,14 +142,14 @@ export function useProfilePosts(
             setHasMore(Boolean(data.nextCursor));
         } catch (err) {
             if (requestId !== requestIdRef.current) return;
-            setError(getErrorMessage(err, "Erro ao carregar mais posts."));
+            setError(getErrorMessage(err, t("publications.loadMoreError")));
         } finally {
             if (requestId === requestIdRef.current) {
                 loadingMoreRef.current = false;
                 setLoadingMore(false);
             }
         }
-    }, [nextCursor, profileUserId, authored]);
+    }, [nextCursor, profileUserId, authored, t]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useCitySuggestions } from "../../hooks/useCitySuggestions";
 
 interface CityComboboxProps {
@@ -25,6 +26,7 @@ export default function CityCombobox({
     className = DEFAULT_INPUT_CLASS,
     disabled = false,
 }: CityComboboxProps) {
+    const { t } = useTranslation("common");
     const { suggestions, loading } = useCitySuggestions(country, value);
     const [open, setOpen] = useState(false);
     const [highlight, setHighlight] = useState(-1);
@@ -128,7 +130,7 @@ export default function CityCombobox({
                 <ul
                     id={listId}
                     role="listbox"
-                    aria-label="Sugestões de cidades"
+                    aria-label={t("cityCombobox.suggestions")}
                     className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto rounded-xl border border-noir-border bg-noir-surface-alt shadow-2xl py-1 text-sm"
                 >
                     {loading && suggestions.length === 0 && (
@@ -138,7 +140,7 @@ export default function CityCombobox({
                             aria-selected="false"
                             className="px-3.5 py-2 text-noir-text-muted italic"
                         >
-                            Buscando cidades…
+                            {t("cityCombobox.searching")}
                         </li>
                     )}
                     {suggestions.map((name, index) => (

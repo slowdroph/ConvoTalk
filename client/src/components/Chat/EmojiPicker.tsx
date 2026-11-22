@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
+const EMOJI_GROUPS: { labelKey: string; emojis: string[] }[] = [
     {
-        label: "Sorrisos",
+        labelKey: "emoji.smileys",
         emojis: [
             "😀",
             "😁",
@@ -67,7 +68,7 @@ const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
         ],
     },
     {
-        label: "Animais",
+        labelKey: "emoji.animals",
         emojis: [
             "🐶",
             "🐱",
@@ -112,7 +113,7 @@ const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
         ],
     },
     {
-        label: "Comida",
+        labelKey: "emoji.food",
         emojis: [
             "🍏",
             "🍎",
@@ -177,7 +178,7 @@ const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
         ],
     },
     {
-        label: "Atividades",
+        labelKey: "emoji.activities",
         emojis: [
             "⚽",
             "🏀",
@@ -232,7 +233,7 @@ const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
         ],
     },
     {
-        label: "Viagem",
+        labelKey: "emoji.travel",
         emojis: [
             "🚗",
             "🚕",
@@ -287,7 +288,7 @@ const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
         ],
     },
     {
-        label: "Objetos",
+        labelKey: "emoji.objects",
         emojis: [
             "⌚",
             "📱",
@@ -342,7 +343,7 @@ const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
         ],
     },
     {
-        label: "Símbolos",
+        labelKey: "emoji.symbols",
         emojis: [
             "❤️",
             "🧡",
@@ -404,6 +405,7 @@ interface EmojiPickerProps {
 }
 
 export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
+    const { t } = useTranslation("chat");
     const [activeGroup, setActiveGroup] = useState(0);
     const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -435,9 +437,9 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
             <div className="flex gap-1 px-2 py-2 border-b border-zinc-700 overflow-x-auto">
                 {EMOJI_GROUPS.map((group, i) => (
                     <button
-                        key={group.label}
+                        key={group.labelKey}
                         onClick={() => setActiveGroup(i)}
-                        title={group.label}
+                        title={t(group.labelKey)}
                         className={`p-1.5 rounded-lg text-base transition-colors ${
                             activeGroup === i
                                 ? "bg-zinc-700 text-white"

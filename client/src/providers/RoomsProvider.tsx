@@ -6,6 +6,7 @@ import {
     useState,
     type ReactNode,
 } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import { useAuth } from "../hooks/useAuth";
 import { useSocket } from "../hooks/useSocket";
@@ -34,6 +35,7 @@ function withoutKey(
 }
 
 export function RoomsProvider({ children }: { children: ReactNode }) {
+    const { t } = useTranslation("chat");
     const { user } = useAuth();
     const { socket, connected } = useSocket();
     const [rooms, setRooms] = useState<Room[]>([]);
@@ -73,12 +75,12 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
             );
             return data;
         } catch {
-            setRoomsError("Erro ao carregar salas. Verifique sua conexão.");
+            setRoomsError(t("sidebar.roomsLoadError"));
             return [];
         } finally {
             setRoomsLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const setActiveRoom = useCallback((roomId: string | null) => {
         setActiveRoomState(roomId);

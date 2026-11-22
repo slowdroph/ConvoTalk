@@ -1,0 +1,109 @@
+{
+    "appName": "ConvoTalk",
+    "nav": {
+        "main": "Main navigation",
+        "chat": "Chat",
+        "feed": "Feed",
+        "profile": "Profile",
+        "settings": "Settings",
+        "settingsShort": "Settings",
+        "logout": "Log out",
+        "logoutTitle": "Log out of your account",
+        "home": "Home",
+        "goToChat": "ConvoTalk — go to chat"
+    },
+    "actions": {
+        "save": "Save",
+        "saving": "Saving...",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "close": "Close",
+        "delete": "Delete",
+        "edit": "Edit",
+        "back": "Back",
+        "next": "Continue",
+        "retry": "Try again",
+        "search": "Search",
+        "send": "Send",
+        "copy": "Copy",
+        "copied": "Copied!",
+        "share": "Share",
+        "remove": "Remove",
+        "loading": "Loading...",
+        "seeMore": "See more",
+        "seeLess": "See less",
+        "dismiss": "Dismiss",
+        "savingChanges": "Saving changes...",
+        "saved": "Changes saved."
+    },
+    "language": {
+        "label": "Language",
+        "title": "Interface language",
+        "description": "Choose the language ConvoTalk is displayed in. The change applies immediately.",
+        "select": "Select language",
+        "current": "Current language",
+        "changed": "Language updated.",
+        "syncError": "Could not save your language to your account. Please try again.",
+        "deviceHint": "Your language is saved to your account and this device. When you sign in on another device, your account preference is applied."
+    },
+    "time": {
+        "now": "Just now",
+        "yesterday": "Yesterday",
+        "today": "Today",
+        "minutesAgo": "{{count}}m ago",
+        "hoursAgo": "{{count}}h ago",
+        "daysAgo": "{{count}}d ago"
+    },
+    "notifications": {
+        "close": "Dismiss notification",
+        "newMessage": "New message",
+        "defaultBody": "You have a new message.",
+        "mentionTitle": "@{{name}} mentioned you",
+        "attachmentBody": "Sent an attachment"
+    },
+    "footer": {
+        "privacy": "Privacy",
+        "terms": "Terms",
+        "rights": "© {{year}} ConvoTalk Inc. All rights reserved."
+    },
+    "ui": {
+        "closeDialog": "Close dialog",
+        "openMenu": "Open menu",
+        "moreOptions": "More options"
+    },
+    "seo": {
+        "defaultDescription": "ConvoTalk - Chat in real time with the people who matter. A secure, fast, and intuitive instant messaging platform."
+    },
+    "optionSearch": {
+        "placeholder": "Search options...",
+        "label": "Search options"
+    },
+    "dateOfBirth": {
+        "day": "Day",
+        "month": "Month",
+        "year": "Year"
+    },
+    "cityCombobox": {
+        "suggestions": "City suggestions",
+        "searching": "Searching cities…"
+    },
+    "errorBoundary": {
+        "title": "Something went wrong",
+        "description": "An unexpected error occurred. Reload the page to continue.",
+        "reload": "Reload"
+    },
+    "mockup": {
+        "team": "ConvoTalk Team",
+        "online": "online",
+        "message1": "Hey team! The real-time update via WebSockets has been applied successfully. 🚀",
+        "message2": "Excellent! Instant messages and calls working perfectly.",
+        "typing": "Mariana is typing...",
+        "connection": "Real-time connection active",
+        "teamShort": "Team"
+    },
+    "imageLightbox": {
+        "expand": "Enlarge image {{alt}}",
+        "dialog": "Image {{alt}}",
+        "close": "Close image"
+    }
+}

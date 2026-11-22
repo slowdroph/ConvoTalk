@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import FeedList from "../../feed/components/FeedList";
 import { useProfilePosts } from "../hooks/useProfilePosts";
 
@@ -18,6 +19,7 @@ export default function ProfilePublicationsTab({
     onOpenAuthor,
     onStatsChanged,
 }: ProfilePublicationsTabProps) {
+    const { t } = useTranslation("profile");
     const {
         posts,
         loading,
@@ -43,12 +45,12 @@ export default function ProfilePublicationsTab({
             currentUserId={currentUserId}
             wallOwnerId={profileUserId}
             emptyState={{
-                title: "Nenhuma publicação",
+                title: t("publications.emptyTitle"),
                 description: isSelf
-                    ? "Os posts que você publicar no feed aparecerão aqui."
-                    : `${profileName} ainda não publicou no feed.`,
+                    ? t("publications.emptySelf")
+                    : t("publications.emptyOther", { name: profileName }),
             }}
-            endLabel="Você chegou ao fim das publicações."
+            endLabel={t("publications.end")}
             onLoadMore={() => void loadMore()}
             onRetry={() => void load()}
             onRetryMore={() => void loadMore()}

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { AiSummaryPayload } from "@shared/types";
 import type { AssistantLoading } from "../hooks/useAssistant";
 import SummaryCard from "./SummaryCard";
@@ -25,20 +26,22 @@ export default function AssistantPanel({
     onRefresh,
     onClose,
 }: AssistantPanelProps) {
+    const { t } = useTranslation("chat");
+
     return (
         <div className="fixed inset-0 z-40 w-full md:relative md:w-80 md:z-auto flex flex-col border-t md:border-t-0 md:border-l border-noir-border bg-noir-surface md:max-h-full">
             <div className="px-4 py-3 border-b border-noir-border flex items-center justify-between shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))]">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-noir-text-bright flex items-center gap-2">
                     <span className="text-emerald-500">✦</span>
-                    Resumo da conversa
+                    {t("ai.panelTitle")}
                 </h3>
                 <div className="flex items-center gap-1">
                     <button
                         onClick={onRefresh}
                         disabled={loading === "summarize"}
                         className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors disabled:opacity-50 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
-                        title="Gerar novo resumo"
-                        aria-label="Gerar novo resumo"
+                        title={t("ai.refreshTitle")}
+                        aria-label={t("ai.refreshTitle")}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -58,8 +61,8 @@ export default function AssistantPanel({
                     <button
                         onClick={onClose}
                         className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
-                        title="Fechar assistente"
-                        aria-label="Fechar assistente"
+                        title={t("ai.closeTitle")}
+                        aria-label={t("ai.closeAria")}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -94,8 +97,7 @@ export default function AssistantPanel({
 
                 {loading !== "summarize" && !error && !summary && (
                     <p className="text-xs text-slate-500 dark:text-noir-text-muted py-6 text-center">
-                        Nenhum resumo gerado ainda. Use o botão de atualizar
-                        para analisar esta conversa.
+                        {t("ai.emptySummary")}
                     </p>
                 )}
             </div>

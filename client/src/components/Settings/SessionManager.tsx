@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSessions } from "../../hooks/useSessions";
 import { useToast } from "../../contexts/ToastContext";
 import { formatTimeAgo } from "../../utils/format";
@@ -15,6 +16,7 @@ function getDeviceIcon(deviceType: string): string {
 }
 
 export default function SessionManager() {
+    const { t } = useTranslation("settings");
     const { sessions, loading, error, removeSession, removeAllOtherSessions } =
         useSessions();
     const { showToast } = useToast();
@@ -27,12 +29,12 @@ export default function SessionManager() {
             await removeSession(sessionId);
             showToast({
                 type: "success",
-                message: "Sessão encerrada com sucesso.",
+                message: t("sessions.removed"),
             });
         } catch {
             showToast({
                 type: "error",
-                message: "Erro ao encerrar sessão.",
+                message: t("sessions.removeError"),
             });
         } finally {
             setRemovingId(null);
@@ -45,12 +47,12 @@ export default function SessionManager() {
             await removeAllOtherSessions();
             showToast({
                 type: "success",
-                message: "Todas as outras sessões foram encerradas.",
+                message: t("sessions.removedAll"),
             });
         } catch {
             showToast({
                 type: "error",
-                message: "Erro ao encerrar outras sessões.",
+                message: t("sessions.removeAllError"),
             });
         } finally {
             setRemovingAll(false);
@@ -64,22 +66,22 @@ export default function SessionManager() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-noir-border gap-2">
                 <div>
                     <h2 className="text-base font-semibold text-noir-text-bright">
-                        Sessões Ativas
+                        {t("sessions.title")}
                     </h2>
                     <p className="text-xs text-noir-text-muted mt-0.5">
-                        Gerencie os dispositivos conectados à sua conta ConvoTalk.
+                        {t("sessions.description")}
                     </p>
                 </div>
                 {otherSessions.length > 0 && (
                     <button
                         onClick={handleRemoveAll}
                         disabled={removingAll}
-                        aria-label="Encerrar todas as outras sessões"
+                        aria-label={t("sessions.endAllAria")}
                         className="text-xs text-red-400 hover:text-red-300 font-medium hover:underline self-start sm:self-auto cursor-pointer disabled:opacity-50"
                     >
                         {removingAll
-                            ? "Encerrando..."
-                            : "Encerrar todas outras"}
+                            ? t("sessions.ending")
+                            : t("sessions.endAll")}
                     </button>
                 )}
             </div>
@@ -145,19 +147,19 @@ export default function SessionManager() {
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs font-semibold text-noir-text-bright truncate">
-                                            {session.deviceLabel || "Dispositivo"}
+                                            {session.deviceLabel || t("sessions.device")}
                                         </span>
                                         {session.current && (
                                             <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/25 text-emerald-400 border border-emerald-500/30">
-                                                Atual
+                                                {t("sessions.current")}
                                             </span>
                                         )}
                                     </div>
                                     <div className="flex items-center gap-2 text-[11px] text-noir-text-muted font-mono mt-0.5">
-                                        <span>{session.ip || "IP desconhecido"}</span>
+                                        <span>{session.ip || t("sessions.unknownIp")}</span>
                                         <span>•</span>
                                         <span className={session.current ? "text-emerald-400" : "text-noir-text-muted"}>
-                                            {session.current ? "Agora mesmo" : formatTimeAgo(session.lastActiveAt)}
+                                            {session.current ? t("sessions.now") : formatTimeAgo(session.lastActiveAt)}
                                         </span>
                                     </div>
                                 </div>
@@ -165,18 +167,22 @@ export default function SessionManager() {
 
                             {session.current ? (
                                 <span className="hidden sm:inline-block text-xs text-noir-text-muted italic shrink-0">
-                                    Dispositivo principal
+                                    {t("sessions.mainDevice")}
                                 </span>
                             ) : (
                                 <button
                                     onClick={() => handleRemoveSession(session._id)}
                                     disabled={removingId === session._id}
-                                    aria-label={`Encerrar sessão ${session.deviceLabel}`}
+                                    aria-label={t("sessions.endAria", {
+                                        device:
+                                            session.deviceLabel ||
+                                            t("sessions.device"),
+                                    })}
                                     className="text-xs font-medium text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-950/20 border border-transparent hover:border-red-900/40 transition cursor-pointer disabled:opacity-50 shrink-0"
                                 >
                                     {removingId === session._id
-                                        ? "Encerrando..."
-                                        : "Encerrar"}
+                                        ? t("sessions.ending")
+                                        : t("sessions.end")}
                                 </button>
                             )}
                         </div>
@@ -184,7 +190,7 @@ export default function SessionManager() {
 
                     {sessions.length === 0 && (
                         <p className="text-center text-noir-text-muted py-6 text-xs">
-                            Nenhuma sessão ativa encontrada.
+                            {t("sessions.empty")}
                         </p>
                     )}
                 </div>

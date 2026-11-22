@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { getSessions, deleteSession, deleteAllSessions } from "../services/api";
+import i18n from "../i18n";
 import type { Session } from "../types";
 
 export function useSessions() {
@@ -19,7 +20,7 @@ export function useSessions() {
                 }
             } catch {
                 if (!cancelled) {
-                    setError("Erro ao carregar sessões.");
+                    setError(i18n.t("settings:sessions.loadError"));
                     setLoading(false);
                 }
             }
@@ -39,7 +40,7 @@ export function useSessions() {
             const data = await getSessions();
             setSessions(data);
         } catch {
-            setError("Erro ao carregar sessões.");
+            setError(i18n.t("settings:sessions.loadError"));
         } finally {
             setLoading(false);
         }
@@ -51,8 +52,8 @@ export function useSessions() {
                 await deleteSession(sessionId);
                 setSessions((prev) => prev.filter((s) => s._id !== sessionId));
             } catch {
-                setError("Erro ao encerrar sessão.");
-                throw new Error("Erro ao encerrar sessão.");
+                setError(i18n.t("settings:sessions.removeError"));
+                throw new Error(i18n.t("settings:sessions.removeError"));
             }
         },
         [],
@@ -63,8 +64,8 @@ export function useSessions() {
             await deleteAllSessions();
             setSessions((prev) => prev.filter((s) => s.current));
         } catch {
-            setError("Erro ao encerrar outras sessões.");
-            throw new Error("Erro ao encerrar outras sessões.");
+            setError(i18n.t("settings:sessions.removeAllError"));
+            throw new Error(i18n.t("settings:sessions.removeAllError"));
         }
     }, []);
 

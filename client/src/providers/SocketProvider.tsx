@@ -7,6 +7,7 @@ import {
     type ReactNode,
 } from "react";
 import { io, Socket } from "socket.io-client";
+import i18n from "../i18n";
 import { SocketContext, type OnlineUser } from "../contexts/SocketContext";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
@@ -64,7 +65,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             if (wasConnected.current) {
                 showToast({
                     type: "success",
-                    message: "Conexão restabelecida de volta.",
+                    message: i18n.t("chat:connection.restored"),
                 });
             }
             wasConnected.current = true;
@@ -92,7 +93,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             setReconnectAttempt(0);
             showToast({
                 type: "error",
-                message: "Não foi possível reconectar. Verifique sua conexão.",
+                message: i18n.t("chat:connection.reconnectFailed"),
             });
         });
         newSocket.on("user_online", (users: OnlineUser[]) =>
@@ -100,16 +101,17 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         );
         newSocket.on("session:force_logout", (data?: { reason?: string }) => {
             if (!getAccessToken()) return;
-            const reasonMessages: Record<string, string> = {
-                password_changed: "Sua senha foi alterada. Faça login novamente.",
-                email_changed: "Seu email foi alterado. Faça login novamente.",
-                all_devices: "Todas as sessões foram encerradas.",
-                remote_logout: "Sessão encerrada remotamente.",
-                session_expired: "Sessão expirada. Faça login novamente.",
+            const reasonKeys: Record<string, string> = {
+                password_changed: "chat:connection.sessionPasswordChanged",
+                email_changed: "chat:connection.sessionEmailChanged",
+                all_devices: "chat:connection.sessionAllDevices",
+                remote_logout: "chat:connection.sessionRemoteLogout",
+                session_expired: "chat:connection.sessionExpired",
             };
-            const message = data?.reason
-                ? reasonMessages[data.reason] ?? "Sessão encerrada."
-                : "Sessão encerrada.";
+            const message = i18n.t(
+                (data?.reason && reasonKeys[data.reason]) ||
+                    "chat:connection.sessionEnded",
+            );
             showToast({ type: "warning", message });
             logout();
         });

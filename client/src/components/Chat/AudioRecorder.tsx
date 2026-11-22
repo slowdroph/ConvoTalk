@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface AudioRecorderProps {
     onCancel: () => void;
@@ -18,6 +19,7 @@ export default function AudioRecorder({
     onCancel,
     onFinish,
 }: AudioRecorderProps) {
+    const { t } = useTranslation("chat");
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
     const streamRef = useRef<MediaStream | null>(null);
@@ -78,7 +80,7 @@ export default function AudioRecorder({
                     });
                 }, 1000);
             } catch {
-                setError("Não foi possível acessar o microfone.");
+                setError(t("recorder.micError"));
             }
         };
 
@@ -134,8 +136,8 @@ export default function AudioRecorder({
                     }}
                     disabled={Boolean(error)}
                     className="p-2 rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white transition-colors"
-                    title="Enviar áudio"
-                    aria-label="Enviar áudio"
+                    title={t("recorder.send")}
+                    aria-label={t("recorder.send")}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -153,8 +155,8 @@ export default function AudioRecorder({
                         onCancel();
                     }}
                     className="p-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-zinc-200 transition-colors"
-                    title="Cancelar gravação"
-                    aria-label="Cancelar gravação"
+                    title={t("recorder.cancel")}
+                    aria-label={t("recorder.cancel")}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

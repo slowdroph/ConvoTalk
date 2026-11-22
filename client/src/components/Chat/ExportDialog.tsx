@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "../../services/api";
 import Button from "../ui/Button";
 
@@ -23,6 +24,7 @@ export default function ExportDialog({
     roomName,
     onClose,
 }: ExportDialogProps) {
+    const { t } = useTranslation("chat");
     const [exporting, setExporting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +40,7 @@ export default function ExportDialog({
             const filename =
                 getFilenameFromDisposition(
                     response.headers["content-disposition"],
-                ) || `${roomName || "conversa"}.pdf`;
+                ) || `${roomName || t("export.fileFallback")}.pdf`;
 
             const url = URL.createObjectURL(response.data);
             const link = document.createElement("a");
@@ -50,7 +52,7 @@ export default function ExportDialog({
             URL.revokeObjectURL(url);
             onClose();
         } catch {
-            setError("Erro ao exportar a conversa. Tente novamente.");
+            setError(t("export.error"));
         } finally {
             setExporting(false);
         }
@@ -60,10 +62,10 @@ export default function ExportDialog({
         <div className="fixed inset-0 bg-noir-base/75 flex items-center justify-center z-50">
             <div className="bg-noir-card border border-noir-border rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
                 <h3 className="text-lg font-semibold text-noir-text-bright mb-2">
-                    Exportar conversa
+                    {t("export.title")}
                 </h3>
                 <p className="text-noir-text-muted text-sm mb-4">
-                    Baixe todas as mensagens desta conversa em um arquivo PDF.
+                    {t("export.description")}
                 </p>
                 {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
                 <div className="flex gap-3">
@@ -73,7 +75,7 @@ export default function ExportDialog({
                         onClick={onClose}
                         disabled={exporting}
                     >
-                        Cancelar
+                        {t("export.cancel")}
                     </Button>
                     <Button
                         variant="primary"
@@ -84,7 +86,9 @@ export default function ExportDialog({
                         {exporting && (
                             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         )}
-                        {exporting ? "Exportando..." : "Exportar PDF"}
+                        {exporting
+                            ? t("export.exporting")
+                            : t("export.export")}
                     </Button>
                 </div>
             </div>
