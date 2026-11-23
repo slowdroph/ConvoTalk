@@ -86,7 +86,7 @@ async function createUser(name: string, email: string) {
 }
 
 describe("preferências de idioma", () => {
-    it("usa pt-BR como idioma padrão de novos cadastros", async () => {
+    it("usa en como idioma padrão de novos cadastros", async () => {
         const { registerUser } = await import("../services/auth");
         await registerUser({
             name: "Ana",
@@ -101,7 +101,7 @@ describe("preferências de idioma", () => {
         });
 
         const user = await User.findOne({ email: "ana-default@test.com" }).lean();
-        expect(user?.preferences?.language).toBe("pt-BR");
+        expect(user?.preferences?.language).toBe("en");
     });
 
     it("salva o idioma escolhido no cadastro", async () => {
@@ -212,8 +212,8 @@ describe("notificações push localizadas", () => {
         );
     });
 
-    it("usa pt-BR para idiomas desconhecidos ou ausentes", () => {
-        expect(getPushCopy(undefined).attachment).toBe("Enviou um anexo");
-        expect(getPushCopy("de").attachment).toBe("Enviou um anexo");
+    it("usa en para idiomas desconhecidos ou ausentes", () => {
+        expect(getPushCopy(undefined).attachment).toBe("Sent an attachment");
+        expect(getPushCopy("de").attachment).toBe("Sent an attachment");
     });
 });

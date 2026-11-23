@@ -5,10 +5,12 @@ import { searchUserLimiter } from "../middleware/rateLimiter";
 import {
     userSearchQuerySchema,
     userSuggestionsQuerySchema,
+    discoverQuerySchema,
 } from "../validations";
 import {
     searchUsers,
     getSuggestions,
+    discoverUsers,
 } from "../controllers/userSearchController";
 
 const router = Router();
@@ -27,6 +29,14 @@ router.get(
     searchUserLimiter,
     validate(userSearchQuerySchema),
     searchUsers,
+);
+
+router.get(
+    "/discover",
+    auth,
+    searchUserLimiter,
+    validate(discoverQuerySchema),
+    discoverUsers,
 );
 
 export default router;

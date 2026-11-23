@@ -18,6 +18,7 @@ const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const HomePage = lazy(() => import("./pages/HomePage"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
 const FeedPage = lazy(() => import("./pages/FeedPage"));
+const DiscoverPage = lazy(() => import("./pages/DiscoverPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
@@ -146,6 +147,14 @@ export default function App() {
                             element={
                                 <Suspense fallback={<LoadingScreen />}>
                                     <FeedPage />
+                                </Suspense>
+                            }
+                        />
+                        <Route
+                            path="/discover"
+                            element={
+                                <Suspense fallback={<LoadingScreen />}>
+                                    <DiscoverPage />
                                 </Suspense>
                             }
                         />

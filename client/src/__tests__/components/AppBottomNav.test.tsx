@@ -27,7 +27,7 @@ describe("AppBottomNav", () => {
     it("renderiza os destinos e o atalho de ajustes", () => {
         renderNav();
 
-        ["Chat", "Feed", "Perfil", "Ajustes"].forEach((label) => {
+        ["Chat", "Feed", "Descobrir", "Perfil", "Ajustes"].forEach((label) => {
             expect(screen.getByRole("link", { name: label })).toBeInTheDocument();
         });
         expect(screen.getByRole("link", { name: "Ajustes" })).toHaveAttribute(

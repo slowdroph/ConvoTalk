@@ -1,0 +1,68 @@
+{
+    "title": "Descobrir",
+    "subtitle": "Encontre pessoas por nome, ID, localização, idiomas e interesses.",
+    "search": {
+        "placeholder": "Buscar por nome ou #ID",
+        "aria": "Buscar pessoas",
+        "clear": "Limpar busca",
+        "minLength": "Digite pelo menos 3 caracteres para buscar."
+    },
+    "filters": {
+        "title": "Filtros",
+        "open": "Filtros ({{count}})",
+        "clear": "Limpar filtros",
+        "country": "País",
+        "allCountries": "Todos os países",
+        "city": "Cidade",
+        "cityPlaceholder": "Buscar cidade",
+        "cityNeedsCountry": "Selecione um país primeiro",
+        "languages": "Idiomas",
+        "interests": "Interesses",
+        "activity": "Atividade",
+        "activityAny": "Qualquer período",
+        "activity24h": "Últimas 24h",
+        "activity7d": "Últimos 7 dias",
+        "activity30d": "Últimos 30 dias",
+        "sort": "Ordenar por",
+        "sortActive": "Ativos recentemente",
+        "sortRecent": "Entraram recentemente",
+        "sortName": "Nome (A–Z)",
+        "searchOptions": "Buscar opções",
+        "selectedCount": "{{count}} selecionados",
+        "max": "Selecione no máximo {{count}} opções.",
+        "noOptions": "Nenhuma opção encontrada."
+    },
+    "activeFilters": {
+        "aria": "Filtros ativos",
+        "country": "País: {{value}}",
+        "city": "Cidade: {{value}}",
+        "language": "Idioma: {{value}}",
+        "interest": "Interesse: {{value}}",
+        "activity": "Atividade: {{value}}",
+        "remove": "Remover filtro {{label}}"
+    },
+    "results": {
+        "titleSuggested": "Sugestões para você",
+        "titleResults": "Resultados",
+        "count_one": "Mostrando {{count}} pessoa",
+        "count_other": "Mostrando {{count}} pessoas",
+        "loading": "Carregando pessoas...",
+        "emptyTitle": "Nenhum usuário encontrado",
+        "emptyDescription": "Tente ajustar a busca ou os filtros.",
+        "clearFilters": "Limpar filtros",
+        "end": "Você chegou ao fim da lista.",
+        "loadMore": "Carregar mais"
+    },
+    "card": {
+        "openProfile": "Ver perfil de {{name}}",
+        "viewProfile": "Ver perfil",
+        "chat": "Conversar",
+        "starting": "Abrindo conversa...",
+        "online": "Online",
+        "noBio": "Sem bio."
+    },
+    "errors": {
+        "load": "Erro ao carregar usuários.",
+        "startChat": "Erro ao iniciar conversa."
+    }
+}

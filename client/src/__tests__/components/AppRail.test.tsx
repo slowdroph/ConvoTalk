@@ -44,6 +44,9 @@ describe("AppRail", () => {
             "href",
             "/feed",
         );
+        expect(
+            screen.getByRole("link", { name: /Descobrir/ }),
+        ).toHaveAttribute("href", "/discover");
         expect(screen.getByRole("link", { name: /Perfil/ })).toHaveAttribute(
             "href",
             "/profile",

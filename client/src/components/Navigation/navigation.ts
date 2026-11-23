@@ -19,6 +19,11 @@ export const NAV_ITEMS: NavItem[] = [
         icon: "M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2zM7 8h10M7 12h10M7 16h6",
     },
     {
+        to: "/discover",
+        labelKey: "nav.discover",
+        icon: "M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z",
+    },
+    {
         to: "/profile",
         labelKey: "nav.profile",
         icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",

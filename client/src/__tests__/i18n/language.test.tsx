@@ -68,7 +68,8 @@ describe("language persistence", () => {
     it("normalizes regional and unknown variants", () => {
         expect(normalizeLanguage("en-US")).toBe("en");
         expect(normalizeLanguage("pt")).toBe("pt-BR");
-        expect(normalizeLanguage("xx")).toBe("pt-BR");
+        expect(normalizeLanguage("xx")).toBe("en");
+        expect(normalizeLanguage(undefined)).toBe("en");
     });
 });
 

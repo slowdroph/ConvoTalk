@@ -1,6 +1,8 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth";
 import * as userService from "../services/user";
+import * as discoverService from "../services/discover";
+import type { DiscoverQueryInput } from "../services/discover";
 import { handleError } from "../utils/errors";
 
 export async function searchUsers(
@@ -29,5 +31,21 @@ export async function getSuggestions(
         res.json(users);
     } catch (error) {
         handleError(error, res, "Erro ao carregar sugestões.");
+    }
+}
+
+export async function discoverUsers(
+    req: AuthRequest,
+    res: Response,
+): Promise<void> {
+    try {
+        const query = req.query as unknown as DiscoverQueryInput;
+        const result = await discoverService.discoverUsers(
+            req.user!._id,
+            query,
+        );
+        res.json(result);
+    } catch (error) {
+        handleError(error, res, "Erro ao descobrir usuários.");
     }
 }

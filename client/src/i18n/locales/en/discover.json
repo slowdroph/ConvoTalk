@@ -1,0 +1,68 @@
+{
+    "title": "Discover",
+    "subtitle": "Find people by name, ID, location, languages and interests.",
+    "search": {
+        "placeholder": "Search by name or #ID",
+        "aria": "Search people",
+        "clear": "Clear search",
+        "minLength": "Type at least 3 characters to search."
+    },
+    "filters": {
+        "title": "Filters",
+        "open": "Filters ({{count}})",
+        "clear": "Clear filters",
+        "country": "Country",
+        "allCountries": "All countries",
+        "city": "City",
+        "cityPlaceholder": "Search city",
+        "cityNeedsCountry": "Select a country first",
+        "languages": "Languages",
+        "interests": "Interests",
+        "activity": "Activity",
+        "activityAny": "Any time",
+        "activity24h": "Last 24h",
+        "activity7d": "Last 7 days",
+        "activity30d": "Last 30 days",
+        "sort": "Sort by",
+        "sortActive": "Recently active",
+        "sortRecent": "Recently joined",
+        "sortName": "Name (A–Z)",
+        "searchOptions": "Search options",
+        "selectedCount": "{{count}} selected",
+        "max": "Select at most {{count}} options.",
+        "noOptions": "No options found."
+    },
+    "activeFilters": {
+        "aria": "Active filters",
+        "country": "Country: {{value}}",
+        "city": "City: {{value}}",
+        "language": "Language: {{value}}",
+        "interest": "Interest: {{value}}",
+        "activity": "Activity: {{value}}",
+        "remove": "Remove filter {{label}}"
+    },
+    "results": {
+        "titleSuggested": "Suggestions for you",
+        "titleResults": "Results",
+        "count_one": "Showing {{count}} person",
+        "count_other": "Showing {{count}} people",
+        "loading": "Loading people...",
+        "emptyTitle": "No users found",
+        "emptyDescription": "Try adjusting your search or filters.",
+        "clearFilters": "Clear filters",
+        "end": "You have reached the end of the list.",
+        "loadMore": "Load more"
+    },
+    "card": {
+        "openProfile": "View {{name}}'s profile",
+        "viewProfile": "View profile",
+        "chat": "Chat",
+        "starting": "Opening chat...",
+        "online": "Online",
+        "noBio": "No bio."
+    },
+    "errors": {
+        "load": "Failed to load users.",
+        "startChat": "Failed to start the conversation."
+    }
+}

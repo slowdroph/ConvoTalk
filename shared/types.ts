@@ -49,6 +49,35 @@ export interface PublicProfilePayload extends PublicUserPayload {
     createdAt?: string;
 }
 
+export type DiscoverSort = "active" | "recent" | "name";
+
+export type DiscoverActivityWindow = "24h" | "7d" | "30d";
+
+export type DiscoverMode = "suggested" | "results";
+
+export interface DiscoverUserPayload {
+    _id: string;
+    name: string;
+    publicId: string;
+    avatar: string;
+    status: string;
+    country: string;
+    city: string;
+    bio: string;
+    interests: string[];
+    languages: string[];
+    languageLevels: Record<string, string>;
+    lastSeen: string | null;
+    createdAt: string;
+}
+
+export interface DiscoverPagePayload {
+    mode: DiscoverMode;
+    page: number;
+    hasMore: boolean;
+    users: DiscoverUserPayload[];
+}
+
 export interface AttachmentPayload {
     url: string;
     filename: string;

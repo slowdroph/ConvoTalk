@@ -415,6 +415,112 @@ export const userSuggestionsQuerySchema = z.object({
     }),
 });
 
+export const MAX_DISCOVER_FILTER_VALUES = 5;
+
+function csvFilterSchema(
+    isValid: (value: string) => boolean,
+    invalidMessage: string,
+) {
+    return z.preprocess(
+        (value) => {
+            if (value === undefined || value === "") return undefined;
+            const raw = Array.isArray(value) ? value.join(",") : value;
+            if (typeof raw !== "string") return raw;
+            const items = raw
+                .split(",")
+                .map((item) => item.trim())
+                .filter(Boolean);
+            return items.length ? Array.from(new Set(items)) : undefined;
+        },
+        z
+            .array(z.string().refine(isValid, invalidMessage))
+            .max(
+                MAX_DISCOVER_FILTER_VALUES,
+                `Selecione no máximo ${MAX_DISCOVER_FILTER_VALUES} opções.`,
+            )
+            .optional(),
+    );
+}
+
+export const discoverQuerySchema = z.object({
+    query: z
+        .object({
+            q: z.preprocess(
+                (value) =>
+                    typeof value === "string" && value.trim() === ""
+                        ? undefined
+                        : value,
+                z
+                    .string()
+                    .trim()
+                    .min(3, "Digite pelo menos 3 caracteres para buscar.")
+                    .max(50, "Termo de busca deve ter no máximo 50 caracteres.")
+                    .refine((val) => !val.includes("@"), {
+                        message:
+                            "Busque por nome ou #ID. Busca por email foi desativada.",
+                    })
+                    .optional(),
+            ),
+            country: z.preprocess(
+                (value) =>
+                    typeof value === "string" && value.trim() === ""
+                        ? undefined
+                        : value,
+                z
+                    .string()
+                    .trim()
+                    .transform((value) => value.toUpperCase())
+                    .refine((value) => /^[A-Z]{2}$/.test(value), "País inválido.")
+                    .optional(),
+            ),
+            city: z.preprocess(
+                (value) =>
+                    typeof value === "string" && value.trim() === ""
+                        ? undefined
+                        : value,
+                z
+                    .string()
+                    .trim()
+                    .min(1, "Informe uma cidade.")
+                    .max(80, "Cidade deve ter no máximo 80 caracteres.")
+                    .optional(),
+            ),
+            languages: csvFilterSchema(isLanguageId, "Idioma inválido."),
+            interests: csvFilterSchema(isInterestId, "Interesse inválido."),
+            activeWithin: z
+                .enum(["24h", "7d", "30d"], {
+                    message: "Período de atividade inválido.",
+                })
+                .optional(),
+            sort: z
+                .enum(["active", "recent", "name"], {
+                    message: "Ordenação inválida.",
+                })
+                .default("active"),
+            page: z.coerce
+                .number()
+                .int()
+                .min(1, "Página deve ser no mínimo 1.")
+                .max(20, "Página deve ser no máximo 20.")
+                .default(1),
+            limit: z.coerce
+                .number()
+                .int()
+                .min(1, "Limite deve ser no mínimo 1.")
+                .max(24, "Limite deve ser no máximo 24.")
+                .default(12),
+        })
+        .superRefine((data, ctx) => {
+            if (data.city && !data.country) {
+                ctx.addIssue({
+                    code: "custom",
+                    message: "Selecione um país para filtrar por cidade.",
+                    path: ["city"],
+                });
+            }
+        }),
+});
+
 export const resendVerificationSchema = z.object({
     body: z.object({
         email: z

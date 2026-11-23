@@ -204,7 +204,12 @@ const userSchema = new Schema<IUser>({
 userSchema.index({ verificationToken: 1 }, { sparse: true });
 userSchema.index({ pendingEmailToken: 1 }, { sparse: true });
 userSchema.index({ resetToken: 1 }, { sparse: true });
-userSchema.index({ name: 1 });
+userSchema.index({ name: 1, _id: 1 });
 userSchema.index({ blockedUsers: 1 });
+userSchema.index({ country: 1, city: 1 });
+userSchema.index({ lastSeen: -1 });
+userSchema.index({ createdAt: -1 });
+userSchema.index({ languages: 1 });
+userSchema.index({ interests: 1 });
 
 export default mongoose.model<IUser>("User", userSchema);

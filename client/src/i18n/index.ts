@@ -13,6 +13,7 @@ import ptBRAuth from "./locales/pt-BR/auth.json";
 import ptBRChat from "./locales/pt-BR/chat.json";
 import ptBRSettings from "./locales/pt-BR/settings.json";
 import ptBRFeed from "./locales/pt-BR/feed.json";
+import ptBRDiscover from "./locales/pt-BR/discover.json";
 import ptBRProfile from "./locales/pt-BR/profile.json";
 import ptBRHome from "./locales/pt-BR/home.json";
 import ptBRLegal from "./locales/pt-BR/legal.json";
@@ -23,6 +24,7 @@ import enAuth from "./locales/en/auth.json";
 import enChat from "./locales/en/chat.json";
 import enSettings from "./locales/en/settings.json";
 import enFeed from "./locales/en/feed.json";
+import enDiscover from "./locales/en/discover.json";
 import enProfile from "./locales/en/profile.json";
 import enHome from "./locales/en/home.json";
 import enLegal from "./locales/en/legal.json";
@@ -33,6 +35,7 @@ import esAuth from "./locales/es/auth.json";
 import esChat from "./locales/es/chat.json";
 import esSettings from "./locales/es/settings.json";
 import esFeed from "./locales/es/feed.json";
+import esDiscover from "./locales/es/discover.json";
 import esProfile from "./locales/es/profile.json";
 import esHome from "./locales/es/home.json";
 import esLegal from "./locales/es/legal.json";
@@ -43,6 +46,7 @@ import frAuth from "./locales/fr/auth.json";
 import frChat from "./locales/fr/chat.json";
 import frSettings from "./locales/fr/settings.json";
 import frFeed from "./locales/fr/feed.json";
+import frDiscover from "./locales/fr/discover.json";
 import frProfile from "./locales/fr/profile.json";
 import frHome from "./locales/fr/home.json";
 import frLegal from "./locales/fr/legal.json";
@@ -56,6 +60,7 @@ export const NAMESPACES = [
     "chat",
     "settings",
     "feed",
+    "discover",
     "profile",
     "home",
     "legal",
@@ -69,6 +74,7 @@ export const resources = {
         chat: ptBRChat,
         settings: ptBRSettings,
         feed: ptBRFeed,
+        discover: ptBRDiscover,
         profile: ptBRProfile,
         home: ptBRHome,
         legal: ptBRLegal,
@@ -80,6 +86,7 @@ export const resources = {
         chat: enChat,
         settings: enSettings,
         feed: enFeed,
+        discover: enDiscover,
         profile: enProfile,
         home: enHome,
         legal: enLegal,
@@ -91,6 +98,7 @@ export const resources = {
         chat: esChat,
         settings: esSettings,
         feed: esFeed,
+        discover: esDiscover,
         profile: esProfile,
         home: esHome,
         legal: esLegal,
@@ -102,6 +110,7 @@ export const resources = {
         chat: frChat,
         settings: frSettings,
         feed: frFeed,
+        discover: frDiscover,
         profile: frProfile,
         home: frHome,
         legal: frLegal,

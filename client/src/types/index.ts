@@ -31,6 +31,11 @@ import type {
     CommentPayload as CommentPayloadShared,
     CommentCreatedEvent as CommentCreatedEventShared,
     CommentDeletedEvent as CommentDeletedEventShared,
+    DiscoverUserPayload as DiscoverUserPayloadShared,
+    DiscoverPagePayload as DiscoverPagePayloadShared,
+    DiscoverSort as DiscoverSortShared,
+    DiscoverActivityWindow as DiscoverActivityWindowShared,
+    DiscoverMode as DiscoverModeShared,
 } from "@shared/types";
 
 export type User = UserPayload;
@@ -65,6 +70,11 @@ export type TrendingTopic = TrendingTopicPayloadShared;
 export type Comment = CommentPayloadShared;
 export type CommentCreatedEvent = CommentCreatedEventShared;
 export type CommentDeletedEvent = CommentDeletedEventShared;
+export type DiscoverUser = DiscoverUserPayloadShared;
+export type DiscoverPage = DiscoverPagePayloadShared;
+export type DiscoverSort = DiscoverSortShared;
+export type DiscoverActivityWindow = DiscoverActivityWindowShared;
+export type DiscoverMode = DiscoverModeShared;
 
 export interface PreviewMessage {
     id: string;

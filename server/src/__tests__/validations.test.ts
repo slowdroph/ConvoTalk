@@ -13,6 +13,7 @@ import {
     messagesQuerySchema,
     messageSearchQuerySchema,
     userSearchQuerySchema,
+    discoverQuerySchema,
     deleteRoomParams,
     directRoomSchema,
     createGroupRoomSchema,
@@ -539,6 +540,114 @@ describe("user search validations", () => {
             query: { q: "#ABCD1234" },
         });
         expect(result.success).toBe(true);
+    });
+});
+
+describe("discover validations", () => {
+    it("aplica defaults quando nenhum filtro é enviado", () => {
+        const result = discoverQuerySchema.safeParse({ query: {} });
+        expect(result.success).toBe(true);
+        if (!result.success) return;
+        expect(result.data.query).toMatchObject({
+            sort: "active",
+            page: 1,
+            limit: 12,
+        });
+    });
+
+    it("interpreta listas separadas por vírgula e remove duplicatas", () => {
+        const result = discoverQuerySchema.safeParse({
+            query: {
+                country: "br",
+                city: "São Paulo",
+                languages: "pt, en,pt",
+                interests: "programming,ai",
+                activeWithin: "7d",
+                sort: "recent",
+                page: "2",
+                limit: "24",
+            },
+        });
+        expect(result.success).toBe(true);
+        if (!result.success) return;
+        expect(result.data.query.country).toBe("BR");
+        expect(result.data.query.languages).toEqual(["pt", "en"]);
+        expect(result.data.query.interests).toEqual(["programming", "ai"]);
+        expect(result.data.query.sort).toBe("recent");
+        expect(result.data.query.page).toBe(2);
+        expect(result.data.query.limit).toBe(24);
+    });
+
+    it("trata q vazio como ausente", () => {
+        const result = discoverQuerySchema.safeParse({ query: { q: "   " } });
+        expect(result.success).toBe(true);
+        if (!result.success) return;
+        expect(result.data.query.q).toBeUndefined();
+    });
+
+    it("rejeita cidade sem país", () => {
+        const result = discoverQuerySchema.safeParse({
+            query: { city: "Lisboa" },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita país inválido", () => {
+        const result = discoverQuerySchema.safeParse({
+            query: { country: "BRA" },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita idioma inválido", () => {
+        const result = discoverQuerySchema.safeParse({
+            query: { languages: "pt,xx" },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita interesse inválido", () => {
+        const result = discoverQuerySchema.safeParse({
+            query: { interests: "not-a-real-interest" },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita mais de 5 opções por filtro", () => {
+        const result = discoverQuerySchema.safeParse({
+            query: { languages: "pt,en,es,fr,de,it" },
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejeita ordenação e período inválidos", () => {
+        expect(
+            discoverQuerySchema.safeParse({ query: { sort: "popular" } })
+                .success,
+        ).toBe(false);
+        expect(
+            discoverQuerySchema.safeParse({ query: { activeWithin: "12h" } })
+                .success,
+        ).toBe(false);
+    });
+
+    it("rejeita page/limit acima do máximo", () => {
+        expect(
+            discoverQuerySchema.safeParse({ query: { page: 21 } }).success,
+        ).toBe(false);
+        expect(
+            discoverQuerySchema.safeParse({ query: { limit: 25 } }).success,
+        ).toBe(false);
+    });
+
+    it("rejeita busca curta e busca por email", () => {
+        expect(
+            discoverQuerySchema.safeParse({ query: { q: "ana@test.com" } })
+                .success,
+        ).toBe(false);
+        expect(
+            discoverQuerySchema.safeParse({ query: { q: "ab" } }).success,
+        ).toBe(false);
     });
 });
 
