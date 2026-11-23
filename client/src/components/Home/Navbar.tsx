@@ -31,19 +31,22 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 {/* Brand */}
-                <Link to="/" className="flex items-center gap-2 group">
+                <Link
+                    to="/"
+                    className="flex items-center gap-2 shrink-0 group"
+                >
                     <img
                         src="/convo_talk_logo.png"
                         alt="ConvoTalk"
                         className="h-8 w-auto object-contain group-hover:scale-105 transition-transform"
                     />
-                    <span className="text-xl font-bold text-primary tracking-tight font-hanken">
+                    <span className="hidden sm:inline text-xl font-bold text-primary tracking-tight font-hanken whitespace-nowrap">
                         ConvoTalk
                     </span>
                 </Link>
 
                 {/* Nav Links */}
-                <div className="hidden md:flex items-center gap-7">
+                <div className="hidden lg:flex items-center gap-7">
                     {NAV_LINKS.map((link) => (
                         <a
                             key={link.id}
@@ -51,7 +54,7 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                             aria-current={
                                 activeSection === link.id ? "true" : undefined
                             }
-                            className={`text-sm font-medium transition-colors ${
+                            className={`whitespace-nowrap text-sm font-medium transition-colors ${
                                 activeSection === link.id
                                     ? "text-primary font-semibold"
                                     : "text-on-surface-variant hover:text-primary"
@@ -63,26 +66,26 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     <div className="hidden md:block">
                         <LanguageSelector tone="header" />
                     </div>
                     <Link
                         to="/login"
-                        className="text-sm font-medium text-on-surface-variant hover:text-on-surface px-3 py-1.5 transition-colors"
+                        className="hidden sm:inline-block whitespace-nowrap text-sm font-medium text-on-surface-variant hover:text-on-surface px-3 py-1.5 transition-colors"
                     >
                         {t("nav.login")}
                     </Link>
                     <Link
                         to="/login?mode=register"
-                        className="inline-flex items-center gap-1.5 bg-primary-container text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary hover:text-on-primary-container transition-all shadow-[0_0_15px_rgba(0,168,75,0.25)] hover:shadow-[0_0_20px_rgba(89,224,123,0.4)]"
+                        className="inline-flex items-center gap-1.5 whitespace-nowrap bg-primary-container text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary hover:text-on-primary-container transition-all shadow-[0_0_15px_rgba(0,168,75,0.25)] hover:shadow-[0_0_20px_rgba(89,224,123,0.4)]"
                     >
                         {t("nav.register")}
                     </Link>
                     <button
                         type="button"
                         onClick={() => setMenuOpen((v) => !v)}
-                        className="md:hidden p-2 -mr-2 text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+                        className="lg:hidden shrink-0 p-2 -mr-2 text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
                         aria-label={
                             menuOpen ? t("nav.closeMenu") : t("nav.openMenu")
                         }
@@ -117,7 +120,7 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
 
             {/* Mobile dropdown */}
             {menuOpen && (
-                <div className="md:hidden border-t border-outline-variant/40 bg-background/95 backdrop-blur-xl">
+                <div className="lg:hidden border-t border-outline-variant/40 bg-background/95 backdrop-blur-xl">
                     <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-3">
                         {NAV_LINKS.map((link) => (
                             <a
@@ -141,18 +144,18 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                         <div className="border-t border-outline-variant/30 pt-3">
                             <LanguageSelector tone="header" align="left" />
                         </div>
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
                             <Link
                                 to="/login"
                                 onClick={handleNavClick}
-                                className="text-on-surface hover:text-primary text-sm font-medium transition-colors"
+                                className="whitespace-nowrap text-on-surface hover:text-primary text-sm font-medium transition-colors"
                             >
                                 {t("nav.login")}
                             </Link>
                             <Link
                                 to="/login?mode=register"
                                 onClick={handleNavClick}
-                                className="bg-primary-container text-white text-xs font-semibold px-3.5 py-2 rounded-lg"
+                                className="whitespace-nowrap bg-primary-container text-white text-xs font-semibold px-3.5 py-2 rounded-lg"
                             >
                                 {t("nav.register")}
                             </Link>
