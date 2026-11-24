@@ -8,7 +8,9 @@
         "participants": "{{count}} participantes",
         "unavailable": "Usuario no disponible",
         "voiceCall": "Llamada de voz",
-        "videoCall": "Videollamada"
+        "videoCall": "Videollamada",
+        "hideNav": "Contraer barra de navegación",
+        "showNav": "Mostrar barra de navegación"
     },
     "actions": {
         "conversationOptions": "Opciones de la conversación",
@@ -34,6 +36,7 @@
         "clearConfirm": "Vaciar"
     },
     "input": {
+        "actions": "Acciones del mensaje",
         "dropFiles": "Suelta los archivos para enviar",
         "dropHint": "Imágenes, audios, PDF, TXT o JSON",
         "replyingTo": "Respondiendo a {{name}}",

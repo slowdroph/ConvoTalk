@@ -4,6 +4,7 @@ import CountryFlag from "../ui/CountryFlag";
 import Tooltip from "../ui/Tooltip";
 import { countryName } from "../../i18n/catalogs";
 import { formatLastSeen } from "../../utils/formatLastSeen";
+import { useBottomNav } from "../../hooks/useBottomNav";
 import ChatHeaderActions from "./ChatHeaderActions";
 
 interface ChatHeaderProps {
@@ -62,9 +63,10 @@ export default function ChatHeader({
     pinnedCount,
 }: ChatHeaderProps) {
     const { t } = useTranslation("chat");
+    const { manualHidden, toggleManual } = useBottomNav();
 
     return (
-        <div className="min-h-16 px-2 sm:px-6 py-1.5 border-b border-noir-border bg-noir-surface/90 flex items-center justify-between gap-2">
+        <div className="min-h-14 sm:min-h-16 px-2 sm:px-6 py-1.5 border-b border-noir-border bg-noir-surface/90 flex items-center justify-between gap-2">
             <h2 className="text-slate-900 font-semibold flex items-center gap-2 min-w-0 flex-1 dark:text-noir-text-bright">
                 {onOpenSidebar && (
                     <Tooltip content={t("header.openConversationList")}>
@@ -161,6 +163,40 @@ export default function ChatHeader({
                 </button>
             </h2>
             <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                <Tooltip
+                    content={
+                        manualHidden
+                            ? t("header.showNav")
+                            : t("header.hideNav")
+                    }
+                >
+                    <button
+                        type="button"
+                        onClick={toggleManual}
+                        aria-label={
+                            manualHidden
+                                ? t("header.showNav")
+                                : t("header.hideNav")
+                        }
+                        aria-pressed={manualHidden}
+                        className="inline-flex lg:hidden p-2 rounded-lg transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-noir-text-muted dark:hover:text-noir-text-bright dark:hover:bg-noir-surface-alt"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d={manualHidden ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"}
+                            />
+                        </svg>
+                    </button>
+                </Tooltip>
                 <ChatHeaderActions
                 roomType={roomType}
                 canManageGroup={canManageGroup}

@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useSocket } from "../../hooks/useSocket";
 import { useAuth } from "../../hooks/useAuth";
+import { useBottomNav } from "../../hooks/useBottomNav";
 import { getErrorMessage } from "../../utils/errors";
 import { useToast } from "../../contexts/ToastContext";
 import api from "../../services/api";
@@ -79,6 +80,8 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
     const [files, setFiles] = useState<File[]>([]);
     const [uploading, setUploading] = useState(false);
     const [emojiOpen, setEmojiOpen] = useState(false);
+    const [actionsOpen, setActionsOpen] = useState(false);
+    const [focused, setFocused] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [dragDepth, setDragDepth] = useState(0);
     const [dragging, setDragging] = useState(false);
@@ -89,8 +92,55 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLFormElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const actionsButtonRef = useRef<HTMLButtonElement>(null);
+    const actionsTrayRef = useRef<HTMLDivElement>(null);
+    const { setComposerActive } = useBottomNav();
 
     const offline = !navigator.onLine || !connected;
+
+    const composerActive =
+        focused ||
+        actionsOpen ||
+        uploading ||
+        isRecording ||
+        message.trim().length > 0 ||
+        files.length > 0 ||
+        Boolean(replyingTo);
+
+    useEffect(() => {
+        setComposerActive(composerActive);
+    }, [composerActive, setComposerActive]);
+
+    useEffect(() => {
+        return () => setComposerActive(false);
+    }, [setComposerActive]);
+
+    useEffect(() => {
+        if (!actionsOpen) return;
+
+        const handlePointerDown = (event: PointerEvent) => {
+            const target = event.target as Node;
+            if (
+                actionsTrayRef.current?.contains(target) ||
+                actionsButtonRef.current?.contains(target)
+            ) {
+                return;
+            }
+            setActionsOpen(false);
+        };
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setActionsOpen(false);
+        };
+
+        document.addEventListener("pointerdown", handlePointerDown);
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("pointerdown", handlePointerDown);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [actionsOpen]);
 
     const resizeTextarea = useCallback(() => {
         const el = textareaRef.current;
@@ -298,6 +348,8 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
             setError(t("input.tooLong", { count: MAX_LENGTH }));
             return;
         }
+
+        setActionsOpen(false);
 
         if (offline) {
             if (hasFiles) {
@@ -525,7 +577,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
             onDragOver={(e) => e.preventDefault()}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className="relative px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-noir-border bg-noir-surface shrink-0"
+            className="relative px-3 sm:px-4 pt-2 sm:pt-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-noir-border bg-noir-surface shrink-0"
         >
             {dragging && (
                 <div className="absolute inset-0 z-20 bg-emerald-500/10 border-2 border-dashed border-emerald-500 rounded-xl flex items-center justify-center pointer-events-none dark:bg-emerald-600/10 dark:border-emerald-500">
@@ -655,7 +707,15 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
             )}
 
             {!isRecording && (
-                <div className="flex items-center gap-2 mb-3">
+                <div
+                    ref={actionsTrayRef}
+                    id="composer-actions"
+                    role="group"
+                    aria-label={t("input.actions")}
+                    className={`${
+                        actionsOpen ? "flex" : "hidden"
+                    } sm:flex items-center gap-2 mb-2 sm:mb-3`}
+                >
                     <div className="flex items-center bg-slate-100 border border-slate-200 rounded-2xl p-1 dark:bg-noir-surface-alt dark:border-noir-border">
                         {toolbarStart}
                         <div className="relative shrink-0">
@@ -694,7 +754,10 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                     </div>
                         <button
                             type="button"
-                            onClick={() => setIsRecording(true)}
+                            onClick={() => {
+                                setActionsOpen(false);
+                                setIsRecording(true);
+                            }}
                             disabled={uploading || files.length > 0}
                             className="p-2 text-slate-500 hover:text-red-600 hover:bg-slate-200 rounded-xl transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:text-noir-text-muted dark:hover:text-red-400 dark:hover:bg-noir-card"
                         title={t("input.recordVoice")}
@@ -732,7 +795,10 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                     />
                     <button
                         type="button"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => {
+                            setActionsOpen(false);
+                            fileInputRef.current?.click();
+                        }}
                         disabled={uploading || files.length >= MAX_FILES}
                         className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-200 rounded-xl transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:text-noir-text-muted dark:hover:text-emerald-400 dark:hover:bg-noir-card"
                         title={t("input.attachFile")}
@@ -774,6 +840,37 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                 />
             ) : (
                 <div className="flex gap-2 items-end">
+                    <button
+                        ref={actionsButtonRef}
+                        type="button"
+                        onClick={() => setActionsOpen((prev) => !prev)}
+                        aria-expanded={actionsOpen}
+                        aria-controls="composer-actions"
+                        aria-label={t("input.actions")}
+                        title={t("input.actions")}
+                        className={`sm:hidden h-11 w-11 shrink-0 rounded-2xl border flex items-center justify-center transition-colors ${
+                            actionsOpen
+                                ? "bg-emerald-600/15 border-emerald-600/40 text-emerald-600 dark:border-emerald-500/40 dark:text-emerald-400"
+                                : "bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-900 dark:bg-noir-surface-alt dark:border-noir-border dark:text-noir-text-muted dark:hover:text-noir-text-bright"
+                        }`}
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className={`h-5 w-5 transition-transform ${
+                                actionsOpen ? "rotate-45" : ""
+                            }`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 5v14M5 12h14"
+                            />
+                        </svg>
+                    </button>
                     <textarea
                         ref={textareaRef}
                         name="message"
@@ -783,6 +880,8 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                         rows={1}
                         onChange={handleTextareaChange}
                         onKeyDown={handleTextareaKeyDown}
+                        onFocus={() => setFocused(true)}
+                        onBlur={() => setFocused(false)}
                         placeholder={
                             isBlocked
                                 ? t("input.blockedPlaceholder")

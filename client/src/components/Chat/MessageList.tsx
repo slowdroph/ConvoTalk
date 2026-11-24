@@ -114,6 +114,20 @@ export default memo(function MessageList({
     }, [hasMore, loadingMore, onLoadMore]);
 
     useEffect(() => {
+        const container = containerRef.current;
+        if (!container || typeof ResizeObserver === "undefined") return;
+
+        const observer = new ResizeObserver(() => {
+            if (nearBottomRef.current) {
+                container.scrollTop = container.scrollHeight;
+            }
+        });
+
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
         if (loading) {
             virtualizer.scrollToIndex(rowCount - 1, { align: "end" });
         }
@@ -176,7 +190,7 @@ export default memo(function MessageList({
                 role="log"
                 aria-live="polite"
                 aria-label={t("list.ariaLabel")}
-                className="absolute inset-0 overflow-y-auto overscroll-contain custom-scrollbar chat-bg-pattern px-4 sm:px-6 py-2 pt-10"
+                className="absolute inset-0 overflow-y-auto overscroll-contain custom-scrollbar chat-bg-pattern px-3 sm:px-6 py-2 pt-2 sm:pt-10"
             >
                 {loading ? (
                     <div className="flex items-center justify-center h-full">
@@ -187,17 +201,18 @@ export default memo(function MessageList({
                         <p>{t("list.empty")}</p>
                     </div>
                 ) : (
-                    <div
-                        style={{
-                            height: virtualizer.getTotalSize(),
-                            width: "100%",
-                            position: "relative",
-                        }}
-                    >
-                        {virtualizer.getVirtualItems().map((virtualRow) => {
-                            const index = virtualRow.index;
-                            return (
-                                <div
+                    <div className="flex min-h-full flex-col justify-end">
+                        <div
+                            style={{
+                                height: virtualizer.getTotalSize(),
+                                width: "100%",
+                                position: "relative",
+                            }}
+                        >
+                            {virtualizer.getVirtualItems().map((virtualRow) => {
+                                const index = virtualRow.index;
+                                return (
+                                    <div
                                     key={virtualRow.key}
                                     ref={virtualizer.measureElement}
                                     data-index={index}
@@ -346,6 +361,7 @@ export default memo(function MessageList({
                                 </div>
                             );
                         })}
+                        </div>
                     </div>
                 )}
             </div>

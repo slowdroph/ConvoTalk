@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useRooms } from "../../hooks/useRooms";
+import { useBottomNav } from "../../hooks/useBottomNav";
 import {
     MOBILE_NAV_ITEMS,
     isNavItemActive,
@@ -61,11 +62,18 @@ function BottomLink({ item, badge }: { item: NavItem; badge?: number }) {
 export default function AppBottomNav() {
     const { t } = useTranslation("common");
     const { totalUnread } = useRooms();
+    const { hidden } = useBottomNav();
 
     return (
         <nav
             aria-label={t("nav.main")}
-            className={`fixed inset-x-0 bottom-0 z-40 flex ${HEIGHT_CLASS} items-stretch border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden dark:border-noir-border dark:bg-noir-surface/95`}
+            data-bottom-nav
+            inert={hidden}
+            className={`fixed inset-x-0 bottom-0 z-40 flex ${HEIGHT_CLASS} items-stretch border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md transition-transform duration-200 ease-out lg:hidden dark:border-noir-border dark:bg-noir-surface/95 ${
+                hidden
+                    ? "pointer-events-none translate-y-full"
+                    : "translate-y-0"
+            }`}
         >
             {MOBILE_NAV_ITEMS.map((item) => (
                 <BottomLink
