@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../hooks/useAuth";
 import { useSessions } from "../../hooks/useSessions";
 import { useToast } from "../../contexts/ToastContext";
 import { formatTimeAgo } from "../../utils/format";
@@ -17,6 +18,7 @@ function getDeviceIcon(deviceType: string): string {
 
 export default function SessionManager() {
     const { t } = useTranslation("settings");
+    const { logout } = useAuth();
     const { sessions, loading, error, removeSession, removeAllOtherSessions } =
         useSessions();
     const { showToast } = useToast();
@@ -195,6 +197,30 @@ export default function SessionManager() {
                     )}
                 </div>
             )}
+
+            <div className="border-t border-noir-border pt-4">
+                <button
+                    type="button"
+                    onClick={() => void logout()}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-900/40 bg-red-950/20 px-4 py-2.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-900/30 hover:text-red-300 sm:w-auto cursor-pointer"
+                >
+                    <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.8}
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
+                    </svg>
+                    {t("sessions.signOut")}
+                </button>
+            </div>
         </div>
     );
 }

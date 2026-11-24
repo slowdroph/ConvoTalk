@@ -105,6 +105,7 @@
         "now": "À l'instant",
         "mainDevice": "Appareil principal",
         "empty": "Aucune session active trouvée.",
+        "signOut": "Se déconnecter de ce compte",
         "removed": "Session terminée avec succès.",
         "removeError": "Impossible de terminer la session.",
         "removedAll": "Toutes les autres sessions ont été terminées.",

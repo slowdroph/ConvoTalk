@@ -105,6 +105,7 @@
         "now": "Agora mesmo",
         "mainDevice": "Dispositivo principal",
         "empty": "Nenhuma sessão ativa encontrada.",
+        "signOut": "Sair desta conta",
         "removed": "Sessão encerrada com sucesso.",
         "removeError": "Erro ao encerrar sessão.",
         "removedAll": "Todas as outras sessões foram encerradas.",
