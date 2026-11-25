@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -9,12 +9,7 @@ import {
     Routes,
     useLocation,
 } from "react-router-dom";
-import {
-    DEFAULT_LANGUAGE,
-    normalizeLanguage,
-    type LanguageCode,
-} from "@shared/i18n";
-import i18n from "./i18n";
+import { DEFAULT_LANGUAGE } from "@shared/i18n";
 import {
     isLocalizablePath,
     languageFromPath,
@@ -22,6 +17,7 @@ import {
 } from "./i18n/routing";
 import { trackPublicPageView } from "./services/analytics";
 import { useAuth } from "./hooks/useAuth";
+import { LanguageProvider } from "./providers/LanguageProvider";
 import { SocketProvider } from "./providers/SocketProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ChatSkeleton from "./components/Skeletons/ChatSkeleton";
@@ -81,26 +77,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     return user ? <Navigate to="/chat" /> : <>{children}</>;
 }
 
-/** The URL is the source of truth for the language of public pages. */
-function useRouteLanguage(language: LanguageCode) {
-    useLayoutEffect(() => {
-        const current = normalizeLanguage(
-            i18n.resolvedLanguage || i18n.language,
-        );
-        if (current === language) return;
-        void i18n.changeLanguage(language);
-    }, [language]);
-}
-
 function DefaultLocaleLayout() {
-    useRouteLanguage(DEFAULT_LANGUAGE);
     return <Outlet />;
 }
 
 function LocaleLayout() {
     const { pathname } = useLocation();
     const language = languageFromPath(pathname);
-    useRouteLanguage(language ?? DEFAULT_LANGUAGE);
 
     if (!language) return <NotFoundPage />;
     if (language === DEFAULT_LANGUAGE) {
@@ -124,102 +107,117 @@ function AnalyticsTracker() {
 export default function App() {
     return (
         <BrowserRouter>
-            <AnalyticsTracker />
-            <ErrorBoundary>
-                <Routes>
-                    {/* Public pages, default locale (unprefixed). */}
-                    <Route element={<DefaultLocaleLayout />}>
-                        <Route path="/" element={page(<HomePage />)} />
-                        <Route
-                            path="/login"
-                            element={
-                                <PublicRoute>{page(<LoginPage />)}</PublicRoute>
-                            }
-                        />
-                        <Route
-                            path="/terms"
-                            element={page(<TermsPage />)}
-                        />
-                        <Route
-                            path="/privacy"
-                            element={page(<PrivacyPage />)}
-                        />
-                        <Route
-                            path="/forgot-password"
-                            element={page(<ForgotPasswordPage />)}
-                        />
-                    </Route>
+            <LanguageProvider>
+                <AnalyticsTracker />
+                <ErrorBoundary>
+                    <Routes>
+                        {/* Public pages, default locale (unprefixed). */}
+                        <Route element={<DefaultLocaleLayout />}>
+                            <Route path="/" element={page(<HomePage />)} />
+                            <Route
+                                path="/login"
+                                element={
+                                    <PublicRoute>
+                                        {page(<LoginPage />)}
+                                    </PublicRoute>
+                                }
+                            />
+                            <Route
+                                path="/terms"
+                                element={page(<TermsPage />)}
+                            />
+                            <Route
+                                path="/privacy"
+                                element={page(<PrivacyPage />)}
+                            />
+                            <Route
+                                path="/forgot-password"
+                                element={page(<ForgotPasswordPage />)}
+                            />
+                        </Route>
 
-                    {/* Public pages, locale-prefixed (/es, /pt-br, /fr). */}
-                    <Route path=":locale" element={<LocaleLayout />}>
-                        <Route index element={page(<HomePage />)} />
-                        <Route
-                            path="login"
-                            element={
-                                <PublicRoute>{page(<LoginPage />)}</PublicRoute>
-                            }
-                        />
-                        <Route path="terms" element={page(<TermsPage />)} />
-                        <Route path="privacy" element={page(<PrivacyPage />)} />
-                        <Route
-                            path="forgot-password"
-                            element={page(<ForgotPasswordPage />)}
-                        />
-                    </Route>
+                        {/* Public pages, locale-prefixed (/es, /pt-br, /fr). */}
+                        <Route path=":locale" element={<LocaleLayout />}>
+                            <Route index element={page(<HomePage />)} />
+                            <Route
+                                path="login"
+                                element={
+                                    <PublicRoute>
+                                        {page(<LoginPage />)}
+                                    </PublicRoute>
+                                }
+                            />
+                            <Route
+                                path="terms"
+                                element={page(<TermsPage />)}
+                            />
+                            <Route
+                                path="privacy"
+                                element={page(<PrivacyPage />)}
+                            />
+                            <Route
+                                path="forgot-password"
+                                element={page(<ForgotPasswordPage />)}
+                            />
+                        </Route>
 
-                    {/* Account flows: never indexed, never locale-prefixed. */}
-                    <Route
-                        path="/verify-email"
-                        element={page(<VerifyEmailPage />)}
-                    />
-                    <Route
-                        path="/confirm-email-change"
-                        element={page(<ConfirmEmailChangePage />)}
-                    />
-                    <Route
-                        path="/reset-password"
-                        element={page(<ResetPasswordPage />)}
-                    />
+                        {/* Account flows: never indexed, never locale-prefixed. */}
+                        <Route
+                            path="/verify-email"
+                            element={page(<VerifyEmailPage />)}
+                        />
+                        <Route
+                            path="/confirm-email-change"
+                            element={page(<ConfirmEmailChangePage />)}
+                        />
+                        <Route
+                            path="/reset-password"
+                            element={page(<ResetPasswordPage />)}
+                        />
 
-                    {/* Authenticated app. */}
-                    <Route
-                        element={
-                            <PrivateRoute>
-                                <AppLayout />
-                            </PrivateRoute>
-                        }
-                    >
+                        {/* Authenticated app. */}
                         <Route
-                            path="/chat/:roomId?"
                             element={
-                                <Suspense fallback={<ChatSkeleton />}>
-                                    <ChatPage />
-                                </Suspense>
+                                <PrivateRoute>
+                                    <AppLayout />
+                                </PrivateRoute>
                             }
-                        />
-                        <Route path="/feed" element={page(<FeedPage />)} />
-                        <Route
-                            path="/discover"
-                            element={page(<DiscoverPage />)}
-                        />
-                        <Route path="/profile" element={page(<ProfilePage />)} />
-                        <Route
-                            path="/profile/:userId"
-                            element={page(<ProfilePage />)}
-                        />
-                        <Route
-                            path="/settings"
-                            element={
-                                <Suspense fallback={<SettingsSkeleton />}>
-                                    <SettingsPage />
-                                </Suspense>
-                            }
-                        />
-                    </Route>
+                        >
+                            <Route
+                                path="/chat/:roomId?"
+                                element={
+                                    <Suspense fallback={<ChatSkeleton />}>
+                                        <ChatPage />
+                                    </Suspense>
+                                }
+                            />
+                            <Route path="/feed" element={page(<FeedPage />)} />
+                            <Route
+                                path="/discover"
+                                element={page(<DiscoverPage />)}
+                            />
+                            <Route
+                                path="/profile"
+                                element={page(<ProfilePage />)}
+                            />
+                            <Route
+                                path="/profile/:userId"
+                                element={page(<ProfilePage />)}
+                            />
+                            <Route
+                                path="/settings"
+                                element={
+                                    <Suspense fallback={<SettingsSkeleton />}>
+                                        <SettingsPage />
+                                    </Suspense>
+                                }
+                            />
+                        </Route>
 
-                    <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-            </ErrorBoundary>
+                        <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                </ErrorBoundary>
+            </LanguageProvider>
         </BrowserRouter>
     );
 }

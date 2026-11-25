@@ -1,5 +1,4 @@
 import i18n from "i18next";
-import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 import {
     DEFAULT_LANGUAGE,
@@ -7,6 +6,8 @@ import {
     normalizeLanguage,
     SUPPORTED_LANGUAGES,
 } from "@shared/i18n";
+import { LANGUAGE_STORAGE_KEY } from "./constants";
+import { currentPathname, resolveInitialLanguage } from "./languageResolution";
 
 import ptBRCommon from "./locales/pt-BR/common.json";
 import ptBRAuth from "./locales/pt-BR/auth.json";
@@ -52,7 +53,7 @@ import frHome from "./locales/fr/home.json";
 import frLegal from "./locales/fr/legal.json";
 import frErrors from "./locales/fr/errors.json";
 
-export const LANGUAGE_STORAGE_KEY = "convo-talk-language";
+export { LANGUAGE_STORAGE_KEY };
 
 export const NAMESPACES = [
     "common",
@@ -119,10 +120,10 @@ export const resources = {
 } as const;
 
 void i18n
-    .use(LanguageDetector)
     .use(initReactI18next)
     .init({
         resources,
+        lng: resolveInitialLanguage(currentPathname()),
         supportedLngs: [...SUPPORTED_LANGUAGES],
         fallbackLng: FALLBACK_LANGUAGE,
         load: "currentOnly",
@@ -137,12 +138,6 @@ void i18n
         react: {
             useSuspense: false,
         },
-        detection: {
-            order: ["localStorage", "navigator", "htmlTag"],
-            caches: ["localStorage"],
-            lookupLocalStorage: LANGUAGE_STORAGE_KEY,
-            convertDetectedLanguage: (language) => normalizeLanguage(language),
-        },
     });
 
 if (typeof document !== "undefined") {
@@ -153,11 +148,6 @@ i18n.on("languageChanged", (language) => {
     const normalized = normalizeLanguage(language);
     if (typeof document !== "undefined") {
         document.documentElement.lang = normalized;
-    }
-    try {
-        localStorage.setItem(LANGUAGE_STORAGE_KEY, normalized);
-    } catch {
-        // Storage may be unavailable (private mode / quota).
     }
 });
 

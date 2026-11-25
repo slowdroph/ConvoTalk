@@ -1,26 +1,55 @@
 import {
     useCallback,
     useEffect,
+    useLayoutEffect,
     useRef,
     useState,
+    useSyncExternalStore,
     type ReactNode,
 } from "react";
-import { isLanguageCode, normalizeLanguage, type LanguageCode } from "@shared/i18n";
+import { useLocation } from "react-router-dom";
+import {
+    DEFAULT_LANGUAGE,
+    normalizeLanguage,
+    type LanguageCode,
+} from "@shared/i18n";
 import i18n from "../i18n";
-import { isLocalizablePath } from "../i18n/routing";
+import {
+    persistLanguage,
+    resolvePrivateLanguage,
+    resolvePublicLanguage,
+} from "../i18n/languageResolution";
 import { LanguageContext } from "../contexts/LanguageContext";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
 import api from "../services/api";
 
+function subscribeToLanguage(onStoreChange: () => void) {
+    const handleChange = () => onStoreChange();
+    i18n.on("languageChanged", handleChange);
+    return () => {
+        i18n.off("languageChanged", handleChange);
+    };
+}
+
+function getLanguageSnapshot(): LanguageCode {
+    return normalizeLanguage(i18n.resolvedLanguage || i18n.language);
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
     const { user, updateUser } = useAuth();
     const { showToast } = useToast();
-    const [language, setLanguageState] = useState<LanguageCode>(() =>
-        normalizeLanguage(i18n.resolvedLanguage || i18n.language),
+    const { pathname } = useLocation();
+    const accountLanguage = user?.preferences?.language;
+    const routeLanguage = resolvePublicLanguage(pathname);
+
+    const language = useSyncExternalStore(
+        subscribeToLanguage,
+        getLanguageSnapshot,
+        () => DEFAULT_LANGUAGE,
     );
     const [isSyncing, setIsSyncing] = useState(false);
-    const languageRef = useRef(language);
+    const pathnameRef = useRef(pathname);
     const userRef = useRef(user);
     const requestRef = useRef(0);
 
@@ -28,39 +57,38 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         userRef.current = user;
     }, [user]);
 
-    useEffect(() => {
-        const handleLanguageChanged = (next: string) => {
-            const normalized = normalizeLanguage(next);
-            languageRef.current = normalized;
-            setLanguageState(normalized);
-        };
+    const desiredLanguage =
+        routeLanguage ?? resolvePrivateLanguage(accountLanguage);
 
-        i18n.on("languageChanged", handleLanguageChanged);
-        return () => {
-            i18n.off("languageChanged", handleLanguageChanged);
-        };
-    }, []);
+    useLayoutEffect(() => {
+        pathnameRef.current = pathname;
 
-    const accountLanguage = user?.preferences?.language;
-
-    useEffect(() => {
-        if (!isLanguageCode(accountLanguage)) return;
-        if (accountLanguage === languageRef.current) return;
-        // On public pages the URL owns the language, not the account.
-        if (isLocalizablePath(window.location.pathname)) return;
-        void i18n.changeLanguage(accountLanguage);
-    }, [accountLanguage]);
+        if (
+            normalizeLanguage(i18n.resolvedLanguage || i18n.language) !==
+            desiredLanguage
+        ) {
+            void i18n.changeLanguage(desiredLanguage);
+        }
+    }, [desiredLanguage, pathname]);
 
     const setLanguage = useCallback(
         async (next: LanguageCode) => {
+            // Public routes change language by navigating; the URL owns it.
+            if (resolvePublicLanguage(pathnameRef.current)) return;
+
             const normalized = normalizeLanguage(next);
             const currentUser = userRef.current;
-            const previous = languageRef.current;
+            const previous = normalizeLanguage(
+                i18n.resolvedLanguage || i18n.language,
+            );
             if (normalized === previous) return;
 
-            await i18n.changeLanguage(normalized);
+            persistLanguage(normalized);
 
-            if (!currentUser) return;
+            if (!currentUser) {
+                await i18n.changeLanguage(normalized);
+                return;
+            }
 
             const requestId = requestRef.current + 1;
             requestRef.current = requestId;
@@ -72,8 +100,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
                 },
             };
 
+            // Update the account preference in the same render as the language
+            // so the private-route resolver cannot override the choice.
             updateUser(optimisticUser);
             setIsSyncing(true);
+            await i18n.changeLanguage(normalized);
 
             try {
                 const { data } = await api.put("/user/preferences", {
@@ -88,8 +119,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
                 }
             } catch {
                 if (requestRef.current !== requestId) return;
-                await i18n.changeLanguage(previous);
                 updateUser(currentUser);
+                persistLanguage(previous);
+
+                // A public URL owns the language; only roll back on private routes.
+                if (!resolvePublicLanguage(pathnameRef.current)) {
+                    await i18n.changeLanguage(previous);
+                }
+
                 showToast({
                     type: "error",
                     message: i18n.t("language.syncError"),
