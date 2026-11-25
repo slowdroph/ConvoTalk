@@ -2,12 +2,20 @@ import PDFDocument from "pdfkit";
 
 type PDFDoc = InstanceType<typeof PDFDocument>;
 
+export interface ExportAttachment {
+    url: string;
+    filename: string;
+    mimetype: string;
+    size: number;
+}
+
 export interface ExportMessage {
     senderName: string;
     senderAvatar?: string;
     content: string;
     createdAt: Date;
     deleted: boolean;
+    attachments?: ExportAttachment[];
 }
 
 interface GenerateParams {
@@ -48,7 +56,7 @@ function formatTimestamp(date: Date): string {
 
 export interface ConversationPdfWriter {
     doc: PDFDoc;
-    writeMessage(message: ExportMessage): void;
+    writeMessage(message: ExportMessage): Promise<void>;
     end(): void;
 }
 
@@ -179,7 +187,76 @@ export function createConversationPdfWriter(
             );
     };
 
-    const writeMessage = (message: ExportMessage): void => {
+    const maxImageWidth = textWidth;
+    const maxImageHeight = 320;
+    const maxImageBytes = 8 * 1024 * 1024;
+
+    const openImage = (
+        doc as unknown as {
+            openImage(src: Buffer): { width: number; height: number };
+        }
+    ).openImage.bind(doc);
+
+    const writeAttachments = async (
+        attachments: ExportAttachment[] | undefined,
+    ): Promise<void> => {
+        if (!attachments || attachments.length === 0) return;
+        for (const attachment of attachments) {
+            const isImage = attachment.mimetype.startsWith("image/");
+            if (
+                isImage &&
+                attachment.size > 0 &&
+                attachment.size <= maxImageBytes
+            ) {
+                try {
+                    const response = await fetch(attachment.url);
+                    if (!response.ok) {
+                        throw new Error(`status ${response.status}`);
+                    }
+                    const buffer = Buffer.from(await response.arrayBuffer());
+                    const image = openImage(buffer);
+                    if (!image.width || !image.height) {
+                        throw new Error("dimensões inválidas");
+                    }
+                    const scale = Math.min(
+                        maxImageWidth / image.width,
+                        maxImageHeight / image.height,
+                        1,
+                    );
+                    const drawWidth = image.width * scale;
+                    const drawHeight = image.height * scale;
+                    if (doc.y + drawHeight + gap > pageBottom) doc.addPage();
+                    const topY = doc.y;
+                    doc.image(buffer, marginX + padding, topY, {
+                        width: drawWidth,
+                        height: drawHeight,
+                    });
+                    doc.y = topY + drawHeight + gap;
+                    continue;
+                } catch {
+                    // Falha ao baixar/decodificar: cai no fallback textual abaixo.
+                }
+            }
+
+            const label = `Anexo: ${attachment.filename}`;
+            doc.font("Helvetica").fontSize(9).fillColor(COLORS.muted);
+            const labelLines = wrapLines(doc, label, textWidth);
+            const labelHeight = labelLines.length * 12;
+            if (doc.y + labelHeight > pageBottom) doc.addPage();
+            let y = doc.y;
+            doc.font("Helvetica").fontSize(9).fillColor(COLORS.muted);
+            for (const line of labelLines) {
+                doc.text(line, marginX + padding, y, {
+                    width: textWidth,
+                    lineBreak: false,
+                });
+                y += 12;
+            }
+            doc.y = y + gap;
+        }
+    };
+
+    const writeMessage = async (message: ExportMessage): Promise<void> => {
         if (message.deleted) {
             if (doc.y + 24 > pageBottom) doc.addPage();
             doc.font("Helvetica-Oblique")
@@ -218,6 +295,7 @@ export function createConversationPdfWriter(
             }
 
             doc.y = startY + bubbleHeight + gap;
+            await writeAttachments(message.attachments);
             return;
         }
 
@@ -282,6 +360,7 @@ export function createConversationPdfWriter(
             }
             segment += 1;
         }
+        await writeAttachments(message.attachments);
     };
 
     return { doc, writeMessage, end: () => doc.end() };
@@ -302,9 +381,15 @@ export function generateConversationPdf(
         doc.on("end", () => resolve(Buffer.concat(chunks)));
         doc.on("error", reject);
 
-        for (const message of params.messages) {
-            writeMessage(message);
-        }
-        end();
+        void (async () => {
+            try {
+                for (const message of params.messages) {
+                    await writeMessage(message);
+                }
+                end();
+            } catch (error) {
+                reject(error);
+            }
+        })();
     });
 }

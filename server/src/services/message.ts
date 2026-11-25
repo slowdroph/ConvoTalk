@@ -425,11 +425,17 @@ export async function exportRoomToPdf(
 
         for (const m of messages) {
             if (!m.sender) continue;
-            writeMessage({
+            await writeMessage({
                 senderName: (m.sender as unknown as { name: string }).name,
                 content: m.content,
                 createdAt: m.createdAt,
                 deleted: m.deleted,
+                attachments: m.attachments?.map((a) => ({
+                    url: a.url,
+                    filename: a.filename,
+                    mimetype: a.mimetype,
+                    size: a.size,
+                })),
             });
         }
         lastId = (
