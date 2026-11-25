@@ -62,6 +62,30 @@ function waitFor(client: ClientSocket, event: string, timeoutMs = 3000): Promise
     });
 }
 
+function emitReaction(
+    client: ClientSocket,
+    roomId: string,
+    messageId: string,
+    emoji: string,
+): Promise<string | undefined> {
+    return new Promise((resolve) => {
+        client.emit(
+            "toggle_reaction",
+            { roomId, messageId, emoji },
+            (res: { error?: string }) => resolve(res?.error),
+        );
+    });
+}
+
+function reactionUsers(
+    reactions: Record<string, unknown[]> | undefined,
+    emoji: string,
+): string[] {
+    return ((reactions?.[emoji] ?? []) as { toString(): string }[]).map(
+        (id) => id.toString(),
+    );
+}
+
 beforeAll(async () => {
     await startTestDb();
     httpServer = createServer();
@@ -339,5 +363,137 @@ describe("socket handlers", () => {
 
         clientAlice.close();
         clientBob.close();
+    });
+
+    it("reações concorrentes de usuários diferentes preservam todas (atomic toggle)", async () => {
+        const alice = await createUser("Alice6", "alice6-s@test.com");
+        const bob = await createUser("Bob6", "bob6-s@test.com");
+        const carol = await createUser("Carol6", "carol6-s@test.com");
+        const room = await Room.create({
+            type: "group",
+            participants: [alice._id, bob._id, carol._id],
+        });
+        const message = await Message.create({
+            sender: alice._id,
+            room: room._id,
+            content: "reaja junto",
+        });
+
+        const clientAlice = await connectClient(alice._id.toString());
+        const clientBob = await connectClient(bob._id.toString());
+        const clientCarol = await connectClient(carol._id.toString());
+        await joinRoom(clientAlice, room._id.toString());
+        await joinRoom(clientBob, room._id.toString());
+        await joinRoom(clientCarol, room._id.toString());
+
+        const roomId = room._id.toString();
+        const messageId = message._id.toString();
+        const errors = await Promise.all([
+            emitReaction(clientAlice, roomId, messageId, "👍"),
+            emitReaction(clientBob, roomId, messageId, "👍"),
+            emitReaction(clientCarol, roomId, messageId, "👍"),
+        ]);
+        expect(errors).toEqual([undefined, undefined, undefined]);
+
+        const persisted = await Message.findById(messageId).lean();
+        const users = reactionUsers(
+            persisted?.reactions as Record<string, unknown[]> | undefined,
+            "👍",
+        );
+        expect(users).toHaveLength(3);
+        expect(new Set(users)).toEqual(
+            new Set([
+                alice._id.toString(),
+                bob._id.toString(),
+                carol._id.toString(),
+            ]),
+        );
+
+        clientAlice.close();
+        clientBob.close();
+        clientCarol.close();
+    });
+
+    it("toggles concorrentes do mesmo usuário seguem a semântica de alternância sem duplicar", async () => {
+        const alice = await createUser("Alice7", "alice7-s@test.com");
+        const bob = await createUser("Bob7", "bob7-s@test.com");
+        const room = await Room.create({
+            type: "group",
+            participants: [alice._id, bob._id],
+        });
+        const message = await Message.create({
+            sender: bob._id,
+            room: room._id,
+            content: "alternar",
+            reactions: { "👍": [alice._id] },
+        });
+
+        const clientAlice = await connectClient(alice._id.toString());
+        await joinRoom(clientAlice, room._id.toString());
+
+        const roomId = room._id.toString();
+        const messageId = message._id.toString();
+        // Dois toggles do mesmo usuário a partir de um estado já reativo:
+        // remove -> adiciona = presente (sem duplicar).
+        const errors = await Promise.all([
+            emitReaction(clientAlice, roomId, messageId, "👍"),
+            emitReaction(clientAlice, roomId, messageId, "👍"),
+        ]);
+        expect(errors).toEqual([undefined, undefined]);
+
+        const persisted = await Message.findById(messageId).lean();
+        const users = reactionUsers(
+            persisted?.reactions as Record<string, unknown[]> | undefined,
+            "👍",
+        );
+        expect(users).toEqual([alice._id.toString()]);
+
+        clientAlice.close();
+    });
+
+    it("toggle concorrente preserva reação existente de outro usuário", async () => {
+        const alice = await createUser("Alice8", "alice8-s@test.com");
+        const bob = await createUser("Bob8", "bob8-s@test.com");
+        const carol = await createUser("Carol8", "carol8-s@test.com");
+        const room = await Room.create({
+            type: "group",
+            participants: [alice._id, bob._id, carol._id],
+        });
+        const message = await Message.create({
+            sender: alice._id,
+            room: room._id,
+            content: "preservar",
+            reactions: { "👍": [alice._id] },
+        });
+
+        const clientBob = await connectClient(bob._id.toString());
+        const clientCarol = await connectClient(carol._id.toString());
+        await joinRoom(clientBob, room._id.toString());
+        await joinRoom(clientCarol, room._id.toString());
+
+        const roomId = room._id.toString();
+        const messageId = message._id.toString();
+        const errors = await Promise.all([
+            emitReaction(clientBob, roomId, messageId, "👍"),
+            emitReaction(clientCarol, roomId, messageId, "👍"),
+        ]);
+        expect(errors).toEqual([undefined, undefined]);
+
+        const persisted = await Message.findById(messageId).lean();
+        const users = reactionUsers(
+            persisted?.reactions as Record<string, unknown[]> | undefined,
+            "👍",
+        );
+        expect(users).toHaveLength(3);
+        expect(new Set(users)).toEqual(
+            new Set([
+                alice._id.toString(),
+                bob._id.toString(),
+                carol._id.toString(),
+            ]),
+        );
+
+        clientBob.close();
+        clientCarol.close();
     });
 });

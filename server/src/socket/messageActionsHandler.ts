@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Message from "../models/Message";
 import Room from "../models/Room";
 import { deleteCloudinaryAttachments } from "../services/cloudinary";
@@ -222,33 +223,57 @@ export function registerMessageActionsHandlers(ctx: ConnectionContext): void {
                     return;
                 }
 
-                const current = await Message.findById(messageId)
-                    .select("reactions")
-                    .lean();
-                if (!current) {
-                    ack?.({ error: "Mensagem não encontrada." });
-                    return;
-                }
-                const users = (
-                    (current.reactions as unknown as Record<string, unknown[]>)?.[
-                        emoji
-                    ] ?? []
-                ).map(String);
-                const next = users.includes(userId)
-                    ? users.filter((u) => u !== userId)
-                    : [...users, userId];
-
-                if (next.length === 0) {
-                    await Message.updateOne(
-                        { _id: messageId },
-                        { $unset: { [`reactions.${emoji}`]: 1 } },
-                    );
-                } else {
-                    await Message.updateOne(
-                        { _id: messageId },
-                        { $set: { [`reactions.${emoji}`]: next } },
-                    );
-                }
+                const userObjectId = new mongoose.Types.ObjectId(userId);
+                const reactionField = `reactions.${emoji}`;
+                await Message.updateOne(
+                    { _id: messageId },
+                    [
+                        {
+                            $set: {
+                                [reactionField]: {
+                                    $let: {
+                                        vars: {
+                                            current: {
+                                                $ifNull: [
+                                                    `$reactions.${emoji}`,
+                                                    [],
+                                                ],
+                                            },
+                                        },
+                                        in: {
+                                            $cond: [
+                                                {
+                                                    $in: [
+                                                        userObjectId,
+                                                        "$$current",
+                                                    ],
+                                                },
+                                                {
+                                                    $filter: {
+                                                        input: "$$current",
+                                                        cond: {
+                                                            $ne: [
+                                                                "$$this",
+                                                                userObjectId,
+                                                            ],
+                                                        },
+                                                    },
+                                                },
+                                                {
+                                                    $concatArrays: [
+                                                        "$$current",
+                                                        [userObjectId],
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    ] as unknown as mongoose.UpdateWithAggregationPipeline,
+                    { updatePipeline: true },
+                );
 
                 const updated = await Message.findById(messageId)
                     .select("reactions")
@@ -261,6 +286,7 @@ export function registerMessageActionsHandlers(ctx: ConnectionContext): void {
                             string[]
                         >,
                     )) {
+                        if (userIds.length === 0) continue;
                         formatted[emoji] = userIds.map((u) => u.toString());
                     }
                 }

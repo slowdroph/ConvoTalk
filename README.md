@@ -211,6 +211,9 @@ All server environment variables are defined in `server/.env.example`. The serve
 | `VAPID_PUBLIC_KEY` | Web Push public key (enables push notifications) | — |
 | `VAPID_PRIVATE_KEY` | Web Push private key | — |
 | `VAPID_SUBJECT` | Web Push subject | `mailto:admin@convotalk.com` |
+| `TURN_URL` | TURN relay URL (enables TURN for WebRTC; without it the app is STUN-only) | — |
+| `TURN_USERNAME` | TURN REST API username | — |
+| `TURN_SECRET` | TURN REST API shared secret (used to sign per-call credentials) | — |
 | `COOKIE_SECURE` | Set secure flag on cookies | `false` |
 | `COOKIE_SAMESITE` | SameSite cookie policy | `lax` |
 | `CORS_ORIGINS` | Extra CORS origins (comma-separated) | — |
