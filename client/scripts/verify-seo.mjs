@@ -3,10 +3,11 @@
  * Usage: node scripts/verify-seo.mjs [baseUrl]
  *
  * Asserts, for the target origin:
- *   - every public page, in every locale, answers 200 (no redirect) with a real
- *     <h1>, a self-referencing canonical, the right <html lang> and a non-empty
- *     title
- *   - every page carries the complete hreflang cluster plus x-default
+ *   - every indexable page, in every locale, answers 200 (no redirect) with a
+ *     real <h1>, a self-referencing canonical, the right <html lang> and a
+ *     non-empty title
+ *   - every indexable page carries the complete hreflang cluster plus x-default
+ *   - utility pages (forgot-password) answer 200 with noindex and no canonical
  *   - /en and /en/<path> redirect to the unprefixed URL
  *   - every private/utility route answers 200 with `X-Robots-Tag: noindex`
  *   - an unknown URL answers 404
@@ -24,7 +25,13 @@ const LOCALES = [
     { segment: "fr", tag: "fr" },
 ];
 
-const PAGES = ["/", "/login", "/terms", "/privacy", "/forgot-password"];
+const PAGES = [
+    { path: "/", indexable: true },
+    { path: "/login", indexable: true },
+    { path: "/terms", indexable: true },
+    { path: "/privacy", indexable: true },
+    { path: "/forgot-password", indexable: false },
+];
 
 const PRIVATE_ROUTES = [
     "/chat",
@@ -38,6 +45,7 @@ const PRIVATE_ROUTES = [
     "/reset-password",
     "/confirm-email-change",
     "/app.html",
+    "/offline.html",
 ];
 
 const UNKNOWN_ROUTE = "/this-route-should-not-exist-9f3a";
@@ -60,7 +68,7 @@ async function get(path) {
     });
 }
 
-async function checkPublicPage(segment, pagePath) {
+async function checkPublicPage(segment, pagePath, indexable) {
     const routePath = urlFor(segment, pagePath);
     const locale = LOCALES.find((item) => item.segment === segment);
     const response = await get(routePath);
@@ -77,11 +85,22 @@ async function checkPublicPage(segment, pagePath) {
     const title = /<title>([^<]*)<\/title>/.exec(html)?.[1]?.trim() ?? "";
 
     if (!/<h1[ >]/.test(html)) problems.push("no <h1>");
+    if (lang !== locale.tag) problems.push(`lang ${lang ?? "missing"}`);
+    if (!title) problems.push("empty <title>");
+
+    if (!indexable) {
+        if (!/<meta name="robots" content="[^"]*noindex/.test(html)) {
+            problems.push("missing noindex robots meta");
+        }
+        if (canonical !== null) problems.push(`canonical ${canonical}`);
+        if (/hreflang=/.test(html)) problems.push("unexpected hreflang links");
+        record(problems.length === 0, routePath, problems.join(", "));
+        return;
+    }
+
     if (canonical !== `${SITE_URL}${routePath}`) {
         problems.push(`canonical ${canonical ?? "missing"}`);
     }
-    if (lang !== locale.tag) problems.push(`lang ${lang ?? "missing"}`);
-    if (!title) problems.push("empty <title>");
 
     for (const alternate of LOCALES) {
         const expected = `${SITE_URL}${urlFor(alternate.segment, pagePath)}`;
@@ -141,8 +160,8 @@ async function checkServed(path) {
 
 async function main() {
     for (const locale of LOCALES) {
-        for (const pagePath of PAGES) {
-            await checkPublicPage(locale.segment, pagePath);
+        for (const page of PAGES) {
+            await checkPublicPage(locale.segment, page.path, page.indexable);
         }
     }
     await checkLocaleRedirect("en");

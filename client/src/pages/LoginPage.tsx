@@ -38,7 +38,7 @@ export default function LoginPage() {
                         className="flex items-center gap-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                     >
                         <img
-                            src="/convo_talk_logo.png"
+                            src="/logo-192.webp" width={192} height={163}
                             alt="ConvoTalk"
                             className="h-9 w-auto object-contain"
                         />

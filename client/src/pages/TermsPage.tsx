@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import LegalLayout from "../components/LegalLayout";
 import SEO from "../components/SEO";
 import Icon from "../components/ui/Icon";
-import { getLocale } from "../i18n/formatters";
+import { formatLegalLastUpdated } from "../i18n/legalDate";
 
 interface SectionProps {
     icon: string;
@@ -48,11 +48,7 @@ function ProhibitedList({ items }: { items: string[] }) {
 
 export default function TermsPage() {
     const { t } = useTranslation("legal");
-    const lastUpdated = new Date().toLocaleDateString(getLocale(), {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-    });
+    const lastUpdated = formatLegalLastUpdated();
     const prohibited = t("terms.s2Items", {
         returnObjects: true,
     }) as string[];

@@ -23,7 +23,7 @@ export default function LegalLayout({
                 <div className="flex justify-between items-center px-4 h-16 border-b border-surface-container-high">
                     <LocalizedLink to="/" className="flex items-center gap-2">
                         <img
-                            src="/convo_talk_logo.png"
+                            src="/logo-192.webp" width={192} height={163}
                             alt="ConvoTalk"
                             className="h-8 w-auto object-contain"
                         />

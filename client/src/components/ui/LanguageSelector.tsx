@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
-import { LANGUAGE_OPTIONS } from "@shared/i18n";
+import { LANGUAGE_OPTIONS, type LanguageCode } from "@shared/i18n";
 import { useLanguage } from "../../hooks/useLanguage";
 import {
     isLocalizablePath,
@@ -8,7 +8,15 @@ import {
     stripLocale,
 } from "../../i18n/routing";
 import DropdownMenu from "./DropdownMenu";
-import CountryFlag from "./CountryFlag";
+
+// Static SVGs (see scripts/generate-flags.mjs). Importing the React components
+// dragged the 200 KB all-country chunk onto every page that shows a flag.
+const LANGUAGE_FLAGS: Record<LanguageCode, string> = {
+    en: "/flags/us.svg",
+    es: "/flags/es.svg",
+    "pt-BR": "/flags/br.svg",
+    fr: "/flags/fr.svg",
+};
 
 interface LanguageSelectorProps {
     tone?: "default" | "dark" | "header";
@@ -80,10 +88,12 @@ export default function LanguageSelector({
                                 d="M12 21a9 9 0 100-18 9 9 0 000 18zm0-18c2.5 2.4 3.9 5.5 3.9 9s-1.4 6.6-3.9 9m0-18C9.5 5.4 8.1 8.5 8.1 12s1.4 6.6 3.9 9M3.5 9h17M3.5 15h17"
                             />
                         </svg>
-                        <CountryFlag
-                            country={current.flag}
-                            name={current.nativeName}
-                            className="h-3.5 w-5"
+                        <img
+                            src={LANGUAGE_FLAGS[current.code]}
+                            alt=""
+                            width={20}
+                            height={14}
+                            className="h-3.5 w-5 inline-block rounded-[2px] shrink-0 object-cover"
                         />
                         {tone !== "header" && (
                             <span className="truncate">
@@ -147,10 +157,12 @@ export default function LanguageSelector({
                             }}
                             className={itemClass(active)}
                         >
-                            <CountryFlag
-                                country={option.flag}
-                                name={option.nativeName}
-                                className="h-3.5 w-5"
+                            <img
+                                src={LANGUAGE_FLAGS[option.code]}
+                                alt=""
+                                width={20}
+                                height={14}
+                                className="h-3.5 w-5 inline-block rounded-[2px] shrink-0 object-cover"
                             />
                             <span className="flex min-w-0 flex-col">
                                 <span className="truncate font-medium">

@@ -50,7 +50,7 @@ export default function ResetPasswordPage() {
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <img
-                        src="/convo_talk_logo.png"
+                        src="/logo-192.webp" width={192} height={163}
                         alt="ConvoTalk"
                         className="h-20 w-auto mx-auto mb-4 object-contain"
                     />

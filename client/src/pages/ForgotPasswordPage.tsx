@@ -30,15 +30,17 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="min-h-dvh-fallback bg-zinc-950 flex items-center justify-center px-4">
+            {/* A single form with no content of its own: nothing to rank. */}
             <SEO
                 title={t("forgot.title")}
                 description={t("forgot.description")}
                 canonical="/forgot-password"
+                noindex
             />
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <img
-                        src="/convo_talk_logo.png"
+                        src="/logo-192.webp" width={192} height={163}
                         alt="ConvoTalk"
                         className="h-20 w-auto mx-auto mb-4 object-contain"
                     />

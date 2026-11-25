@@ -1,4 +1,4 @@
-import { lazy, Suspense, useLayoutEffect } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -15,7 +15,12 @@ import {
     type LanguageCode,
 } from "@shared/i18n";
 import i18n from "./i18n";
-import { languageFromPath, stripLocale } from "./i18n/routing";
+import {
+    isLocalizablePath,
+    languageFromPath,
+    stripLocale,
+} from "./i18n/routing";
+import { trackPublicPageView } from "./services/analytics";
 import { useAuth } from "./hooks/useAuth";
 import { SocketProvider } from "./providers/SocketProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -104,9 +109,22 @@ function LocaleLayout() {
     return <Outlet />;
 }
 
+/** Analytics runs on the public pages only, never inside the app. */
+function AnalyticsTracker() {
+    const { pathname, search } = useLocation();
+
+    useEffect(() => {
+        if (!isLocalizablePath(pathname)) return;
+        trackPublicPageView(`${pathname}${search}`);
+    }, [pathname, search]);
+
+    return null;
+}
+
 export default function App() {
     return (
         <BrowserRouter>
+            <AnalyticsTracker />
             <ErrorBoundary>
                 <Routes>
                     {/* Public pages, default locale (unprefixed). */}

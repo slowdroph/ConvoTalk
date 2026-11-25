@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="theme-color" content="#0e150e" />
+        <title>Offline | ConvoTalk</title>
+        <style>
+            :root {
+                color-scheme: dark;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                min-height: 100dvh;
+                display: grid;
+                place-items: center;
+                padding: 24px;
+                background: #0e150e;
+                color: #e6f0e6;
+                font-family:
+                    "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system,
+                    "Segoe UI", sans-serif;
+                text-align: center;
+            }
+            main {
+                max-width: 28rem;
+            }
+            .dot {
+                width: 56px;
+                height: 56px;
+                margin: 0 auto 24px;
+                border-radius: 16px;
+                background: rgba(0, 168, 75, 0.15);
+                border: 1px solid rgba(0, 168, 75, 0.35);
+                display: grid;
+                place-items: center;
+                font-size: 26px;
+            }
+            h1 {
+                font-size: 1.5rem;
+                line-height: 1.25;
+                margin: 0 0 12px;
+            }
+            p {
+                margin: 0 0 28px;
+                color: #9fb3a0;
+                line-height: 1.6;
+                font-size: 0.95rem;
+            }
+            .actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                justify-content: center;
+            }
+            button,
+            a {
+                font: inherit;
+                font-weight: 600;
+                font-size: 0.9rem;
+                padding: 12px 22px;
+                border-radius: 999px;
+                cursor: pointer;
+                text-decoration: none;
+                border: 1px solid transparent;
+            }
+            button {
+                background: #00a84b;
+                color: #06120a;
+            }
+            a {
+                background: transparent;
+                color: #e6f0e6;
+                border-color: rgba(255, 255, 255, 0.18);
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <div class="dot" aria-hidden="true">⚠</div>
+            <h1>You are offline</h1>
+            <p>
+                ConvoTalk needs a connection to load this page. Check your
+                network and try again — your conversations will be waiting.
+            </p>
+            <div class="actions">
+                <button type="button" onclick="location.reload()">
+                    Try again
+                </button>
+                <a href="/">Go to the homepage</a>
+            </div>
+        </main>
+    </body>
+</html>

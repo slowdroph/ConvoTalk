@@ -12,6 +12,8 @@
         "test:watch": "vitest",
         "verify:seo": "node scripts/verify-seo.mjs",
         "generate:flags": "node scripts/generate-flag-loaders.mjs",
+        "generate:flag-assets": "node scripts/generate-flags.mjs",
+        "generate:logo": "node scripts/generate-logo.mjs",
         "generate:cities": "node scripts/generate-city-data.mjs"
     },
     "dependencies": {

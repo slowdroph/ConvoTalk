@@ -76,7 +76,7 @@ export default function AppRail() {
                 className="mb-3 rounded-xl p-1.5 transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
             >
                 <img
-                    src="/convo_talk_logo.png"
+                    src="/logo-192.webp" width={192} height={163}
                     alt="ConvoTalk"
                     className="h-8 w-8 object-contain"
                 />

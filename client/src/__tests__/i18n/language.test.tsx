@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { act } from "react";
 import { normalizeLanguage } from "@shared/i18n";
@@ -75,11 +75,18 @@ describe("language persistence", () => {
 
 describe("LanguageProvider account sync", () => {
     beforeEach(async () => {
+        // The account preference only applies inside the app: on public pages
+        // the URL owns the language.
+        window.history.replaceState({}, "", "/chat");
         await i18n.changeLanguage("pt-BR");
         localStorage.clear();
         mocks.updateUser.mockReset();
         mocks.showToast.mockReset();
         mocks.put.mockReset();
+    });
+
+    afterEach(() => {
+        window.history.replaceState({}, "", "/");
     });
 
     it("applies the account preference on startup", async () => {

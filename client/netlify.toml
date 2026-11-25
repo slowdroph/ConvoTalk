@@ -229,3 +229,20 @@
   for = "/404.html"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
+
+# Utility pages: reachable, but nothing for a search engine to index.
+
+[[headers]]
+  for = "/offline.html"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/forgot-password"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/*/forgot-password"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

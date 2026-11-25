@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { io, Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 import Avatar from "../ui/Avatar";
 import Icon from "../ui/Icon";
 import type { PreviewMessage } from "../../types";
@@ -64,61 +64,80 @@ export default function PreviewChat() {
     }, []);
 
     useEffect(() => {
-        const socket = io(SOCKET_URL ? `${SOCKET_URL}/preview` : "/preview", {
-            auth: { name: nameRef.current },
-            transports: ["websocket", "polling"],
-        });
-        socketRef.current = socket;
+        let cancelled = false;
+        let socket: Socket | null = null;
 
-        socket.on("connect", () => {
-            setMySocketId(socket.id ?? null);
-            setConnected(true);
-            setError("");
-        });
+        // The realtime client is only needed once the widget connects, and
+        // this component sits on the landing page: load it after first paint
+        // instead of shipping it in the entry chunk.
+        void import("socket.io-client").then(({ io }) => {
+            if (cancelled) return;
 
-        socket.on("disconnect", () => {
-            setConnected(false);
-        });
+            const created = io(
+                SOCKET_URL ? `${SOCKET_URL}/preview` : "/preview",
+                {
+                    auth: { name: nameRef.current },
+                    transports: ["websocket", "polling"],
+                },
+            );
+            socket = created;
+            socketRef.current = created;
 
-        socket.on(
-            "preview:history",
-            (data: { messages: PreviewMessage[]; online: number }) => {
-                setMessages(data.messages || []);
-                setOnlineCount(data.online || 1);
-            },
-        );
-
-        socket.on("preview:message", (msg: PreviewMessage) => {
-            setMessages((prev) => {
-                if (prev.some((m) => m.id === msg.id)) return prev;
-                const next = [...prev, msg];
-                return next.length > 50 ? next.slice(next.length - 50) : next;
+            created.on("connect", () => {
+                setMySocketId(created.id ?? null);
+                setConnected(true);
+                setError("");
             });
-        });
 
-        socket.on("preview:online", (count: number) => {
-            setOnlineCount(count);
-        });
+            created.on("disconnect", () => {
+                setConnected(false);
+            });
 
-        socket.on(
-            "preview:typing",
-            (data: { name: string; isTyping: boolean }) => {
-                if (!data.isTyping) {
-                    setTypingName((prev) => (prev === data.name ? null : prev));
-                    return;
-                }
-                setTypingName(data.name || null);
-                if (typingTimerRef.current) {
-                    clearTimeout(typingTimerRef.current);
-                }
-                typingTimerRef.current = setTimeout(() => {
-                    setTypingName(null);
-                }, TYPING_TIMEOUT_MS);
-            },
-        );
+            created.on(
+                "preview:history",
+                (data: { messages: PreviewMessage[]; online: number }) => {
+                    setMessages(data.messages || []);
+                    setOnlineCount(data.online || 1);
+                },
+            );
+
+            created.on("preview:message", (msg: PreviewMessage) => {
+                setMessages((prev) => {
+                    if (prev.some((m) => m.id === msg.id)) return prev;
+                    const next = [...prev, msg];
+                    return next.length > 50
+                        ? next.slice(next.length - 50)
+                        : next;
+                });
+            });
+
+            created.on("preview:online", (count: number) => {
+                setOnlineCount(count);
+            });
+
+            created.on(
+                "preview:typing",
+                (data: { name: string; isTyping: boolean }) => {
+                    if (!data.isTyping) {
+                        setTypingName((prev) =>
+                            prev === data.name ? null : prev,
+                        );
+                        return;
+                    }
+                    setTypingName(data.name || null);
+                    if (typingTimerRef.current) {
+                        clearTimeout(typingTimerRef.current);
+                    }
+                    typingTimerRef.current = setTimeout(() => {
+                        setTypingName(null);
+                    }, TYPING_TIMEOUT_MS);
+                },
+            );
+        });
 
         return () => {
-            socket.disconnect();
+            cancelled = true;
+            socket?.disconnect();
             socketRef.current = null;
             if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
             if (typingTimeoutRef.current)

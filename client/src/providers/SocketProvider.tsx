@@ -6,7 +6,7 @@ import {
     useSyncExternalStore,
     type ReactNode,
 } from "react";
-import { io, Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 import i18n from "../i18n";
 import { SocketContext, type OnlineUser } from "../contexts/SocketContext";
 import { useAuth } from "../hooks/useAuth";
@@ -47,80 +47,91 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (!token) return;
 
-        const newSocket = io(SOCKET_URL || "/", {
-            auth: { token: token || getAccessToken() },
-            transports: ["websocket", "polling"],
-            reconnection: true,
-            reconnectionAttempts: 20,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 30000,
-            randomizationFactor: 0.5,
-        });
+        let cancelled = false;
+        let socket: Socket | null = null;
 
-        newSocket.on("connect", () => {
-            setConnected(true);
-            setReconnecting(false);
-            setReconnectAttempt(0);
-            setHasConnectedOnce(true);
-            if (wasConnected.current) {
-                showToast({
-                    type: "success",
-                    message: i18n.t("chat:connection.restored"),
-                });
-            }
-            wasConnected.current = true;
-        });
-        newSocket.on("disconnect", (reason) => {
-            if (!getAccessToken()) return;
-            setConnected(false);
-            setReconnecting(
-                reason === "io server disconnect" ||
-                    reason === "io client disconnect"
-                    ? false
-                    : true,
-            );
-        });
-        newSocket.on("reconnect_attempt", () => {
-            const freshToken = getAccessToken();
-            if (freshToken) {
-                newSocket.auth = { token: freshToken };
-            }
-            setReconnecting(true);
-            setReconnectAttempt((prev) => prev + 1);
-        });
-        newSocket.on("reconnect_failed", () => {
-            setReconnecting(false);
-            setReconnectAttempt(0);
-            showToast({
-                type: "error",
-                message: i18n.t("chat:connection.reconnectFailed"),
+        // Loaded on demand so the realtime client stays out of the entry
+        // chunk: public pages never open a socket.
+        void import("socket.io-client").then(({ io }) => {
+            if (cancelled) return;
+
+            const newSocket = io(SOCKET_URL || "/", {
+                auth: { token: token || getAccessToken() },
+                transports: ["websocket", "polling"],
+                reconnection: true,
+                reconnectionAttempts: 20,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 30000,
+                randomizationFactor: 0.5,
             });
-        });
-        newSocket.on("user_online", (users: OnlineUser[]) =>
-            setOnlineUsers(users),
-        );
-        newSocket.on("session:force_logout", (data?: { reason?: string }) => {
-            if (!getAccessToken()) return;
-            const reasonKeys: Record<string, string> = {
-                password_changed: "chat:connection.sessionPasswordChanged",
-                email_changed: "chat:connection.sessionEmailChanged",
-                all_devices: "chat:connection.sessionAllDevices",
-                remote_logout: "chat:connection.sessionRemoteLogout",
-                session_expired: "chat:connection.sessionExpired",
-            };
-            const message = i18n.t(
-                (data?.reason && reasonKeys[data.reason]) ||
-                    "chat:connection.sessionEnded",
-            );
-            showToast({ type: "warning", message });
-            logout();
-        });
+            socket = newSocket;
 
-        currentSocket = newSocket;
-        emitSocketChange();
+            newSocket.on("connect", () => {
+                setConnected(true);
+                setReconnecting(false);
+                setReconnectAttempt(0);
+                setHasConnectedOnce(true);
+                if (wasConnected.current) {
+                    showToast({
+                        type: "success",
+                        message: i18n.t("chat:connection.restored"),
+                    });
+                }
+                wasConnected.current = true;
+            });
+            newSocket.on("disconnect", (reason) => {
+                if (!getAccessToken()) return;
+                setConnected(false);
+                setReconnecting(
+                    reason === "io server disconnect" ||
+                        reason === "io client disconnect"
+                        ? false
+                        : true,
+                );
+            });
+            newSocket.on("reconnect_attempt", () => {
+                const freshToken = getAccessToken();
+                if (freshToken) {
+                    newSocket.auth = { token: freshToken };
+                }
+                setReconnecting(true);
+                setReconnectAttempt((prev) => prev + 1);
+            });
+            newSocket.on("reconnect_failed", () => {
+                setReconnecting(false);
+                setReconnectAttempt(0);
+                showToast({
+                    type: "error",
+                    message: i18n.t("chat:connection.reconnectFailed"),
+                });
+            });
+            newSocket.on("user_online", (users: OnlineUser[]) =>
+                setOnlineUsers(users),
+            );
+            newSocket.on("session:force_logout", (data?: { reason?: string }) => {
+                if (!getAccessToken()) return;
+                const reasonKeys: Record<string, string> = {
+                    password_changed: "chat:connection.sessionPasswordChanged",
+                    email_changed: "chat:connection.sessionEmailChanged",
+                    all_devices: "chat:connection.sessionAllDevices",
+                    remote_logout: "chat:connection.sessionRemoteLogout",
+                    session_expired: "chat:connection.sessionExpired",
+                };
+                const message = i18n.t(
+                    (data?.reason && reasonKeys[data.reason]) ||
+                        "chat:connection.sessionEnded",
+                );
+                showToast({ type: "warning", message });
+                logout();
+            });
+
+            currentSocket = newSocket;
+            emitSocketChange();
+        });
 
         return () => {
-            newSocket.disconnect();
+            cancelled = true;
+            socket?.disconnect();
             currentSocket = null;
             emitSocketChange();
             setConnected(false);

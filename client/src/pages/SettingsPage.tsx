@@ -204,7 +204,7 @@ export default function SettingsPage() {
 
                     <div className="flex items-center gap-2.5 shrink-0 lg:hidden">
                         <img
-                            src="/convo_talk_logo.png"
+                            src="/logo-192.webp" width={192} height={163}
                             alt="ConvoTalk Logo"
                             className="w-8 h-8 rounded-xl object-contain shadow-md shadow-emerald-950/40"
                         />

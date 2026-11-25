@@ -32,13 +32,21 @@ const LOCALES = [
     { segment: "fr", tag: "fr", browser: "fr-FR" },
 ];
 
-/** Public pages, with the source file used for the sitemap `lastmod`. */
+/**
+ * Public pages, with the source file used for the sitemap `lastmod`.
+ * `noindex` pages are still rendered for visitors, but they carry no canonical
+ * or hreflang cluster and are left out of the sitemaps.
+ */
 const PAGES = [
     { path: "/", source: "src/pages/HomePage.tsx" },
     { path: "/login", source: "src/pages/LoginPage.tsx" },
     { path: "/terms", source: "src/pages/TermsPage.tsx" },
     { path: "/privacy", source: "src/pages/PrivacyPage.tsx" },
-    { path: "/forgot-password", source: "src/pages/ForgotPasswordPage.tsx" },
+    {
+        path: "/forgot-password",
+        source: "src/pages/ForgotPasswordPage.tsx",
+        noindex: true,
+    },
 ];
 
 const CONTENT_TYPES = {
@@ -161,7 +169,7 @@ async function writeSitemaps() {
 
     for (const locale of LOCALES) {
         const name = `sitemap-${locale.segment || "en"}.xml`;
-        const urls = PAGES.map((page) => {
+        const urls = PAGES.filter((page) => !page.noindex).map((page) => {
             const urlPath = urlFor(locale.segment, page.path);
             const mod = lastmod.get(page.path);
             return `  <url>
@@ -225,14 +233,16 @@ async function prerenderLocale(browser, baseUrl, locale) {
     for (const pageSpec of PAGES) {
         const urlPath = urlFor(locale.segment, pageSpec.path);
         const file = fileFor(urlPath);
-        const expectedCanonical = absolute(urlPath);
-        const expectedAlternates = new Map([
-            ...LOCALES.map((alt) => [
-                alt.tag,
-                absolute(urlFor(alt.segment, pageSpec.path)),
-            ]),
-            ["x-default", absolute(urlFor("", pageSpec.path))],
-        ]);
+        const expectedCanonical = pageSpec.noindex ? null : absolute(urlPath);
+        const expectedAlternates = pageSpec.noindex
+            ? new Map()
+            : new Map([
+                  ...LOCALES.map((alt) => [
+                      alt.tag,
+                      absolute(urlFor(alt.segment, pageSpec.path)),
+                  ]),
+                  ["x-default", absolute(urlFor("", pageSpec.path))],
+              ]);
 
         const page = await context.newPage();
         const pageErrors = [];
@@ -273,16 +283,31 @@ async function prerenderLocale(browser, baseUrl, locale) {
                 timeout: 60_000,
             }),
         );
-        await step("waiting for the canonical", () =>
-            page.waitForFunction(
-                (expected) =>
-                    document
-                        .querySelector('link[rel="canonical"]')
-                        ?.getAttribute("href") === expected,
-                expectedCanonical,
-                { timeout: 30_000 },
-            ),
-        );
+        if (pageSpec.noindex) {
+            await step("waiting for the noindex meta", () =>
+                page.waitForFunction(
+                    () =>
+                        (
+                            document
+                                .querySelector('meta[name="robots"]')
+                                ?.getAttribute("content") ?? ""
+                        ).includes("noindex"),
+                    undefined,
+                    { timeout: 30_000 },
+                ),
+            );
+        } else {
+            await step("waiting for the canonical", () =>
+                page.waitForFunction(
+                    (expected) =>
+                        document
+                            .querySelector('link[rel="canonical"]')
+                            ?.getAttribute("href") === expected,
+                    expectedCanonical,
+                    { timeout: 30_000 },
+                ),
+            );
+        }
         await step("waiting for <html lang>", () =>
             page.waitForFunction(
                 (expected) => document.documentElement.lang === expected,
@@ -324,6 +349,10 @@ async function prerenderLocale(browser, baseUrl, locale) {
                     document
                         .querySelector('link[rel="canonical"]')
                         ?.getAttribute("href") ?? null,
+                robots:
+                    document
+                        .querySelector('meta[name="robots"]')
+                        ?.getAttribute("content") ?? null,
                 lang: document.documentElement.lang,
                 alternates: [
                     ...document.querySelectorAll(
@@ -346,28 +375,46 @@ async function prerenderLocale(browser, baseUrl, locale) {
         }
         if (metrics.h1Count < 1) problems.push("no <h1> inside #root");
         if (!metrics.title) problems.push("empty <title>");
-        if (metrics.canonical !== expectedCanonical) {
-            problems.push(
-                `canonical is "${metrics.canonical}", expected "${expectedCanonical}"`,
-            );
+        if (pageSpec.noindex) {
+            if (metrics.canonical !== null) {
+                problems.push(
+                    `noindex page declares a canonical (${metrics.canonical})`,
+                );
+            }
+            if (metrics.alternates.length !== 0) {
+                problems.push(
+                    `noindex page declares ${metrics.alternates.length} hreflang links`,
+                );
+            }
+            if (!metrics.robots?.includes("noindex")) {
+                problems.push("missing the noindex robots meta");
+            }
+        } else {
+            if (metrics.canonical !== expectedCanonical) {
+                problems.push(
+                    `canonical is "${metrics.canonical}", expected "${expectedCanonical}"`,
+                );
+            }
+            if (metrics.alternates.length !== expectedAlternates.size) {
+                problems.push(
+                    `expected ${expectedAlternates.size} hreflang links, found ${metrics.alternates.length}`,
+                );
+            }
+            for (const [hreflang, href] of expectedAlternates) {
+                const found = metrics.alternates.find(
+                    ([tag]) => tag === hreflang,
+                );
+                if (found?.[1] !== href) {
+                    problems.push(
+                        `hreflang "${hreflang}" is "${found?.[1] ?? "missing"}", expected "${href}"`,
+                    );
+                }
+            }
         }
         if (metrics.lang !== locale.tag) {
             problems.push(
                 `<html lang> is "${metrics.lang}", expected "${locale.tag}"`,
             );
-        }
-        if (metrics.alternates.length !== expectedAlternates.size) {
-            problems.push(
-                `expected ${expectedAlternates.size} hreflang links, found ${metrics.alternates.length}`,
-            );
-        }
-        for (const [hreflang, href] of expectedAlternates) {
-            const found = metrics.alternates.find(([tag]) => tag === hreflang);
-            if (found?.[1] !== href) {
-                problems.push(
-                    `hreflang "${hreflang}" is "${found?.[1] ?? "missing"}", expected "${href}"`,
-                );
-            }
         }
         if (pageErrors.length > 0) {
             problems.push(`page errors: ${pageErrors.join(" | ")}`);

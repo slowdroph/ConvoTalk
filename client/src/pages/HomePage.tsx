@@ -900,9 +900,9 @@ export default function HomePage() {
                                         <Icon name="picture_as_pdf" className="text-xl" />
                                     </div>
                                     <div>
-                                        <h5 className="text-xs sm:text-sm font-bold text-on-surface">
+                                        <p className="text-xs sm:text-sm font-bold text-on-surface">
                                             relatorio_arquitetura_v2.pdf
-                                        </h5>
+                                        </p>
                                         <p className="text-[11px] text-on-surface-variant">
                                             {t("files.pdfSentBy")}
                                         </p>
@@ -1422,27 +1422,37 @@ export default function HomePage() {
                             return (
                                 <Reveal key={index} delay={index * 50}>
                                     <div className="glass-card rounded-xl border border-outline-variant/70 overflow-hidden transition-colors">
-                                        <button
-                                            type="button"
-                                            id={buttonId}
-                                            aria-expanded={isOpen}
-                                            aria-controls={panelId}
-                                            onClick={() => toggleFaq(index)}
-                                            className="w-full p-5 text-left flex items-center justify-between gap-4 hover:text-primary transition-colors focus:outline-none cursor-pointer"
-                                        >
-                                            <span className="font-bold text-sm sm:text-base text-on-surface">
-                                                {t(`faq.q${faq}`)}
-                                            </span>
-                                            <Icon name="expand_more" />
-                                        </button>
+                                        <h3 className="m-0">
+                                            <button
+                                                type="button"
+                                                id={buttonId}
+                                                aria-expanded={isOpen}
+                                                aria-controls={panelId}
+                                                onClick={() => toggleFaq(index)}
+                                                className="w-full p-5 text-left flex items-center justify-between gap-4 hover:text-primary transition-colors focus:outline-none cursor-pointer"
+                                            >
+                                                <span className="font-bold text-sm sm:text-base text-on-surface">
+                                                    {t(`faq.q${faq}`)}
+                                                </span>
+                                                <Icon name="expand_more" />
+                                            </button>
+                                        </h3>
+                                        {/* Collapsed visually, not with `hidden`:
+                                            the answers stay readable to
+                                            crawlers and assistive tech. */}
                                         <div
                                             id={panelId}
                                             role="region"
                                             aria-labelledby={buttonId}
-                                            hidden={!isOpen}
-                                            className="px-5 pb-5 text-sm text-on-surface-variant leading-relaxed border-t border-outline-variant/30 pt-3"
+                                            className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-out ${
+                                                isOpen
+                                                    ? "max-h-[32rem] opacity-100"
+                                                    : "max-h-0 opacity-0"
+                                            }`}
                                         >
-                                            {t(`faq.a${faq}`)}
+                                            <p className="px-5 pb-5 text-sm text-on-surface-variant leading-relaxed border-t border-outline-variant/30 pt-3">
+                                                {t(`faq.a${faq}`)}
+                                            </p>
                                         </div>
                                     </div>
                                 </Reveal>
@@ -1492,7 +1502,7 @@ export default function HomePage() {
                         <div className="lg:col-span-2 space-y-4">
                             <div className="flex items-center gap-2">
                                 <img
-                                    src="/convo_talk_logo.png"
+                                    src="/logo-192.webp" width={192} height={163}
                                     alt="ConvoTalk"
                                     className="h-7 w-auto object-contain"
                                 />
@@ -1511,9 +1521,9 @@ export default function HomePage() {
 
                         {/* Nav Column 1: Produto */}
                         <div className="space-y-3">
-                            <h5 className="text-xs font-bold uppercase tracking-wider text-on-surface">
+                            <h2 className="text-xs font-bold uppercase tracking-wider text-on-surface">
                                 {t("footer.product")}
-                            </h5>
+                            </h2>
                             <ul className="space-y-2 text-xs sm:text-sm text-on-surface-variant">
                                 <li>
                                     <a
@@ -1528,9 +1538,9 @@ export default function HomePage() {
 
                         {/* Nav Column 2: Plataforma */}
                         <div className="space-y-3">
-                            <h5 className="text-xs font-bold uppercase tracking-wider text-on-surface">
+                            <h2 className="text-xs font-bold uppercase tracking-wider text-on-surface">
                                 {t("footer.platform")}
-                            </h5>
+                            </h2>
                             <ul className="space-y-2 text-xs sm:text-sm text-on-surface-variant">
                                 <li>
                                     <a
@@ -1569,9 +1579,9 @@ export default function HomePage() {
 
                         {/* Nav Column 4: Legal */}
                         <div className="space-y-3">
-                            <h5 className="text-xs font-bold uppercase tracking-wider text-on-surface">
+                            <h2 className="text-xs font-bold uppercase tracking-wider text-on-surface">
                                 {t("footer.legal")}
-                            </h5>
+                            </h2>
                             <ul className="space-y-2 text-xs sm:text-sm text-on-surface-variant">
                                 <li>
                                     <LocalizedLink

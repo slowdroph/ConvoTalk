@@ -37,7 +37,7 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                     className="flex items-center gap-2 shrink-0 group"
                 >
                     <img
-                        src="/convo_talk_logo.png"
+                        src="/logo-192.webp" width={192} height={163}
                         alt="ConvoTalk"
                         className="h-8 w-auto object-contain group-hover:scale-105 transition-transform"
                     />

@@ -1,6 +1,7 @@
-const CACHE_NAME = "convo-talk-v2";
+const CACHE_NAME = "convo-talk-v3";
+const OFFLINE_URL = "/offline.html";
 const PRECACHE_URLS = [
-  "/",
+  OFFLINE_URL,
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",
@@ -47,19 +48,29 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Navigations are never cached. Serving a stored shell at an arbitrary URL
+  // is a soft 404 for humans, keeps stale metadata alive after a deploy and
+  // grows storage without bound for chat and profile URLs. Prerendered pages
+  // are static files behind a CDN, so the network is the right source here.
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request.url, copy));
-          return response;
-        })
-        .catch(() => caches.match("/")),
+      fetch(request).catch(() =>
+        caches
+          .match(OFFLINE_URL)
+          .then(
+            (cached) =>
+              cached ||
+              new Response("You are offline.", {
+                status: 503,
+                headers: { "Content-Type": "text/plain; charset=utf-8" },
+              }),
+          ),
+      ),
     );
     return;
   }
 
+  // Hashed build output is immutable: serve it from cache when present.
   event.respondWith(
     caches.match(request).then(
       (cached) =>

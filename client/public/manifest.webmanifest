@@ -2,6 +2,8 @@
   "name": "ConvoTalk - Converse em tempo real",
   "short_name": "ConvoTalk",
   "description": "Plataforma segura, rápida e intuitiva para conversas em tempo real.",
+  "lang": "pt-BR",
+  "dir": "ltr",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0e150e",
