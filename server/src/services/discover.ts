@@ -189,9 +189,15 @@ export async function discoverUsers(
             { $project: DISCOVER_USER_PROJECTION },
         ]).allowDiskUse(true);
     } else {
-        docs = await User.find(filter as never)
+        const cursor = User.find(filter as never)
             .select(DISCOVER_USER_SELECT)
-            .sort(SORT_MAP[query.sort])
+            .sort(SORT_MAP[query.sort]);
+
+        if (query.sort === "name") {
+            cursor.collation({ locale: "pt", strength: 1 });
+        }
+
+        docs = await cursor
             .skip(skip)
             .limit(query.limit + 1)
             .lean<Record<string, unknown>[]>();

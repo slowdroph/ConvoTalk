@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import DiscoverFilters from "../../../features/discover/components/DiscoverFilters";
 import {
     emptyDiscoverFilters,
@@ -21,6 +21,10 @@ function renderFilters(
         />,
     );
     return { onChange, onClear };
+}
+
+function expandPicker(label: string) {
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${label}`) }));
 }
 
 describe("DiscoverFilters", () => {
@@ -55,9 +59,28 @@ describe("DiscoverFilters", () => {
 
     it("adiciona e remove idiomas", () => {
         const { onChange } = renderFilters();
+        expandPicker("Idiomas");
 
         fireEvent.click(screen.getByRole("button", { name: "Português" }));
         expect(onChange).toHaveBeenCalledWith({ languages: ["pt"] });
+    });
+
+    it("mantém as opções recolhidas até expandir", () => {
+        renderFilters();
+
+        expect(
+            screen.queryByPlaceholderText("Buscar opções"),
+        ).not.toBeInTheDocument();
+
+        const toggle = screen.getByRole("button", { name: /^Idiomas/ });
+        expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+        fireEvent.click(toggle);
+
+        expect(toggle).toHaveAttribute("aria-expanded", "true");
+        expect(
+            screen.getByPlaceholderText("Buscar opções"),
+        ).toBeInTheDocument();
     });
 
     it("respeita o máximo de idiomas selecionados", () => {
@@ -65,6 +88,7 @@ describe("DiscoverFilters", () => {
             ...emptyDiscoverFilters(),
             languages: ["pt", "en", "es", "fr", "de"],
         });
+        expandPicker("Idiomas");
 
         expect(screen.getByRole("button", { name: "Italiano" })).toBeDisabled();
         expect(
@@ -102,13 +126,53 @@ describe("DiscoverFilters", () => {
         expect(onChange).toHaveBeenCalledWith({ activeWithin: null });
     });
 
-    it("altera a ordenação", () => {
-        const { onChange } = renderFilters();
-
-        fireEvent.change(screen.getByLabelText("Ordenar por"), {
-            target: { value: "name" },
+    it("atrasa a atualização da cidade", () => {
+        vi.useFakeTimers();
+        const { onChange } = renderFilters({
+            ...emptyDiscoverFilters(),
+            country: "BR",
         });
 
-        expect(onChange).toHaveBeenCalledWith({ sort: "name" });
+        fireEvent.change(screen.getByLabelText("Cidade"), {
+            target: { value: "Santos" },
+        });
+
+        expect(onChange).not.toHaveBeenCalled();
+
+        act(() => {
+            vi.advanceTimersByTime(500);
+        });
+
+        expect(onChange).toHaveBeenCalledWith({ city: "Santos" });
+        vi.useRealTimers();
+    });
+
+    it("gera ids únicos quando há mais de um painel", () => {
+        render(
+            <>
+                <DiscoverFilters
+                    value={emptyDiscoverFilters()}
+                    hasFilters={false}
+                    onChange={vi.fn()}
+                    onClear={vi.fn()}
+                />
+                <DiscoverFilters
+                    value={emptyDiscoverFilters()}
+                    hasFilters={false}
+                    onChange={vi.fn()}
+                    onClear={vi.fn()}
+                    idPrefix="discover-mobile"
+                />
+            </>,
+        );
+
+        const countries = screen.getAllByLabelText("País");
+        expect(countries).toHaveLength(2);
+        expect(countries[0]).toHaveAttribute("id", "discover-country");
+        expect(countries[1]).toHaveAttribute("id", "discover-mobile-country");
+
+        const cities = screen.getAllByLabelText("Cidade");
+        expect(cities).toHaveLength(2);
+        expect(cities[1]).toHaveAttribute("id", "discover-mobile-city");
     });
 });

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
@@ -7,11 +7,12 @@ import { createDirectRoom } from "../services/rooms";
 import { getErrorMessage } from "../utils/errors";
 import DiscoverActiveFilters from "../features/discover/components/DiscoverActiveFilters";
 import DiscoverFilters from "../features/discover/components/DiscoverFilters";
+import DiscoverFiltersSheet from "../features/discover/components/DiscoverFiltersSheet";
 import DiscoverResults from "../features/discover/components/DiscoverResults";
 import DiscoverSearchBar from "../features/discover/components/DiscoverSearchBar";
 import { useDiscover } from "../features/discover/hooks/useDiscover";
 import { useDiscoverParams } from "../features/discover/hooks/useDiscoverParams";
-import { countActiveDiscoverFilters } from "../features/discover/utils";
+import { countActiveDiscoverFilters, FOCUS_RING } from "../features/discover/utils";
 import type { DiscoverUser } from "../types";
 
 export default function DiscoverPage() {
@@ -36,15 +37,16 @@ export default function DiscoverPage() {
     const [busyId, setBusyId] = useState<string | null>(null);
     const [filtersOpen, setFiltersOpen] = useState(false);
     const activeFilterCount = countActiveDiscoverFilters(filters);
+    const filtersButtonRef = useRef<HTMLButtonElement>(null);
+    const closeFilters = useCallback(() => {
+        setFiltersOpen(false);
+        filtersButtonRef.current?.focus();
+    }, []);
 
     const onlineIds = useMemo(
         () => new Set(onlineUsers.map((user) => user.userId)),
         [onlineUsers],
     );
-
-    const handleViewProfile = (user: DiscoverUser) => {
-        navigate(`/profile/${user._id}`);
-    };
 
     const handleStartConversation = async (user: DiscoverUser) => {
         if (busyId) return;
@@ -86,27 +88,18 @@ export default function DiscoverPage() {
                             onChange={updateFilters}
                         />
                         <button
+                            ref={filtersButtonRef}
                             type="button"
-                            onClick={() => setFiltersOpen((open) => !open)}
-                            aria-expanded={filtersOpen}
-                            className="self-start rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 dark:border-noir-border dark:text-noir-text-bright lg:hidden"
+                            onClick={() => setFiltersOpen(true)}
+                            aria-haspopup="dialog"
+                            className={`inline-flex min-h-10 items-center self-start rounded-xl border border-slate-200 px-3 text-xs font-medium text-slate-700 dark:border-noir-border dark:text-noir-text-bright lg:hidden ${FOCUS_RING}`}
                         >
                             {t("filters.open", { count: activeFilterCount })}
                         </button>
-                        {filtersOpen && (
-                            <div className="lg:hidden">
-                                <DiscoverFilters
-                                    value={filters}
-                                    hasFilters={hasFilters}
-                                    onChange={updateFilters}
-                                    onClear={clearFilters}
-                                />
-                            </div>
-                        )}
                     </div>
 
                     <div className="grid grid-cols-12 items-start gap-6">
-                        <aside className="sticky top-6 hidden self-start lg:col-span-3 lg:block">
+                        <aside className="custom-scrollbar sticky top-6 hidden max-h-[calc(100vh-3rem)] self-start overflow-y-auto pr-1 lg:col-span-3 lg:block">
                             <DiscoverFilters
                                 value={filters}
                                 hasFilters={hasFilters}
@@ -124,12 +117,13 @@ export default function DiscoverPage() {
                                 error={error}
                                 hasMore={hasMore}
                                 hasFilters={hasFilters}
+                                sort={filters.sort}
                                 onlineIds={onlineIds}
                                 busyId={busyId}
+                                onSortChange={(sort) => updateFilters({ sort })}
                                 onStartConversation={(user) =>
                                     void handleStartConversation(user)
                                 }
-                                onViewProfile={handleViewProfile}
                                 onLoadMore={() => void loadMore()}
                                 onRetry={retry}
                                 onRetryMore={retryLoadMore}
@@ -139,6 +133,15 @@ export default function DiscoverPage() {
                     </div>
                 </div>
             </main>
+
+            <DiscoverFiltersSheet
+                open={filtersOpen}
+                onClose={closeFilters}
+                value={filters}
+                hasFilters={hasFilters}
+                onChange={updateFilters}
+                onClear={clearFilters}
+            />
         </div>
     );
 }

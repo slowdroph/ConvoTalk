@@ -1,6 +1,6 @@
 {
     "title": "Découvrir",
-    "subtitle": "Trouvez des personnes par nom, ID, lieu, langues et centres d'intérêt.",
+    "subtitle": "Trouvez des personnes par nom ou ID. Affinez par lieu, langues et centres d'intérêt.",
     "search": {
         "placeholder": "Rechercher par nom ou #ID",
         "aria": "Rechercher des personnes",
@@ -10,6 +10,8 @@
     "filters": {
         "title": "Filtres",
         "open": "Filtres ({{count}})",
+        "close": "Fermer les filtres",
+        "showResults": "Voir les résultats",
         "clear": "Effacer les filtres",
         "country": "Pays",
         "allCountries": "Tous les pays",
@@ -19,7 +21,6 @@
         "languages": "Langues",
         "interests": "Centres d'intérêt",
         "activity": "Activité",
-        "activityAny": "Toute période",
         "activity24h": "Dernières 24h",
         "activity7d": "7 derniers jours",
         "activity30d": "30 derniers jours",
@@ -29,6 +30,8 @@
         "sortName": "Nom (A–Z)",
         "searchOptions": "Rechercher des options",
         "selectedCount": "{{count}} sélectionnés",
+        "selectedCount_one": "{{count}} sélectionné",
+        "selectedCount_other": "{{count}} sélectionnés",
         "max": "Sélectionnez au maximum {{count}} options.",
         "noOptions": "Aucune option trouvée."
     },
@@ -49,6 +52,8 @@
         "loading": "Chargement des personnes...",
         "emptyTitle": "Aucun utilisateur trouvé",
         "emptyDescription": "Essayez d'ajuster la recherche ou les filtres.",
+        "emptySuggestedTitle": "Pas encore de suggestions",
+        "emptySuggestedDescription": "Nous n'avons trouvé personne à suggérer pour le moment. Revenez plus tard pour voir de nouvelles personnes.",
         "clearFilters": "Effacer les filtres",
         "end": "Vous avez atteint la fin de la liste.",
         "loadMore": "Charger plus"
@@ -59,7 +64,7 @@
         "chat": "Discuter",
         "starting": "Ouverture de la conversation...",
         "online": "En ligne",
-        "noBio": "Pas de bio."
+        "lastSeenDate": "Vu pour la dernière fois le {{date}}"
     },
     "errors": {
         "load": "Échec du chargement des utilisateurs.",

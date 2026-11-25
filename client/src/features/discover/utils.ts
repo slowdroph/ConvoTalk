@@ -7,6 +7,8 @@ import type {
 
 export const DISCOVER_PAGE_SIZE = 12;
 export const MAX_DISCOVER_FILTERS = 5;
+export const FOCUS_RING =
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50";
 
 const ACTIVITY_WINDOWS: readonly DiscoverActivityWindow[] = [
     "24h",

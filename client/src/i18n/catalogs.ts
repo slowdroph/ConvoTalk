@@ -63,7 +63,10 @@ export function spokenLanguageLabel(id: string): string {
     }
     const names = getDisplayNames(getLocale(), "language");
     const localized = names?.of(id);
-    return localized ? capitalize(localized) : fallback;
+    if (!localized || localized.toLowerCase() === id.toLowerCase()) {
+        return fallback;
+    }
+    return capitalize(localized);
 }
 
 export function languageLevelLabel(id: string): string {

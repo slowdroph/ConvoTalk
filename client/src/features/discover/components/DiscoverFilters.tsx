@@ -1,9 +1,10 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     INTEREST_OPTIONS,
 } from "@shared/interests";
 import { LANGUAGE_OPTIONS } from "@shared/profile";
-import type { DiscoverActivityWindow, DiscoverSort } from "../../../types";
+import type { DiscoverActivityWindow } from "../../../types";
 import {
     countryName,
     countryOptions,
@@ -15,6 +16,7 @@ import {
 import CityCombobox from "../../../components/ui/CityCombobox";
 import DiscoverOptionPicker from "./DiscoverOptionPicker";
 import {
+    FOCUS_RING,
     MAX_DISCOVER_FILTERS,
     type DiscoverFilterState,
 } from "../utils";
@@ -28,12 +30,6 @@ const ACTIVITY_OPTIONS: Array<{
     { value: "30d", labelKey: "filters.activity30d" },
 ];
 
-const SORT_OPTIONS: Array<{ value: DiscoverSort; labelKey: string }> = [
-    { value: "active", labelKey: "filters.sortActive" },
-    { value: "recent", labelKey: "filters.sortRecent" },
-    { value: "name", labelKey: "filters.sortName" },
-];
-
 const SELECT_CLASS =
     "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright";
 
@@ -45,6 +41,9 @@ interface DiscoverFiltersProps {
     hasFilters: boolean;
     onChange: (patch: Partial<DiscoverFilterState>) => void;
     onClear: () => void;
+    idPrefix?: string;
+    variant?: "card" | "plain";
+    showHeader?: boolean;
 }
 
 export default function DiscoverFilters({
@@ -52,8 +51,30 @@ export default function DiscoverFilters({
     hasFilters,
     onChange,
     onClear,
+    idPrefix = "discover",
+    variant = "card",
+    showHeader = true,
 }: DiscoverFiltersProps) {
     const { t } = useTranslation("discover");
+    const countryId = `${idPrefix}-country`;
+    const cityId = `${idPrefix}-city`;
+    const [cityDraft, setCityDraft] = useState(value.city);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCityDraft(value.city);
+    }, [value.city]);
+
+    useEffect(() => {
+        if (cityDraft === value.city) return;
+
+        const timer = window.setTimeout(() => onChange({ city: cityDraft }), 500);
+        return () => window.clearTimeout(timer);
+    }, [cityDraft, value.city, onChange]);
+    const containerClass =
+        variant === "card"
+            ? "flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-noir-border dark:bg-noir-surface"
+            : "flex flex-col gap-5";
 
     const languageOptions = LANGUAGE_OPTIONS.map((language) => ({
         id: language.id,
@@ -70,30 +91,32 @@ export default function DiscoverFilters({
     }));
 
     return (
-        <div className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-noir-border dark:bg-noir-surface">
-            <div className="flex items-center justify-between gap-2">
-                <h2 className="text-sm font-bold tracking-wide text-slate-900 dark:text-noir-text-bright">
-                    {t("filters.title")}
-                </h2>
-                <button
-                    type="button"
-                    onClick={onClear}
-                    disabled={!hasFilters}
-                    className="text-[11px] font-medium text-emerald-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-emerald-400"
-                >
-                    {t("filters.clear")}
-                </button>
-            </div>
+        <div className={containerClass}>
+            {showHeader && (
+                <div className="flex items-center justify-between gap-2">
+                    <h2 className="text-sm font-bold tracking-wide text-slate-900 dark:text-noir-text-bright">
+                        {t("filters.title")}
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={onClear}
+                        disabled={!hasFilters}
+                        className={`-mr-2 inline-flex min-h-9 items-center rounded-lg px-2 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30 ${FOCUS_RING}`}
+                    >
+                        {t("filters.clear")}
+                    </button>
+                </div>
+            )}
 
             <div className="flex flex-col gap-1.5">
                 <label
-                    htmlFor="discover-country"
+                    htmlFor={countryId}
                     className="text-xs font-semibold text-slate-700 dark:text-noir-text-bright"
                 >
                     {t("filters.country")}
                 </label>
                 <select
-                    id="discover-country"
+                    id={countryId}
                     value={value.country}
                     onChange={(event) =>
                         onChange({ country: event.target.value, city: "" })
@@ -111,27 +134,27 @@ export default function DiscoverFilters({
 
             <div className="flex flex-col gap-1.5">
                 <label
-                    htmlFor="discover-city"
+                    htmlFor={cityId}
                     className="text-xs font-semibold text-slate-700 dark:text-noir-text-bright"
                 >
                     {t("filters.city")}
                 </label>
                 <CityCombobox
-                    id="discover-city"
-                    value={value.city}
-                    onChange={(city) => onChange({ city })}
+                    id={cityId}
+                    value={cityDraft}
+                    onChange={setCityDraft}
                     country={value.country || null}
                     placeholder={t("filters.cityPlaceholder")}
                     disabled={!value.country}
                     className={CITY_CLASS}
                 />
                 {!value.country && (
-                    <p className="text-[10px] text-slate-500 dark:text-noir-text-muted">
+                    <p className="text-[11px] text-slate-500 dark:text-noir-text-muted">
                         {t("filters.cityNeedsCountry")}
                     </p>
                 )}
                 {value.country && (
-                    <p className="text-[10px] text-slate-500 dark:text-noir-text-muted">
+                    <p className="text-[11px] text-slate-500 dark:text-noir-text-muted">
                         {countryName(value.country)}
                     </p>
                 )}
@@ -172,7 +195,7 @@ export default function DiscoverFilters({
                                             : option.value,
                                     })
                                 }
-                                className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+                                className={`inline-flex min-h-8 items-center rounded-full border px-2.5 text-[11px] transition-colors ${FOCUS_RING} ${
                                     active
                                         ? "border-emerald-600/40 bg-emerald-50 font-medium text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-400"
                                         : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-noir-border dark:text-noir-text-muted dark:hover:bg-noir-surface-alt"
@@ -184,29 +207,6 @@ export default function DiscoverFilters({
                     })}
                 </div>
             </fieldset>
-
-            <div className="flex flex-col gap-1.5">
-                <label
-                    htmlFor="discover-sort"
-                    className="text-xs font-semibold text-slate-700 dark:text-noir-text-bright"
-                >
-                    {t("filters.sort")}
-                </label>
-                <select
-                    id="discover-sort"
-                    value={value.sort}
-                    onChange={(event) =>
-                        onChange({ sort: event.target.value as DiscoverSort })
-                    }
-                    className={SELECT_CLASS}
-                >
-                    {SORT_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                            {t(option.labelKey)}
-                        </option>
-                    ))}
-                </select>
-            </div>
         </div>
     );
 }

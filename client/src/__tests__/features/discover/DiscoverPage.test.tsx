@@ -137,7 +137,7 @@ describe("DiscoverPage", () => {
         renderPage();
 
         fireEvent.click(
-            await screen.findByRole("button", {
+            await screen.findByRole("link", {
                 name: "Ver perfil de Bob Lima",
             }),
         );
@@ -178,6 +178,123 @@ describe("DiscoverPage", () => {
                     expect.any(AbortSignal),
                 ),
             { timeout: 3000 },
+        );
+    });
+
+    it("altera a ordenação no cabeçalho de resultados", async () => {
+        renderPage();
+        await screen.findByText("Ana Souza");
+
+        const sort = screen.getByLabelText("Ordenar por");
+        fireEvent.change(sort, { target: { value: "name" } });
+
+        await waitFor(
+            () =>
+                expect(getDiscoverUsersMock).toHaveBeenLastCalledWith(
+                    expect.objectContaining({ sort: "name", page: 1 }),
+                    expect.any(AbortSignal),
+                ),
+            { timeout: 3000 },
+        );
+
+        expect(screen.getByLabelText("Ordenar por")).toBe(sort);
+    });
+
+    it("explica quando não há sugestões", async () => {
+        getDiscoverUsersMock.mockResolvedValue({
+            mode: "suggested",
+            page: 1,
+            hasMore: false,
+            users: [],
+        });
+        renderPage();
+
+        expect(
+            await screen.findByText("Ainda não há sugestões"),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText(/Volte mais tarde para ver novas pessoas/),
+        ).toBeInTheDocument();
+        const emptyCard = screen
+            .getByText("Ainda não há sugestões")
+            .closest("div");
+        expect(emptyCard).not.toBeNull();
+        expect(within(emptyCard as HTMLElement).queryByRole("button")).toBeNull();
+    });
+
+    it("não duplica ids ao abrir os filtros no mobile", async () => {
+        renderPage();
+        await screen.findByText("Ana Souza");
+
+        fireEvent.click(
+            screen.getByRole("button", { name: /^Filtros \(\d\)$/ }),
+        );
+
+        expect(screen.getByRole("dialog", { name: "Filtros" })).toBeInTheDocument();
+        expect(document.querySelectorAll("#discover-country")).toHaveLength(1);
+        expect(document.querySelectorAll("#discover-mobile-country")).toHaveLength(
+            1,
+        );
+        expect(document.querySelectorAll("#discover-city")).toHaveLength(1);
+        expect(document.querySelectorAll("#discover-mobile-city")).toHaveLength(
+            1,
+        );
+        expect(document.querySelectorAll("#discover-sort")).toHaveLength(1);
+    });
+
+    it("aplica filtros pelo diálogo do mobile", async () => {
+        renderPage();
+        await screen.findByText("Ana Souza");
+
+        fireEvent.click(
+            screen.getByRole("button", { name: /^Filtros \(\d\)$/ }),
+        );
+
+        const dialog = screen.getByRole("dialog", { name: "Filtros" });
+        fireEvent.change(within(dialog).getByLabelText("País"), {
+            target: { value: "PT" },
+        });
+
+        await waitFor(
+            () =>
+                expect(getDiscoverUsersMock).toHaveBeenLastCalledWith(
+                    expect.objectContaining({ country: "PT", page: 1 }),
+                    expect.any(AbortSignal),
+                ),
+            { timeout: 3000 },
+        );
+    });
+
+    it("fecha o diálogo de filtros com Escape e devolve o foco", async () => {
+        renderPage();
+        await screen.findByText("Ana Souza");
+
+        const trigger = screen.getByRole("button", {
+            name: /^Filtros \(\d\)$/,
+        });
+        fireEvent.click(trigger);
+
+        expect(screen.getByRole("dialog", { name: "Filtros" })).toBeInTheDocument();
+
+        fireEvent.keyDown(document, { key: "Escape" });
+
+        await waitFor(() =>
+            expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+        );
+        expect(trigger).toHaveFocus();
+    });
+
+    it("fecha o diálogo de filtros ao ver resultados", async () => {
+        renderPage();
+        await screen.findByText("Ana Souza");
+
+        fireEvent.click(
+            screen.getByRole("button", { name: /^Filtros \(\d\)$/ }),
+        );
+        fireEvent.click(screen.getByRole("button", { name: "Ver resultados" }));
+
+        await waitFor(() =>
+            expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
         );
     });
 

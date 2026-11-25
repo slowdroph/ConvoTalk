@@ -1,6 +1,6 @@
 {
     "title": "Discover",
-    "subtitle": "Find people by name, ID, location, languages and interests.",
+    "subtitle": "Find people by name or ID. Refine by location, languages and interests.",
     "search": {
         "placeholder": "Search by name or #ID",
         "aria": "Search people",
@@ -10,6 +10,8 @@
     "filters": {
         "title": "Filters",
         "open": "Filters ({{count}})",
+        "close": "Close filters",
+        "showResults": "Show results",
         "clear": "Clear filters",
         "country": "Country",
         "allCountries": "All countries",
@@ -19,7 +21,6 @@
         "languages": "Languages",
         "interests": "Interests",
         "activity": "Activity",
-        "activityAny": "Any time",
         "activity24h": "Last 24h",
         "activity7d": "Last 7 days",
         "activity30d": "Last 30 days",
@@ -29,6 +30,8 @@
         "sortName": "Name (A–Z)",
         "searchOptions": "Search options",
         "selectedCount": "{{count}} selected",
+        "selectedCount_one": "{{count}} selected",
+        "selectedCount_other": "{{count}} selected",
         "max": "Select at most {{count}} options.",
         "noOptions": "No options found."
     },
@@ -49,6 +52,8 @@
         "loading": "Loading people...",
         "emptyTitle": "No users found",
         "emptyDescription": "Try adjusting your search or filters.",
+        "emptySuggestedTitle": "No suggestions yet",
+        "emptySuggestedDescription": "We couldn't find people to suggest right now. Check back later to see new people.",
         "clearFilters": "Clear filters",
         "end": "You have reached the end of the list.",
         "loadMore": "Load more"
@@ -59,7 +64,7 @@
         "chat": "Chat",
         "starting": "Opening chat...",
         "online": "Online",
-        "noBio": "No bio."
+        "lastSeenDate": "Last seen on {{date}}"
     },
     "errors": {
         "load": "Failed to load users.",

@@ -82,7 +82,8 @@ export const emailChangeLimiter = rateLimit({
     legacyHeaders: false,
     keyGenerator,
     message: {
-        message: "Muitas solicitações de alteração de email. Aguarde 15 minutos.",
+        message:
+            "Muitas solicitações de alteração de email. Aguarde 15 minutos.",
     },
 });
 
@@ -97,7 +98,8 @@ export const profileEmailGuardLimiter = rateLimit({
     keyGenerator,
     skip: (req) => !req.body?.currentPassword,
     message: {
-        message: "Muitas solicitações de alteração de email. Aguarde 15 minutos.",
+        message:
+            "Muitas solicitações de alteração de email. Aguarde 15 minutos.",
     },
 });
 

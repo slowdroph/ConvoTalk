@@ -3,11 +3,12 @@ import { formatFullDate } from "../i18n/formatters";
 
 interface FormatLastSeenOptions {
     short?: boolean;
+    dateLabel?: (date: string) => string;
 }
 
 export function formatLastSeen(
     lastSeen: string | null,
-    { short = false }: FormatLastSeenOptions = {},
+    { short = false, dateLabel }: FormatLastSeenOptions = {},
 ): string {
     if (!lastSeen) return i18n.t("profile:lastSeen.unknown");
 
@@ -34,5 +35,5 @@ export function formatLastSeen(
         return i18n.t("profile:lastSeen.hours", { count: diffHour });
     if (diffDay === 1) return i18n.t("profile:lastSeen.yesterday");
 
-    return formatFullDate(lastSeen);
+    return dateLabel ? dateLabel(lastSeen) : formatFullDate(lastSeen);
 }

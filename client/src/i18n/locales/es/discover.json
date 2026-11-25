@@ -1,6 +1,6 @@
 {
     "title": "Descubrir",
-    "subtitle": "Encuentra personas por nombre, ID, ubicación, idiomas e intereses.",
+    "subtitle": "Encuentra personas por nombre o ID. Refina por ubicación, idiomas e intereses.",
     "search": {
         "placeholder": "Buscar por nombre o #ID",
         "aria": "Buscar personas",
@@ -10,6 +10,8 @@
     "filters": {
         "title": "Filtros",
         "open": "Filtros ({{count}})",
+        "close": "Cerrar filtros",
+        "showResults": "Ver resultados",
         "clear": "Limpiar filtros",
         "country": "País",
         "allCountries": "Todos los países",
@@ -19,7 +21,6 @@
         "languages": "Idiomas",
         "interests": "Intereses",
         "activity": "Actividad",
-        "activityAny": "Cualquier período",
         "activity24h": "Últimas 24h",
         "activity7d": "Últimos 7 días",
         "activity30d": "Últimos 30 días",
@@ -29,6 +30,8 @@
         "sortName": "Nombre (A–Z)",
         "searchOptions": "Buscar opciones",
         "selectedCount": "{{count}} seleccionados",
+        "selectedCount_one": "{{count}} seleccionado",
+        "selectedCount_other": "{{count}} seleccionados",
         "max": "Selecciona como máximo {{count}} opciones.",
         "noOptions": "No se encontraron opciones."
     },
@@ -49,6 +52,8 @@
         "loading": "Cargando personas...",
         "emptyTitle": "Ningún usuario encontrado",
         "emptyDescription": "Intenta ajustar la búsqueda o los filtros.",
+        "emptySuggestedTitle": "Aún no hay sugerencias",
+        "emptySuggestedDescription": "No encontramos personas para sugerir ahora. Vuelve más tarde para ver nuevas personas.",
         "clearFilters": "Limpiar filtros",
         "end": "Llegaste al final de la lista.",
         "loadMore": "Cargar más"
@@ -59,7 +64,7 @@
         "chat": "Conversar",
         "starting": "Abriendo conversación...",
         "online": "En línea",
-        "noBio": "Sin bio."
+        "lastSeenDate": "Visto por última vez el {{date}}"
     },
     "errors": {
         "load": "Error al cargar usuarios.",

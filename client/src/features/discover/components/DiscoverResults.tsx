@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import type { DiscoverMode, DiscoverUser } from "../../../types";
+import type { DiscoverMode, DiscoverSort, DiscoverUser } from "../../../types";
 import DiscoverUserCard from "./DiscoverUserCard";
+import { FOCUS_RING } from "../utils";
 
 interface DiscoverResultsProps {
     users: DiscoverUser[];
@@ -11,15 +12,22 @@ interface DiscoverResultsProps {
     error: string | null;
     hasMore: boolean;
     hasFilters: boolean;
+    sort: DiscoverSort;
     onlineIds: Set<string>;
     busyId: string | null;
+    onSortChange: (sort: DiscoverSort) => void;
     onStartConversation: (user: DiscoverUser) => void;
-    onViewProfile: (user: DiscoverUser) => void;
     onLoadMore: () => void;
     onRetry: () => void;
     onRetryMore: () => void;
     onClearFilters: () => void;
 }
+
+const SORT_OPTIONS: Array<{ value: DiscoverSort; labelKey: string }> = [
+    { value: "active", labelKey: "filters.sortActive" },
+    { value: "recent", labelKey: "filters.sortRecent" },
+    { value: "name", labelKey: "filters.sortName" },
+];
 
 const GRID_CLASS =
     "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3";
@@ -49,10 +57,11 @@ export default function DiscoverResults({
     error,
     hasMore,
     hasFilters,
+    sort,
     onlineIds,
     busyId,
+    onSortChange,
     onStartConversation,
-    onViewProfile,
     onLoadMore,
     onRetry,
     onRetryMore,
@@ -101,7 +110,7 @@ export default function DiscoverResults({
                 <button
                     type="button"
                     onClick={onRetry}
-                    className="mt-3 rounded-xl border border-emerald-700/30 bg-emerald-50 px-4 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-400"
+                    className={`mt-3 inline-flex min-h-10 items-center rounded-xl border border-emerald-700/30 bg-emerald-50 px-4 text-xs font-medium text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-400 ${FOCUS_RING}`}
                 >
                     {t("common:actions.retry")}
                 </button>
@@ -110,19 +119,24 @@ export default function DiscoverResults({
     }
 
     if (!loading && users.length === 0) {
+        const suggested = mode === "suggested";
         return (
             <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-noir-border dark:bg-noir-surface">
                 <h2 className="text-sm font-semibold text-slate-900 dark:text-noir-text-bright">
-                    {t("results.emptyTitle")}
+                    {suggested
+                        ? t("results.emptySuggestedTitle")
+                        : t("results.emptyTitle")}
                 </h2>
                 <p className="mt-1 text-xs text-slate-500 dark:text-noir-text-muted">
-                    {t("results.emptyDescription")}
+                    {suggested
+                        ? t("results.emptySuggestedDescription")
+                        : t("results.emptyDescription")}
                 </p>
                 {hasFilters && (
                     <button
                         type="button"
                         onClick={onClearFilters}
-                        className="mt-3 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+                        className={`mt-2 inline-flex min-h-9 items-center px-2 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400 ${FOCUS_RING}`}
                     >
                         {t("results.clearFilters")}
                     </button>
@@ -133,18 +147,37 @@ export default function DiscoverResults({
 
     return (
         <section aria-label={t("results.titleResults")} className="space-y-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 <h2 className="text-sm font-bold tracking-wide text-slate-900 dark:text-noir-text-bright">
                     {mode === "suggested"
                         ? t("results.titleSuggested")
                         : t("results.titleResults")}
                 </h2>
-                <span
-                    aria-live="polite"
-                    className="font-mono text-[11px] text-slate-500 dark:text-noir-text-muted"
-                >
-                    {t("results.count", { count: users.length })}
-                </span>
+                <div className="flex items-center gap-3">
+                    <span
+                        aria-live="polite"
+                        className="font-mono text-[11px] text-slate-500 dark:text-noir-text-muted"
+                    >
+                        {t("results.count", { count: users.length })}
+                    </span>
+                    <label htmlFor="discover-sort" className="sr-only">
+                        {t("filters.sort")}
+                    </label>
+                    <select
+                        id="discover-sort"
+                        value={sort}
+                        onChange={(event) =>
+                            onSortChange(event.target.value as DiscoverSort)
+                        }
+                        className="min-h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright"
+                    >
+                        {SORT_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {t(option.labelKey)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
             <ul className={GRID_CLASS}>
@@ -153,9 +186,9 @@ export default function DiscoverResults({
                         <DiscoverUserCard
                             user={user}
                             online={onlineIds.has(user._id)}
-                            busy={busyId === user._id}
+                            busy={busyId !== null}
+                            starting={busyId === user._id}
                             onStartConversation={onStartConversation}
-                            onViewProfile={onViewProfile}
                         />
                     </li>
                 ))}
@@ -169,7 +202,7 @@ export default function DiscoverResults({
                     <button
                         type="button"
                         onClick={onRetryMore}
-                        className="mt-2 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+                        className={`mt-1 inline-flex min-h-9 items-center px-2 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400 ${FOCUS_RING}`}
                     >
                         {t("common:actions.retry")}
                     </button>
@@ -185,7 +218,7 @@ export default function DiscoverResults({
                         onClick={onLoadMore}
                         disabled={loadingMore}
                         aria-busy={loadingMore}
-                        className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-noir-border dark:text-noir-text-bright dark:hover:bg-noir-surface-alt"
+                        className={`inline-flex min-h-10 items-center rounded-xl border border-slate-200 px-4 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-noir-border dark:text-noir-text-bright dark:hover:bg-noir-surface-alt ${FOCUS_RING}`}
                     >
                         {loadingMore
                             ? t("common:actions.loading")

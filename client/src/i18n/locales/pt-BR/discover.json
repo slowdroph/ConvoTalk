@@ -1,6 +1,6 @@
 {
     "title": "Descobrir",
-    "subtitle": "Encontre pessoas por nome, ID, localização, idiomas e interesses.",
+    "subtitle": "Encontre pessoas por nome ou ID. Refine por localização, idiomas e interesses.",
     "search": {
         "placeholder": "Buscar por nome ou #ID",
         "aria": "Buscar pessoas",
@@ -10,6 +10,8 @@
     "filters": {
         "title": "Filtros",
         "open": "Filtros ({{count}})",
+        "close": "Fechar filtros",
+        "showResults": "Ver resultados",
         "clear": "Limpar filtros",
         "country": "País",
         "allCountries": "Todos os países",
@@ -19,7 +21,6 @@
         "languages": "Idiomas",
         "interests": "Interesses",
         "activity": "Atividade",
-        "activityAny": "Qualquer período",
         "activity24h": "Últimas 24h",
         "activity7d": "Últimos 7 dias",
         "activity30d": "Últimos 30 dias",
@@ -29,6 +30,8 @@
         "sortName": "Nome (A–Z)",
         "searchOptions": "Buscar opções",
         "selectedCount": "{{count}} selecionados",
+        "selectedCount_one": "{{count}} selecionado",
+        "selectedCount_other": "{{count}} selecionados",
         "max": "Selecione no máximo {{count}} opções.",
         "noOptions": "Nenhuma opção encontrada."
     },
@@ -49,6 +52,8 @@
         "loading": "Carregando pessoas...",
         "emptyTitle": "Nenhum usuário encontrado",
         "emptyDescription": "Tente ajustar a busca ou os filtros.",
+        "emptySuggestedTitle": "Ainda não há sugestões",
+        "emptySuggestedDescription": "Não encontramos pessoas para sugerir agora. Volte mais tarde para ver novas pessoas.",
         "clearFilters": "Limpar filtros",
         "end": "Você chegou ao fim da lista.",
         "loadMore": "Carregar mais"
@@ -59,7 +64,7 @@
         "chat": "Conversar",
         "starting": "Abrindo conversa...",
         "online": "Online",
-        "noBio": "Sem bio."
+        "lastSeenDate": "Visto por último em {{date}}"
     },
     "errors": {
         "load": "Erro ao carregar usuários.",

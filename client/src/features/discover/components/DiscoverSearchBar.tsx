@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FOCUS_RING } from "../utils";
 
-const DEBOUNCE_MS = 350;
+const DEBOUNCE_MS = 500;
 
 interface DiscoverSearchBarProps {
     value: string;
@@ -14,6 +15,7 @@ export default function DiscoverSearchBar({
 }: DiscoverSearchBarProps) {
     const { t } = useTranslation("discover");
     const [term, setTerm] = useState(value);
+    const hintId = useId();
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -65,6 +67,7 @@ export default function DiscoverSearchBar({
                     onChange={(event) => setTerm(event.target.value)}
                     placeholder={t("search.placeholder")}
                     aria-label={t("search.aria")}
+                    aria-describedby={showHint ? hintId : undefined}
                     maxLength={50}
                     className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-9 text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright dark:placeholder:text-noir-text-muted"
                 />
@@ -74,7 +77,7 @@ export default function DiscoverSearchBar({
                         onClick={handleClear}
                         aria-label={t("search.clear")}
                         title={t("search.clear")}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-noir-surface-alt dark:hover:text-noir-text-bright"
+                        className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-noir-surface-alt dark:hover:text-noir-text-bright ${FOCUS_RING}`}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -95,7 +98,10 @@ export default function DiscoverSearchBar({
                 )}
             </div>
             {showHint && (
-                <p className="mt-1.5 text-[11px] text-slate-500 dark:text-noir-text-muted">
+                <p
+                    id={hintId}
+                    className="mt-1.5 text-[11px] text-slate-500 dark:text-noir-text-muted"
+                >
                     {t("search.minLength")}
                 </p>
             )}

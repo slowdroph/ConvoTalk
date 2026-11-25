@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { countryName, interestLabel, spokenLanguageLabel } from "../../../i18n/catalogs";
-import type { DiscoverFilterState } from "../utils";
+import { FOCUS_RING, type DiscoverFilterState } from "../utils";
 
 interface DiscoverActiveFiltersProps {
     filters: DiscoverFilterState;
@@ -92,7 +92,7 @@ export default function DiscoverActiveFilters({
                     aria-label={t("activeFilters.remove", {
                         label: chip.label,
                     })}
-                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-600 transition-colors hover:border-emerald-500/40 hover:text-emerald-700 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-muted dark:hover:text-emerald-400"
+                    className={`inline-flex min-h-8 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 text-[11px] text-slate-600 transition-colors hover:border-emerald-500/40 hover:text-emerald-700 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-muted dark:hover:text-emerald-400 ${FOCUS_RING}`}
                 >
                     {chip.label}
                     <span aria-hidden="true">×</span>

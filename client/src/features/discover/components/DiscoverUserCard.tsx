@@ -1,25 +1,32 @@
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getInterestOption } from "@shared/interests";
-import { countryName, interestLabel, spokenLanguageLabel } from "../../../i18n/catalogs";
+import {
+    countryName,
+    interestLabel,
+    spokenLanguageLabel,
+} from "../../../i18n/catalogs";
+import { formatFullDate } from "../../../i18n/formatters";
 import { formatLastSeen } from "../../../utils/formatLastSeen";
 import Avatar from "../../../components/ui/Avatar";
 import CountryFlag from "../../../components/ui/CountryFlag";
+import { FOCUS_RING } from "../utils";
 import type { DiscoverUser } from "../../../types";
 
 interface DiscoverUserCardProps {
     user: DiscoverUser;
     online: boolean;
     busy: boolean;
+    starting: boolean;
     onStartConversation: (user: DiscoverUser) => void;
-    onViewProfile: (user: DiscoverUser) => void;
 }
 
 export default function DiscoverUserCard({
     user,
     online,
     busy,
+    starting,
     onStartConversation,
-    onViewProfile,
 }: DiscoverUserCardProps) {
     const { t } = useTranslation("discover");
     const interests = user.interests.slice(0, 3);
@@ -30,15 +37,23 @@ export default function DiscoverUserCard({
         .filter(Boolean)
         .join(", ");
 
+    const activityLabel = user.lastSeen
+        ? formatLastSeen(user.lastSeen, {
+              dateLabel: (date) =>
+                  t("card.lastSeenDate", { date: formatFullDate(date) }),
+          })
+        : null;
+
     return (
-        <article className="flex h-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-emerald-500/40 dark:border-noir-border dark:bg-noir-surface">
+        <article className="group relative flex h-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-emerald-500/40 focus-within:border-emerald-500/40 dark:border-noir-border dark:bg-noir-surface">
+            <Link
+                to={`/profile/${user._id}`}
+                aria-label={t("card.openProfile", { name: user.name })}
+                className={`absolute inset-0 z-0 rounded-2xl ${FOCUS_RING}`}
+            />
+
             <div className="flex items-start gap-3">
-                <button
-                    type="button"
-                    onClick={() => onViewProfile(user)}
-                    aria-label={t("card.openProfile", { name: user.name })}
-                    className="relative shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-                >
+                <div className="relative shrink-0">
                     <Avatar src={user.avatar} name={user.name} size="lg" />
                     {online && (
                         <span
@@ -47,16 +62,12 @@ export default function DiscoverUserCard({
                             className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 dark:border-noir-surface"
                         />
                     )}
-                </button>
+                </div>
 
                 <div className="min-w-0 flex-1">
-                    <button
-                        type="button"
-                        onClick={() => onViewProfile(user)}
-                        className="block max-w-full truncate text-left text-sm font-semibold text-slate-900 hover:underline dark:text-noir-text-bright"
-                    >
+                    <p className="block max-w-full truncate text-sm font-semibold text-slate-900 group-hover:underline dark:text-noir-text-bright">
                         {user.name}
-                    </button>
+                    </p>
                     <p className="truncate font-mono text-[11px] text-slate-500 dark:text-noir-text-muted">
                         #{user.publicId}
                     </p>
@@ -79,11 +90,7 @@ export default function DiscoverUserCard({
                                 : "text-slate-500 dark:text-noir-text-muted"
                         }`}
                     >
-                        {online
-                            ? t("card.online")
-                            : user.lastSeen
-                              ? formatLastSeen(user.lastSeen, { short: true })
-                              : null}
+                        {online ? t("card.online") : activityLabel}
                     </p>
                 </div>
             </div>
@@ -117,33 +124,34 @@ export default function DiscoverUserCard({
 
             {languages.length > 0 && (
                 <p className="text-[11px] text-slate-500 dark:text-noir-text-muted">
-                    {languages.map((code) => spokenLanguageLabel(code)).join(" · ")}
+                    {languages
+                        .map((code) => spokenLanguageLabel(code))
+                        .join(" · ")}
                     {extraLanguages > 0 ? ` +${extraLanguages}` : ""}
                 </p>
             )}
 
             <div className="mt-auto flex items-center gap-2 pt-1">
-                <button
-                    type="button"
-                    onClick={() => onViewProfile(user)}
-                    className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-noir-border dark:text-noir-text-bright dark:hover:bg-noir-surface-alt"
+                <span
+                    aria-hidden="true"
+                    className="flex min-h-10 flex-1 items-center justify-center rounded-xl border border-slate-200 px-3 text-xs font-medium text-slate-700 transition-colors group-hover:bg-slate-50 dark:border-noir-border dark:text-noir-text-bright dark:group-hover:bg-noir-surface-alt"
                 >
                     {t("card.viewProfile")}
-                </button>
+                </span>
                 <button
                     type="button"
                     onClick={() => onStartConversation(user)}
                     disabled={busy}
-                    aria-busy={busy}
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-emerald-700/30 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
+                    aria-busy={starting}
+                    className={`relative z-10 inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-emerald-700/30 bg-emerald-50 px-3 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/60 ${FOCUS_RING}`}
                 >
-                    {busy && (
+                    {starting && (
                         <span
                             aria-hidden="true"
                             className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
                         />
                     )}
-                    {busy ? t("card.starting") : t("card.chat")}
+                    {starting ? t("card.starting") : t("card.chat")}
                 </button>
             </div>
         </article>

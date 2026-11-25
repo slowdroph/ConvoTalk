@@ -300,6 +300,24 @@ describe("discover users", () => {
         expect(ids(result).slice(0, 2)).toEqual([aliceId, bobId]);
     });
 
+    it("ordena nomes ignorando caixa e acentos", async () => {
+        await createUser({ name: "zeca silva" });
+        await createUser({ name: "Álvaro Nunes" });
+
+        const result = await discoverUsers(
+            viewerId,
+            baseQuery({ sort: "name" }),
+        );
+        const names = result.users.map((user) => user.name);
+
+        expect(names.slice(0, 3)).toEqual([
+            "Alice Souza",
+            "Álvaro Nunes",
+            "Bob Lima",
+        ]);
+        expect(names[names.length - 1]).toBe("zeca silva");
+    });
+
     it("pagina sem duplicar ou pular resultados", async () => {
         const first = await discoverUsers(
             viewerId,

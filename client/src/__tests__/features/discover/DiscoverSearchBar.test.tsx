@@ -22,7 +22,7 @@ describe("DiscoverSearchBar", () => {
         expect(onSearch).not.toHaveBeenCalled();
 
         act(() => {
-            vi.advanceTimersByTime(350);
+            vi.advanceTimersByTime(500);
         });
 
         expect(onSearch).toHaveBeenCalledTimes(1);
@@ -36,9 +36,13 @@ describe("DiscoverSearchBar", () => {
             target: { value: "an" },
         });
 
-        expect(
-            screen.getByText("Digite pelo menos 3 caracteres para buscar."),
-        ).toBeInTheDocument();
+        const input = screen.getByLabelText("Buscar pessoas");
+        const hint = screen.getByText(
+            "Digite pelo menos 3 caracteres para buscar.",
+        );
+
+        expect(hint).toBeInTheDocument();
+        expect(input).toHaveAttribute("aria-describedby", hint.id);
     });
 
     it("limpa a busca imediatamente", () => {
