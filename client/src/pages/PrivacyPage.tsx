@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import LegalLayout from "../components/LegalLayout";
 import SEO from "../components/SEO";
+import Icon from "../components/ui/Icon";
 import { getLocale } from "../i18n/formatters";
 
 interface SectionProps {
@@ -14,12 +15,7 @@ function Section({ icon, title, children, highlighted }: SectionProps) {
     return (
         <section>
             <h2 className="text-xl leading-7 font-semibold text-on-surface mb-4 flex items-center gap-2">
-                <span
-                    className="material-symbols-outlined text-primary"
-                    aria-hidden="true"
-                >
-                    {icon}
-                </span>
+                <Icon name={icon} className="text-primary" />
                 {title}
             </h2>
             {highlighted ? (
@@ -152,12 +148,7 @@ export default function PrivacyPage() {
                     <ul className="list-none space-y-3 text-base leading-6 text-on-surface-variant ml-2 border-l-2 border-surface-container-high pl-4">
                         {rights.map((right) => (
                             <li key={right} className="flex items-start gap-2">
-                                <span
-                                    className="material-symbols-outlined text-primary text-sm mt-1"
-                                    aria-hidden="true"
-                                >
-                                    check_circle
-                                </span>
+                                <Icon name="check_circle" className="text-primary text-sm mt-1" />
                                 {right}
                             </li>
                         ))}

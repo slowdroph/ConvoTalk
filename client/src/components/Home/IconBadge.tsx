@@ -1,3 +1,5 @@
+import Icon from "../ui/Icon";
+
 interface IconBadgeProps {
     name: string;
     filled?: boolean;
@@ -20,13 +22,10 @@ export default function IconBadge({
     className,
 }: IconBadgeProps) {
     return (
-        <span
-            className={`material-symbols-outlined ${sizeMap[size]} ${className ?? ""}`}
-            style={
-                filled ? { fontVariationSettings: "'FILL' 1" } : undefined
-            }
-        >
-            {name}
-        </span>
+        <Icon
+            name={name}
+            filled={filled}
+            className={`${sizeMap[size]} ${className ?? ""}`}
+        />
     );
 }

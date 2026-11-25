@@ -13,11 +13,17 @@ export default function Reveal({
     className = "",
 }: RevealProps) {
     const ref = useRef<HTMLDivElement>(null);
-    const [visible, setVisible] = useState(false);
+    // Start visible so prerendered HTML is never hidden again on mount (and so
+    // the first paint does not wait for the observer). Only elements that start
+    // below the viewport get the scroll-in animation.
+    const [visible, setVisible] = useState(true);
 
     useEffect(() => {
         const node = ref.current;
         if (!node) return;
+
+        if (node.getBoundingClientRect().top < window.innerHeight) return;
+        setVisible(false);
 
         const observer = new IntersectionObserver(
             (entries) => {

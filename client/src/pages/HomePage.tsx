@@ -1,15 +1,23 @@
 import { useState, useMemo } from "react";
+import LocalizedLink from "../components/ui/LocalizedLink";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { DEFAULT_LANGUAGE } from "@shared/i18n";
 import { Helmet } from "react-helmet-async";
 import PreviewChat from "../components/Home/PreviewChat";
 import Navbar from "../components/Home/Navbar";
 import BackToTop from "../components/Home/BackToTop";
 import Reveal from "../components/ui/Reveal";
+import Icon from "../components/ui/Icon";
 import SEO from "../components/SEO";
 import { useScrollSpy } from "../hooks/useScrollSpy";
 import SectionHeader from "../components/Home/SectionHeader";
 import IconBadge from "../components/Home/IconBadge";
+import {
+    languageFromPath,
+    localizePath,
+    localeSegment,
+} from "../i18n/routing";
 import FeatureCard from "../components/Home/FeatureCard";
 
 const FAQ_ITEMS = [1, 2, 3, 4, 5, 6, 7] as const;
@@ -19,24 +27,67 @@ export default function HomePage() {
     const { activeSection, scrolled, showBackToTop } = useScrollSpy();
     const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-    const structuredData = useMemo(
-        () =>
-            JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "WebApplication",
-                name: "ConvoTalk",
-                url: "https://convotalk.live",
-                description: t("seo.structuredDescription"),
-                applicationCategory: "CommunicationApplication",
-                operatingSystem: "Web",
-                offers: {
-                    "@type": "Offer",
-                    price: "0",
-                    priceCurrency: "BRL",
+    const { pathname } = useLocation();
+    const language = languageFromPath(pathname) ?? DEFAULT_LANGUAGE;
+
+    const structuredData = useMemo(() => {
+        const origin = "https://convotalk.live";
+        const organizationId = `${origin}/#organization`;
+
+        return JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "Organization",
+                    "@id": organizationId,
+                    name: "ConvoTalk",
+                    url: origin,
+                    logo: {
+                        "@type": "ImageObject",
+                        url: `${origin}/icon-512.png`,
+                        width: 512,
+                        height: 512,
+                    },
                 },
-            }),
-        [t],
-    );
+                {
+                    "@type": "WebSite",
+                    "@id": `${origin}/#website`,
+                    url: origin,
+                    name: "ConvoTalk",
+                    inLanguage: ["en", "es", "pt-BR", "fr"],
+                    publisher: { "@id": organizationId },
+                },
+                {
+                    "@type": "WebApplication",
+                    "@id": `${origin}/#webapp`,
+                    name: "ConvoTalk",
+                    url: `${origin}${localizePath(language, "/")}`,
+                    description: t("seo.structuredDescription"),
+                    applicationCategory: "CommunicationApplication",
+                    operatingSystem: "Web",
+                    browserRequirements: "Requires JavaScript",
+                    inLanguage: language,
+                    isAccessibleForFree: true,
+                    featureList: [
+                        t("features.realtimeTitle"),
+                        t("features.groupsTitle"),
+                        t("features.callsTitle"),
+                        t("features.filesTitle"),
+                        t("features.searchTitle"),
+                    ],
+                    screenshot: `${origin}/og/${
+                        localeSegment(language) || "en"
+                    }.png`,
+                    offers: {
+                        "@type": "Offer",
+                        price: "0",
+                        priceCurrency: "BRL",
+                    },
+                    publisher: { "@id": organizationId },
+                },
+            ],
+        });
+    }, [t, language]);
 
     const toggleFaq = (index: number) => {
         setOpenFaq((prev) => (prev === index ? null : index));
@@ -92,21 +143,19 @@ export default function HomePage() {
                     {/* CTAs */}
                     <Reveal delay={300}>
                         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <Link
+                            <LocalizedLink
                                 to="/login?mode=register"
                                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-linear-to-r from-primary-container to-primary text-white px-7 py-3.5 rounded-lg font-semibold text-sm shadow-[0_0_25px_rgba(0,168,75,0.4)] hover:shadow-[0_0_35px_rgba(89,224,123,0.6)] hover:-translate-y-0.5 transition-all"
                             >
                                 <span>{t("hero.start")}</span>
-                                <span className="material-symbols-outlined text-lg">
-                                    arrow_forward
-                                </span>
-                            </Link>
-                            <Link
+                                <Icon name="arrow_forward" className="text-lg" />
+                            </LocalizedLink>
+                            <LocalizedLink
                                 to="/login"
                                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-outline-variant bg-surface-container/60 hover:bg-surface-container-high text-on-surface px-7 py-3.5 rounded-lg font-semibold text-sm transition-all"
                             >
                                 <span>{t("hero.login")}</span>
-                            </Link>
+                            </LocalizedLink>
                         </div>
                     </Reveal>
 
@@ -326,9 +375,10 @@ export default function HomePage() {
                                             </div>
                                             {/* Pinned message badge */}
                                             <div className="flex items-center gap-1 text-[11px] text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded border border-outline-variant">
-                                                <span className="material-symbols-outlined text-[13px] text-primary">
-                                                    push_pin
-                                                </span>
+                                                <Icon
+                                                    name="push_pin"
+                                                    className="text-[13px] text-primary"
+                                                />
                                                 <span>
                                                     {t("chatMockup.pinned")}
                                                 </span>
@@ -341,9 +391,7 @@ export default function HomePage() {
                                             <div className="flex flex-col items-start gap-1">
                                                 <div className="bg-surface-container-high border border-outline-variant rounded-xl rounded-tl-sm p-3 max-w-[85%]">
                                                     <div className="text-[10px] text-primary font-medium mb-1 flex items-center gap-1">
-                                                        <span className="material-symbols-outlined text-[12px]">
-                                                            lock
-                                                        </span>
+                                                        <Icon name="lock" className="text-[12px]" />
                                                         <span>
                                                             {t(
                                                                 "chatMockup.secure",
@@ -417,9 +465,7 @@ export default function HomePage() {
                                                 )}
                                             />
                                             <div className="bg-primary text-on-primary-container p-1.5 rounded-lg flex items-center justify-center">
-                                                <span className="material-symbols-outlined text-[16px]">
-                                                    send
-                                                </span>
+                                                <Icon name="send" className="text-[16px]" />
                                             </div>
                                         </div>
                                     </div>
@@ -600,27 +646,21 @@ export default function HomePage() {
                                             aria-label={t("calls.mic")}
                                             className="w-10 h-10 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface hover:text-primary transition-colors cursor-pointer"
                                         >
-                                            <span className="material-symbols-outlined text-[20px]">
-                                                mic
-                                            </span>
+                                            <Icon name="mic" className="text-[20px]" />
                                         </button>
                                         <button
                                             type="button"
                                             aria-label={t("calls.camera")}
                                             className="w-10 h-10 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface hover:text-primary transition-colors cursor-pointer"
                                         >
-                                            <span className="material-symbols-outlined text-[20px]">
-                                                videocam
-                                            </span>
+                                            <Icon name="videocam" className="text-[20px]" />
                                         </button>
                                         <button
                                             type="button"
                                             aria-label={t("calls.shareScreen")}
                                             className="w-10 h-10 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface hover:text-primary transition-colors cursor-pointer"
                                         >
-                                            <span className="material-symbols-outlined text-[20px]">
-                                                screen_share
-                                            </span>
+                                            <Icon name="screen_share" className="text-[20px]" />
                                         </button>
                                         <div className="w-px h-6 bg-outline-variant" />
                                         <button
@@ -628,9 +668,7 @@ export default function HomePage() {
                                             aria-label={t("calls.hangUp")}
                                             className="w-10 h-10 rounded-full bg-error-container hover:bg-red-700 flex items-center justify-center text-white transition-colors shadow-[0_0_15px_rgba(255,100,100,0.3)] cursor-pointer"
                                         >
-                                            <span className="material-symbols-outlined text-[20px]">
-                                                call_end
-                                            </span>
+                                            <Icon name="call_end" className="text-[20px]" />
                                         </button>
                                     </div>
                                 </div>
@@ -682,9 +720,7 @@ export default function HomePage() {
                                         type="button"
                                         className="bg-primary text-on-primary-container text-xs font-semibold px-3 py-1.5 rounded-md flex items-center gap-1 cursor-pointer hover:bg-primary-fixed transition-colors"
                                     >
-                                        <span className="material-symbols-outlined text-[15px]">
-                                            person_add
-                                        </span>
+                                        <Icon name="person_add" className="text-[15px]" />
                                         <span>{t("groups.invite")}</span>
                                     </button>
                                 </div>
@@ -692,9 +728,7 @@ export default function HomePage() {
 
                             {/* Pinned Announcement Banner */}
                             <div className="bg-primary/10 border-b border-primary/20 px-4 py-2.5 flex items-center gap-2 text-xs text-on-surface">
-                                <span className="material-symbols-outlined text-primary text-[16px]">
-                                    campaign
-                                </span>
+                                <Icon name="campaign" className="text-primary text-[16px]" />
                                 <span className="font-semibold text-primary">
                                     {t("groups.pinnedAnnouncement")}
                                 </span>
@@ -811,9 +845,7 @@ export default function HomePage() {
                         <Reveal delay={100}>
                             <div className="glass-card p-5 rounded-xl h-full">
                                 <div className="w-8 h-8 rounded bg-primary/10 text-primary flex items-center justify-center font-bold mb-3">
-                                    <span className="material-symbols-outlined text-lg">
-                                        admin_panel_settings
-                                    </span>
+                                    <Icon name="admin_panel_settings" className="text-lg" />
                                 </div>
                                 <h4 className="text-base font-bold text-on-surface mb-1">
                                     {t("groups.membersPermissionsTitle")}
@@ -827,9 +859,7 @@ export default function HomePage() {
                         <Reveal delay={200}>
                             <div className="glass-card p-5 rounded-xl h-full">
                                 <div className="w-8 h-8 rounded bg-primary/10 text-primary flex items-center justify-center font-bold mb-3">
-                                    <span className="material-symbols-outlined text-lg">
-                                        notifications
-                                    </span>
+                                    <Icon name="notifications" className="text-lg" />
                                 </div>
                                 <h4 className="text-base font-bold text-on-surface mb-1">
                                     {t("groups.notificationsTitle")}
@@ -843,9 +873,7 @@ export default function HomePage() {
                         <Reveal delay={300}>
                             <div className="glass-card p-5 rounded-xl h-full">
                                 <div className="w-8 h-8 rounded bg-primary/10 text-primary flex items-center justify-center font-bold mb-3">
-                                    <span className="material-symbols-outlined text-lg">
-                                        badge
-                                    </span>
+                                    <Icon name="badge" className="text-lg" />
                                 </div>
                                 <h4 className="text-base font-bold text-on-surface mb-1">
                                     {t("groups.profilesTitle")}
@@ -869,9 +897,7 @@ export default function HomePage() {
                             <div className="glass-card p-4 rounded-xl border border-outline-variant hover:border-primary/40 transition-colors flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-lg bg-error-container/30 border border-error/40 flex items-center justify-center text-error">
-                                        <span className="material-symbols-outlined text-xl">
-                                            picture_as_pdf
-                                        </span>
+                                        <Icon name="picture_as_pdf" className="text-xl" />
                                     </div>
                                     <div>
                                         <h5 className="text-xs sm:text-sm font-bold text-on-surface">
@@ -887,9 +913,7 @@ export default function HomePage() {
                                     className="p-2 rounded-lg bg-surface-container-high hover:bg-primary-container text-on-surface hover:text-white transition-colors cursor-pointer"
                                     title={t("files.download")}
                                 >
-                                    <span className="material-symbols-outlined text-[18px]">
-                                        download
-                                    </span>
+                                    <Icon name="download" className="text-[18px]" />
                                 </button>
                             </div>
                         </Reveal>
@@ -899,9 +923,10 @@ export default function HomePage() {
                             <div className="glass-card p-4 rounded-xl border border-outline-variant space-y-2">
                                 <div className="flex items-center justify-between text-xs text-on-surface-variant">
                                     <span className="flex items-center gap-1 text-primary font-semibold">
-                                        <span className="material-symbols-outlined text-[16px]">
-                                            graphic_eq
-                                        </span>
+                                        <Icon
+                                            name="graphic_eq"
+                                            className="text-[16px]"
+                                        />
                                         {t("files.audioMessage")}
                                     </span>
                                     <span className="font-mono">0:42</span>
@@ -912,15 +937,7 @@ export default function HomePage() {
                                         aria-label={t("files.playAudio")}
                                         className="w-9 h-9 rounded-full bg-primary text-on-primary-container flex items-center justify-center shrink-0 cursor-pointer"
                                     >
-                                        <span
-                                            className="material-symbols-outlined text-[20px]"
-                                            style={{
-                                                fontVariationSettings:
-                                                    "'FILL' 1",
-                                            }}
-                                        >
-                                            play_arrow
-                                        </span>
+                                        <Icon name="play_arrow" filled className="text-[20px]" />
                                     </button>
                                     {/* Simulated Waveform */}
                                     <div className="flex-1 flex items-center gap-1 h-6">
@@ -1036,9 +1053,7 @@ export default function HomePage() {
                             <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition-all flex flex-col justify-between h-full">
                                 <div>
                                     <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
-                                        <span className="material-symbols-outlined text-2xl">
-                                            install_desktop
-                                        </span>
+                                        <Icon name="install_desktop" className="text-2xl" />
                                     </div>
                                     <h3 className="text-lg font-bold text-on-surface mb-2">
                                         {t("pwa.installTitle")}
@@ -1048,9 +1063,7 @@ export default function HomePage() {
                                     </p>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-outline-variant/40 flex items-center gap-2 text-xs text-primary font-semibold">
-                                    <span className="material-symbols-outlined text-[16px]">
-                                        devices
-                                    </span>
+                                    <Icon name="devices" className="text-[16px]" />
                                     <span>{t("pwa.installFooter")}</span>
                                 </div>
                             </div>
@@ -1061,9 +1074,7 @@ export default function HomePage() {
                             <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition-all flex flex-col justify-between h-full">
                                 <div>
                                     <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
-                                        <span className="material-symbols-outlined text-2xl">
-                                            database
-                                        </span>
+                                        <Icon name="database" className="text-2xl" />
                                     </div>
                                     <h3 className="text-lg font-bold text-on-surface mb-2">
                                         {t("pwa.offlineTitle")}
@@ -1073,9 +1084,7 @@ export default function HomePage() {
                                     </p>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-outline-variant/40 flex items-center gap-2 text-xs text-primary font-semibold">
-                                    <span className="material-symbols-outlined text-[16px]">
-                                        cloud_off
-                                    </span>
+                                    <Icon name="cloud_off" className="text-[16px]" />
                                     <span>{t("pwa.offlineFooter")}</span>
                                 </div>
                             </div>
@@ -1086,9 +1095,7 @@ export default function HomePage() {
                             <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition-all flex flex-col justify-between h-full">
                                 <div>
                                     <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
-                                        <span className="material-symbols-outlined text-2xl">
-                                            sync
-                                        </span>
+                                        <Icon name="sync" className="text-2xl" />
                                     </div>
                                     <h3 className="text-lg font-bold text-on-surface mb-2">
                                         {t("pwa.queueTitle")}
@@ -1098,9 +1105,7 @@ export default function HomePage() {
                                     </p>
                                 </div>
                                 <div className="mt-6 pt-4 border-t border-outline-variant/40 flex items-center gap-2 text-xs text-primary font-semibold">
-                                    <span className="material-symbols-outlined text-[16px]">
-                                        schedule_send
-                                    </span>
+                                    <Icon name="schedule_send" className="text-[16px]" />
                                     <span>{t("pwa.queueFooter")}</span>
                                 </div>
                             </div>
@@ -1229,9 +1234,7 @@ export default function HomePage() {
                                 {/* Node 1: Client */}
                                 <div className="flex-1 w-full p-5 rounded-xl bg-surface-container border border-outline-variant text-left hover:border-primary/40 transition-colors">
                                     <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider mb-2">
-                                        <span className="material-symbols-outlined text-[18px]">
-                                            devices
-                                        </span>
+                                        <Icon name="devices" className="text-[18px]" />
                                         <span>
                                             {t("architecture.frontend")}
                                         </span>
@@ -1256,9 +1259,7 @@ export default function HomePage() {
                                 {/* Node 2: Gateway & API */}
                                 <div className="flex-1 w-full p-5 rounded-xl bg-surface-container border border-outline-variant text-left hover:border-primary/40 transition-colors">
                                     <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider mb-2">
-                                        <span className="material-symbols-outlined text-[18px]">
-                                            dns
-                                        </span>
+                                        <Icon name="dns" className="text-[18px]" />
                                         <span>{t("architecture.gateway")}</span>
                                     </div>
                                     <h4 className="font-bold text-sm text-on-surface">
@@ -1281,9 +1282,7 @@ export default function HomePage() {
                                 {/* Node 3: Database & Storage */}
                                 <div className="flex-1 w-full p-5 rounded-xl bg-surface-container border border-outline-variant text-left hover:border-primary/40 transition-colors">
                                     <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider mb-2">
-                                        <span className="material-symbols-outlined text-[18px]">
-                                            database
-                                        </span>
+                                        <Icon name="database" className="text-[18px]" />
                                         <span>
                                             {t("architecture.database")}
                                         </span>
@@ -1434,13 +1433,7 @@ export default function HomePage() {
                                             <span className="font-bold text-sm sm:text-base text-on-surface">
                                                 {t(`faq.q${faq}`)}
                                             </span>
-                                            <span
-                                                className={`material-symbols-outlined text-primary text-xl transition-transform duration-300 ${
-                                                    isOpen ? "rotate-180" : ""
-                                                }`}
-                                            >
-                                                expand_more
-                                            </span>
+                                            <Icon name="expand_more" />
                                         </button>
                                         <div
                                             id={panelId}
@@ -1476,15 +1469,13 @@ export default function HomePage() {
                                     {t("cta.subtitle")}
                                 </p>
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                                    <Link
+                                    <LocalizedLink
                                         to="/login?mode=register"
                                         className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-linear-to-r from-primary-container to-primary text-white px-8 py-4 rounded-xl font-bold text-sm shadow-[0_0_30px_rgba(0,168,75,0.5)] hover:shadow-[0_0_40px_rgba(89,224,123,0.7)] hover:-translate-y-0.5 transition-all"
                                     >
                                         <span>{t("cta.start")}</span>
-                                        <span className="material-symbols-outlined text-lg">
-                                            arrow_forward
-                                        </span>
-                                    </Link>
+                                        <Icon name="arrow_forward" className="text-lg" />
+                                    </LocalizedLink>
                                 </div>
                             </div>
                         </div>
@@ -1583,20 +1574,20 @@ export default function HomePage() {
                             </h5>
                             <ul className="space-y-2 text-xs sm:text-sm text-on-surface-variant">
                                 <li>
-                                    <Link
+                                    <LocalizedLink
                                         className="hover:text-primary transition-colors"
                                         to="/privacy"
                                     >
                                         {t("footer.privacy")}
-                                    </Link>
+                                    </LocalizedLink>
                                 </li>
                                 <li>
-                                    <Link
+                                    <LocalizedLink
                                         className="hover:text-primary transition-colors"
                                         to="/terms"
                                     >
                                         {t("footer.terms")}
-                                    </Link>
+                                    </LocalizedLink>
                                 </li>
                             </ul>
                         </div>

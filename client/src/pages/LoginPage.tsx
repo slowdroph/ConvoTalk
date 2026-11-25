@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import LocalizedLink from "../components/ui/LocalizedLink";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LoginForm from "../components/Auth/LoginForm";
 import RegisterForm from "../components/Auth/RegisterForm";
@@ -32,7 +33,7 @@ export default function LoginPage() {
 
             <header className="relative z-10 w-full px-6 py-6 lg:px-12">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <Link
+                    <LocalizedLink
                         to="/"
                         className="flex items-center gap-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                     >
@@ -47,7 +48,7 @@ export default function LoginPage() {
                             </span>
                             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         </div>
-                    </Link>
+                    </LocalizedLink>
                     <div className="flex items-center gap-2">
                         <LanguageSelector tone="dark" />
                         <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#131c13]/80 border border-emerald-500/20 text-xs font-medium text-emerald-300 backdrop-blur-md">
@@ -140,12 +141,12 @@ export default function LoginPage() {
                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
                     <p>{t("common:footer.rights", { year: 2026 })}</p>
                     <div className="flex items-center gap-6">
-                        <Link className="hover:text-zinc-300 transition-colors" to="/privacy">
+                        <LocalizedLink className="hover:text-zinc-300 transition-colors" to="/privacy">
                             {t("common:footer.privacy")}
-                        </Link>
-                        <Link className="hover:text-zinc-300 transition-colors" to="/terms">
+                        </LocalizedLink>
+                        <LocalizedLink className="hover:text-zinc-300 transition-colors" to="/terms">
                             {t("common:footer.terms")}
-                        </Link>
+                        </LocalizedLink>
                     </div>
                 </div>
             </footer>

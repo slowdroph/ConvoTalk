@@ -1,3 +1,15 @@
+# ConvoTalk — Netlify configuration.
+#
+# Public pages are prerendered per locale at build time (scripts/prerender.mjs),
+# so they are served as files and never hit the SPA fallback. Only the
+# authenticated app is rewritten to the client-side shell (/app.html), which
+# lets unknown URLs return a real 404 instead of a 200 soft page.
+
+[build.processing.html]
+  pretty_urls = false
+
+# --- API / realtime proxy -------------------------------------------------
+
 [[redirects]]
   from = "/api/*"
   to = "https://convopl.up.railway.app/api/:splat"
@@ -10,7 +22,210 @@
   status = 200
   force = true
 
+# --- One canonical URL per page -------------------------------------------
+
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/index.html"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/login.html"
+  to = "/login"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/terms.html"
+  to = "/terms"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/privacy.html"
+  to = "/privacy"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/forgot-password.html"
+  to = "/forgot-password"
+  status = 301
+  force = true
+
+# English is the default locale and is served unprefixed.
+[[redirects]]
+  from = "/en"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/en/*"
+  to = "/:splat"
+  status = 301
+  force = true
+
+# Locale roots are files too (es.html, pt-br.html, fr.html). Resolving them
+# explicitly avoids any ambiguity with the locale directories that hold the
+# nested pages.
+[[redirects]]
+  from = "/es"
+  to = "/es.html"
   status = 200
+  force = true
+
+[[redirects]]
+  from = "/pt-br"
+  to = "/pt-br.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/fr"
+  to = "/fr.html"
+  status = 200
+  force = true
+
+# --- Client-side app shell ------------------------------------------------
+# Everything below requires a session; it must never be indexed.
+
+[[redirects]]
+  from = "/chat"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/chat/*"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/feed"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/discover"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/profile"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/profile/*"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/settings"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/verify-email"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/reset-password"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/confirm-email-change"
+  to = "/app.html"
+  status = 200
+
+# --- Headers --------------------------------------------------------------
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=(self)"
+
+# Hashed build output never changes under the same name.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/og/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+# --- noindex for every non-public route -----------------------------------
+
+[[headers]]
+  for = "/app.html"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/chat"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/chat/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/feed"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/discover"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/profile"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/profile/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/settings"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/verify-email"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/reset-password"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/confirm-email-change"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/404.html"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

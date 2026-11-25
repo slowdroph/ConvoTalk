@@ -5,11 +5,12 @@
     "type": "module",
     "scripts": {
         "dev": "vite --host 127.0.0.1",
-        "build": "tsc -b && vite build",
+        "build": "tsc -b && vite build && node scripts/prerender.mjs",
         "lint": "eslint .",
         "preview": "vite preview",
         "test": "vitest run",
         "test:watch": "vitest",
+        "verify:seo": "node scripts/verify-seo.mjs",
         "generate:flags": "node scripts/generate-flag-loaders.mjs",
         "generate:cities": "node scripts/generate-city-data.mjs"
     },
@@ -48,7 +49,6 @@
         "typescript": "~6.0.2",
         "typescript-eslint": "^8.62.0",
         "vite": "^8.1.1",
-        "vite-plugin-prerender": "^1.0.8",
         "vitest": "^4.1.10"
     }
 }

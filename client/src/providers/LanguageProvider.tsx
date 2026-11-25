@@ -7,6 +7,7 @@ import {
 } from "react";
 import { isLanguageCode, normalizeLanguage, type LanguageCode } from "@shared/i18n";
 import i18n from "../i18n";
+import { isLocalizablePath } from "../i18n/routing";
 import { LanguageContext } from "../contexts/LanguageContext";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
@@ -45,6 +46,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (!isLanguageCode(accountLanguage)) return;
         if (accountLanguage === languageRef.current) return;
+        // On public pages the URL owns the language, not the account.
+        if (isLocalizablePath(window.location.pathname)) return;
         void i18n.changeLanguage(accountLanguage);
     }, [accountLanguage]);
 

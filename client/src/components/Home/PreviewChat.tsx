@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { io, Socket } from "socket.io-client";
 import Avatar from "../ui/Avatar";
+import Icon from "../ui/Icon";
 import type { PreviewMessage } from "../../types";
 import { SOCKET_URL } from "../../lib/apiUrl";
 import { getLocale } from "../../i18n/formatters";
@@ -344,9 +345,7 @@ export default function PreviewChat() {
                                 <span className="max-w-40 truncate text-on-surface/80 font-medium">
                                     {name}
                                 </span>
-                                <span className="material-symbols-outlined text-[13px] text-on-surface-variant">
-                                    edit
-                                </span>
+                                <Icon name="edit" className="text-[13px] text-on-surface-variant" />
                             </>
                         )}
                     </button>
@@ -385,9 +384,7 @@ export default function PreviewChat() {
                         aria-label={t("preview.send")}
                         className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary text-xs shadow-lg shadow-primary/20 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed"
                     >
-                        <span className="material-symbols-outlined text-[16px]">
-                            send
-                        </span>
+                        <Icon name="send" className="text-[16px]" />
                     </button>
                 </form>
             </div>

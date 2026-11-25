@@ -1,6 +1,12 @@
 import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
 import { LANGUAGE_OPTIONS } from "@shared/i18n";
 import { useLanguage } from "../../hooks/useLanguage";
+import {
+    isLocalizablePath,
+    localizePath,
+    stripLocale,
+} from "../../i18n/routing";
 import DropdownMenu from "./DropdownMenu";
 import CountryFlag from "./CountryFlag";
 
@@ -19,6 +25,8 @@ export default function LanguageSelector({
 }: LanguageSelectorProps) {
     const { t } = useTranslation("common");
     const { language, isSyncing, setLanguage } = useLanguage();
+    const navigate = useNavigate();
+    const { pathname, search } = useLocation();
     const current =
         LANGUAGE_OPTIONS.find((option) => option.code === language) ??
         LANGUAGE_OPTIONS[0];
@@ -124,7 +132,18 @@ export default function LanguageSelector({
                             aria-checked={active}
                             lang={option.code}
                             onClick={() => {
-                                if (!active) void setLanguage(option.code);
+                                if (active) return;
+                                // Public pages carry the language in the URL.
+                                if (isLocalizablePath(pathname)) {
+                                    navigate(
+                                        `${localizePath(
+                                            option.code,
+                                            stripLocale(pathname),
+                                        )}${search}`,
+                                    );
+                                    return;
+                                }
+                                void setLanguage(option.code);
                             }}
                             className={itemClass(active)}
                         >

@@ -1,6 +1,7 @@
 import { useState } from "react";
+import LocalizedLink from "./ui/LocalizedLink";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+
 import LanguageSelector from "./ui/LanguageSelector";
 
 interface LegalLayoutProps {
@@ -20,7 +21,7 @@ export default function LegalLayout({
         <div className="bg-background text-on-surface font-hanken antialiased flex flex-col min-h-dvh-fallback">
             <header className="fixed top-0 left-0 w-full z-50 bg-background">
                 <div className="flex justify-between items-center px-4 h-16 border-b border-surface-container-high">
-                    <Link to="/" className="flex items-center gap-2">
+                    <LocalizedLink to="/" className="flex items-center gap-2">
                         <img
                             src="/convo_talk_logo.png"
                             alt="ConvoTalk"
@@ -29,43 +30,43 @@ export default function LegalLayout({
                         <span className="text-xl font-bold text-primary tracking-tight font-hanken">
                             ConvoTalk
                         </span>
-                    </Link>
+                    </LocalizedLink>
                     <nav className="hidden md:flex items-center gap-8">
-                        <Link
+                        <LocalizedLink
                             to="/#recursos"
                             className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                         >
                             {t("layout.features")}
-                        </Link>
-                        <Link
+                        </LocalizedLink>
+                        <LocalizedLink
                             to="/#como-funciona"
                             className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                         >
                             {t("layout.howItWorks")}
-                        </Link>
-                        <Link
+                        </LocalizedLink>
+                        <LocalizedLink
                             to="/#seguranca"
                             className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                         >
                             {t("layout.security")}
-                        </Link>
+                        </LocalizedLink>
                     </nav>
                     <div className="flex items-center gap-3">
                         <div className="hidden md:block">
                             <LanguageSelector tone="header" />
                         </div>
-                        <Link
+                        <LocalizedLink
                             to="/login"
                             className="hidden md:block text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200 px-3 py-2"
                         >
                             {t("layout.login")}
-                        </Link>
-                        <Link
+                        </LocalizedLink>
+                        <LocalizedLink
                             to="/login?mode=register"
                             className="text-[13px] leading-4.5 tracking-[0.02em] font-medium bg-primary-container text-white rounded px-4 py-2 hover:opacity-90 transition-opacity"
                         >
                             {t("layout.register")}
-                        </Link>
+                        </LocalizedLink>
                         <button
                             type="button"
                             onClick={() => setMobileMenuOpen((v) => !v)}
@@ -106,47 +107,47 @@ export default function LegalLayout({
                 {mobileMenuOpen && (
                     <div className="md:hidden border-b border-surface-container-high bg-background">
                         <nav className="px-4 py-4 flex flex-col gap-4">
-                            <Link
+                            <LocalizedLink
                                 to="/#recursos"
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                             >
                                 {t("layout.features")}
-                            </Link>
-                            <Link
+                            </LocalizedLink>
+                            <LocalizedLink
                                 to="/#como-funciona"
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                             >
                                 {t("layout.howItWorks")}
-                            </Link>
-                            <Link
+                            </LocalizedLink>
+                            <LocalizedLink
                                 to="/#seguranca"
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                             >
                                 {t("layout.security")}
-                            </Link>
+                            </LocalizedLink>
                             <div className="border-t border-outline-variant/40 pt-3">
                                 <LanguageSelector
                                     tone="header"
                                     align="left"
                                 />
                             </div>
-                            <Link
+                            <LocalizedLink
                                 to="/login"
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-[13px] leading-4.5 tracking-[0.02em] font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
                             >
                                 {t("layout.login")}
-                            </Link>
-                            <Link
+                            </LocalizedLink>
+                            <LocalizedLink
                                 to="/login?mode=register"
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="text-[13px] leading-4.5 tracking-[0.02em] font-medium bg-primary-container text-white rounded px-4 py-2 hover:opacity-90 transition-opacity"
                             >
                                 {t("layout.register")}
-                            </Link>
+                            </LocalizedLink>
                         </nav>
                     </div>
                 )}
@@ -181,18 +182,18 @@ export default function LegalLayout({
                         </span>
                     </div>
                     <nav className="flex flex-wrap justify-center gap-6">
-                        <Link
+                        <LocalizedLink
                             to="/privacy"
                             className="text-[11px] leading-4 tracking-wider text-primary font-bold hover:text-on-surface transition-colors"
                         >
                             {t("layout.privacy")}
-                        </Link>
-                        <Link
+                        </LocalizedLink>
+                        <LocalizedLink
                             to="/terms"
                             className="text-[11px] leading-4 tracking-wider font-semibold text-primary hover:text-on-surface transition-colors"
                         >
                             {t("layout.terms")}
-                        </Link>
+                        </LocalizedLink>
                     </nav>
                 </div>
             </footer>

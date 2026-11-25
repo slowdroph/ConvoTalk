@@ -2,23 +2,9 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
-
-function prerenderPlugin(): import("vite").Plugin {
-    return require("vite-plugin-prerender")({
-        staticDir: fileURLToPath(new URL("./dist", import.meta.url)),
-        routes: ["/", "/login", "/terms", "/privacy", "/forgot-password"],
-    });
-}
 
 export default defineConfig({
-    plugins: [
-        react(),
-        tailwindcss(),
-        prerenderPlugin(),
-    ],
+    plugins: [react(), tailwindcss()],
     resolve: {
         alias: {
             "@shared": fileURLToPath(new URL("../shared", import.meta.url)),

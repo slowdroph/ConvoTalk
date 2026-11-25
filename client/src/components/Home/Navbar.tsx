@@ -1,6 +1,7 @@
 import { useState } from "react";
+import LocalizedLink from "../ui/LocalizedLink";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+
 import LanguageSelector from "../ui/LanguageSelector";
 
 interface NavbarProps {
@@ -31,7 +32,7 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 {/* Brand */}
-                <Link
+                <LocalizedLink
                     to="/"
                     className="flex items-center gap-2 shrink-0 group"
                 >
@@ -43,7 +44,7 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                     <span className="hidden sm:inline text-xl font-bold text-primary tracking-tight font-hanken whitespace-nowrap">
                         ConvoTalk
                     </span>
-                </Link>
+                </LocalizedLink>
 
                 {/* Nav Links */}
                 <div className="hidden lg:flex items-center gap-7">
@@ -70,18 +71,18 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                     <div className="hidden md:block">
                         <LanguageSelector tone="header" />
                     </div>
-                    <Link
+                    <LocalizedLink
                         to="/login"
                         className="hidden sm:inline-block whitespace-nowrap text-sm font-medium text-on-surface-variant hover:text-on-surface px-3 py-1.5 transition-colors"
                     >
                         {t("nav.login")}
-                    </Link>
-                    <Link
+                    </LocalizedLink>
+                    <LocalizedLink
                         to="/login?mode=register"
                         className="inline-flex items-center gap-1.5 whitespace-nowrap bg-primary-container text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary hover:text-on-primary-container transition-all shadow-[0_0_15px_rgba(0,168,75,0.25)] hover:shadow-[0_0_20px_rgba(89,224,123,0.4)]"
                     >
                         {t("nav.register")}
-                    </Link>
+                    </LocalizedLink>
                     <button
                         type="button"
                         onClick={() => setMenuOpen((v) => !v)}
@@ -145,20 +146,20 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                             <LanguageSelector tone="header" align="left" />
                         </div>
                         <div className="flex flex-wrap items-center justify-between gap-3">
-                            <Link
+                            <LocalizedLink
                                 to="/login"
                                 onClick={handleNavClick}
                                 className="whitespace-nowrap text-on-surface hover:text-primary text-sm font-medium transition-colors"
                             >
                                 {t("nav.login")}
-                            </Link>
-                            <Link
+                            </LocalizedLink>
+                            <LocalizedLink
                                 to="/login?mode=register"
                                 onClick={handleNavClick}
                                 className="whitespace-nowrap bg-primary-container text-white text-xs font-semibold px-3.5 py-2 rounded-lg"
                             >
                                 {t("nav.register")}
-                            </Link>
+                            </LocalizedLink>
                         </div>
                     </div>
                 </div>

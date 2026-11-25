@@ -1,12 +1,28 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useLayoutEffect } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+    BrowserRouter,
+    Navigate,
+    Outlet,
+    Route,
+    Routes,
+    useLocation,
+} from "react-router-dom";
+import {
+    DEFAULT_LANGUAGE,
+    normalizeLanguage,
+    type LanguageCode,
+} from "@shared/i18n";
+import i18n from "./i18n";
+import { languageFromPath, stripLocale } from "./i18n/routing";
 import { useAuth } from "./hooks/useAuth";
 import { SocketProvider } from "./providers/SocketProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ChatSkeleton from "./components/Skeletons/ChatSkeleton";
 import SettingsSkeleton from "./components/Skeletons/SettingsSkeleton";
 import AppLayout from "./layouts/AppLayout";
+import NotFoundPage from "./pages/NotFoundPage";
 
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
@@ -36,6 +52,10 @@ function LoadingScreen() {
     );
 }
 
+function page(node: ReactNode) {
+    return <Suspense fallback={<LoadingScreen />}>{node}</Suspense>;
+}
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
 
@@ -56,77 +76,94 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     return user ? <Navigate to="/chat" /> : <>{children}</>;
 }
 
+/** The URL is the source of truth for the language of public pages. */
+function useRouteLanguage(language: LanguageCode) {
+    useLayoutEffect(() => {
+        const current = normalizeLanguage(
+            i18n.resolvedLanguage || i18n.language,
+        );
+        if (current === language) return;
+        void i18n.changeLanguage(language);
+    }, [language]);
+}
+
+function DefaultLocaleLayout() {
+    useRouteLanguage(DEFAULT_LANGUAGE);
+    return <Outlet />;
+}
+
+function LocaleLayout() {
+    const { pathname } = useLocation();
+    const language = languageFromPath(pathname);
+    useRouteLanguage(language ?? DEFAULT_LANGUAGE);
+
+    if (!language) return <NotFoundPage />;
+    if (language === DEFAULT_LANGUAGE) {
+        return <Navigate to={stripLocale(pathname)} replace />;
+    }
+    return <Outlet />;
+}
+
 export default function App() {
     return (
         <BrowserRouter>
             <ErrorBoundary>
                 <Routes>
-                    <Route
-                        path="/"
-                        element={
-                            <Suspense fallback={<LoadingScreen />}>
-                                <HomePage />
-                            </Suspense>
-                        }
-                    />
-                    <Route
-                        path="/login"
-                        element={
-                            <PublicRoute>
-                                <Suspense fallback={<LoadingScreen />}>
-                                    <LoginPage />
-                                </Suspense>
-                            </PublicRoute>
-                        }
-                    />
+                    {/* Public pages, default locale (unprefixed). */}
+                    <Route element={<DefaultLocaleLayout />}>
+                        <Route path="/" element={page(<HomePage />)} />
+                        <Route
+                            path="/login"
+                            element={
+                                <PublicRoute>{page(<LoginPage />)}</PublicRoute>
+                            }
+                        />
+                        <Route
+                            path="/terms"
+                            element={page(<TermsPage />)}
+                        />
+                        <Route
+                            path="/privacy"
+                            element={page(<PrivacyPage />)}
+                        />
+                        <Route
+                            path="/forgot-password"
+                            element={page(<ForgotPasswordPage />)}
+                        />
+                    </Route>
+
+                    {/* Public pages, locale-prefixed (/es, /pt-br, /fr). */}
+                    <Route path=":locale" element={<LocaleLayout />}>
+                        <Route index element={page(<HomePage />)} />
+                        <Route
+                            path="login"
+                            element={
+                                <PublicRoute>{page(<LoginPage />)}</PublicRoute>
+                            }
+                        />
+                        <Route path="terms" element={page(<TermsPage />)} />
+                        <Route path="privacy" element={page(<PrivacyPage />)} />
+                        <Route
+                            path="forgot-password"
+                            element={page(<ForgotPasswordPage />)}
+                        />
+                    </Route>
+
+                    {/* Account flows: never indexed, never locale-prefixed. */}
                     <Route
                         path="/verify-email"
-                        element={
-                            <Suspense fallback={<LoadingScreen />}>
-                                <VerifyEmailPage />
-                            </Suspense>
-                        }
+                        element={page(<VerifyEmailPage />)}
                     />
                     <Route
                         path="/confirm-email-change"
-                        element={
-                            <Suspense fallback={<LoadingScreen />}>
-                                <ConfirmEmailChangePage />
-                            </Suspense>
-                        }
-                    />
-                    <Route
-                        path="/forgot-password"
-                        element={
-                            <Suspense fallback={<LoadingScreen />}>
-                                <ForgotPasswordPage />
-                            </Suspense>
-                        }
+                        element={page(<ConfirmEmailChangePage />)}
                     />
                     <Route
                         path="/reset-password"
-                        element={
-                            <Suspense fallback={<LoadingScreen />}>
-                                <ResetPasswordPage />
-                            </Suspense>
-                        }
+                        element={page(<ResetPasswordPage />)}
                     />
-                    <Route
-                        path="/terms"
-                        element={
-                            <Suspense fallback={<LoadingScreen />}>
-                                <TermsPage />
-                            </Suspense>
-                        }
-                    />
-                    <Route
-                        path="/privacy"
-                        element={
-                            <Suspense fallback={<LoadingScreen />}>
-                                <PrivacyPage />
-                            </Suspense>
-                        }
-                    />
+
+                    {/* Authenticated app. */}
                     <Route
                         element={
                             <PrivateRoute>
@@ -142,37 +179,15 @@ export default function App() {
                                 </Suspense>
                             }
                         />
-                        <Route
-                            path="/feed"
-                            element={
-                                <Suspense fallback={<LoadingScreen />}>
-                                    <FeedPage />
-                                </Suspense>
-                            }
-                        />
+                        <Route path="/feed" element={page(<FeedPage />)} />
                         <Route
                             path="/discover"
-                            element={
-                                <Suspense fallback={<LoadingScreen />}>
-                                    <DiscoverPage />
-                                </Suspense>
-                            }
+                            element={page(<DiscoverPage />)}
                         />
-                        <Route
-                            path="/profile"
-                            element={
-                                <Suspense fallback={<LoadingScreen />}>
-                                    <ProfilePage />
-                                </Suspense>
-                            }
-                        />
+                        <Route path="/profile" element={page(<ProfilePage />)} />
                         <Route
                             path="/profile/:userId"
-                            element={
-                                <Suspense fallback={<LoadingScreen />}>
-                                    <ProfilePage />
-                                </Suspense>
-                            }
+                            element={page(<ProfilePage />)}
                         />
                         <Route
                             path="/settings"
@@ -183,7 +198,8 @@ export default function App() {
                             }
                         />
                     </Route>
-                    <Route path="*" element={<Navigate to="/" />} />
+
+                    <Route path="*" element={<NotFoundPage />} />
                 </Routes>
             </ErrorBoundary>
         </BrowserRouter>
