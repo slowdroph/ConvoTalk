@@ -44,4 +44,30 @@ describe("export service (PDF)", () => {
         expect(Buffer.isBuffer(buffer)).toBe(true);
         expect(buffer.subarray(0, 5).toString("latin1")).toBe("%PDF-");
     });
+
+    it("pagina mensagens longas sem lan\u00e7ar erro", async () => {
+        const longContent = Array.from(
+            { length: 400 },
+            (_, i) => `palavra${i}`,
+        ).join(" ");
+        const buffer = await generateConversationPdf({
+            roomTitle: "Longa",
+            participantsLabel: "2 participantes: Ana, Bruno",
+            exportedAt: new Date("2024-01-01T12:00:00.000Z"),
+            messages: [
+                {
+                    senderName: "Ana",
+                    content: longContent,
+                    createdAt: new Date("2024-01-01T12:00:01.000Z"),
+                    deleted: false,
+                },
+            ],
+        });
+        expect(Buffer.isBuffer(buffer)).toBe(true);
+        expect(buffer.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+        const pageMarkers = buffer
+            .toString("latin1")
+            .match(/\/Type \/Page\b/g);
+        expect(pageMarkers?.length ?? 0).toBeGreaterThan(1);
+    });
 });

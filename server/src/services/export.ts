@@ -52,23 +52,71 @@ export interface ConversationPdfWriter {
     end(): void;
 }
 
+function wrapLines(doc: PDFDoc, text: string, maxWidth: number): string[] {
+    const paragraphs = text.split("\n");
+    const lines: string[] = [];
+    for (const paragraph of paragraphs) {
+        if (paragraph.length === 0) {
+            lines.push("");
+            continue;
+        }
+        const words = paragraph.split(/\s+/);
+        let current = "";
+        for (const word of words) {
+            const candidate = current ? `${current} ${word}` : word;
+            if (doc.widthOfString(candidate) <= maxWidth) {
+                current = candidate;
+                continue;
+            }
+            if (current) {
+                lines.push(current);
+                current = "";
+            }
+            if (doc.widthOfString(word) <= maxWidth) {
+                current = word;
+            } else {
+                let chunk = "";
+                for (const char of word) {
+                    if (doc.widthOfString(chunk + char) > maxWidth) {
+                        if (chunk) lines.push(chunk);
+                        chunk = char;
+                    } else {
+                        chunk += char;
+                    }
+                }
+                current = chunk;
+            }
+        }
+        if (current) lines.push(current);
+    }
+    return lines.length > 0 ? lines : [""];
+}
+
 export function createConversationPdfWriter(
     params: PdfWriterParams,
 ): ConversationPdfWriter {
     const doc = new PDFDocument({ margin: 48, size: "A4" });
 
-    const titleWidth = doc.widthOfString("ConvoTalk");
+    const pageWidth = doc.page.width;
+    const pageHeight = doc.page.height;
+    const marginX = doc.page.margins.left;
+    const contentWidth =
+        pageWidth - doc.page.margins.left - doc.page.margins.right;
+    const pageBottom = pageHeight - doc.page.margins.bottom;
+
     doc.font("Helvetica-Bold")
         .fontSize(22)
         .rect(0, 0, 200, 70)
         .fill(COLORS.headerBg);
-    doc.fillColor("#ffffff").text("ConvoTalk", 48, 24, { width: titleWidth });
+    doc.fillColor("#ffffff").text("ConvoTalk", marginX, 24, {
+        width: 200 - marginX,
+    });
 
     doc.font("Helvetica")
         .fontSize(10)
         .fillColor(COLORS.headerText)
         .text(`Exportado em ${formatTimestamp(params.exportedAt)}`, 250, 30, {
-            width: 300,
+            width: pageWidth - marginX - 250,
             align: "right",
         });
 
@@ -76,16 +124,19 @@ export function createConversationPdfWriter(
     doc.font("Helvetica-Bold")
         .fontSize(18)
         .fillColor(COLORS.title)
-        .text(params.roomTitle);
+        .text(params.roomTitle, marginX, doc.y, { width: contentWidth });
 
     doc.font("Helvetica")
         .fontSize(10)
         .fillColor(COLORS.subtitle)
-        .text(params.participantsLabel);
+        .text(params.participantsLabel, marginX, doc.y, {
+            width: contentWidth,
+        });
 
     doc.moveDown(0.5);
-    doc.moveTo(48, doc.y)
-        .lineTo(545, doc.y)
+    const dividerY = doc.y;
+    doc.moveTo(marginX, dividerY)
+        .lineTo(pageWidth - marginX, dividerY)
         .lineWidth(1)
         .strokeColor(COLORS.divider)
         .stroke();
@@ -94,60 +145,143 @@ export function createConversationPdfWriter(
     doc.font("Helvetica-Bold")
         .fontSize(10)
         .fillColor(COLORS.muted)
-        .text(`${params.messageCount} mensagens`, { align: "right" });
+        .text(`${params.messageCount} mensagens`, marginX, doc.y, {
+            width: contentWidth,
+            align: "right",
+        });
 
-    const pageHeight = doc.page.height - doc.page.margins.bottom;
+    doc.moveDown(0.8);
 
-    const writeMessage = (message: ExportMessage): void => {
-        if (doc.y > pageHeight - 60) {
-            doc.addPage();
-        }
+    const bubbleWidth = Math.min(contentWidth, 420);
+    const padding = 12;
+    const textWidth = bubbleWidth - padding * 2;
+    const nameHeight = 16;
+    const headerHeight = padding + nameHeight + 12;
+    const lineHeight = 14;
+    const gap = 10;
+    const contentHeight = pageBottom - marginX;
 
-        const timestamp = formatTimestamp(message.createdAt);
-        if (message.deleted) {
-            doc.font("Helvetica-Oblique")
-                .fontSize(10)
-                .fillColor(COLORS.deleted)
-                .text("(mensagem excluída)", { align: "center" });
-            doc.moveDown(0.6);
-            return;
-        }
-
-        const contentWidth = doc
-            .font("Helvetica-Bold")
-            .fontSize(12)
-            .widthOfString(message.senderName);
-        const timestampWidth = doc.widthOfString(timestamp);
-        const lineWidth = contentWidth + timestampWidth + 20;
-        const bubbleX = 48;
-        const bubbleWidth = Math.max(160, Math.min(400, lineWidth));
-
-        let startY = doc.y;
-        doc.roundedRect(bubbleX, startY, bubbleWidth, 34, 8).fill(
-            COLORS.bubbleBg,
-        );
-
+    const drawHeader = (senderName: string, createdAt: Date, topY: number) => {
         doc.font("Helvetica-Bold")
             .fontSize(12)
             .fillColor(COLORS.text)
-            .text(message.senderName, bubbleX + 12, startY + 8, {
-                width: bubbleWidth - 24,
+            .text(senderName, marginX + padding, topY + padding, {
+                width: textWidth,
             });
-
         doc.font("Helvetica")
             .fontSize(9)
             .fillColor(COLORS.muted)
-            .text(timestamp, bubbleX + 12, startY + 24);
+            .text(
+                formatTimestamp(createdAt),
+                marginX + padding,
+                topY + padding + nameHeight,
+                { width: textWidth },
+            );
+    };
 
-        const bodyY = startY + 34;
-        doc.font("Helvetica")
-            .fontSize(11)
-            .fillColor(COLORS.text)
-            .text(message.content, bubbleX, bodyY, {
-                width: 497,
-                lineGap: 3,
-            });
-        doc.y += 8;
+    const writeMessage = (message: ExportMessage): void => {
+        if (message.deleted) {
+            if (doc.y + 24 > pageBottom) doc.addPage();
+            doc.font("Helvetica-Oblique")
+                .fontSize(10)
+                .fillColor(COLORS.deleted)
+                .text("(mensagem excluída)", marginX, doc.y, {
+                    width: contentWidth,
+                    align: "center",
+                });
+            doc.y += 18;
+            return;
+        }
+
+        doc.font("Helvetica").fontSize(11);
+        const lines = wrapLines(doc, message.content, textWidth);
+        const bodyHeight = lines.length * lineHeight;
+        const bubbleHeight = headerHeight + bodyHeight + padding;
+
+        if (bubbleHeight <= contentHeight) {
+            if (doc.y + bubbleHeight > pageBottom) doc.addPage();
+            const startY = doc.y;
+
+            doc.roundedRect(marginX, startY, bubbleWidth, bubbleHeight, 8).fill(
+                COLORS.bubbleBg,
+            );
+            drawHeader(message.senderName, message.createdAt, startY);
+
+            doc.font("Helvetica").fontSize(11).fillColor(COLORS.text);
+            let y = startY + headerHeight;
+            for (const line of lines) {
+                doc.text(line, marginX + padding, y, {
+                    width: textWidth,
+                    lineBreak: false,
+                });
+                y += lineHeight;
+            }
+
+            doc.y = startY + bubbleHeight + gap;
+            return;
+        }
+
+        let index = 0;
+        let segment = 0;
+        while (index < lines.length) {
+            if (segment === 0) {
+                if (doc.y + headerHeight + lineHeight > pageBottom)
+                    doc.addPage();
+                const startY = doc.y;
+                const available =
+                    pageBottom - (startY + headerHeight) - padding;
+                const fit = Math.max(1, Math.floor(available / lineHeight));
+                const chunk = lines.slice(0, fit);
+                const segHeight =
+                    headerHeight + chunk.length * lineHeight + padding;
+
+                doc.roundedRect(
+                    marginX,
+                    startY,
+                    bubbleWidth,
+                    segHeight,
+                    8,
+                ).fill(COLORS.bubbleBg);
+                drawHeader(message.senderName, message.createdAt, startY);
+
+                doc.font("Helvetica").fontSize(11).fillColor(COLORS.text);
+                let y = startY + headerHeight;
+                for (const line of chunk) {
+                    doc.text(line, marginX + padding, y, {
+                        width: textWidth,
+                        lineBreak: false,
+                    });
+                    y += lineHeight;
+                }
+                index = chunk.length;
+                doc.y = startY + segHeight + gap;
+            } else {
+                if (doc.y + 16 + lineHeight > pageBottom) doc.addPage();
+                const contY = doc.y;
+                doc.font("Helvetica-Oblique")
+                    .fontSize(9)
+                    .fillColor(COLORS.muted)
+                    .text("(continuação)", marginX + padding, contY, {
+                        width: textWidth,
+                    });
+                const available = pageBottom - (contY + 16) - padding;
+                const fit = Math.max(1, Math.floor(available / lineHeight));
+                const chunk = lines.slice(index, index + fit);
+
+                doc.font("Helvetica").fontSize(11).fillColor(COLORS.text);
+                let y = contY + 16;
+                for (const line of chunk) {
+                    doc.text(line, marginX + padding, y, {
+                        width: textWidth,
+                        lineBreak: false,
+                    });
+                    y += lineHeight;
+                }
+                index += chunk.length;
+                doc.y = contY + 16 + chunk.length * lineHeight + gap;
+            }
+            segment += 1;
+        }
     };
 
     return { doc, writeMessage, end: () => doc.end() };
