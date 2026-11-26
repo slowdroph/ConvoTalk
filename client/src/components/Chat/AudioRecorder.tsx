@@ -113,19 +113,27 @@ export default function AudioRecorder({
             <span className="text-sm text-white tabular-nums font-medium">
                 {formatDuration(elapsed)}
             </span>
-            <div className="flex items-center gap-2 h-6 flex-1" aria-hidden>
-                {Array.from({ length: 24 }).map((_, i) => (
-                    <span
-                        key={i}
-                        className="w-0.5 rounded-full bg-green-400 animate-pulse"
-                        style={{
-                            height: `${6 + Math.abs(Math.sin(elapsed / 200 + i)) * 18}px`,
-                            animationDelay: `${i * 45}ms`,
-                        }}
-                    />
-                ))}
-            </div>
-            {error && <span className="text-xs text-red-400">{error}</span>}
+            {error ? (
+                <span className="min-w-0 flex-1 truncate text-xs text-red-400">
+                    {error}
+                </span>
+            ) : (
+                <div
+                    className="flex items-center justify-between sm:justify-start sm:gap-2 h-6 flex-1 min-w-0 overflow-hidden"
+                    aria-hidden
+                >
+                    {Array.from({ length: 24 }).map((_, i) => (
+                        <span
+                            key={i}
+                            className="w-0.5 rounded-full bg-green-400 animate-pulse shrink-0"
+                            style={{
+                                height: `${6 + Math.abs(Math.sin(elapsed / 200 + i)) * 18}px`,
+                                animationDelay: `${i * 45}ms`,
+                            }}
+                        />
+                    ))}
+                </div>
+            )}
             <div className="flex items-center gap-1 shrink-0">
                 <button
                     type="button"
