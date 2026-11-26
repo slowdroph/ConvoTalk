@@ -142,7 +142,7 @@ export default function PostCard({
     };
 
     return (
-        <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-colors hover:border-slate-300 dark:border-noir-border dark:bg-noir-surface dark:hover:border-noir-border-light">
+        <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-slate-300 dark:border-noir-border dark:bg-noir-surface dark:hover:border-noir-border-light">
             <header className="flex items-center justify-between gap-3 p-4 sm:p-5">
                 <div className="flex min-w-0 items-center gap-3">
                     <button

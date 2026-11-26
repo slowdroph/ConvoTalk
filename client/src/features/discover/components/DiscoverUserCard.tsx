@@ -45,7 +45,7 @@ export default function DiscoverUserCard({
         : null;
 
     return (
-        <article className="group relative flex h-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-emerald-500/40 focus-within:border-emerald-500/40 dark:border-noir-border dark:bg-noir-surface">
+        <article className="group relative flex h-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-500/40 focus-within:border-emerald-500/40 dark:border-noir-border dark:bg-noir-surface">
             <Link
                 to={`/profile/${user._id}`}
                 aria-label={t("card.openProfile", { name: user.name })}

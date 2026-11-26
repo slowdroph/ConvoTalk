@@ -160,7 +160,7 @@ export default function RoomList({
                                                         : room.name)}
                                             </p>
                                             {hasUnread ? (
-                                                <span className="shrink-0 min-w-4 h-4 px-1 rounded-full bg-emerald-600 text-[10px] font-bold text-white flex items-center justify-center ml-1">
+                                                <span className="shrink-0 min-w-4 h-4 px-1 rounded-full bg-emerald-600 text-[10px] font-bold text-white flex items-center justify-center ml-1 animate-popIn">
                                                     {mentions > 0
                                                         ? mentions
                                                         : unread}

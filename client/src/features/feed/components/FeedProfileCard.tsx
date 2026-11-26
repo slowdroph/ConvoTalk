@@ -42,7 +42,7 @@ export default function FeedProfileCard({
     return (
         <section
             aria-label={t("profileCard.aria")}
-            className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm dark:border-noir-border dark:bg-noir-surface"
+            className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm transition duration-200 hover:-translate-y-0.5 dark:border-noir-border dark:bg-noir-surface"
         >
             <div
                 aria-hidden="true"

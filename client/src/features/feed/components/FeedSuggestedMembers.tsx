@@ -139,7 +139,7 @@ export default function FeedSuggestedMembers({
                         return (
                             <li
                                 key={member._id}
-                                className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+                                className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0 transition-colors hover:bg-slate-50 dark:hover:bg-noir-surface-alt/40"
                             >
                                 <button
                                     type="button"

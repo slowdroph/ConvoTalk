@@ -158,7 +158,7 @@ export default function DropdownMenu({
                             left: position?.left ?? 0,
                             visibility: position ? "visible" : "hidden",
                         }}
-                        className={`fixed z-[100] w-64 max-w-[calc(100vw-1.5rem)] max-h-[70vh] overflow-y-auto custom-scrollbar rounded-2xl bg-noir-surface-alt/95 backdrop-blur-md border border-noir-border shadow-2xl p-1.5 ${className}`}
+                        className={`fixed z-[100] w-64 max-w-[calc(100vw-1.5rem)] max-h-[70vh] overflow-y-auto custom-scrollbar rounded-2xl bg-noir-surface-alt/95 backdrop-blur-md border border-noir-border shadow-2xl p-1.5 animate-popIn ${className}`}
                     >
                         {children}
                     </div>,

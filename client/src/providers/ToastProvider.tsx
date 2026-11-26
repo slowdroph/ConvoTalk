@@ -32,7 +32,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     <div
                         key={toast.id}
                         role="status"
-                        className={`pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border text-sm ${
+                        className={`pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border text-sm animate-slideInRight ${
                             toast.type === "error"
                                 ? "bg-red-900/90 border-red-700 text-red-50"
                                 : toast.type === "success"
