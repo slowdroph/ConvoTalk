@@ -113,9 +113,8 @@ describe("ProfileLanguagesCard", () => {
         );
 
         fireEvent.click(screen.getByRole("button", { name: /Espanhol/ }));
-        fireEvent.change(screen.getByLabelText("Nível de Espanhol"), {
-            target: { value: "basic" },
-        });
+        fireEvent.click(screen.getByLabelText("Nível de Espanhol"));
+        fireEvent.click(screen.getByRole("option", { name: "Básico" }));
         fireEvent.click(
             screen.getByRole("button", { name: "Salvar idiomas" }),
         );

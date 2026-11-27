@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { DiscoverMode, DiscoverSort, DiscoverUser } from "../../../types";
 import DiscoverUserCard from "./DiscoverUserCard";
+import Select from "../../../components/ui/Select";
 import { FOCUS_RING } from "../utils";
 
 interface DiscoverResultsProps {
@@ -163,20 +164,20 @@ export default function DiscoverResults({
                     <label htmlFor="discover-sort" className="sr-only">
                         {t("filters.sort")}
                     </label>
-                    <select
+                    <Select
                         id="discover-sort"
+                        ariaLabel={t("filters.sort")}
+                        fullWidth={false}
+                        className="min-h-9"
                         value={sort}
-                        onChange={(event) =>
-                            onSortChange(event.target.value as DiscoverSort)
+                        onChange={(value) =>
+                            onSortChange(value as DiscoverSort)
                         }
-                        className="min-h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright"
-                    >
-                        {SORT_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {t(option.labelKey)}
-                            </option>
-                        ))}
-                    </select>
+                        options={SORT_OPTIONS.map((option) => ({
+                            value: option.value,
+                            label: t(option.labelKey),
+                        }))}
+                    />
                 </div>
             </div>
 

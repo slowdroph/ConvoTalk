@@ -14,6 +14,7 @@ import {
     spokenLanguageLabel,
 } from "../../../i18n/catalogs";
 import CityCombobox from "../../../components/ui/CityCombobox";
+import Select from "../../../components/ui/Select";
 import DiscoverOptionPicker from "./DiscoverOptionPicker";
 import {
     FOCUS_RING,
@@ -29,9 +30,6 @@ const ACTIVITY_OPTIONS: Array<{
     { value: "7d", labelKey: "filters.activity7d" },
     { value: "30d", labelKey: "filters.activity30d" },
 ];
-
-const SELECT_CLASS =
-    "w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright";
 
 const CITY_CLASS =
     "w-full rounded-xl border border-slate-200 bg-white py-2 pl-8 pr-3 text-xs text-slate-800 outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright dark:placeholder:text-noir-text-muted";
@@ -115,21 +113,25 @@ export default function DiscoverFilters({
                 >
                     {t("filters.country")}
                 </label>
-                <select
+                <Select
                     id={countryId}
+                    ariaLabel={t("filters.country")}
                     value={value.country}
-                    onChange={(event) =>
-                        onChange({ country: event.target.value, city: "" })
+                    onChange={(country) =>
+                        onChange({ country, city: "" })
                     }
-                    className={SELECT_CLASS}
-                >
-                    <option value="">{t("filters.allCountries")}</option>
-                    {countryOptions().map((country) => (
-                        <option key={country.code} value={country.code}>
-                            {country.name}
-                        </option>
-                    ))}
-                </select>
+                    placeholder={t("filters.allCountries")}
+                    options={[
+                        {
+                            value: "",
+                            label: t("filters.allCountries"),
+                        },
+                        ...countryOptions().map((country) => ({
+                            value: country.code,
+                            label: country.name,
+                        })),
+                    ]}
+                />
             </div>
 
             <div className="flex flex-col gap-1.5">

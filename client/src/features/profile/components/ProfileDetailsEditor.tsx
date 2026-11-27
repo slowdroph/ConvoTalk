@@ -7,6 +7,7 @@ import { countryName, countryOptions, genderLabel } from "../../../i18n/catalogs
 import { getLocale } from "../../../i18n/formatters";
 import CityCombobox from "../../../components/ui/CityCombobox";
 import DateOfBirthInput from "../../../components/ui/DateOfBirthInput";
+import Select from "../../../components/ui/Select";
 import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
 import InlineEditButton from "./inline/InlineEditButton";
 
@@ -80,20 +81,24 @@ function DetailsForm({
                     <label htmlFor="details-gender" className={labelClass}>
                         {t("details.gender")}
                     </label>
-                    <select
+                    <Select
                         id="details-gender"
+                        ariaLabel={t("details.gender")}
                         value={gender}
-                        onChange={(event) => setGender(event.target.value)}
+                        onChange={setGender}
                         disabled={editor.saving}
-                        className={`${fieldClass} cursor-pointer`}
-                    >
-                        <option value="">{t("details.unspecified")}</option>
-                        {GENDER_OPTIONS.map((option) => (
-                            <option key={option.id} value={option.id}>
-                                {genderLabel(option.id)}
-                            </option>
-                        ))}
-                    </select>
+                        placeholder={t("details.unspecified")}
+                        options={[
+                            {
+                                value: "",
+                                label: t("details.unspecified"),
+                            },
+                            ...GENDER_OPTIONS.map((option) => ({
+                                value: option.id,
+                                label: genderLabel(option.id),
+                            })),
+                        ]}
+                    />
                 </div>
                 <div>
                     <label
@@ -120,20 +125,21 @@ function DetailsForm({
                 <label htmlFor="details-country" className={labelClass}>
                     {t("details.country")}
                 </label>
-                <select
+                <Select
                     id="details-country"
+                    ariaLabel={t("details.country")}
                     value={country}
-                    onChange={(event) => setCountry(event.target.value)}
+                    onChange={setCountry}
                     disabled={editor.saving}
-                    className={`${fieldClass} cursor-pointer`}
-                >
-                    <option value="">{t("details.unspecified")}</option>
-                    {sortedCountries.map((option) => (
-                        <option key={option.code} value={option.code}>
-                            {option.name}
-                        </option>
-                    ))}
-                </select>
+                    placeholder={t("details.unspecified")}
+                    options={[
+                        { value: "", label: t("details.unspecified") },
+                        ...sortedCountries.map((option) => ({
+                            value: option.code,
+                            label: option.name,
+                        })),
+                    ]}
+                />
             </div>
 
             <div>

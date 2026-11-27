@@ -27,6 +27,11 @@ function expandPicker(label: string) {
     fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${label}`) }));
 }
 
+function selectOption(label: string, optionName: string) {
+    fireEvent.click(screen.getByLabelText(label));
+    fireEvent.click(screen.getByRole("option", { name: optionName }));
+}
+
 describe("DiscoverFilters", () => {
     it("desabilita limpar quando não há filtros", () => {
         renderFilters();
@@ -42,9 +47,7 @@ describe("DiscoverFilters", () => {
             city: "Lisboa",
         });
 
-        fireEvent.change(screen.getByLabelText("País"), {
-            target: { value: "BR" },
-        });
+        selectOption("País", "Brasil");
 
         expect(onChange).toHaveBeenCalledWith({ country: "BR", city: "" });
     });

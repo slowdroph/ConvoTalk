@@ -16,6 +16,11 @@ vi.mock("../../lib/ads", () => ({
 
 const continueButton = () => screen.getByRole("button", { name: "Continuar" });
 
+function selectOption(label: string, optionName: string) {
+    fireEvent.click(screen.getByLabelText(label));
+    fireEvent.click(screen.getByRole("option", { name: optionName }));
+}
+
 function fillAccountStep() {
     fireEvent.change(screen.getByLabelText("Nome"), {
         target: { value: "Ana" },
@@ -34,9 +39,7 @@ function goToPersonalStep() {
 }
 
 function fillPersonalStep() {
-    fireEvent.change(screen.getByLabelText("Gênero"), {
-        target: { value: "woman" },
-    });
+    selectOption("Gênero", "Mulher");
     fillBirthdate();
 }
 
@@ -59,9 +62,7 @@ function goToLocationStep() {
 }
 
 function fillLocationStep() {
-    fireEvent.change(screen.getByLabelText("País"), {
-        target: { value: "BR" },
-    });
+    selectOption("País", "Brasil");
     fireEvent.change(screen.getByLabelText("Cidade"), {
         target: { value: "São Paulo" },
     });
@@ -101,9 +102,7 @@ describe("RegisterForm", () => {
         expect(screen.getByText("Etapa 4 de 4")).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole("button", { name: /Português/ }));
-        fireEvent.change(screen.getByLabelText("Nível de Português"), {
-            target: { value: "fluent" },
-        });
+        selectOption("Nível de Português", "Fluente");
         fireEvent.click(screen.getByRole("checkbox"));
         clickCreateAccount();
 
@@ -155,9 +154,7 @@ describe("RegisterForm", () => {
         render(<RegisterForm onSwitchToLogin={vi.fn()} />);
 
         goToPersonalStep();
-        fireEvent.change(screen.getByLabelText("Gênero"), {
-            target: { value: "woman" },
-        });
+        selectOption("Gênero", "Mulher");
         fillBirthdate("01", "01", String(year));
         fireEvent.click(continueButton());
 
@@ -176,9 +173,7 @@ describe("RegisterForm", () => {
         expect(screen.getByText("Selecione seu país.")).toBeInTheDocument();
         expect(screen.getByText("Etapa 3 de 4")).toBeInTheDocument();
 
-        fireEvent.change(screen.getByLabelText("País"), {
-            target: { value: "BR" },
-        });
+        selectOption("País", "Brasil");
         fireEvent.click(continueButton());
         expect(screen.getByText("Informe sua cidade.")).toBeInTheDocument();
         expect(screen.getByText("Etapa 3 de 4")).toBeInTheDocument();

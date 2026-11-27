@@ -27,6 +27,7 @@ import { filterOptions } from "../../utils/options";
 import CityCombobox from "../ui/CityCombobox";
 import DateOfBirthInput from "../ui/DateOfBirthInput";
 import OptionSearch from "../ui/OptionSearch";
+import Select from "../ui/Select";
 import AuthSubmitButton from "./AuthSubmitButton";
 import RegisterProgress from "./RegisterProgress";
 
@@ -527,29 +528,29 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                     >
                                         {t("register.fields.gender")}
                                     </label>
-                                    <select
+                                    <Select
                                         id="register-gender"
-                                        name="gender"
+                                        ariaLabel={t("register.fields.gender")}
                                         value={gender}
-                                        onChange={(e) => {
-                                            setGender(e.target.value);
+                                        onChange={(value) => {
+                                            setGender(value);
                                             clearError();
                                         }}
-                                        required
-                                        className={`${inputClass} cursor-pointer`}
-                                    >
-                                        <option value="">
-                                            {t("register.fields.select")}
-                                        </option>
-                                        {GENDER_OPTIONS.map((option) => (
-                                            <option
-                                                key={option.id}
-                                                value={option.id}
-                                            >
-                                                {genderLabel(option.id)}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        tone="onDark"
+                                        placeholder={t("register.fields.select")}
+                                        options={[
+                                            {
+                                                value: "",
+                                                label: t(
+                                                    "register.fields.select",
+                                                ),
+                                            },
+                                            ...GENDER_OPTIONS.map((option) => ({
+                                                value: option.id,
+                                                label: genderLabel(option.id),
+                                            })),
+                                        ]}
+                                    />
                                 </div>
 
                                 <div className="space-y-1.5">
@@ -589,29 +590,29 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                     >
                                         {t("register.fields.country")}
                                     </label>
-                                    <select
+                                    <Select
                                         id="register-country"
-                                        name="country"
+                                        ariaLabel={t("register.fields.country")}
                                         value={country}
-                                        onChange={(e) => {
-                                            setCountry(e.target.value);
+                                        onChange={(value) => {
+                                            setCountry(value);
                                             clearError();
                                         }}
-                                        required
-                                        className={`${inputClass} cursor-pointer`}
-                                    >
-                                        <option value="">
-                                            {t("register.fields.select")}
-                                        </option>
-                                        {countries.map((option) => (
-                                            <option
-                                                key={option.code}
-                                                value={option.code}
-                                            >
-                                                {option.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        tone="onDark"
+                                        placeholder={t("register.fields.select")}
+                                        options={[
+                                            {
+                                                value: "",
+                                                label: t(
+                                                    "register.fields.select",
+                                                ),
+                                            },
+                                            ...countries.map((option) => ({
+                                                value: option.code,
+                                                label: option.name,
+                                            })),
+                                        ]}
+                                    />
                                 </div>
 
                                 <div className="space-y-1.5">
@@ -732,8 +733,11 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                                         </span>{" "}
                                                         {spokenLanguageLabel(option.id)}
                                                     </span>
-                                                    <select
-                                                        aria-label={t("register.fields.levelOf", {
+                                                    <Select
+                                                        size="sm"
+                                                        tone="onDark"
+                                                        fullWidth={false}
+                                                        ariaLabel={t("register.fields.levelOf", {
                                                             language: spokenLanguageLabel(option.id),
                                                         })}
                                                         value={
@@ -742,10 +746,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                                             ] ??
                                                             DEFAULT_LANGUAGE_LEVEL
                                                         }
-                                                        onChange={(event) => {
-                                                            const value =
-                                                                event.target
-                                                                    .value;
+                                                        onChange={(value) => {
                                                             setLanguageLevels(
                                                                 (current) => ({
                                                                     ...current,
@@ -753,27 +754,15 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                                                                 }),
                                                             );
                                                         }}
-                                                        className="rounded-lg border border-white/10 bg-[#0f170f] px-2 py-1 text-[11px] text-zinc-200 focus:border-emerald-500 focus:outline-none"
-                                                    >
-                                                        {LANGUAGE_LEVEL_OPTIONS.map(
-                                                            (level) => (
-                                                                <option
-                                                                    key={
-                                                                        level.id
-                                                                    }
-                                                                    value={
-                                                                        level.id
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        languageLevelLabel(
-                                                                            level.id,
-                                                                        )
-                                                                    }
-                                                                </option>
-                                                            ),
+                                                        options={LANGUAGE_LEVEL_OPTIONS.map(
+                                                            (level) => ({
+                                                                value: level.id,
+                                                                label: languageLevelLabel(
+                                                                    level.id,
+                                                                ),
+                                                            }),
                                                         )}
-                                                    </select>
+                                                    />
                                                 </div>
                                             );
                                         })}

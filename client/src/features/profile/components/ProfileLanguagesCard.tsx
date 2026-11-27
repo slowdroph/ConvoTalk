@@ -18,6 +18,7 @@ import {
 import type { ProfileSectionEditor } from "../hooks/useProfileSectionEditor";
 import { filterOptions } from "../../../utils/options";
 import OptionSearch from "../../../components/ui/OptionSearch";
+import Select from "../../../components/ui/Select";
 import InlineEditActions from "./inline/InlineEditActions";
 import InlineEditButton from "./inline/InlineEditButton";
 
@@ -131,8 +132,10 @@ function LanguagesEditor({
                                     {spokenLanguageLabel(option.id)}
                                 </span>
                                 <div className="flex shrink-0 items-center gap-1">
-                                    <select
-                                        aria-label={t("languagesCard.levelAria", {
+                                    <Select
+                                        size="sm"
+                                        fullWidth={false}
+                                        ariaLabel={t("languagesCard.levelAria", {
                                             language: spokenLanguageLabel(
                                                 option.id,
                                             ),
@@ -141,24 +144,22 @@ function LanguagesEditor({
                                             levels[code] ??
                                             DEFAULT_LANGUAGE_LEVEL
                                         }
-                                        onChange={(event) =>
+                                        onChange={(value) =>
                                             setLevels((current) => ({
                                                 ...current,
-                                                [code]: event.target.value,
+                                                [code]: value,
                                             }))
                                         }
                                         disabled={editor.saving}
-                                        className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 outline-none focus:border-emerald-500 disabled:opacity-60 dark:border-noir-border dark:bg-noir-surface dark:text-noir-text-bright"
-                                    >
-                                        {LANGUAGE_LEVEL_OPTIONS.map((level) => (
-                                            <option
-                                                key={level.id}
-                                                value={level.id}
-                                            >
-                                                {languageLevelLabel(level.id)}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        options={LANGUAGE_LEVEL_OPTIONS.map(
+                                            (level) => ({
+                                                value: level.id,
+                                                label: languageLevelLabel(
+                                                    level.id,
+                                                ),
+                                            }),
+                                        )}
+                                    />
                                     <button
                                         type="button"
                                         onClick={() => toggle(code)}

@@ -31,6 +31,11 @@ vi.mock("../../../features/discover/services/discoverApi", () => ({
 const getDiscoverUsersMock = vi.mocked(getDiscoverUsers);
 const createDirectRoomMock = vi.mocked(createDirectRoom);
 
+function selectOption(label: string, optionName: string) {
+    fireEvent.click(screen.getByLabelText(label));
+    fireEvent.click(screen.getByRole("option", { name: optionName }));
+}
+
 const users: DiscoverPagePayload["users"] = [
     {
         _id: "u1",
@@ -167,9 +172,7 @@ describe("DiscoverPage", () => {
         renderPage();
         await screen.findByText("Ana Souza");
 
-        fireEvent.change(screen.getByLabelText("País"), {
-            target: { value: "PT" },
-        });
+        selectOption("País", "Portugal");
 
         await waitFor(
             () =>
@@ -186,7 +189,8 @@ describe("DiscoverPage", () => {
         await screen.findByText("Ana Souza");
 
         const sort = screen.getByLabelText("Ordenar por");
-        fireEvent.change(sort, { target: { value: "name" } });
+        fireEvent.click(sort);
+        fireEvent.click(screen.getByRole("option", { name: "Nome (A–Z)" }));
 
         await waitFor(
             () =>
@@ -251,9 +255,8 @@ describe("DiscoverPage", () => {
         );
 
         const dialog = screen.getByRole("dialog", { name: "Filtros" });
-        fireEvent.change(within(dialog).getByLabelText("País"), {
-            target: { value: "PT" },
-        });
+        fireEvent.click(within(dialog).getByLabelText("País"));
+        fireEvent.click(screen.getByRole("option", { name: "Portugal" }));
 
         await waitFor(
             () =>
