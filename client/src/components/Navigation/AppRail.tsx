@@ -25,12 +25,12 @@ function RailLink({ item, badge }: { item: NavItem; badge?: number }) {
                     : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-noir-text-muted dark:hover:bg-noir-surface-alt dark:hover:text-noir-text-bright"
             }`}
         >
-            {active && (
-                <span
-                    aria-hidden="true"
-                    className="absolute left-0 top-1/2 h-6 w-0.5 -translate-y-1/2 rounded-full bg-emerald-600 dark:bg-emerald-400"
-                />
-            )}
+            <span
+                aria-hidden="true"
+                className={`absolute left-0 top-1/2 h-6 w-0.5 -translate-y-1/2 rounded-full bg-emerald-600 transition-opacity duration-200 dark:bg-emerald-400 ${
+                    active ? "opacity-100" : "opacity-0"
+                }`}
+            />
             <span className="relative">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

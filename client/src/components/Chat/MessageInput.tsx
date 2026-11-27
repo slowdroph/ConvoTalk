@@ -893,13 +893,13 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                         }
                         disabled={uploading || isBlocked}
                         maxLength={MAX_LENGTH + 100}
-                        className="flex-1 min-w-0 px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition-all resize-none overflow-y-hidden max-h-30 disabled:opacity-50 dark:bg-noir-surface-alt dark:border-noir-border dark:text-noir-text-bright dark:placeholder-noir-text-muted/70 dark:focus:border-emerald-500/80 dark:focus:ring-emerald-500/80"
+                        className="flex-1 min-w-0 px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 transition resize-none overflow-y-hidden max-h-30 disabled:opacity-50 dark:bg-noir-surface-alt dark:border-noir-border dark:text-noir-text-bright dark:placeholder-noir-text-muted/70 dark:focus:border-emerald-500/80 dark:focus:ring-emerald-500/80"
                     />
                     <button
                         type="submit"
                         disabled={!canSubmit}
                         aria-label={t("input.send")}
-                        className="w-11 h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-30 disabled:hover:bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-glow-emerald transition-all"
+                        className="w-11 h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-30 disabled:hover:bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-glow-emerald transition"
                     >
                         {uploading ? (
                             <div className="w-5 h-5 border-2 border-on-accent border-t-transparent rounded-full animate-spin" />

@@ -63,8 +63,10 @@ export default memo(function MessageList({
     const containerRef = useRef<HTMLDivElement>(null);
     const nearBottomRef = useRef(true);
     const prevRowsCountRef = useRef(0);
+    const prevMessagesCountRef = useRef(messages.length);
     const lastAutoLoadRef = useRef(0);
     const [showNewBadge, setShowNewBadge] = useState(false);
+    const [newCount, setNewCount] = useState(0);
 
     const loadMoreRows = hasMore ? 1 : 0;
     const typingRows = typingUsers.length > 0 ? 1 : 0;
@@ -97,6 +99,7 @@ export default memo(function MessageList({
             nearBottomRef.current = near;
             if (near) {
                 setShowNewBadge(false);
+                setNewCount(0);
             }
             if (
                 hasMore &&
@@ -157,11 +160,18 @@ export default memo(function MessageList({
                     align: "end",
                     behavior: "smooth",
                 });
-            } else {
-                setShowNewBadge(true);
             }
         }
     }, [rowCount, loadingMore, virtualizer]);
+
+    useEffect(() => {
+        const prev = prevMessagesCountRef.current;
+        prevMessagesCountRef.current = messages.length;
+        if (messages.length > prev && !nearBottomRef.current) {
+            setShowNewBadge(true);
+            setNewCount((current) => current + (messages.length - prev));
+        }
+    }, [messages.length]);
 
     const scrollToBottom = () => {
         virtualizer.scrollToIndex(rowCount - 1, {
@@ -169,6 +179,7 @@ export default memo(function MessageList({
             behavior: "smooth",
         });
         setShowNewBadge(false);
+        setNewCount(0);
     };
 
     useEffect(() => {
@@ -369,9 +380,11 @@ export default memo(function MessageList({
             {showNewBadge && (
                 <button
                     onClick={scrollToBottom}
-                    className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg dark:shadow-glow-emerald transition-colors z-10"
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg dark:shadow-glow-emerald transition-colors z-10 animate-popIn"
                 >
-                    {t("list.newMessages")}
+                    {newCount > 0
+                        ? t("list.newMessagesCount", { count: newCount })
+                        : t("list.newMessages")}
                 </button>
             )}
         </div>

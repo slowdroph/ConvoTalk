@@ -198,7 +198,7 @@ export default function PasswordForm() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs tracking-wide shadow-md shadow-emerald-500/20 transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
+                        className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs tracking-wide shadow-md shadow-emerald-500/20 transition hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                         {loading ? t("password.submitting") : t("password.submit")}
                     </button>

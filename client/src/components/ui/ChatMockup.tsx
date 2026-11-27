@@ -6,7 +6,7 @@ export default function ChatMockup() {
     return (
         <div
             aria-hidden="true"
-            className="relative w-full max-w-lg lg:max-w-xl bg-[#0e150e]/90 border border-emerald-500/20 rounded-2xl shadow-2xl shadow-black/80 backdrop-blur-xl overflow-hidden transition-all duration-300 hover:border-emerald-500/35 select-none"
+            className="relative w-full max-w-lg lg:max-w-xl bg-[#0e150e]/90 border border-emerald-500/20 rounded-2xl shadow-2xl shadow-black/80 backdrop-blur-xl overflow-hidden transition duration-300 hover:border-emerald-500/35 select-none"
         >
             <div className="px-4 py-3 bg-black/40 border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-2">

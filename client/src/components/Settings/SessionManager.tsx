@@ -117,7 +117,7 @@ export default function SessionManager() {
                     {sessions.map((session) => (
                         <div
                             key={session._id}
-                            className={`p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3 ${
+                            className={`p-3.5 rounded-xl border transition flex items-center justify-between gap-3 ${
                                 session.current
                                     ? "border-emerald-500/40 bg-gradient-to-r from-emerald-950/30 to-noir-surface-alt"
                                     : "border-noir-border bg-noir-surface-alt/50 hover:border-noir-border-light"

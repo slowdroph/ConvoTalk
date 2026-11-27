@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export type ProfileTab = "about" | "publications" | "gallery";
@@ -44,6 +44,20 @@ export default function ProfileTabs({
         publications: null,
         gallery: null,
     });
+    const [pill, setPill] = useState<{ left: number; width: number } | null>(
+        null,
+    );
+
+    useLayoutEffect(() => {
+        const measure = () => {
+            const element = tabRefs.current[active];
+            if (!element) return;
+            setPill({ left: element.offsetLeft, width: element.offsetWidth });
+        };
+        measure();
+        window.addEventListener("resize", measure);
+        return () => window.removeEventListener("resize", measure);
+    }, [active]);
 
     const counts: Record<ProfileTab, number | null> = {
         about: postCount,
@@ -61,8 +75,18 @@ export default function ProfileTabs({
         <div
             role="tablist"
             aria-label={t("tabs.aria")}
-            className="flex items-stretch gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm custom-scrollbar dark:border-noir-border dark:bg-noir-surface"
+            className="relative flex items-stretch gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm custom-scrollbar dark:border-noir-border dark:bg-noir-surface"
         >
+            {pill && (
+                <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-1.5 bottom-1.5 rounded-xl bg-emerald-600 shadow-sm shadow-emerald-600/20 transition-[transform,width] duration-200 ease-out"
+                    style={{
+                        width: pill.width,
+                        transform: `translateX(${pill.left}px)`,
+                    }}
+                />
+            )}
             {TABS.map((tab, index) => {
                 const selected = tab.id === active;
                 const count = counts[tab.id];
@@ -94,9 +118,9 @@ export default function ProfileTabs({
                                 focusTab(TABS.length - 1);
                             }
                         }}
-                        className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${
+                        className={`relative flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${
                             selected
-                                ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/20"
+                                ? "text-white"
                                 : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-noir-text-muted dark:hover:bg-noir-surface-alt dark:hover:text-noir-text-bright"
                         }`}
                     >

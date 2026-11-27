@@ -25,12 +25,12 @@ function BottomLink({ item, badge }: { item: NavItem; badge?: number }) {
                     : "text-slate-500 dark:text-noir-text-muted"
             }`}
         >
-            {active && (
-                <span
-                    aria-hidden="true"
-                    className="absolute top-0 h-0.5 w-8 rounded-full bg-emerald-600 dark:bg-emerald-400"
-                />
-            )}
+            <span
+                aria-hidden="true"
+                className={`absolute top-0 h-0.5 w-8 rounded-full bg-emerald-600 transition-opacity duration-200 dark:bg-emerald-400 ${
+                    active ? "opacity-100" : "opacity-0"
+                }`}
+            />
             <span className="relative">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

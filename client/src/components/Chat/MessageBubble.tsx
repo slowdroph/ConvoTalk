@@ -543,7 +543,7 @@ function MessageBubbleComponent({
                                                     emoji,
                                                 )
                                             }
-                                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors ${
+                                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors animate-popIn ${
                                                 hasReacted
                                                     ? "bg-green-700/40 border border-green-500/50 text-green-300 dark:bg-emerald-600/20 dark:border-emerald-500/50 dark:text-emerald-400"
                                                     : "bg-slate-100 border border-slate-200 text-slate-500 hover:border-slate-300 dark:bg-noir-card dark:border-noir-border dark:text-noir-text-muted dark:hover:border-noir-border-light"

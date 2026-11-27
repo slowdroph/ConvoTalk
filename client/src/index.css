@@ -326,6 +326,33 @@ html[data-theme="light"] .custom-scrollbar {
     animation: popIn 0.25s ease-out both;
 }
 
+@keyframes popOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+}
+
+.animate-popOut {
+    animation: popOut 0.15s ease-in both;
+}
+
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+    transition:
+        background-color 0.25s ease,
+        color 0.25s ease,
+        border-color 0.25s ease,
+        fill 0.25s ease,
+        stroke 0.25s ease;
+}
+
 .animation-delay-100 {
     animation-delay: 100ms;
 }

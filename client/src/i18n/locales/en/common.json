@@ -79,6 +79,10 @@
         "placeholder": "Search options...",
         "label": "Search options"
     },
+    "select": {
+        "search": "Search...",
+        "noResults": "No results"
+    },
     "dateOfBirth": {
         "day": "Day",
         "month": "Month",

@@ -16,7 +16,7 @@ interface DateOfBirthInputProps {
 }
 
 const DEFAULT_CLASS =
-    "w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 transition-all focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 dark:border-noir-border dark:bg-noir-surface-alt/60 dark:text-noir-text-bright";
+    "w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 transition focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 dark:border-noir-border dark:bg-noir-surface-alt/60 dark:text-noir-text-bright";
 
 const SEGMENT_CLASS =
     "min-w-0 bg-transparent text-center outline-none placeholder:text-slate-400 dark:placeholder:text-noir-text-muted/70";

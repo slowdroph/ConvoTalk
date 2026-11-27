@@ -401,7 +401,7 @@ export default function PreviewChat() {
                         type="submit"
                         disabled={!input.trim() || isOverLimit || !connected}
                         aria-label={t("preview.send")}
-                        className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary text-xs shadow-lg shadow-primary/20 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed"
+                        className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary text-xs shadow-lg shadow-primary/20 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 transition shrink-0 cursor-pointer disabled:cursor-not-allowed"
                     >
                         <Icon name="send" className="text-[16px]" />
                     </button>

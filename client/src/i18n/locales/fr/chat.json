@@ -117,6 +117,7 @@
         "loading": "Chargement...",
         "loadOlder": "Charger les messages précédents",
         "newMessages": "↓ Nouveaux messages",
+        "newMessagesCount": "↓ Nouveaux messages ({{count}})",
         "typingOne": "{{name}} est en train d'écrire...",
         "typingTwo": "{{first}} et {{second}} sont en train d'écrire...",
         "typingMany": "{{first}} et {{count}} autres personnes sont en train d'écrire..."

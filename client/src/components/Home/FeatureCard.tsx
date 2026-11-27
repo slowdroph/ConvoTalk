@@ -14,7 +14,7 @@ export default function FeatureCard({
     filled = true,
 }: FeatureCardProps) {
     return (
-        <div className="glass-card glass-card-hover p-6 rounded-xl transition-all h-full">
+        <div className="glass-card glass-card-hover p-6 rounded-xl transition h-full">
             <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
                 <IconBadge name={icon} filled={filled} size="xl" />
             </div>

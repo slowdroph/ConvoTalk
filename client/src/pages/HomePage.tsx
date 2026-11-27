@@ -145,14 +145,14 @@ export default function HomePage() {
                         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                             <LocalizedLink
                                 to="/login?mode=register"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-linear-to-r from-primary-container to-primary text-white px-7 py-3.5 rounded-lg font-semibold text-sm shadow-[0_0_25px_rgba(0,168,75,0.4)] hover:shadow-[0_0_35px_rgba(89,224,123,0.6)] hover:-translate-y-0.5 transition-all"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-linear-to-r from-primary-container to-primary text-white px-7 py-3.5 rounded-lg font-semibold text-sm shadow-[0_0_25px_rgba(0,168,75,0.4)] hover:shadow-[0_0_35px_rgba(89,224,123,0.6)] hover:-translate-y-0.5 transition"
                             >
                                 <span>{t("hero.start")}</span>
                                 <Icon name="arrow_forward" className="text-lg" />
                             </LocalizedLink>
                             <LocalizedLink
                                 to="/login"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-outline-variant bg-surface-container/60 hover:bg-surface-container-high text-on-surface px-7 py-3.5 rounded-lg font-semibold text-sm transition-all"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-outline-variant bg-surface-container/60 hover:bg-surface-container-high text-on-surface px-7 py-3.5 rounded-lg font-semibold text-sm transition"
                             >
                                 <span>{t("hero.login")}</span>
                             </LocalizedLink>
@@ -1050,7 +1050,7 @@ export default function HomePage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-14 text-left">
                         {/* Card 1 */}
                         <Reveal delay={100}>
-                            <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition-all flex flex-col justify-between h-full">
+                            <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition flex flex-col justify-between h-full">
                                 <div>
                                     <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
                                         <Icon name="install_desktop" className="text-2xl" />
@@ -1071,7 +1071,7 @@ export default function HomePage() {
 
                         {/* Card 2 */}
                         <Reveal delay={200}>
-                            <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition-all flex flex-col justify-between h-full">
+                            <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition flex flex-col justify-between h-full">
                                 <div>
                                     <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
                                         <Icon name="database" className="text-2xl" />
@@ -1092,7 +1092,7 @@ export default function HomePage() {
 
                         {/* Card 3 */}
                         <Reveal delay={300}>
-                            <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition-all flex flex-col justify-between h-full">
+                            <div className="glass-card p-6 rounded-xl border border-outline-variant hover:border-primary/40 transition flex flex-col justify-between h-full">
                                 <div>
                                     <div className="w-12 h-12 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary mb-4">
                                         <Icon name="sync" className="text-2xl" />
@@ -1481,7 +1481,7 @@ export default function HomePage() {
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                                     <LocalizedLink
                                         to="/login?mode=register"
-                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-linear-to-r from-primary-container to-primary text-white px-8 py-4 rounded-xl font-bold text-sm shadow-[0_0_30px_rgba(0,168,75,0.5)] hover:shadow-[0_0_40px_rgba(89,224,123,0.7)] hover:-translate-y-0.5 transition-all"
+                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-linear-to-r from-primary-container to-primary text-white px-8 py-4 rounded-xl font-bold text-sm shadow-[0_0_30px_rgba(0,168,75,0.5)] hover:shadow-[0_0_40px_rgba(89,224,123,0.7)] hover:-translate-y-0.5 transition"
                                     >
                                         <span>{t("cta.start")}</span>
                                         <Icon name="arrow_forward" className="text-lg" />

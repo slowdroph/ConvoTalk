@@ -117,6 +117,7 @@
         "loading": "Loading...",
         "loadOlder": "Load earlier messages",
         "newMessages": "↓ New messages",
+        "newMessagesCount": "↓ New messages ({{count}})",
         "typingOne": "{{name}} is typing...",
         "typingTwo": "{{first}} and {{second}} are typing...",
         "typingMany": "{{first}} and {{count}} others are typing..."

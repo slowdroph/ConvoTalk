@@ -24,7 +24,7 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
 
     return (
         <nav
-            className={`fixed top-0 left-0 w-full z-50 border-b transition-all duration-300 ${
+            className={`fixed top-0 left-0 w-full z-50 border-b transition duration-300 ${
                 scrolled
                     ? "glass-card border-outline-variant/60 bg-background/90 shadow-lg shadow-black/30"
                     : "glass-card border-outline-variant/40 bg-background/75"
@@ -79,7 +79,7 @@ export default function Navbar({ activeSection, scrolled }: NavbarProps) {
                     </LocalizedLink>
                     <LocalizedLink
                         to="/login?mode=register"
-                        className="inline-flex items-center gap-1.5 whitespace-nowrap bg-primary-container text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary hover:text-on-primary-container transition-all shadow-[0_0_15px_rgba(0,168,75,0.25)] hover:shadow-[0_0_20px_rgba(89,224,123,0.4)]"
+                        className="inline-flex items-center gap-1.5 whitespace-nowrap bg-primary-container text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary hover:text-on-primary-container transition shadow-[0_0_15px_rgba(0,168,75,0.25)] hover:shadow-[0_0_20px_rgba(89,224,123,0.4)]"
                     >
                         {t("nav.register")}
                     </LocalizedLink>

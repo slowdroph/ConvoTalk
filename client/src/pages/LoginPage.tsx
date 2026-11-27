@@ -83,7 +83,7 @@ export default function LoginPage() {
                     </section>
 
                     <section aria-label={t("auth:login.formAria")} className="lg:col-span-5 flex justify-center w-full">
-                        <div className="w-full max-w-md bg-[#0e150e]/95 border border-emerald-500/20 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/90 backdrop-blur-xl transition-all duration-300 hover:border-emerald-500/30">
+                        <div className="w-full max-w-md bg-[#0e150e]/95 border border-emerald-500/20 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/90 backdrop-blur-xl transition duration-300 hover:border-emerald-500/30">
                             <AuthTabs isLogin={isLogin} onChange={setIsLogin} />
 
                             <div className="mb-6 space-y-1.5">

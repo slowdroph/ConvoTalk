@@ -303,7 +303,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                 <button
                     type="button"
                     onClick={onSwitchToLogin}
-                    className="w-full py-3 px-4 bg-[#00a84b] hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all text-sm flex items-center justify-center gap-2"
+                    className="w-full py-3 px-4 bg-[#00a84b] hover:bg-emerald-500 text-white font-semibold rounded-xl transition text-sm flex items-center justify-center gap-2"
                 >
                     {t("register.goToLogin")}
                 </button>
