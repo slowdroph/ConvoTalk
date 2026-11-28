@@ -19,6 +19,7 @@ const user: User = {
     avatar: "",
     status: "",
     country: "",
+    verified: true,
 };
 
 const writeText = vi.fn().mockResolvedValue(undefined);
