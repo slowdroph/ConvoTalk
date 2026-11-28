@@ -10,6 +10,7 @@ function makeEditor(
         active: null,
         saving: false,
         error: null,
+        canEdit: true,
         start: vi.fn(),
         cancel: vi.fn(),
         save: vi.fn().mockResolvedValue(true),
@@ -127,6 +128,23 @@ describe("ProfileInterestsCard", () => {
         ).not.toBeInTheDocument();
         expect(
             screen.queryByRole("button", { name: "Editar interesses" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("não oferece edição ao dono não verificado", () => {
+        render(
+            <ProfileInterestsCard
+                interests={["gaming"]}
+                isSelf
+                editor={makeEditor({ canEdit: false })}
+            />,
+        );
+
+        expect(
+            screen.queryByRole("button", { name: "Editar interesses" }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Selecionar interesses" }),
         ).not.toBeInTheDocument();
     });
 });

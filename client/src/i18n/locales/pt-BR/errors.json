@@ -7,6 +7,7 @@
     "CONFLICT": "Não foi possível concluir: já existe um registro com esses dados.",
     "BAD_REQUEST": "Requisição inválida.",
     "EMAIL_NOT_VERIFIED": "Verifique seu email antes de continuar.",
+    "MESSAGE_QUOTA_EXCEEDED": "Você atingiu o limite diário de mensagens. Confirme seu email para continuar conversando.",
     "INVALID_URL": "Link inválido.",
     "BLOCKED_HOST": "Este link não é permitido.",
     "PREVIEW_UNAVAILABLE": "Não foi possível carregar a prévia deste link.",

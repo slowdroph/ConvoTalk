@@ -9,10 +9,19 @@ export interface PublicUserPayload {
     country?: string;
 }
 
+export interface MessageQuotaPayload {
+    limit: number;
+    used: number;
+    remaining: number;
+    resetAt: string;
+}
+
 export interface UserPayload extends PublicUserPayload {
     email: string;
+    verified: boolean;
     emailPending?: boolean;
     pendingEmail?: string;
+    messageQuota?: MessageQuotaPayload | null;
     city?: string;
     bio?: string;
     interests?: string[];
@@ -260,6 +269,12 @@ export interface MessageSendPayload {
     roomId: string;
     content?: string;
     attachments?: AttachmentPayload[];
+}
+
+export interface MessageAck {
+    error?: string;
+    code?: "MESSAGE_QUOTA_EXCEEDED";
+    quota?: MessageQuotaPayload;
 }
 
 export interface TypingPayload {

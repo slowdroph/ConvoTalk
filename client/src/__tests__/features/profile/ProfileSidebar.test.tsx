@@ -68,6 +68,7 @@ function makeEditor(
         active: null,
         saving: false,
         error: null,
+        canEdit: true,
         start: vi.fn(),
         cancel: vi.fn(),
         save: vi.fn().mockResolvedValue(true),
@@ -355,6 +356,25 @@ describe("ProfileSidebar", () => {
         expect(screen.queryByText("Alterar foto")).not.toBeInTheDocument();
         expect(
             screen.queryByRole("button", { name: "Remover foto" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("esconde ações de edição do dono não verificado", () => {
+        renderSidebar({
+            profile: {
+                ...profile,
+                avatar: "https://example.com/avatar.png",
+            },
+            isSelf: true,
+            editor: makeEditor({ canEdit: false }),
+        });
+
+        expect(screen.queryByText("Alterar foto")).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Remover foto" }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Editar detalhes do perfil" }),
         ).not.toBeInTheDocument();
     });
 });

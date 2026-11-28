@@ -7,6 +7,7 @@
     "CONFLICT": "Could not complete the request: a record with this information already exists.",
     "BAD_REQUEST": "Invalid request.",
     "EMAIL_NOT_VERIFIED": "Verify your email before continuing.",
+    "MESSAGE_QUOTA_EXCEEDED": "You reached the daily message limit. Confirm your email to keep chatting.",
     "INVALID_URL": "Invalid link.",
     "BLOCKED_HOST": "This link is not allowed.",
     "PREVIEW_UNAVAILABLE": "Could not load the preview for this link.",

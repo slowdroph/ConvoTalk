@@ -113,6 +113,13 @@ function cleanupIpRateLimits(): void {
 
 setInterval(cleanupIpRateLimits, 60_000).unref();
 
+export function resetRateLimitsForTests(): void {
+    messageAttempts.clear();
+    roomMessageAttempts.clear();
+    ipEventAttempts.clear();
+    typingThrottle.clear();
+}
+
 export function cleanupSocketRateLimits(socketId: string, userId?: string): void {
     messageAttempts.delete(socketId);
     for (const [roomId, perRoom] of roomMessageAttempts) {

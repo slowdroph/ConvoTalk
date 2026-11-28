@@ -190,7 +190,7 @@ export default function ProfileSidebar({
                     </ImageLightbox>
                 )}
 
-                {isSelf && (
+                {isSelf && editor.canEdit && (
                     <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
                         <label
                             className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-black/55 px-2.5 py-1.5 text-[11px] font-medium text-white backdrop-blur-sm transition-colors hover:bg-black/75 ${

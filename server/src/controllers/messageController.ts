@@ -11,6 +11,7 @@ import {
     sendError,
 } from "../utils/errors";
 import { logger } from "../config/logger";
+import { getMessageQuota } from "../services/messageQuota";
 
 const ALLOWED_MIME_TYPES = [
     "image/jpeg",
@@ -118,6 +119,18 @@ export async function uploadAttachments(
         const files = req.files as Express.Multer.File[] | undefined;
         if (!files || files.length === 0) {
             throw new ValidationError("Nenhum arquivo enviado.");
+        }
+
+        const quota = await getMessageQuota(req.user!._id);
+        if (!quota.verified && quota.quota && quota.quota.remaining <= 0) {
+            sendError(
+                res,
+                429,
+                "MESSAGE_QUOTA_EXCEEDED",
+                "Você atingiu o limite diário de mensagens. Confirme seu email para enviar sem limites.",
+                { quota: quota.quota },
+            );
+            return;
         }
 
         const uploaded = await messageService.uploadAttachments(

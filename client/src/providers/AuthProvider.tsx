@@ -9,6 +9,7 @@ import api, {
 } from "../services/api";
 import { unsubscribeFromPush } from "../services/push";
 import type { RegisterInput, User } from "../contexts/AuthContext";
+import type { MessageQuotaPayload } from "@shared/types";
 import i18n from "../i18n";
 import { normalizeLanguage } from "@shared/i18n";
 
@@ -145,6 +146,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(updatedUser);
     }, []);
 
+    const refreshUser = useCallback(async () => {
+        try {
+            const { data } = await api.get("/user/me");
+            localStorage.setItem("user", JSON.stringify(data));
+            setUser(data);
+        } catch {
+            // Mantém o estado atual; o fallback de foco tenta novamente.
+        }
+    }, []);
+
+    const setMessageQuota = useCallback(
+        (quota: MessageQuotaPayload | null) => {
+            setUser((current) => {
+                if (!current) return current;
+                const next = { ...current, messageQuota: quota };
+                localStorage.setItem("user", JSON.stringify(next));
+                return next;
+            });
+        },
+        [],
+    );
+
     return (
         <AuthContext.Provider
             value={{
@@ -153,6 +176,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 login,
                 register,
                 updateUser,
+                refreshUser,
+                setMessageQuota,
                 logout,
                 loading,
             }}

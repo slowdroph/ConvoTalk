@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../utils/errors";
-import api from "../../services/api";
 import AuthSubmitButton from "./AuthSubmitButton";
 
 export default function LoginForm() {
@@ -12,97 +11,28 @@ export default function LoginForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const [needsVerification, setNeedsVerification] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [resending, setResending] = useState(false);
-    const [resendMessage, setResendMessage] = useState("");
-    const [resendIsError, setResendIsError] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
-        setNeedsVerification(false);
-        setResendMessage("");
         setLoading(true);
 
         try {
             await login(email, password);
         } catch (err: unknown) {
-            const axiosErr = err as {
-                response?: {
-                    status?: number;
-                    data?: {
-                        error?: {
-                            code?: string;
-                            message?: string;
-                            details?: { needsVerification?: boolean };
-                        };
-                        message?: string;
-                    };
-                };
-            };
-            const errorData = axiosErr?.response?.data;
-            const needsVerification =
-                axiosErr?.response?.status === 403 &&
-                (errorData?.error?.details?.needsVerification === true ||
-                    errorData?.error?.code === "EMAIL_NOT_VERIFIED");
-            if (needsVerification) {
-                setNeedsVerification(true);
-                setError(t("login.verifyEmail"));
-            } else {
-                setError(getErrorMessage(err, t("login.error")));
-            }
+            setError(getErrorMessage(err, t("login.error")));
         } finally {
             setLoading(false);
         }
     };
 
-    const handleResend = async () => {
-        setResending(true);
-        setResendMessage("");
-        setResendIsError(false);
-        try {
-            await api.post("/auth/resend-verification", { email });
-            setResendMessage(t("login.resendSuccess"));
-        } catch (err: unknown) {
-            setResendMessage(getErrorMessage(err, t("login.resendError")));
-            setResendIsError(true);
-        } finally {
-            setResending(false);
-        }
-    };
-
     return (
         <form onSubmit={handleSubmit} className="space-y-4" method="POST">
-            {error && !needsVerification && (
+            {error && (
                 <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-2 rounded-xl text-sm">
                     {error}
-                </div>
-            )}
-
-            {needsVerification && (
-                <div className="bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-4 py-3 rounded-xl text-sm space-y-2">
-                    <p>{error}</p>
-                    {resendMessage && (
-                        <p
-                            className={
-                                resendIsError
-                                    ? "text-red-400"
-                                    : "text-green-400"
-                            }
-                        >
-                            {resendMessage}
-                        </p>
-                    )}
-                    <button
-                        type="button"
-                        onClick={handleResend}
-                        disabled={resending}
-                        className="text-sm text-green-400 hover:text-green-300 transition-colors underline"
-                    >
-                        {resending ? t("login.resending") : t("login.resend")}
-                    </button>
                 </div>
             )}
 
@@ -126,7 +56,6 @@ export default function LoginForm() {
                         value={email}
                         onChange={(e) => {
                             setEmail(e.target.value);
-                            setNeedsVerification(false);
                             setError("");
                         }}
                         required
@@ -156,7 +85,6 @@ export default function LoginForm() {
                         value={password}
                         onChange={(e) => {
                             setPassword(e.target.value);
-                            setNeedsVerification(false);
                             setError("");
                         }}
                         required

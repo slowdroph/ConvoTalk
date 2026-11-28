@@ -13,6 +13,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../contexts/ToastContext";
 import { getAccessToken } from "../services/api";
 import { SOCKET_URL } from "../lib/apiUrl";
+import type { MessageQuotaPayload } from "@shared/types";
 
 let currentSocket: Socket | null = null;
 let socketListeners: Array<() => void> = [];
@@ -33,7 +34,7 @@ function getSocketSnapshot() {
 }
 
 export function SocketProvider({ children }: { children: ReactNode }) {
-    const { token, logout } = useAuth();
+    const { token, logout, refreshUser, setMessageQuota } = useAuth();
     const { showToast } = useToast();
     const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
     const [connected, setConnected] = useState(false);
@@ -108,6 +109,15 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             newSocket.on("user_online", (users: OnlineUser[]) =>
                 setOnlineUsers(users),
             );
+            newSocket.on("user:verified", () => {
+                void refreshUser();
+            });
+            newSocket.on(
+                "quota:update",
+                (quota: MessageQuotaPayload) => {
+                    setMessageQuota(quota);
+                },
+            );
             newSocket.on("session:force_logout", (data?: { reason?: string }) => {
                 if (!getAccessToken()) return;
                 const reasonKeys: Record<string, string> = {
@@ -141,7 +151,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             setHasConnectedOnce(false);
             wasConnected.current = false;
         };
-    }, [token, showToast, logout]);
+    }, [token, showToast, logout, refreshUser, setMessageQuota]);
 
     const value = useMemo(
         () => ({

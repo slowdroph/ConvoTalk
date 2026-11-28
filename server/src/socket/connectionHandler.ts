@@ -19,13 +19,16 @@ import { registerMessageActionsHandlers } from "./messageActionsHandler";
 import { registerPinHandlers } from "./pinHandler";
 import { registerReadHandlers } from "./readHandler";
 import { registerTypingHandler } from "./typingHandler";
+import { onUserVerified } from "./userEvents";
 
 export const registerConnectionAndLifecycle = (io: SocketIOServer): void => {
     io.on("connection", async (socket: Socket) => {
         const userId = socket.userId!;
         logger.info({ userId, socketId: socket.id }, "usuário conectado");
 
-        const user = await User.findById(userId).select("name publicId avatar status");
+        const user = await User.findById(userId).select(
+            "name publicId avatar status verified",
+        );
         let senderInfo: SenderInfo | null = user
             ? {
                   name: user.name,
@@ -83,10 +86,15 @@ export const registerConnectionAndLifecycle = (io: SocketIOServer): void => {
             io,
             socket,
             userId,
+            verified: Boolean(user?.verified),
             getSenderInfo,
             senderInfo,
             userDoc: user ? { name: user.name, avatar: user.avatar } : null,
         };
+
+        const removeVerifiedListener = onUserVerified(userId, () => {
+            ctx.verified = true;
+        });
 
         socket.on("join", async (roomId: string) => {
             if (isIpEventRateLimited(getClientIp(socket), "join")) return;
@@ -124,6 +132,7 @@ export const registerConnectionAndLifecycle = (io: SocketIOServer): void => {
         registerTypingHandler(ctx);
 
         socket.on("disconnect", () => {
+            removeVerifiedListener();
             removeUserSocket(userId, socket.id);
             cleanupSocketRateLimits(socket.id, userId);
             clearTypingForUser(userId);

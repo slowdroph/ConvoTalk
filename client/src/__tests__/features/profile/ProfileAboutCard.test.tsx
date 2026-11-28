@@ -10,6 +10,7 @@ function makeEditor(
         active: null,
         saving: false,
         error: null,
+        canEdit: true,
         start: vi.fn(),
         cancel: vi.fn(),
         save: vi.fn().mockResolvedValue(true),
@@ -72,5 +73,19 @@ describe("ProfileAboutCard", () => {
         fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
         expect(cancel).toHaveBeenCalled();
+    });
+
+    it("não oferece edição ao dono não verificado", () => {
+        render(
+            <ProfileAboutCard
+                bio="Bio"
+                isSelf
+                editor={makeEditor({ canEdit: false })}
+            />,
+        );
+
+        expect(
+            screen.queryByRole("button", { name: "Editar bio" }),
+        ).not.toBeInTheDocument();
     });
 });

@@ -12,6 +12,7 @@ import { calculateAge, normalizeLanguageLevels } from "../../../shared/profile";
 import { type LanguageCode } from "../../../shared/i18n";
 import cloudinary from "../config/cloudinary";
 import {
+    AppError,
     BadRequestError,
     NotFoundError,
     UnauthorizedError,
@@ -33,6 +34,7 @@ import { logger } from "../config/logger";
 import { getSocketIO } from "../config/io";
 import { emitForceLogout } from "../utils/socket";
 import { escapeRegex } from "../utils/regex";
+import { quotaSnapshot } from "./messageQuota";
 
 const SENSITIVE_SELECT =
     "-password -verificationToken -verificationTokenExpiry -resetToken -resetTokenExpiry -pendingEmailToken -pendingEmailTokenExpiry";
@@ -46,9 +48,16 @@ function toSafeUserObject(doc: ReturnType<typeof User.prototype.toObject>) {
         pendingEmailTokenExpiry: _pete,
         resetToken: _rt,
         resetTokenExpiry: _rte,
+        messageQuotaDate,
+        messageQuotaUsed,
         ...safeUser
     } = doc;
-    return safeUser;
+    return {
+        ...safeUser,
+        messageQuota: safeUser.verified
+            ? null
+            : quotaSnapshot({ messageQuotaDate, messageQuotaUsed }),
+    };
 }
 
 export async function getMe(userId: string) {
@@ -56,7 +65,14 @@ export async function getMe(userId: string) {
     if (!user) {
         throw new NotFoundError("Usuário não encontrado.");
     }
-    return { ...user, emailPending: Boolean(user.pendingEmail) };
+    const { messageQuotaDate, messageQuotaUsed, ...safeUser } = user;
+    return {
+        ...safeUser,
+        emailPending: Boolean(user.pendingEmail),
+        messageQuota: user.verified
+            ? null
+            : quotaSnapshot({ messageQuotaDate, messageQuotaUsed }),
+    };
 }
 
 export async function updatePreferences(
@@ -151,6 +167,13 @@ export async function updateProfile(
     let confirmationToken = "";
 
     if (input.name && input.name !== user.name) {
+        if (!user.verified) {
+            throw new AppError(
+                403,
+                "EMAIL_NOT_VERIFIED",
+                "Confirme seu email para editar seu perfil.",
+            );
+        }
         user.name = input.name;
     }
 
@@ -172,6 +195,37 @@ export async function updateProfile(
         );
         if (!isMatch) {
             throw new UnauthorizedError("Senha atual incorreta.");
+        }
+
+        if (!user.verified) {
+            const previousEmail = user.email;
+            const verificationToken = generateSecretToken();
+            user.email = normalizedEmail;
+            user.verified = false;
+            user.verificationToken = hashSecretToken(verificationToken);
+            user.verificationTokenExpiry = new Date(
+                Date.now() + VERIFICATION_TOKEN_EXPIRES_MIN * 60 * 1000,
+            );
+            user.pendingEmail = null;
+            user.pendingEmailToken = null;
+            user.pendingEmailTokenExpiry = null;
+            await user.save();
+
+            enqueueEmail({
+                kind: "verification",
+                to: normalizedEmail,
+                name: user.name,
+                token: verificationToken,
+            });
+
+            return {
+                ...toSafeUserObject(user.toObject()),
+                emailPending: false,
+                emailChanged: true,
+                previousEmail,
+                newEmail: normalizedEmail,
+                verificationSent: true,
+            };
         }
 
         confirmationToken = generateSecretToken();

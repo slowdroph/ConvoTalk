@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { Outlet } from "react-router-dom";
 import AppBottomNav from "../components/Navigation/AppBottomNav";
 import AppRail from "../components/Navigation/AppRail";
+import VerificationBanner from "../components/Auth/VerificationBanner";
 import { RoomsProvider } from "../providers/RoomsProvider";
 import { BottomNavProvider } from "../providers/BottomNavProvider";
 import { useBottomNav } from "../hooks/useBottomNav";
@@ -22,7 +23,10 @@ function AppShell() {
         >
             <AppRail />
             <div className="flex min-h-0 min-w-0 flex-1 flex-col pb-[var(--app-bottom-nav-h)] transition-[padding-bottom] duration-200 ease-out lg:pb-0">
-                <Outlet />
+                <VerificationBanner />
+                <div className="flex min-h-0 flex-1 flex-col">
+                    <Outlet />
+                </div>
             </div>
             <AppBottomNav />
         </div>

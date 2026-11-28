@@ -7,6 +7,7 @@
     "CONFLICT": "No se pudo completar: ya existe un registro con estos datos.",
     "BAD_REQUEST": "Solicitud no válida.",
     "EMAIL_NOT_VERIFIED": "Verifica tu correo antes de continuar.",
+    "MESSAGE_QUOTA_EXCEEDED": "Has alcanzado el límite diario de mensajes. Confirma tu correo para seguir chateando.",
     "INVALID_URL": "Enlace no válido.",
     "BLOCKED_HOST": "Este enlace no está permitido.",
     "PREVIEW_UNAVAILABLE": "No se pudo cargar la vista previa de este enlace.",

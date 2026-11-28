@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import LocalizedLink from "../components/ui/LocalizedLink";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -15,8 +15,6 @@ export default function LoginPage() {
     const [isLogin, setIsLogin] = useState(() => {
         return searchParams.get("mode") !== "register";
     });
-
-    const switchToLogin = useCallback(() => setIsLogin(true), []);
 
     return (
         <div className="login-dark min-h-dvh-fallback text-zinc-100 flex flex-col justify-between relative overflow-x-hidden selection:bg-emerald-500 selection:text-white">
@@ -103,7 +101,7 @@ export default function LoginPage() {
                                 {isLogin ? (
                                     <LoginForm />
                                 ) : (
-                                    <RegisterForm onSwitchToLogin={switchToLogin} />
+                                    <RegisterForm />
                                 )}
                             </div>
 

@@ -285,7 +285,7 @@ export default function ProfileLanguagesCard({
                             {options.length}/{MAX_LANGUAGES}
                         </span>
                     )}
-                    {isSelf && !editing && (
+                    {isSelf && editor.canEdit && !editing && (
                         <InlineEditButton
                             label={t("languagesCard.editLabel")}
                             onClick={() => editor.start("languages")}
@@ -364,7 +364,7 @@ export default function ProfileLanguagesCard({
                             ? t("languagesCard.emptySelf")
                             : t("languagesCard.emptyOther")}
                     </p>
-                    {isSelf && (
+                    {isSelf && editor.canEdit && (
                         <button
                             type="button"
                             onClick={() => editor.start("languages")}

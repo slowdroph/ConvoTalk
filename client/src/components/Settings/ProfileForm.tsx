@@ -14,6 +14,8 @@ export default function ProfileForm() {
     const [error, setError] = useState("");
     const [profileLoading, setProfileLoading] = useState(false);
 
+    const canEditName = Boolean(user?.verified);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
@@ -31,13 +33,22 @@ export default function ProfileForm() {
             });
             updateUser(data);
             if (emailChanged) {
-                setSuccess(
-                    t("profile.emailChangeSuccess", {
-                        email: data.pendingEmail || email,
-                    }),
-                );
                 setCurrentPassword("");
-                setEmail(user?.email || "");
+                if (data.pendingEmail) {
+                    setSuccess(
+                        t("profile.emailChangeSuccess", {
+                            email: data.pendingEmail,
+                        }),
+                    );
+                    setEmail(user?.email || "");
+                } else {
+                    setSuccess(
+                        t("profile.emailChangeVerify", {
+                            email: data.email || email,
+                        }),
+                    );
+                    setEmail(data.email || email);
+                }
             } else {
                 setSuccess(t("profile.success"));
             }
@@ -109,8 +120,14 @@ export default function ProfileForm() {
                         onChange={(e) => setName(e.target.value)}
                         required
                         maxLength={50}
-                        className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2.5 text-sm text-noir-text-bright focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition"
+                        disabled={!canEditName}
+                        className="w-full bg-noir-surface-alt border border-noir-border rounded-xl px-3.5 py-2.5 text-sm text-noir-text-bright focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition disabled:cursor-not-allowed disabled:opacity-60"
                     />
+                    {!canEditName && (
+                        <p className="mt-1.5 text-[11px] text-noir-text-muted">
+                            {t("profile.nameLocked")}
+                        </p>
+                    )}
                 </div>
 
                 <div>
@@ -121,12 +138,18 @@ export default function ProfileForm() {
                         >
                             {t("profile.email")}
                         </label>
-                        <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            {t("profile.verified")}
-                        </span>
+                        {user?.verified ? (
+                            <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                {t("profile.verified")}
+                            </span>
+                        ) : (
+                            <span className="text-[11px] text-amber-400 font-medium">
+                                {t("profile.unverified")}
+                            </span>
+                        )}
                     </div>
                     <input
                         type="email"

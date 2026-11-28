@@ -1,5 +1,6 @@
 import { Router } from "express";
 import auth from "../middleware/auth";
+import requireVerified from "../middleware/requireVerified";
 import { validate } from "../middleware/validate";
 import upload from "../middleware/upload";
 import { profileEmailGuardLimiter, emailChangeLimiter, profileUpdateLimiter } from "../middleware/rateLimiter";
@@ -49,6 +50,7 @@ router.put(
 router.put(
     "/location",
     auth,
+    requireVerified,
     validate(locationSchema),
     updateLocation,
 );
@@ -58,7 +60,7 @@ router.post(
     validate(confirmEmailChangeSchema),
     confirmEmailChange,
 );
-router.put("/status", auth, validate(statusSchema), updateStatus);
+router.put("/status", auth, requireVerified, validate(statusSchema), updateStatus);
 router.put(
     "/preferences",
     auth,
@@ -69,14 +71,15 @@ router.put(
 router.put(
     "/about",
     auth,
+    requireVerified,
     profileUpdateLimiter,
     validate(aboutSchema),
     updateAbout,
 );
 router.put("/password", auth, validate(passwordSchema), updatePassword);
 router.delete("/account", auth, validate(accountSchema), deleteAccount);
-router.put("/avatar", auth, upload.single("avatar"), updateAvatar);
-router.delete("/avatar", auth, removeAvatar);
+router.put("/avatar", auth, requireVerified, upload.single("avatar"), updateAvatar);
+router.delete("/avatar", auth, requireVerified, removeAvatar);
 router.get("/blocked", auth, listBlockedUsers);
 router.post("/:id/block", auth, validate(blockUserParams), blockUser);
 router.delete("/:id/block", auth, validate(blockUserParams), unblockUser);

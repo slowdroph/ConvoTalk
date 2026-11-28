@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
+import type { HydratedDocument } from "mongoose";
 import User from "../models/User";
 import Session from "../models/Session";
+import type { IUser } from "../types";
 import {
     UnauthorizedError,
     ValidationError,
@@ -23,6 +25,8 @@ import { SALT_ROUNDS } from "../constants";
 import { logger } from "../config/logger";
 import { getSocketIO } from "../config/io";
 import { emitForceLogout } from "../utils/socket";
+import { notifyUserVerified } from "../socket/userEvents";
+import { quotaSnapshot } from "./messageQuota";
 import { generatePublicId } from "../utils/publicId";
 import { normalizeLanguageLevels } from "../../../shared/profile";
 import { DEFAULT_LANGUAGE, type LanguageCode } from "../../../shared/i18n";
@@ -33,6 +37,9 @@ function publicUser(user: {
     email: string;
     publicId: string;
     avatar: string;
+    verified?: boolean;
+    messageQuotaDate?: string | null;
+    messageQuotaUsed?: number | null;
     country?: string;
     city?: string;
     preferences?: { language?: string };
@@ -42,6 +49,8 @@ function publicUser(user: {
     email: string;
     publicId: string;
     avatar: string;
+    verified: boolean;
+    messageQuota: ReturnType<typeof quotaSnapshot> | null;
     country: string;
     city: string;
     preferences?: { language?: string };
@@ -52,6 +61,8 @@ function publicUser(user: {
         email: user.email,
         publicId: user.publicId,
         avatar: user.avatar,
+        verified: Boolean(user.verified),
+        messageQuota: user.verified ? null : quotaSnapshot(user),
         country: user.country || "",
         city: user.city || "",
         preferences: user.preferences?.language
@@ -92,6 +103,56 @@ function buildDeviceLabel(userAgent: string): string {
 const MAX_SESSIONS_PER_USER = 10;
 const REFRESH_REUSE_GRACE_MS = 60 * 1000;
 
+async function createUserSession(
+    user: HydratedDocument<IUser>,
+    userAgent: string,
+    ip?: string,
+) {
+    const deviceType = parseDeviceType(userAgent);
+    const deviceLabel = buildDeviceLabel(userAgent);
+
+    const tempRefreshToken = signRefreshToken(user._id.toString(), "pending");
+    const session = await Session.create({
+        userId: user._id,
+        token: hashRefreshToken(tempRefreshToken),
+        deviceType,
+        userAgent: userAgent.slice(0, 500),
+        ip: ip ?? null,
+        deviceLabel,
+        lastActiveAt: new Date(),
+    });
+
+    const accessToken = signAccessToken(user._id.toString(), session._id.toString());
+    const finalRefreshToken = signRefreshToken(user._id.toString(), session._id.toString());
+    session.token = hashRefreshToken(finalRefreshToken);
+    await session.save();
+
+    const excessCount = await Session.countDocuments({ userId: user._id }) - MAX_SESSIONS_PER_USER;
+    if (excessCount > 0) {
+        const oldestSessions = await Session.find({ userId: user._id })
+            .sort({ createdAt: 1 })
+            .limit(excessCount)
+            .select("_id")
+            .lean();
+        if (oldestSessions.length > 0) {
+            const idsToRemove = oldestSessions.map((s) => s._id);
+            await Session.deleteMany({ _id: { $in: idsToRemove } });
+        }
+    }
+
+    user.lastIp = ip ?? null;
+    user.lastIpAt = new Date();
+    await user.save();
+
+    return {
+        accessToken,
+        refreshToken: finalRefreshToken,
+        user: publicUser(user),
+        sessionId: session._id.toString(),
+        deviceType,
+    };
+}
+
 export async function registerUser(
     input: {
         name: string;
@@ -106,6 +167,7 @@ export async function registerUser(
         language?: LanguageCode;
     },
     ip?: string,
+    userAgent = "",
 ) {
     const {
         name,
@@ -187,7 +249,11 @@ export async function registerUser(
         emailSendingFailed = true;
     }
 
-    return { alreadyExists: false as const, emailSendingFailed };
+    return {
+        alreadyExists: false as const,
+        emailSendingFailed,
+        ...(await createUserSession(user, userAgent, ip)),
+    };
 }
 
 export async function loginUser(
@@ -206,56 +272,7 @@ export async function loginUser(
         throw new UnauthorizedError("Credenciais inválidas.");
     }
 
-    if (!user.verified) {
-        return {
-            emailNotVerified: true,
-            needsVerification: true,
-        } as const;
-    }
-
-    const deviceType = parseDeviceType(userAgent);
-    const deviceLabel = buildDeviceLabel(userAgent);
-
-    const tempRefreshToken = signRefreshToken(user._id.toString(), "pending");
-    const session = await Session.create({
-        userId: user._id,
-        token: hashRefreshToken(tempRefreshToken),
-        deviceType,
-        userAgent: userAgent.slice(0, 500),
-        ip: ip ?? null,
-        deviceLabel,
-        lastActiveAt: new Date(),
-    });
-
-    const accessToken = signAccessToken(user._id.toString(), session._id.toString());
-    const finalRefreshToken = signRefreshToken(user._id.toString(), session._id.toString());
-    session.token = hashRefreshToken(finalRefreshToken);
-    await session.save();
-
-    const excessCount = await Session.countDocuments({ userId: user._id }) - MAX_SESSIONS_PER_USER;
-    if (excessCount > 0) {
-        const oldestSessions = await Session.find({ userId: user._id })
-            .sort({ createdAt: 1 })
-            .limit(excessCount)
-            .select("_id")
-            .lean();
-        if (oldestSessions.length > 0) {
-            const idsToRemove = oldestSessions.map((s) => s._id);
-            await Session.deleteMany({ _id: { $in: idsToRemove } });
-        }
-    }
-
-    user.lastIp = ip ?? null;
-    user.lastIpAt = new Date();
-    await user.save();
-
-    return {
-        accessToken,
-        refreshToken: finalRefreshToken,
-        user: publicUser(user),
-        sessionId: session._id.toString(),
-        deviceType,
-    };
+    return createUserSession(user, userAgent, ip);
 }
 
 export async function refreshSession(refreshToken: string, ip?: string) {
@@ -341,6 +358,8 @@ export async function verifyEmailToken(token: string) {
     user.verificationToken = null;
     user.verificationTokenExpiry = null;
     await user.save();
+
+    await notifyUserVerified(user._id.toString());
 }
 
 export async function resendVerification(email: string) {

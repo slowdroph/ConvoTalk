@@ -20,6 +20,7 @@ import MentionAutocomplete from "./MentionAutocomplete";
 import { queuePendingMessage } from "../../lib/offlineStorage";
 import { parseMentionTokens, getUniqueMentionUserIds } from "@shared/mentions";
 import type { Message, PublicUser } from "../../types";
+import type { MessageAck } from "@shared/types";
 
 const MAX_LENGTH = 2000;
 const WARN_LENGTH = 1800;
@@ -97,6 +98,12 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
     const { setComposerActive } = useBottomNav();
 
     const offline = !navigator.onLine || !connected;
+    const quotaBlocked = Boolean(
+        user &&
+            !user.verified &&
+            user.messageQuota &&
+            user.messageQuota.remaining <= 0,
+    );
 
     const composerActive =
         focused ||
@@ -344,6 +351,10 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
         const trimmed = message.trim();
         if (!trimmed && !hasFiles) return;
         if (isBlocked) return;
+        if (quotaBlocked) {
+            setError(t("input.quotaBlocked"));
+            return;
+        }
         if (trimmed.length > MAX_LENGTH) {
             setError(t("input.tooLong", { count: MAX_LENGTH }));
             return;
@@ -453,11 +464,11 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
             clearInput();
             setUploading(false);
 
-            const failOptimistic = () => {
+            const failOptimistic = (message = t("input.sendError")) => {
                 onOptimisticFailed?.(clientMessageId);
                 showToast({
                     type: "error",
-                    message: t("input.sendError"),
+                    message,
                 });
                 setMessage((prev) => prev || trimmed);
             };
@@ -480,10 +491,14 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                           attachments,
                           clientMessageId,
                       },
-                (response: { error?: string }) => {
+                (response: MessageAck) => {
                     clearTimeout(ackTimeout);
                     if (response?.error) {
-                        failOptimistic();
+                        failOptimistic(
+                            response.code === "MESSAGE_QUOTA_EXCEEDED"
+                                ? t("input.quotaLimitReached")
+                                : t("input.sendError"),
+                        );
                         return;
                     }
                 },
@@ -509,6 +524,11 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
         setIsRecording(false);
         setError("");
 
+        if (quotaBlocked) {
+            setError(t("input.quotaBlocked"));
+            return;
+        }
+
         if (offline) {
             setError(t("input.offlineAudio"));
             return;
@@ -528,6 +548,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                 { headers: { "Content-Type": "multipart/form-data" } },
             );
             const attachments = data.files;
+            const clientMessageId = crypto.randomUUID();
             if (socket) {
                 socket.emit(
                     replyingTo ? "reply" : "message",
@@ -537,16 +558,16 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                               parentId: replyingTo._id,
                               content: "",
                               attachments,
+                              clientMessageId,
                           }
-                        : { roomId, content: "", attachments },
-                    (response: { error?: string }) => {
+                        : { roomId, content: "", attachments, clientMessageId },
+                    (response: MessageAck) => {
                         setUploading(false);
                         if (response?.error) {
                             setError(
-                                getErrorMessage(
-                                    response,
-                                    t("input.audioError"),
-                                ),
+                                response.code === "MESSAGE_QUOTA_EXCEEDED"
+                                    ? t("input.quotaLimitReached")
+                                    : t("input.audioError"),
                             );
                         } else {
                             if (onCancelReply) onCancelReply();
@@ -567,6 +588,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
     const canSubmit =
         !uploading &&
         !isBlocked &&
+        !quotaBlocked &&
         (message.trim().length > 0 || files.length > 0);
 
     return (
@@ -758,7 +780,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                                 setActionsOpen(false);
                                 setIsRecording(true);
                             }}
-                            disabled={uploading || files.length > 0}
+                            disabled={uploading || files.length > 0 || quotaBlocked}
                             className="p-2 text-slate-500 hover:text-red-600 hover:bg-slate-200 rounded-xl transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:text-noir-text-muted dark:hover:text-red-400 dark:hover:bg-noir-card"
                         title={t("input.recordVoice")}
                         aria-label={t("input.recordVoice")}
@@ -799,7 +821,7 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                             setActionsOpen(false);
                             fileInputRef.current?.click();
                         }}
-                        disabled={uploading || files.length >= MAX_FILES}
+                        disabled={uploading || files.length >= MAX_FILES || quotaBlocked}
                         className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-200 rounded-xl transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed dark:text-noir-text-muted dark:hover:text-emerald-400 dark:hover:bg-noir-card"
                         title={t("input.attachFile")}
                     >
@@ -885,11 +907,13 @@ const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
                         placeholder={
                             isBlocked
                                 ? t("input.blockedPlaceholder")
-                                : uploading
-                                  ? t("input.uploadingPlaceholder")
-                                  : files.length > 0
-                                    ? t("input.captionPlaceholder")
-                                    : t("input.placeholder")
+                                : quotaBlocked
+                                  ? t("input.quotaBlockedPlaceholder")
+                                  : uploading
+                                    ? t("input.uploadingPlaceholder")
+                                    : files.length > 0
+                                      ? t("input.captionPlaceholder")
+                                      : t("input.placeholder")
                         }
                         disabled={uploading || isBlocked}
                         maxLength={MAX_LENGTH + 100}

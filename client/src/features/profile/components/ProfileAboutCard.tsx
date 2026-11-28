@@ -82,7 +82,7 @@ export default function ProfileAboutCard({
                         {t("about.badge")}
                     </span>
                 </div>
-                {isSelf && !editing ? (
+                {isSelf && editor.canEdit && !editing ? (
                     <InlineEditButton
                         label={t("about.editLabel")}
                         onClick={() => editor.start("bio")}

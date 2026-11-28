@@ -217,7 +217,7 @@ export default function ProfileInterestsCard({
                             })}
                         </span>
                     )}
-                    {isSelf && !editing && (
+                    {isSelf && editor.canEdit && !editing && (
                         <InlineEditButton
                             label={t("interestsCard.editLabel")}
                             onClick={() => editor.start("interests")}
@@ -253,7 +253,7 @@ export default function ProfileInterestsCard({
                               })
                             : t("interestsCard.emptyOther")}
                     </p>
-                    {isSelf && (
+                    {isSelf && editor.canEdit && (
                         <button
                             type="button"
                             onClick={() => editor.start("interests")}

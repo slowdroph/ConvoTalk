@@ -38,6 +38,7 @@ export interface ConnectionContext {
     io: SocketIOServer;
     socket: Socket;
     userId: string;
+    verified: boolean;
     getSenderInfo: () => Promise<SenderInfo | null>;
     senderInfo: SenderInfo | null;
     userDoc: { name?: string; avatar?: string } | null;

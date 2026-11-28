@@ -260,7 +260,7 @@ export default function ProfileDetailsEditor({
                 </p>
             )}
 
-            {isSelf && (
+            {isSelf && editor.canEdit && (
                 <InlineEditButton
                     label={t("details.editLabel")}
                     onClick={() => editor.start("details")}

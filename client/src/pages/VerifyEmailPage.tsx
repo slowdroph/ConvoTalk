@@ -3,9 +3,11 @@ import { useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import { getErrorMessage } from "../utils/errors";
+import { useAuth } from "../hooks/useAuth";
 
 export default function VerifyEmailPage() {
     const { t } = useTranslation("auth");
+    const { user, refreshUser } = useAuth();
     const [searchParams] = useSearchParams();
     const token = searchParams.get("token");
     const [status, setStatus] = useState<"loading" | "success" | "error">(
@@ -25,6 +27,7 @@ export default function VerifyEmailPage() {
                 await api.get(`/auth/verify/${token}`);
                 setStatus("success");
                 setMessage(t("verify.successMessage"));
+                void refreshUser();
             } catch (err: unknown) {
                 setStatus("error");
                 setMessage(getErrorMessage(err, t("verify.error")));
@@ -32,7 +35,7 @@ export default function VerifyEmailPage() {
         };
 
         verify();
-    }, [token, t]);
+    }, [token, t, refreshUser]);
 
     return (
         <div className="min-h-dvh-fallback bg-zinc-950 flex items-center justify-center px-4">
@@ -70,10 +73,12 @@ export default function VerifyEmailPage() {
                             </h1>
                             <p className="text-zinc-400 text-sm">{message}</p>
                             <Link
-                                to="/login"
+                                to={user ? "/chat" : "/login"}
                                 className="block w-full py-3 bg-green-600 hover:bg-green-700 text-on-accent font-medium rounded-lg transition-colors text-sm"
                             >
-                                {t("verify.goToLogin")}
+                                {user
+                                    ? t("verify.continueToApp")
+                                    : t("verify.goToLogin")}
                             </Link>
                         </>
                     )}

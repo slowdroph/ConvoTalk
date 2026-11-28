@@ -56,6 +56,15 @@ const userSchema = new Schema<IUser>({
         type: Boolean,
         default: false,
     },
+    messageQuotaDate: {
+        type: String,
+        default: null,
+    },
+    messageQuotaUsed: {
+        type: Number,
+        default: 0,
+        min: 0,
+    },
     verificationToken: {
         type: String,
         default: null,

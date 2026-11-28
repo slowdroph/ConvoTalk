@@ -110,7 +110,7 @@ export default function ProfileStatusEditor({
 }: ProfileStatusEditorProps) {
     const { t } = useTranslation("profile");
 
-    if (isSelf && editor.isEditing("status")) {
+    if (isSelf && editor.canEdit && editor.isEditing("status")) {
         return <StatusForm status={status} editor={editor} />;
     }
 
@@ -127,7 +127,7 @@ export default function ProfileStatusEditor({
             >
                 {status || t("status.empty")}
             </span>
-            {isSelf && (
+            {isSelf && editor.canEdit && (
                 <InlineEditButton
                     label={t("status.editLabel")}
                     onClick={() => editor.start("status")}

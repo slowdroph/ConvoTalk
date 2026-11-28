@@ -85,7 +85,7 @@ describe("RegisterForm", () => {
     });
 
     it("avança as quatro etapas e envia todos os dados no cadastro", async () => {
-        render(<RegisterForm onSwitchToLogin={vi.fn()} />);
+        render(<RegisterForm />);
 
         expect(screen.getByText("Etapa 1 de 4")).toBeInTheDocument();
 
@@ -119,13 +119,10 @@ describe("RegisterForm", () => {
                 languageLevels: { pt: "fluent" },
             }),
         );
-        expect(
-            await screen.findByText("Verifique seu email"),
-        ).toBeInTheDocument();
     });
 
     it("não avança com email inválido", () => {
-        render(<RegisterForm onSwitchToLogin={vi.fn()} />);
+        render(<RegisterForm />);
 
         fillAccountStep();
         fireEvent.change(screen.getByLabelText("E-mail"), {
@@ -139,7 +136,7 @@ describe("RegisterForm", () => {
     });
 
     it("exige gênero na etapa sobre você", () => {
-        render(<RegisterForm onSwitchToLogin={vi.fn()} />);
+        render(<RegisterForm />);
 
         goToPersonalStep();
         fireEvent.click(continueButton());
@@ -151,7 +148,7 @@ describe("RegisterForm", () => {
 
     it("bloqueia o cadastro de menor de 18 anos", () => {
         const year = new Date().getUTCFullYear() - 10;
-        render(<RegisterForm onSwitchToLogin={vi.fn()} />);
+        render(<RegisterForm />);
 
         goToPersonalStep();
         selectOption("Gênero", "Mulher");
@@ -166,7 +163,7 @@ describe("RegisterForm", () => {
     });
 
     it("exige país e cidade na etapa de localização", () => {
-        render(<RegisterForm onSwitchToLogin={vi.fn()} />);
+        render(<RegisterForm />);
 
         goToLocationStep();
         fireEvent.click(continueButton());
@@ -181,7 +178,7 @@ describe("RegisterForm", () => {
     });
 
     it("exige pelo menos um idioma", () => {
-        render(<RegisterForm onSwitchToLogin={vi.fn()} />);
+        render(<RegisterForm />);
 
         goToLanguagesStep();
         fireEvent.click(screen.getByRole("checkbox"));
@@ -194,7 +191,7 @@ describe("RegisterForm", () => {
     });
 
     it("só habilita a criação após aceitar os termos", () => {
-        render(<RegisterForm onSwitchToLogin={vi.fn()} />);
+        render(<RegisterForm />);
 
         goToLanguagesStep();
         fireEvent.click(screen.getByRole("button", { name: /Português/ }));
@@ -209,7 +206,7 @@ describe("RegisterForm", () => {
     });
 
     it("volta de etapa preservando os dados preenchidos", () => {
-        render(<RegisterForm onSwitchToLogin={vi.fn()} />);
+        render(<RegisterForm />);
 
         fillAccountStep();
         fireEvent.click(continueButton());
@@ -223,7 +220,7 @@ describe("RegisterForm", () => {
     });
 
     it("expõe o progresso acessível e não oferece voltar na primeira etapa", () => {
-        render(<RegisterForm onSwitchToLogin={vi.fn()} />);
+        render(<RegisterForm />);
 
         const progress = screen.getByRole("progressbar", {
             name: "Progresso do cadastro",
@@ -247,3 +244,4 @@ describe("RegisterForm", () => {
         ).toBeInTheDocument();
     });
 });
+

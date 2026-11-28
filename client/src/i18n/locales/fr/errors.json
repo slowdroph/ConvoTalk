@@ -7,6 +7,7 @@
     "CONFLICT": "Impossible de terminer : un enregistrement avec ces informations existe déjà.",
     "BAD_REQUEST": "Requête invalide.",
     "EMAIL_NOT_VERIFIED": "Vérifiez votre e-mail avant de continuer.",
+    "MESSAGE_QUOTA_EXCEEDED": "Vous avez atteint la limite quotidienne de messages. Confirmez votre e-mail pour continuer à discuter.",
     "INVALID_URL": "Lien invalide.",
     "BLOCKED_HOST": "Ce lien n'est pas autorisé.",
     "PREVIEW_UNAVAILABLE": "Impossible de charger l'aperçu de ce lien.",

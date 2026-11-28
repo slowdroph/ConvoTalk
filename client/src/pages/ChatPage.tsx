@@ -9,6 +9,7 @@ import SuggestedUsers from "../components/Chat/SuggestedUsers";
 import api from "../services/api";
 import { useSocket } from "../hooks/useSocket";
 import { useAuth } from "../hooks/useAuth";
+import { useToast } from "../contexts/ToastContext";
 import { useRooms } from "../hooks/useRooms";
 import { useNotifications } from "../hooks/useNotifications";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
@@ -20,6 +21,7 @@ import {
     removePendingMessage,
 } from "../lib/offlineStorage";
 import type { Room } from "../types";
+import type { MessageAck } from "@shared/types";
 
 export default function ChatPage() {
     const { socket } = useSocket();
@@ -54,6 +56,7 @@ function ChatPageInner() {
     const [webrtcState, setWebrtcState] = useState<WebRTCState | null>(null);
     const { socket, connected } = useSocket();
     const { user } = useAuth();
+    const { showToast } = useToast();
     const { incomingCall, setIncomingCall, setPendingAcceptedCall } = useIncomingCall();
 
     useNotifications(socket, user, activeRoom);
@@ -74,9 +77,18 @@ function ChatPageInner() {
                             attachments: [],
                             clientMessageId: msg.id,
                         },
-                        (res: { error?: string }) => {
-                            if (!cancelled && !res?.error) {
+                        (res: MessageAck) => {
+                            if (cancelled) return;
+                            if (!res?.error) {
                                 removePendingMessage(msg.id).catch(() => {});
+                                return;
+                            }
+                            if (res.code === "MESSAGE_QUOTA_EXCEEDED") {
+                                removePendingMessage(msg.id).catch(() => {});
+                                showToast({
+                                    type: "error",
+                                    message: t("input.quotaLimitReached"),
+                                });
                             }
                         },
                     );
@@ -87,7 +99,7 @@ function ChatPageInner() {
         return () => {
             cancelled = true;
         };
-    }, [connected, socket]);
+    }, [connected, socket, showToast, t]);
 
     useEffect(() => {
         if (roomsLoading) return;

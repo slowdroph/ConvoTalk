@@ -14,7 +14,6 @@ import {
     MIN_AGE,
     getLanguageOption,
 } from "@shared/profile";
-import api from "../../services/api";
 import { dateOfBirthError } from "../../utils/date";
 import {
     genderLabel,
@@ -30,10 +29,6 @@ import OptionSearch from "../ui/OptionSearch";
 import Select from "../ui/Select";
 import AuthSubmitButton from "./AuthSubmitButton";
 import RegisterProgress from "./RegisterProgress";
-
-interface RegisterFormProps {
-    onSwitchToLogin: () => void;
-}
 
 const labelClass = "block text-xs font-semibold text-zinc-300";
 
@@ -67,7 +62,7 @@ const STEPS = [
     },
 ] as const;
 
-export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
+export default function RegisterForm() {
     const { t } = useTranslation("auth");
     const countries = useCountryOptions();
     const { register } = useAuth();
@@ -85,11 +80,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     >({});
     const [languageQuery, setLanguageQuery] = useState("");
     const [error, setError] = useState("");
+    const [info, setInfo] = useState("");
     const [loading, setLoading] = useState(false);
-    const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
-    const [resending, setResending] = useState(false);
-    const [resendMessage, setResendMessage] = useState("");
-    const [resendIsError, setResendIsError] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [acceptedTerms, setAcceptedTerms] = useState(false);
 
@@ -115,6 +107,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
     const clearError = () => {
         if (error) setError("");
+        if (info) setInfo("");
     };
 
     const toggleLanguage = (id: string) => {
@@ -180,6 +173,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         e.preventDefault();
         if (loading) return;
         setError("");
+        setInfo("");
 
         if (!isLastStep) {
             const stepError = validateStep(step);
@@ -203,7 +197,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         setLoading(true);
 
         try {
-            await register({
+            const result = await register({
                 name: name.trim(),
                 email: email.trim(),
                 password,
@@ -215,7 +209,9 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                 languageLevels,
             });
             reportSignupConversion();
-            setRegisteredEmail(email.trim());
+            if (!result?.token) {
+                setInfo(result?.message || t("register.verifyHint"));
+            }
         } catch (err: unknown) {
             setError(getErrorMessage(err, t("register.error")));
         } finally {
@@ -228,88 +224,6 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         setError("");
         setStep((current) => Math.max(0, current - 1));
     };
-
-    const handleResend = async () => {
-        if (!registeredEmail) return;
-        setResending(true);
-        setResendMessage("");
-        setResendIsError(false);
-        try {
-            await api.post("/auth/resend-verification", {
-                email: registeredEmail,
-            });
-            setResendMessage(t("login.resendSuccess"));
-        } catch (err: unknown) {
-            setResendMessage(getErrorMessage(err, t("login.resendError")));
-            setResendIsError(true);
-        } finally {
-            setResending(false);
-        }
-    };
-
-    if (registeredEmail) {
-        return (
-            <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-[#00a84b] rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-950/60">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-8 w-8 text-white"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                    </svg>
-                </div>
-                <h2 className="text-white text-lg font-semibold">
-                    {t("register.verifyTitle")}
-                </h2>
-                <p className="text-zinc-400 text-sm">
-                    {t("register.verifyDescription")}{" "}
-                    <span className="text-white font-medium">
-                        {registeredEmail}
-                    </span>
-                </p>
-                <p className="text-zinc-500 text-xs">
-                    {t("register.verifyHint")}
-                </p>
-
-                {resendMessage && (
-                    <div
-                        className={`text-sm px-4 py-2 rounded-xl ${
-                            resendIsError
-                                ? "bg-red-500/10 border border-red-500/50 text-red-400"
-                                : "bg-green-500/10 border border-green-500/50 text-green-400"
-                        }`}
-                    >
-                        {resendMessage}
-                    </div>
-                )}
-
-                <button
-                    type="button"
-                    onClick={handleResend}
-                    disabled={resending}
-                    className="w-full py-3 bg-zinc-800/90 hover:bg-zinc-700 disabled:opacity-50 text-white font-medium rounded-xl transition-colors text-sm border border-white/10"
-                >
-                    {resending ? t("login.resending") : t("register.resend")}
-                </button>
-
-                <button
-                    type="button"
-                    onClick={onSwitchToLogin}
-                    className="w-full py-3 px-4 bg-[#00a84b] hover:bg-emerald-500 text-white font-semibold rounded-xl transition text-sm flex items-center justify-center gap-2"
-                >
-                    {t("register.goToLogin")}
-                </button>
-            </div>
-        );
-    }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4" method="POST" noValidate>
@@ -324,7 +238,16 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                 </div>
             )}
 
-            <div key={step} className="min-h-[170px] animate-slideInRight">
+            {info && (
+                <div
+                    role="status"
+                    className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 px-4 py-2 rounded-xl text-sm"
+                >
+                    {info}
+                </div>
+            )}
+
+            <div key={step} className="min-h-42.5 animate-slideInRight">
                 <div className="space-y-1">
                     <h3
                         ref={headingRef}
@@ -815,7 +738,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                         type="button"
                         onClick={handleBack}
                         disabled={loading}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3 text-sm font-medium text-zinc-300 transition-colors hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-white/10 bg-white/3 px-3.5 py-3 text-sm font-medium text-zinc-300 transition-colors hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

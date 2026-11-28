@@ -23,6 +23,80 @@ import {
     extractMentionsFromContent,
 } from "./shared";
 import { logger } from "../config/logger";
+import type { MessageAck, MessageQuotaPayload } from "../../../shared/types";
+import {
+    consumeMessageQuota,
+    refundMessageQuota,
+} from "../services/messageQuota";
+import { emitToUser } from "../utils/socket";
+
+async function reserveMessageQuota(
+    ctx: ConnectionContext,
+    ack?: (res: MessageAck) => void,
+): Promise<MessageQuotaPayload | null | undefined> {
+    if (ctx.verified) return null;
+
+    const result = await consumeMessageQuota(ctx.userId);
+
+    if (result.verified) {
+        ctx.verified = true;
+        return null;
+    }
+
+    if (!result.allowed) {
+        if (typeof ack === "function") {
+            ack({
+                error:
+                    "Você atingiu o limite diário de mensagens. Confirme seu email para enviar sem limites.",
+                code: "MESSAGE_QUOTA_EXCEEDED",
+                quota: result.quota ?? undefined,
+            });
+        }
+        return undefined;
+    }
+
+    return result.quota;
+}
+
+async function refundReservedQuota(
+    ctx: ConnectionContext,
+    quota: MessageQuotaPayload | null,
+): Promise<void> {
+    if (!quota) return;
+
+    try {
+        const updated = await refundMessageQuota(ctx.userId);
+        if (updated) {
+            await emitToUser(ctx.io, ctx.userId, "quota:update", updated);
+        }
+    } catch (error) {
+        logger.error(
+            { error, userId: ctx.userId },
+            "erro ao devolver cota de mensagem",
+        );
+    }
+}
+
+function publishQuotaUpdate(
+    ctx: ConnectionContext,
+    quota: MessageQuotaPayload | null,
+): void {
+    if (!quota) return;
+    void emitToUser(ctx.io, ctx.userId, "quota:update", quota).catch((error) => {
+        logger.error(
+            { error, userId: ctx.userId },
+            "erro ao emitir quota:update",
+        );
+    });
+}
+
+async function isDuplicateSubmission(
+    userId: string,
+    clientMessageId?: string,
+): Promise<boolean> {
+    if (!clientMessageId) return false;
+    return Boolean(await Message.exists({ sender: userId, clientMessageId }));
+}
 
 export function registerMessageHandlers(ctx: ConnectionContext): void {
     const { io, socket, userId, getSenderInfo } = ctx;
@@ -42,8 +116,9 @@ export function registerMessageHandlers(ctx: ConnectionContext): void {
                     publicId: string;
                 }[];
             },
-            ack?: (res: { error?: string }) => void,
+            ack?: (res: MessageAck) => void,
         ) => {
+            let reservedQuota: MessageQuotaPayload | null = null;
             try {
                 if (isRateLimited(socket.id)) {
                     if (typeof ack === "function") {
@@ -100,9 +175,20 @@ export function registerMessageHandlers(ctx: ConnectionContext): void {
                     return;
                 }
 
+                if (await isDuplicateSubmission(userId, clientMessageId)) {
+                    if (typeof ack === "function") {
+                        ack({});
+                    }
+                    return;
+                }
+
                 const info = await getSenderInfo();
 
                 const mentions = await extractMentionsFromContent(content, roomId);
+
+                const quota = await reserveMessageQuota(ctx, ack);
+                if (quota === undefined) return;
+                reservedQuota = quota;
 
                 const message = await Message.create({
                     sender: userId,
@@ -112,6 +198,9 @@ export function registerMessageHandlers(ctx: ConnectionContext): void {
                     clientMessageId: clientMessageId || null,
                     mentions,
                 });
+
+                reservedQuota = null;
+                publishQuotaUpdate(ctx, quota);
 
                 Room.updateOne(
                     { _id: roomId },
@@ -164,6 +253,7 @@ export function registerMessageHandlers(ctx: ConnectionContext): void {
                 }
 
             } catch (error) {
+                await refundReservedQuota(ctx, reservedQuota);
                 if (isDuplicateClientMessageId(error)) {
                     if (typeof ack === "function") {
                         ack({});
@@ -193,8 +283,9 @@ export function registerMessageHandlers(ctx: ConnectionContext): void {
                     publicId: string;
                 }[];
             },
-            ack?: (res: { error?: string }) => void,
+            ack?: (res: MessageAck) => void,
         ) => {
+            let reservedQuota: MessageQuotaPayload | null = null;
             try {
                 if (isRateLimited(socket.id)) {
                     if (typeof ack === "function") {
@@ -256,6 +347,13 @@ export function registerMessageHandlers(ctx: ConnectionContext): void {
                     return;
                 }
 
+                if (await isDuplicateSubmission(userId, clientMessageId)) {
+                    if (typeof ack === "function") {
+                        ack({});
+                    }
+                    return;
+                }
+
                 const parent = await Message.findOne({
                     _id: parentId,
                     room: roomId,
@@ -274,6 +372,10 @@ export function registerMessageHandlers(ctx: ConnectionContext): void {
 
                 const mentions = await extractMentionsFromContent(content, roomId);
 
+                const quota = await reserveMessageQuota(ctx, ack);
+                if (quota === undefined) return;
+                reservedQuota = quota;
+
                 const message = await Message.create({
                     sender: userId,
                     room: roomId,
@@ -283,6 +385,9 @@ export function registerMessageHandlers(ctx: ConnectionContext): void {
                     clientMessageId: clientMessageId || null,
                     mentions,
                 });
+
+                reservedQuota = null;
+                publishQuotaUpdate(ctx, quota);
 
                 Room.updateOne(
                     { _id: roomId },
@@ -339,6 +444,7 @@ export function registerMessageHandlers(ctx: ConnectionContext): void {
                 }
 
             } catch (error) {
+                await refundReservedQuota(ctx, reservedQuota);
                 if (isDuplicateClientMessageId(error)) {
                     if (typeof ack === "function") {
                         ack({});

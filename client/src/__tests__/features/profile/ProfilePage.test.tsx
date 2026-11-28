@@ -10,12 +10,22 @@ const {
     useProfilePostsMock,
     updateUserMock,
     updateAboutMock,
+    authUser,
 } = vi.hoisted(() => ({
     showToastMock: vi.fn(),
     useProfileMock: vi.fn(),
     useProfilePostsMock: vi.fn(),
     updateUserMock: vi.fn(),
     updateAboutMock: vi.fn(),
+    authUser: {
+        current: {
+            _id: "me",
+            name: "Eu",
+            publicId: "ME1",
+            avatar: "",
+            verified: true,
+        } as { _id: string; name: string; publicId: string; avatar: string; verified: boolean },
+    },
 }));
 
 vi.mock("../../../contexts/ToastContext", () => ({
@@ -24,7 +34,7 @@ vi.mock("../../../contexts/ToastContext", () => ({
 
 vi.mock("../../../hooks/useAuth", () => ({
     useAuth: () => ({
-        user: { _id: "me", name: "Eu", publicId: "ME1", avatar: "" },
+        user: authUser.current,
         updateUser: updateUserMock,
     }),
 }));
@@ -161,6 +171,13 @@ describe("ProfilePage", () => {
         useProfilePostsMock.mockReset();
         updateUserMock.mockReset();
         updateAboutMock.mockReset();
+        authUser.current = {
+            _id: "me",
+            name: "Eu",
+            publicId: "ME1",
+            avatar: "",
+            verified: true,
+        };
         mockPosts();
     });
 
@@ -275,6 +292,24 @@ describe("ProfilePage", () => {
         ).not.toBeInTheDocument();
         expect(
             screen.queryByRole("button", { name: "Editar detalhes do perfil" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("não mostra editores inline para o dono não verificado", () => {
+        authUser.current = { ...authUser.current, verified: false };
+        mockProfile({
+            profile: { ...anaProfile, _id: "me" } as unknown as PublicProfile,
+        });
+        renderPage();
+
+        expect(
+            screen.queryByRole("button", { name: "Editar bio" }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Editar detalhes do perfil" }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Alterar foto" }),
         ).not.toBeInTheDocument();
     });
 

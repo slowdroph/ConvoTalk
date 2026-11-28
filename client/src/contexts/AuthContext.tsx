@@ -1,4 +1,5 @@
 import { createContext } from "react";
+import type { MessageQuotaPayload } from "@shared/types";
 import type { User } from "../types";
 
 export type { User };
@@ -19,8 +20,10 @@ export interface AuthContextType {
     user: User | null;
     token: string | null;
     login: (email: string, password: string) => Promise<void>;
-    register: (input: RegisterInput) => Promise<{ message: string }>;
+    register: (input: RegisterInput) => Promise<{ message?: string; token?: string }>;
     updateUser: (user: User) => void;
+    refreshUser: () => Promise<void>;
+    setMessageQuota: (quota: MessageQuotaPayload | null) => void;
     logout: () => void;
     loading: boolean;
 }

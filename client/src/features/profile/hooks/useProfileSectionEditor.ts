@@ -17,6 +17,7 @@ export interface ProfileSectionEditor {
     active: ProfileSection | null;
     saving: boolean;
     error: string | null;
+    canEdit: boolean;
     start: (section: ProfileSection) => void;
     cancel: () => void;
     save: (patch: Partial<AboutInput>) => Promise<boolean>;
@@ -48,13 +49,16 @@ export function useProfileSectionEditor(
     onSaved?: () => void | Promise<void>,
 ): ProfileSectionEditor {
     const { t } = useTranslation("profile");
-    const { updateUser } = useAuth();
+    const { user, updateUser } = useAuth();
     const { showToast } = useToast();
     const [active, setActive] = useState<ProfileSection | null>(null);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const canEdit = Boolean(user?.verified);
+
     const start = (section: ProfileSection) => {
+        if (!canEdit) return;
         setError(null);
         setActive(section);
     };
@@ -90,6 +94,7 @@ export function useProfileSectionEditor(
         active,
         saving,
         error,
+        canEdit,
         start,
         cancel,
         save,

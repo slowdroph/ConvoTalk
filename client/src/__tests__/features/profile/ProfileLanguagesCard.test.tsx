@@ -10,6 +10,7 @@ function makeEditor(
         active: null,
         saving: false,
         error: null,
+        canEdit: true,
         start: vi.fn(),
         cancel: vi.fn(),
         save: vi.fn().mockResolvedValue(true),
@@ -167,6 +168,23 @@ describe("ProfileLanguagesCard", () => {
         ).not.toBeInTheDocument();
         expect(
             screen.queryByRole("button", { name: "Editar idiomas" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("não oferece edição ao dono não verificado", () => {
+        render(
+            <ProfileLanguagesCard
+                languages={["pt"]}
+                isSelf
+                editor={makeEditor({ canEdit: false })}
+            />,
+        );
+
+        expect(
+            screen.queryByRole("button", { name: "Editar idiomas" }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Informar idiomas" }),
         ).not.toBeInTheDocument();
     });
 });

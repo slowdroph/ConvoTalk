@@ -10,6 +10,7 @@ export type ErrorCode =
     | "CONFLICT"
     | "BAD_REQUEST"
     | "EMAIL_NOT_VERIFIED"
+    | "MESSAGE_QUOTA_EXCEEDED"
     | "INVALID_URL"
     | "BLOCKED_HOST"
     | "PREVIEW_UNAVAILABLE"

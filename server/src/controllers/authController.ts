@@ -5,7 +5,6 @@ import {
 } from "../utils/audit";
 import {
     handleError,
-    sendError,
 } from "../utils/errors";
 import {
     refreshCookieOptions,
@@ -28,6 +27,7 @@ export async function register(req: Request, res: Response): Promise<void> {
             language,
         } = req.body;
         const clientIp = getHttpClientIp(req);
+        const userAgent = req.header("User-Agent") || "";
         const result = await authService.registerUser(
             {
                 name,
@@ -42,20 +42,20 @@ export async function register(req: Request, res: Response): Promise<void> {
                 language,
             },
             clientIp,
+            userAgent,
         );
 
-        if (result.emailSendingFailed) {
+        if (result.alreadyExists) {
             res.status(201).json({
                 message:
-                    "Conta criada, mas não foi possível enviar o email de verificação. Solicite um novo email na tela de login.",
-                emailSendingFailed: true,
+                    "Se o email for válido, enviamos um link de confirmação. Verifique sua caixa de entrada.",
             });
             return;
         }
 
         audit({
             action: "auth.register",
-            actorId: "system",
+            actorId: result.user._id,
             ip: getHttpClientIp(req),
             details: {
                 emailDomain: email.split("@")[1] ?? null,
@@ -63,9 +63,17 @@ export async function register(req: Request, res: Response): Promise<void> {
             },
         });
 
+        res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, refreshCookieOptions());
+
         res.status(201).json({
-            message:
-                "Se o email for válido, enviamos um link de confirmação. Verifique sua caixa de entrada.",
+            message: result.emailSendingFailed
+                ? "Conta criada, mas não foi possível enviar o email de verificação. Solicite um novo email na tela de verificação."
+                : "Conta criada! Enviamos um link de confirmação para o seu email.",
+            ...(result.emailSendingFailed
+                ? { emailSendingFailed: true }
+                : {}),
+            token: result.accessToken,
+            user: result.user,
         });
     } catch (error) {
         handleError(error, res);
@@ -84,17 +92,6 @@ export async function login(req: Request, res: Response): Promise<void> {
             userAgent,
             clientIp,
         );
-
-        if ("emailNotVerified" in result && result.emailNotVerified) {
-            sendError(
-                res,
-                403,
-                "EMAIL_NOT_VERIFIED",
-                "Verifique seu email antes de fazer login. Se não recebeu o email, solicite um novo.",
-                { needsVerification: true },
-            );
-            return;
-        }
 
         res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, refreshCookieOptions());
 
@@ -156,7 +153,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
         const token = Array.isArray(rawToken) ? rawToken[0] : rawToken;
         await authService.verifyEmailToken(token);
         res.json({
-            message: "Email verificado com sucesso! Faça login para continuar.",
+            message: "Email verificado com sucesso! Você já pode continuar no app.",
         });
     } catch (error) {
         handleError(error, res);
